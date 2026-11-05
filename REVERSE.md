@@ -56,6 +56,14 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `seeds.csv`. Banks 2 and 3 are mostly data so far (large $FF/$00 runs).
 - `$FF` bytes are padding in this ROM, never `rst $38`.
 
+- Frame model: `VBlankHandler` ($02c0) does the work flagged in `hVBlankTasks` ($ffb3): bit0 `VramCopyList`, bit1 OAM DMA
+  (`OamDmaRoutine` copied to HRAM $ff80 by `CopyOamDmaRoutine`), bit2 `VramCopyRows`; then writes SCX/SCY from `wScrollX/Y`,
+  calls the bank 1 per-frame routine at $4157, bumps `hFrameCounter` and sets `hVBlankFlag`. Main code waits with
+  `WaitVBlankFlag`/`DelayFrames`. `hJoyHeld` = $0f (all four dpad bits) is the soft-reset combo that jumps back to `Entry`.
+- Game modes: `GameModeDispatch` ($01ad) = `rst $00` with 8 entries (modes 0-7; mode 0 is entered at boot). `tables.csv` pins the table length.
+- Graphics loading: bank 2 `$4000` 0x700 bytes and bank 3 `$4000/$5000/$6000/$6e10` blocks are copied to VRAM $8000 (2bpp tiles).
+- Serial: `SerialHandler` ($0221) and `WaitSerialByte` ($0356): the game has a link-cable mode (`hSerialByte`).
+
 ### Data Structures
 
 (none recovered yet)
@@ -99,8 +107,8 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 ### RE Investigation
 
-- [ ] Add `src/hardware.inc` names for I/O registers ($FF40 LCDC, $FF47-49 palettes, $FF0F IF, $FFFF IE, ...) and use them in the source
-- [ ] Name the VBlank handler ($02C0), serial handler ($0221) and the main loop; document the interrupt flow
+- [x] `src/hardware.inc` register names used in the generated source (`DEF` constants, 1:1 verified by the round trip)
+- [x] VBlank handler, serial handler, joypad, OAM DMA, fade, VRAM copy queues named (labels.csv); main loop = the 8 game modes still to name
 - [ ] Decode the `rst $00` jump tables: name each state/handler
 - [ ] Map the HRAM variables ($FF80-$FFFE) and the WRAM variables referenced from bank 1 ($C3xx/$C5xx) into `src/constants.inc`
 - [ ] Classify banks 1-3 data: tile data (2bpp), tilemaps, palettes, text, music/sfx; add `D_` labels and structured `db`/`dw` records

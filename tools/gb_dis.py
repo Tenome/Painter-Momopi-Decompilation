@@ -9,7 +9,7 @@ Banks 1-3 are mapped at $4000: a jump/call from bank N to $4000+ stays in bank N
 unknown, so those targets are listed in build/cross_bank_candidates.tsv and marked by hand (labels.csv `bank,addr,...`
 with the entry in `seeds.csv`).
 """
-import argparse, csv, hashlib, os, sys
+import argparse, csv, hashlib, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import sm83
 
@@ -44,6 +44,15 @@ class Rom:
                 self.comments[(int(r[0]), int(r[1], 16))] = r[3]
         self.seeds = [(int(r[0]), int(r[1], 16)) for r in read_csv(os.path.join(ROOT, "seeds.csv"))
                       if r[0] != "bank"]
+        self.consts = {}     # name -> value from src/*.inc (DEF name EQU $xxxx)
+        for inc in ("hardware.inc", "constants.inc"):
+            pth = os.path.join(ROOT, "src", inc)
+            if os.path.exists(pth):
+                for ln in open(pth, encoding="utf-8"):
+                    m = re.match(r"\s*DEF\s+(\w+)\s+EQU\s+\$([0-9a-fA-F]+)", ln)
+                    if m:
+                        self.consts[m[1]] = int(m[2], 16)
+        self.by_value = {v: k for k, v in self.consts.items()}
         self.kind = {}       # (bank, addr) -> 'code' start map filled by trace
         self.insns = {}      # (bank, addr) -> (len, tpl_kind, target)
         self.code_bytes = set()
@@ -51,6 +60,8 @@ class Rom:
         self.cross = set()
         self.tables = set()  # rst-table vectors
         self.cross_bank = {}
+        self.table_len = {(int(r[0]), int(r[1], 16)): int(r[2]) for r in read_csv(os.path.join(ROOT, "tables.csv"))
+                          if r[0] != "bank"}
         self.dwords = {}     # (bank, addr) -> target of a table word
 
     def home(self, addr, bank):
@@ -70,9 +81,84 @@ class Rom:
                 if b and (b, t) not in self.insns:
                     self.cross_bank[t] = b
                     new.append((b, t))
-            if not new:
+            if new:
+                self.trace_once(new)
+                continue
+            if not self.orphan_scan():
                 break
-            self.trace_once(new)
+
+    TERM = ("retu", "jpu", "jru", "jpind")
+
+    def plausible(self, b, start):
+        """Does unclassified data at (b,start) look like a routine that ends in ret/jp/jr?"""
+        pc, o, n_ins, nops = start, off(b, start), 0, 0
+        while n_ins < 60:
+            if o + 3 > len(self.data) or (b, pc) in self.code_bytes and (b, pc) not in self.insns:
+                return False
+            if (b, pc) in self.insns:
+                return n_ins >= 3
+            if self.data[o] == 0xFF:
+                return False
+            n, tx, k, tg = sm83.decode(self.data, pc, o)
+            if tx is None:
+                return False
+            nops = nops + 1 if self.data[o] == 0 else 0
+            if nops > 1 or (n_ins == 0 and self.data[o] in (0x00,)):
+                return False
+            if k in ("jp", "jpu", "call"):
+                if tg >= 0x8000 or (tg < BANK and (0, tg) not in self.insns):
+                    return False
+                if tg >= BANK and b != 0 and (b, tg) not in self.insns:
+                    return False
+            if k in ("jr", "jru") and not (0 <= tg < 0x8000):
+                return False
+            pc += n
+            o += n
+            n_ins += 1
+            if k in self.TERM:
+                return n_ins >= 3
+        return False
+
+    def orphan_scan(self):
+        """Find routines nothing calls directly (they follow a terminator or a table) and trace them."""
+        cands = set()
+        for (b, pc), (n, kind, tgt) in self.insns.items():
+            if kind in self.TERM and (b, pc + n) not in self.code_bytes:
+                cands.add((b, pc + n))
+        for (b, a) in self.dwords:
+            if (b, a + 2) not in self.code_bytes:
+                cands.add((b, a + 2))
+        found = 0
+        for b, a in sorted(cands):
+            if a < BANK * (1 if b else 0) + (BANK if b else 0) or a >= (BANK if b == 0 else 2 * BANK):
+                continue
+            if b >= 2:
+                continue
+            if self.plausible(b, a) and self.try_run(b, a):
+                found += 1
+        return found
+
+    def try_run(self, b, a):
+        """Trace (b,a); keep it only if every branch lands on an instruction start."""
+        snap = (dict(self.insns), set(self.code_bytes), dict(self.targets), dict(self.dwords), set(self.cross))
+        self.targets[(b, a)] = "code"
+        self.run([(b, a)])
+        if self.cross - snap[4] - set(self.cross_bank):
+            return self.rollback(snap)
+        for key in set(self.insns) - set(snap[0]):
+            n, kind, tg = self.insns[key]
+            if kind in ("jr", "jru", "jp", "jpu", "call"):
+                if tg >= 0x8000:
+                    return self.rollback(snap)
+                if key[0] == 0 and tg >= BANK:
+                    continue
+                if (self.home(tg, key[0]), tg) not in self.insns:
+                    return self.rollback(snap)
+        return True
+
+    def rollback(self, snap):
+        self.insns, self.code_bytes, self.targets, self.dwords, self.cross = snap
+        return False
 
     def guess_bank(self, t):
         """The one switchable bank in which code at t decodes cleanly to a terminator (None if ambiguous)."""
@@ -152,7 +238,9 @@ class Rom:
 
     def read_table(self, b, addr, work):
         """Words after a table-dispatch rst: take them while they point at plausible code."""
-        while addr + 1 < 0x8000 and (b, addr) not in self.code_bytes:
+        left = self.table_len.get((b, addr), 1 << 20)
+        while left > 0 and addr + 1 < 0x8000 and (b, addr) not in self.code_bytes:
+            left -= 1
             o = off(b, addr)
             t = self.data[o] | self.data[o + 1] << 8
             to = off(self.home(t, b), t)
@@ -185,7 +273,7 @@ class Rom:
         start = 0 if bank == 0 else BANK
         end = start + BANK
         lab = self.label(bank)
-        out = []
+        out = ['INCLUDE "src/hardware.inc"', 'INCLUDE "src/constants.inc"', ""]
         if bank == 0:
             out.append('SECTION "bank00", ROM0[$0000]')
         else:
@@ -208,6 +296,8 @@ class Rom:
             if key in self.insns:
                 n, kind, tgt = self.insns[key]
                 _, text, _, _ = sm83.decode(self.data, pc, base + pc - start, lab)
+                if kind not in ("jr", "jru", "jp", "jpu", "call"):
+                    text = re.sub(r"\$([0-9a-f]{4})", lambda m: self.by_value.get(int(m[1], 16), m[0]), text)
                 out.append("    " + text)
                 pc += n
                 continue
@@ -239,6 +329,12 @@ class Rom:
         return res
 
 
+def unname(rom, s):
+    if not rom.consts:
+        return s
+    return re.sub(r"[A-Za-z_]\w*", lambda m: f"${rom.consts[m[0]]:04x}" if m[0] in rom.consts else m[0], s)
+
+
 def assemble(rom, sources):
     """Assemble the emitted text with the in-repo encoder and compare with the ROM bytes."""
     labels = {}
@@ -248,7 +344,7 @@ def assemble(rom, sources):
         pc = 0 if bank == 0 else BANK
         for ln in sources[bank].splitlines():
             s = ln.split(";")[0].rstrip()
-            if not s or s.startswith("SECTION"):
+            if not s or s.startswith(("SECTION", "INCLUDE")):
                 continue
             if s.endswith(":"):
                 labels[s.rstrip(":")] = pc
@@ -257,14 +353,14 @@ def assemble(rom, sources):
             elif s.startswith("    dw "):
                 pc += 2
             else:
-                pc += len(sm83.encode(s.strip(), pc, lookup))
+                pc += len(sm83.encode(unname(rom, s.strip()), pc, lookup))
     built = []
     for bank in range(rom.nbanks):
         pc = 0 if bank == 0 else BANK
         out = bytearray()
         for ln in sources[bank].splitlines():
             s = ln.split(";")[0].rstrip()
-            if not s or s.startswith("SECTION") or s.endswith(":"):
+            if not s or s.startswith(("SECTION", "INCLUDE")) or s.endswith(":"):
                 continue
             if s.startswith("    db "):
                 v = bytes(int(x.strip()[1:], 16) for x in s[7:].split(","))
@@ -272,7 +368,7 @@ def assemble(rom, sources):
                 t = lookup(s[7:].strip())
                 v = bytes([t & 0xFF, t >> 8])
             else:
-                v = sm83.encode(s.strip(), pc, lookup)
+                v = sm83.encode(unname(rom, s.strip()), pc, lookup)
             out += v
             pc += len(v)
         built.append(bytes(out))

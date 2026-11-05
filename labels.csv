@@ -1,5 +1,40 @@
 bank,addr,name,comment
+0,0040,VBlankVector,jp to VBlankHandler
 0,0100,Entry,nop; jp Start
-0,0150,Start,sets SP=$dfff; clears WRAM and HRAM; inits LCD
+0,0150,Start,sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters mode 0
+0,01ad,GameModeDispatch,rst $00 jump table indexed by A: 9 game modes
+0,02c0,VBlankHandler,runs OAM DMA; queued VRAM copies; scroll; bank 1 per-frame update $4157; frame counters
+0,0356,WaitSerialByte,enables serial interrupt only and waits for hSerialByte
+0,036f,WaitFrameAndSyncOam,waits one frame; requests OAM DMA
+0,0385,WaitVBlankFlag,spins (bumping hRngCounter) until the VBlank handler sets hVBlankFlag
+0,0397,DelayFrames,waits A frames
+0,03ad,RequestBank1Command,stores A in $c30c and jumps to bank 1 routine $485b
+0,03b3,FadeOut,steps BGP/OBP0/OBP1 e4-94-50-40-00
+0,0448,ReadJoypad,hJoyHeld = buttons+dpad; hJoyNew = newly pressed
+0,0484,CopyOamDmaRoutine,copies 10 bytes to $ff80
+0,0492,OamDmaRoutine,source of the HRAM routine: DMA from $c000 then waits 40 cycles
+0,049c,PixelToTilemapAddr,hSpriteY/X pixel to BG map address $9800+
 0,04c9,RstJumpTable,target of rst $00: pop hl; index word table after the rst
-0,0040,VBlankVector,jp to VBlank handler
+0,04d5,LcdOff,waits for LY=$91 then clears LCDC bit 7
+0,04f1,ClearMemory,zero fill HL for BC bytes
+0,04f9,FillBackwardsFF,fills $400 bytes with $ff going down from HL
+0,0505,CopyMemory,copy BC bytes from HL to DE
+0,050e,Clear32Bytes,zero fill HL for 32 bytes
+0,0516,SetObjPtr,hObjPtr = HL
+0,05e8,QueueVramCopyRows,queue run-length VRAM copy for the next VBlank
+0,0603,QueueVramCopyList,queue a list of VRAM copy jobs for the next VBlank
+0,0618,VramCopyRows,run-length copy of rows to VRAM (from VBlank)
+0,0663,VramCopyList,runs a list of VramCopyRows jobs (from VBlank)
+0,069c,WaitVramCopyDone,waits until the VBlank task bit 2 is cleared
+0,07e7,ClearOamShadowY,clears Y of every OAM shadow entry
+0,07f9,ClearOamShadow,zero fills the 160 byte OAM shadow at $c000
+0,0806,RequestOamDma,sets the OAM DMA bit in hVBlankTasks
+0,01be,LoadGfxBank2,selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then table-driven tiles to $8700
+0,01e7,LoadTilesBank3A,bank 3 $4000 0x1000 bytes to $8000 via LoadTilesBank3
+0,01ec,LoadTilesBank3B,bank 3 $5000 0x1000 bytes to $8000
+0,01f1,LoadTilesBank3D,bank 3 $6e10 0x1000 bytes to $8000
+0,01f9,LoadTilesBank3C,bank 3 $6000 0xe10 bytes to $8000
+0,01ff,LoadTilesBank3,copy BC bytes from bank 3 HL to VRAM $8000
+0,0210,SerialStartTransfer,link port: clears internal clock bit; sets transfer start
+0,0221,SerialHandler,serial interrupt: stores received byte state in hSerialByte flags
+0,1462,TimerValueTable,16-bit values indexed by $c522 loaded into $c44a/$c44b

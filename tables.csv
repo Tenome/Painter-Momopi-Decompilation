@@ -1,0 +1,3 @@
+# bank,addr,count,comment -- rst $00 word tables whose length the tracer cannot know (address = first word)
+bank,addr,count,comment
+0,01ae,8,game mode jump table (the word after it is code: ld a,2)
