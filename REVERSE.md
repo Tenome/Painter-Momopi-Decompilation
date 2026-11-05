@@ -80,7 +80,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 ## Verification Checklist
 
 - [x] Ph3: all 4 banks emitted as RGBDS source and rebuilt byte-for-byte by the reference assembler (`gb_dis.py --check`)
-- [x] Ph3: RGBDS 1.0.4 build (`python tools/build.py --rgbds E:gbds`) reproduces the SHA-1
+- [x] Ph3: RGBDS 1.0.4 build (`python tools/build.py --rgbds E:/rgbds`) reproduces the SHA-1
 - [ ] Ph3: 3+ functions traced and cross-checked against an emulator trace
 - [ ] Ph4: 5+ tile sets extracted and visually compared to an emulator
 - [ ] Ph5: key data struct confirmed in an emulator memory dump
