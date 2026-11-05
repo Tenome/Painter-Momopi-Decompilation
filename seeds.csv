@@ -1,0 +1,10 @@
+# bank,addr,comment -- code entry points reached through the bank switch (verified by hand: clean RAM-variable code in bank 1)
+bank,addr,comment
+1,4157,entered from bank 0
+1,485b,entered from bank 0
+1,492f,entered from bank 0
+1,4bde,entered from bank 0
+1,50b1,entered from bank 0
+1,51ad,entered from bank 0
+1,5301,entered from bank 0
+1,536a,entered from bank 0

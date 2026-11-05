@@ -1,0 +1,5 @@
+bank,addr,name,comment
+0,0100,Entry,nop; jp Start
+0,0150,Start,sets SP=$dfff; clears WRAM and HRAM; inits LCD
+0,04c9,RstJumpTable,target of rst $00: pop hl; index word table after the rst
+0,0040,VBlankVector,jp to VBlank handler

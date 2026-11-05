@@ -1,0 +1,27 @@
+name: Progress report
+
+# The ROM cannot be put on GitHub, so the objdiff-format report is generated locally with
+#   python tools/report.py            (or `make report` after an RGBDS build)
+# and committed. This job publishes it as the artifact `<VERSION>_report` that ByteMatch (https://bytematch.dev/) reads from
+# CI runs on master. The report contains only function names, addresses, sizes and match percentages (no ROM bytes).
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: jp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the report
+        run: python3 -c "import json,sys; r=json.load(open('progress/${VERSION}/report.json')); m=r['measures']; print(m['matched_functions'], 'of', m['total_functions'], 'functions,', m['matched_code_percent'], '% of code matched')"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.VERSION }}_report
+          path: progress/${{ env.VERSION }}/report.json

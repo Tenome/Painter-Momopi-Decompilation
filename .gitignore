@@ -1,0 +1,29 @@
+# The ROM and anything extracted from it (supply your own copy in orig/)
+orig/*
+!orig/README.md
+*.gb
+*.gbc
+*.sav
+
+# Generated disassembly (contains the ROM's bytes as `db`): regenerate with `python tools/gb_dis.py --write`.
+# Move understood, hand-written source to other file names (e.g. src/home/*.asm) and commit those.
+src/bank_*.asm
+
+# Build outputs
+build/
+*.o
+*.map
+*.sym
+
+# Ghidra projects and exports (analysis output of the original binary)
+*.gpr
+*.rep/
+ghidra/
+
+# Python
+__pycache__/
+*.pyc
+
+# Scratch
+scratch/
+re_loop_sessions/

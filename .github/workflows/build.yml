@@ -1,0 +1,40 @@
+name: Build
+
+# The original ROM cannot be put on GitHub-hosted runners (not redistributable), so this job runs on a self-hosted runner
+# with the label `rgbds` that has RGBDS installed. Configure this repository variable
+# (Settings > Secrets and variables > Actions > Variables):
+#   ROM_ORIG_PATH  full path of the original ROM on the runner  (SHA-1 193901223ffc89cf4f42a19e57447249affcc843)
+# Manual only (it waits forever when no such runner is online). The report that ByteMatch reads comes from report.yml;
+# run this job to verify the committed progress/jp/report.json against a fresh build.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, rgbds]
+    env:
+      VERSION: jp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Provide the original ROM
+        shell: bash
+        run: |
+          test -n "${{ vars.ROM_ORIG_PATH }}" || { echo "Set the repository variable ROM_ORIG_PATH"; exit 1; }
+          mkdir -p orig
+          cp "${{ vars.ROM_ORIG_PATH }}" orig/painter_momopie.gb
+
+      - name: Build and check that the ROM is byte-identical
+        run: python tools/build.py
+
+      - name: Check the sources with the reference assembler
+        run: python tools/gb_dis.py --check
+
+      - name: Write the report from the fresh build
+        run: python tools/report.py --built build/painter_momopie.gb --out build/${{ env.VERSION }}/report.json
+
+      - name: Upload the freshly built report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.VERSION }}_verified_report
+          path: build/${{ env.VERSION }}/report.json
