@@ -682,7 +682,7 @@ L_01_45c3::
 SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word table at $467b; calls it through SoundJumpHL
     and a, $1f
     cp a, $03
-    jr z, L_01_45ef
+    jr z, SoundCmdStop
     sla a
     push de
     ld e, a
@@ -699,7 +699,7 @@ SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word ta
     pop de
     call SoundJumpHL
     jp SoundParseStream
-L_01_45ef::
+SoundCmdStop::  ; command $e3: ends the stream; the channel is silenced
     ld a, $00
     ld [$c30f], a
 L_01_45f4::
@@ -800,25 +800,26 @@ SoundParseStream::  ; reads bytes of the channel's song stream; notes below $e0;
     ret
 SoundJumpHL::  ; jp hl trampoline for the sound command table
     jp hl
-    dw L_01_469f
-    dw L_01_469f
-    dw L_01_46bf
-    dw L_01_45ef
-    dw L_01_46d7
-    dw L_01_46ed
-    dw L_01_46fd
-    dw L_01_4705
-    dw L_01_470e
-    INCBIN "orig/painter_momopie.gb", $0468d, 2
-    dw L_01_4728
+SoundCommandTable::  ; 18 word handlers for stream commands $e0-$f1 (index = byte and $1f)
+    dw SoundCmdCall
+    dw SoundCmdCall
+    dw SoundCmdReturn
+    dw SoundCmdStop
+    dw SoundCmdRepeat
+    dw SoundCmdJump
+    dw SoundCmdSetEnvelope
+    dw SoundCmdAddTranspose
+    dw SoundCmdSetDuty
+    dw SoundCmdSetPan
+    dw SoundCmdSetWave
     dw SoundCmdEnd
-    dw L_01_478e
-    dw L_01_4793
-    dw L_01_4798
-    dw L_01_479d
-    dw L_01_4718
-    dw L_01_471d
-L_01_469f::
+    dw SoundCmdMuteOn
+    dw SoundCmdMuteOff
+    dw SoundCmdClearFlag0
+    dw SoundCmdSetMasterVolume
+    dw SoundCmdSetField6
+    dw SoundCmdSetPitch
+SoundCmdCall::  ; commands $e0 and $e1: pushes the return address on the record's small stack ($a) and jumps to the address that follows
     ld hl, $000a
     add hl, bc
     dec [hl]
@@ -846,7 +847,7 @@ L_01_469f::
     ld a, [hl]
     ld e, a
     ret
-L_01_46bf::
+SoundCmdReturn::  ; command $e2: pops the return address from the record's small stack
     ld hl, $000a
     add hl, bc
     ld a, [hl]
@@ -866,7 +867,7 @@ L_01_46bf::
     ld a, d
     ld [hl], a
     ret
-L_01_46d7::
+SoundCmdRepeat::  ; command $e4: counted loop; operands: counter slot and jump target
     ld hl, $0017
     add hl, bc
     ld a, [de]
@@ -885,7 +886,7 @@ L_01_46d7::
     inc de
     dec [hl]
     jr z, L_01_46fa
-L_01_46ed::
+SoundCmdJump::  ; command $e5: sets the stream pointer from the next two bytes
     ld a, [de]
     inc de
     ld hl, $0003
@@ -901,15 +902,15 @@ L_01_46fa::
     inc de
     inc de
     ret
-L_01_46fd::
+SoundCmdSetEnvelope::  ; command $e6: record +7 = next byte (volume envelope NRx2)
     ld hl, $0007
-L_01_4700::
+SoundSetField::  ; shared tail: record[HL] = next stream byte
     add hl, bc
     ld a, [de]
     inc de
     ld [hl], a
     ret
-L_01_4705::
+SoundCmdAddTranspose::  ; command $e7: record +5 += next byte (note transpose)
     ld hl, $0005
     add hl, bc
     ld a, [de]
@@ -917,22 +918,24 @@ L_01_4705::
     add a, [hl]
     ld [hl], a
     ret
-L_01_470e::
+SoundCmdSetDuty::  ; command $e8: record +$15 = next byte (duty or length NRx1)
     ld hl, $0015
-    jr L_01_4700
-    INCBIN "orig/painter_momopie.gb", $04713, 5
-L_01_4718::
+    jr SoundSetField
+SoundCmdSetPan::  ; command $e9: record +2 = next byte (NR51 pan mask)
+    ld hl, $0002
+    jr SoundSetField
+SoundCmdSetField6::  ; command $f0: record +6 = next byte
     ld hl, $0006
-    jr L_01_4700
-L_01_471d::
+    jr SoundSetField
+SoundCmdSetPitch::  ; command $f1: record +$e = next byte (pitch)
     ld hl, $000e
-    jr L_01_4700
+    jr SoundSetField
 L_01_4722::
     ld a, [de]
     inc de
     ld [$c312], a
     ret
-L_01_4728::
+SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the wave channel
     ld a, [bc]
     bit 2, a
     jr nz, L_01_4722
@@ -949,11 +952,11 @@ L_01_4728::
     jr nc, .L_01_4747
     ld a, [$c314]
     ld [$c312], a
-    jr L_01_474d
+    jr SoundLoadWave
 .L_01_4747:
     ld a, [$c314]
     ld [$c313], a
-L_01_474d::
+SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wave RAM
     push bc
     ld bc, $3fb8
     sla a
@@ -991,27 +994,27 @@ SoundCmdEnd::  ; sound command $eb: discards the caller's return address and end
     cp a, [hl]
     jr z, .L_01_4788
     ld [hl], a
-    call L_01_474d
+    call SoundLoadWave
 .L_01_4788:
     ld a, $00
     pop hl
     jp L_01_45f4
-L_01_478e::
+SoundCmdMuteOn::  ; command $ec: sets bit 5 of the record flags
     ld a, [bc]
     or a, $20
     ld [bc], a
     ret
-L_01_4793::
+SoundCmdMuteOff::  ; command $ed: clears bit 5 of the record flags
     ld a, [bc]
     and a, $df
     ld [bc], a
     ret
-L_01_4798::
+SoundCmdClearFlag0::  ; command $ee: clears bit 0 (note started) of the record flags
     ld a, [bc]
     and a, $fe
     ld [bc], a
     ret
-L_01_479d::
+SoundCmdSetMasterVolume::  ; command $ef: NR50 = next byte (also saved at $c315)
     ld a, [de]
     inc de
     ld [rNR50], a

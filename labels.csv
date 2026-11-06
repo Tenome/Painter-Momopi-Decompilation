@@ -187,3 +187,22 @@ bank,addr,name,comment
 0,2b0a,PickRandomRound,title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
 0,1973,InitCursorMenu,clears the menu variables and creates the cursor object at wCursorObject
 0,1ce7,ClearRoomState,zeroes wRoomType wSubState and the room script variables
+1,467b,SoundCommandTable,18 word handlers for stream commands $e0-$f1 (index = byte and $1f)
+1,469f,SoundCmdCall,commands $e0 and $e1: pushes the return address on the record's small stack ($a) and jumps to the address that follows
+1,46bf,SoundCmdReturn,command $e2: pops the return address from the record's small stack
+1,45ef,SoundCmdStop,command $e3: ends the stream; the channel is silenced
+1,46d7,SoundCmdRepeat,command $e4: counted loop; operands: counter slot and jump target
+1,46ed,SoundCmdJump,command $e5: sets the stream pointer from the next two bytes
+1,46fd,SoundCmdSetEnvelope,command $e6: record +7 = next byte (volume envelope NRx2)
+1,4705,SoundCmdAddTranspose,command $e7: record +5 += next byte (note transpose)
+1,470e,SoundCmdSetDuty,command $e8: record +$15 = next byte (duty or length NRx1)
+1,4713,SoundCmdSetPan,command $e9: record +2 = next byte (NR51 pan mask)
+1,4728,SoundCmdSetWave,command $ea: selects a wave pattern (SoundLoadWave) on the wave channel
+1,4700,SoundSetField,shared tail: record[HL] = next stream byte
+1,474d,SoundLoadWave,copies a 16 byte wave pattern from the table at $3fb8 into wave RAM
+1,478e,SoundCmdMuteOn,command $ec: sets bit 5 of the record flags
+1,4793,SoundCmdMuteOff,command $ed: clears bit 5 of the record flags
+1,4798,SoundCmdClearFlag0,command $ee: clears bit 0 (note started) of the record flags
+1,479d,SoundCmdSetMasterVolume,command $ef: NR50 = next byte (also saved at $c315)
+1,4718,SoundCmdSetField6,command $f0: record +6 = next byte
+1,471d,SoundCmdSetPitch,command $f1: record +$e = next byte (pitch)

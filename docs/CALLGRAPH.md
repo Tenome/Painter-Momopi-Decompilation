@@ -2,11 +2,16 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-134 named routines of 327 found.
+162 named routines of 328 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
+| 0:0000 | `RstVector00` | 3 | 0 | `RstJumpTable` |
 | 0:0040 | `VBlankVector` | 3 | 0 | `VBlankHandler` |
+| 0:0048 | `StatVector` | 1 | 0 |  |
+| 0:0050 | `TimerVector` | 1 | 0 |  |
+| 0:0058 | `SerialVector` | 3 | 0 | `SerialHandler` |
+| 0:0060 | `JoypadVector` | 1 | 0 |  |
 | 0:0100 | `Entry` | 4 | 4 | `Start` |
 | 0:0150 | `Start` | 93 | 1 | `ClearMemory`, `ClearOamShadow`, `CopyOamDmaRoutine`, `FillBackwardsFF`, `LcdOff`, `PlaySound` |
 | 0:01ad | `GameModeDispatch` | 1 | 10 |  |
@@ -58,11 +63,15 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0bf8 | `MultiplyByDE` | 50 | 9 |  |
 | 0:0d0e | `UnpackRoomMap` | 47 | 1 |  |
 | 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
-| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF`, `InitPlayer`, `L_00_11b4` ... |
+| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF`, `InitCursorMenu`, `InitPlayer` ... |
+| 0:13e6 | `StartRoundMusic` | 26 | 1 | `LookupByte`, `PlaySound`, `WaitVBlankFlag` |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
 | 0:142a | `TableIndexFromRound` | 14 | 2 | `LookupWord` |
+| 0:1438 | `InitRoundTimer` | 42 | 1 |  |
 | 0:14a6 | `ClearRoundVariables` | 62 | 1 |  |
-| 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_00_1ce7`, `L_01_492f` ... |
+| 0:1973 | `InitCursorMenu` | 40 | 2 | `Clear32Bytes`, `L_00_1760` |
+| 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `ClearRoomState`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_01_492f` ... |
+| 0:1ce7 | `ClearRoomState` | 22 | 1 |  |
 | 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
 | 0:1dc0 | `Mode7_LinkLose` | 110 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `ReadJoypad` ... |
 | 0:1ea4 | `Mode4_GameOver` | 108 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `LcdOff`, `LoadTilesBank3A` ... |
@@ -71,7 +80,8 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:24b7 | `Mode2_Init` | 132 | 2 | `ClearOamShadow`, `L_00_051d`, `L_00_0628`, `LcdOff`, `LookupWord`, `RequestOamDma`, `RunVramCopyList` |
 | 0:25e0 | `MenuCursorInput` | 80 | 1 | `DrawObjectBytePos`, `LookupByte`, `PlaySound`, `SetObjPtr` |
 | 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `InitTitleVariables`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
-| 0:2a27 | `TitleLoop` | 227 | 0 | `GameModeDispatch`, `L_00_2b0a`, `L_00_2b23`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `WaitFrameAndSyncOam` |
+| 0:2a27 | `TitleLoop` | 227 | 0 | `GameModeDispatch`, `L_00_2b23`, `PickRandomRound`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `WaitFrameAndSyncOam` |
+| 0:2b0a | `PickRandomRound` | 25 | 2 | `L_00_0b44` |
 | 0:2b46 | `InitTitleVariables` | 62 | 1 | `L_00_1760` |
 | 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `Entry`, `FillBackwardsFF`, `L_00_2d5d`, `L_00_2f26` ... |
 | 0:31e2 | `TickObjectTimer` | 9 | 7 |  |
@@ -109,10 +119,28 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:4504 | `SoundWriteChannel3` | 93 | 0 |  |
 | 1:4572 | `SoundWriteChannel4` | 81 | 0 |  |
 | 1:45d1 | `SoundRunCommand` | 30 | 0 | `SoundJumpHL`, `SoundParseStream` |
+| 1:45ef | `SoundCmdStop` | 5 | 0 |  |
 | 1:4613 | `SoundReadNextNote` | 12 | 1 |  |
 | 1:461f | `SoundParseStream` | 91 | 1 |  |
 | 1:467a | `SoundJumpHL` | 1 | 1 |  |
-| 1:4776 | `SoundCmdEnd` | 24 | 0 | `L_01_45f4`, `L_01_474d` |
+| 1:469f | `SoundCmdCall` | 32 | 0 |  |
+| 1:46bf | `SoundCmdReturn` | 24 | 0 |  |
+| 1:46d7 | `SoundCmdRepeat` | 22 | 0 |  |
+| 1:46ed | `SoundCmdJump` | 13 | 0 |  |
+| 1:46fd | `SoundCmdSetEnvelope` | 3 | 0 |  |
+| 1:4700 | `SoundSetField` | 5 | 0 |  |
+| 1:4705 | `SoundCmdAddTranspose` | 9 | 0 |  |
+| 1:470e | `SoundCmdSetDuty` | 5 | 0 |  |
+| 1:4713 | `SoundCmdSetPan` | 5 | 0 |  |
+| 1:4718 | `SoundCmdSetField6` | 5 | 0 |  |
+| 1:471d | `SoundCmdSetPitch` | 5 | 0 |  |
+| 1:4728 | `SoundCmdSetWave` | 37 | 0 |  |
+| 1:474d | `SoundLoadWave` | 40 | 1 | `SoundInit` |
+| 1:4776 | `SoundCmdEnd` | 24 | 0 | `L_01_45f4`, `SoundLoadWave` |
+| 1:478e | `SoundCmdMuteOn` | 5 | 0 |  |
+| 1:4793 | `SoundCmdMuteOff` | 5 | 0 |  |
+| 1:4798 | `SoundCmdClearFlag0` | 5 | 0 |  |
+| 1:479d | `SoundCmdSetMasterVolume` | 9 | 0 |  |
 | 1:47a6 | `SoundApplyPitchSlide` | 37 | 1 | `L_01_47cb`, `L_01_4820` |
 | 1:485b | `PlaySound_Bank1` | 32 | 1 |  |
 | 1:4b1f | `SelectPlayerAnimation` | 20 | 1 |  |
