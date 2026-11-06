@@ -17,8 +17,9 @@ Longer term: a native Windows/Linux port built from the recovered source (see `d
   `make` OK (SHA-1 equal to the original). Refresh `progress/jp/report.json` with `python tools/report.py`.
 
 ## Layout
-- `src/bank_NN.asm`: generated, git-ignored first pass (it embeds the ROM's data bytes). Understood code goes into hand-written
-  topic files (`src/home/*.asm`, ...) that are committed; the generated banks shrink as routines move out.
+- `src/bank_NN.asm`: instruction source, committed. Data is not stored in git: it is `INCBIN "orig/painter_momopie.gb", offset, length`
+  of your own ROM, and each data region becomes real `db`/`dw` records (without the bytes ever being committed as a blob) only
+  when it is decoded into structured form. Regenerate with `python tools/gb_dis.py --write` until a bank file is edited by hand.
 - `labels.csv`, `seeds.csv`: names and code entry points (bank 1-3 entries reached through the MBC1 bank switch).
 - `config/functions.tsv`: routine list used by the report.
 - `tools/`: `sm83.py` (instruction table + encoder), `gb_dis.py` (tracing disassembler + round-trip proof), `report.py`

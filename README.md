@@ -31,7 +31,7 @@ python tools/report.py            # write progress/jp/report.json
 
 | Path | Contents |
 |---|---|
-| `src/` | RGBDS sources: `bank_NN.asm` is generated from your ROM (git-ignored); hand-written topic files are committed |
+| `src/` | RGBDS sources: instructions and labels; data is `INCBIN` of your own ROM (no game data in git) |
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
 | `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), report generator, ROM checker |

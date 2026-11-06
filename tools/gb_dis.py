@@ -414,14 +414,12 @@ class Rom:
                 out.append("    " + text)
                 pc += n
                 continue
-            # data run up to 16 bytes, stopping at a label, a code byte or a bank end
-            run = [self.data[base + pc - start]]
+            # data: one INCBIN of the user's own ROM up to the next label, instruction or table word
             q = pc + 1
-            while (q < end and len(run) < 16 and (bank, q) not in self.insns and (bank, q) not in self.targets
-                   and (bank, q) not in self.names and (bank, q) not in self.dwords and (q & 15) != 0):
-                run.append(self.data[base + q - start])
+            while (q < end and (bank, q) not in self.insns and (bank, q) not in self.targets
+                   and (bank, q) not in self.names and (bank, q) not in self.dwords):
                 q += 1
-            out.append("    db " + ", ".join(f"${x:02x}" for x in run))
+            out.append(f'    INCBIN "orig/painter_momopie.gb", ${base + pc - start:05x}, {q - pc}')
             pc = q
         return "\n".join(out) + "\n"
 
@@ -465,6 +463,8 @@ def assemble(rom, sources):
                 pc += s.count("$")
             elif s.startswith("    dw "):
                 pc += 2
+            elif s.startswith("    INCBIN"):
+                pc += int(s.rsplit(",", 1)[1])
             else:
                 pc += len(sm83.encode(unname(rom, s.strip()), pc, lookup))
     built = []
@@ -480,6 +480,10 @@ def assemble(rom, sources):
             elif s.startswith("    dw "):
                 t = lookup(s[7:].strip())
                 v = bytes([t & 0xFF, t >> 8])
+            elif s.startswith("    INCBIN"):
+                _, o, n = s.split(",")
+                o = int(o.strip()[1:], 16)
+                v = rom.data[o:o + int(n)]
             else:
                 v = sm83.encode(unname(rom, s.strip()), pc, lookup)
             out += v

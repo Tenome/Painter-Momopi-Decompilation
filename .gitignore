@@ -5,10 +5,6 @@ orig/*
 *.gbc
 *.sav
 
-# Generated disassembly (contains the ROM's bytes as `db`): regenerate with `python tools/gb_dis.py --write`.
-# Move understood, hand-written source to other file names (e.g. src/home/*.asm) and commit those.
-src/bank_*.asm
-
 # Build outputs
 build/
 *.o
