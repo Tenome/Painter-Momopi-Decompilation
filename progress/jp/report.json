@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "14892",
-  "matched_code": "14892",
+  "total_code": "15116",
+  "matched_code": "15116",
   "matched_code_percent": 100.0,
-  "total_data": "50644",
-  "matched_data": "50644",
+  "total_data": "50420",
+  "matched_data": "50420",
   "matched_data_percent": 100.0,
-  "total_functions": 334,
-  "matched_functions": 334,
+  "total_functions": 340,
+  "matched_functions": 340,
   "matched_functions_percent": 100.0,
-  "complete_code": "14892",
+  "complete_code": "15116",
   "complete_code_percent": 100.0,
-  "complete_data": "50644",
+  "complete_data": "50420",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9327",
-    "matched_code": "9327",
+    "total_code": "9551",
+    "matched_code": "9551",
     "matched_code_percent": 100.0,
-    "total_data": "7057",
-    "matched_data": "7057",
+    "total_data": "6833",
+    "matched_data": "6833",
     "matched_data_percent": 100.0,
-    "total_functions": 192,
-    "matched_functions": 192,
+    "total_functions": 198,
+    "matched_functions": 198,
     "matched_functions_percent": 100.0,
-    "complete_code": "9327",
+    "complete_code": "9551",
     "complete_code_percent": 100.0,
-    "complete_data": "7057",
+    "complete_data": "6833",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9327",
+     "size": "9551",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "7057",
+     "size": "6833",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -893,10 +893,58 @@
     },
     {
      "name": "Mode2_BonusSelect",
-     "size": "164",
+     "size": "32",
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "9367"
+     }
+    },
+    {
+     "name": "Mode2_Init",
+     "size": "132",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9399"
+     }
+    },
+    {
+     "name": "L_00_253b",
+     "size": "6",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9531"
+     }
+    },
+    {
+     "name": "L_00_2541",
+     "size": "23",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9537"
+     }
+    },
+    {
+     "name": "BonusResultWait",
+     "size": "28",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9560"
+     }
+    },
+    {
+     "name": "BonusSelectLoop",
+     "size": "87",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9588"
+     }
+    },
+    {
+     "name": "MenuCursorInput",
+     "size": "80",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "9696"
      }
     },
     {

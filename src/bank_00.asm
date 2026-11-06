@@ -3167,17 +3167,130 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld [rLCDC], a
     ei
     ld a, [wPlayerBlocked]
-    ld hl, D_00_253b
+    ld hl, $253b
     call LookupWord
     jp hl
-D_00_253b::
-    INCBIN "assets/bank_00/253b.bin"
+L_00_253b::
+    dw L_00_2541
+    dw BonusSelectLoop
+    dw BonusResultWait
+L_00_2541::
+    ld a, $d0
+    ldh [hScratch00], a
+.L_00_2545:
+    call WaitVBlankFlag
+    call ReadJoypad
+    ld hl, hScratch00
+    dec [hl]
+    jr nz, .L_00_2545
+    ld hl, wPlayerBlocked
+    inc [hl]
+    jp Mode2_Init
 BonusResultWait::  ; waits $e0 frames after the door result then goes to mode 3
-    INCBIN "assets/bank_00/2558_BonusResultWait.bin"
+    ld d, $01
+    ld e, $00
+    call AddScore
+    ld a, $e0
+    ldh [hScratch00], a
+.L_00_2563:
+    call WaitVBlankFlag
+    call ReadJoypad
+    ld hl, hScratch00
+    dec [hl]
+    jr nz, .L_00_2563
+    ld a, $03
+    jp GameModeDispatch
 BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
-    INCBIN "assets/bank_00/2574_BonusSelectLoop.bin"
+    ld a, $10
+    call DelayFrames
+    ld hl, wPlayerBlocked
+    inc [hl]
+.L_00_257d:
+    call WaitFrameAndSyncOam
+    call ReadJoypad
+    call MenuCursorInput
+    ld a, [wCursorFlags]
+    bit 7, a
+    jr z, .L_00_257d
+    ld a, [$c487]
+    ld e, $03
+    call MultiplyByDE
+    ld c, a
+    ld b, $00
+    ld hl, D_00_25cb
+    add hl, bc
+    ldh a, [hFrameSpin]
+    cp a, $7f
+    jr c, .L_00_25a8
+    inc hl
+    cp a, $cd
+    jr c, .L_00_25a8
+    inc hl
+.L_00_25a8:
+    ld a, [hl]
+    ldh [hScratch00], a
+    ld hl, wMagicCards
+.L_00_25ae:
+    ld a, [hl]
+    and a, a
+    jr z, .L_00_25bc
+    ld c, a
+    ldh a, [hScratch00]
+    cp a, c
+    jp z, .L_00_25c5
+    inc hl
+    jr .L_00_25ae
+.L_00_25bc:
+    ldh a, [hScratch00]
+    ld [hl], a
+    ld [$c75a], a
+    jp Mode2_Init
+.L_00_25c5:
+    ld [$c75a], a
+    jp Mode2_Init
+D_00_25cb::
+    INCBIN "assets/bank_00/25cb.bin"
 MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
-    INCBIN "assets/bank_00/25e0_MenuCursorInput.bin"
+    ldh a, [hJoyNew]
+    bit 5, a
+    jr z, .L_00_25f8
+    ld a, SND_SFX_CURSOR
+    call PlaySound
+    ld a, [wCursorIndex]
+    dec a
+    bit 7, a
+    jr z, .L_00_25f5
+    ld a, $02
+.L_00_25f5:
+    ld [wCursorIndex], a
+.L_00_25f8:
+    ldh a, [hJoyNew]
+    bit 4, a
+    jr z, .L_00_260f
+    ld a, SND_SFX_CURSOR
+    call PlaySound
+    ld a, [wCursorIndex]
+    inc a
+    cp a, $03
+    jr c, .L_00_260c
+    xor a, a
+.L_00_260c:
+    ld [wCursorIndex], a
+.L_00_260f:
+    ldh a, [hJoyNew]
+    bit 0, a
+    jr z, .L_00_261a
+    ld hl, wCursorFlags
+    set 7, [hl]
+.L_00_261a:
+    ld a, [wCursorIndex]
+    ld c, a
+    ld hl, D_00_2630
+    call LookupByte
+    ld [wCursorX], a
+    ld hl, wCursorObject
+    call SetObjPtr
+    jp DrawObjectBytePos
 D_00_2630::
     INCBIN "assets/bank_00/2630.bin"
 InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)

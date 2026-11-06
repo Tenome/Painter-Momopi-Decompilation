@@ -104,7 +104,13 @@ bank	addr	size	name
 0	1ea4	108	Mode4_GameOver
 0	1f1c	329	Mode5_Continue
 0	2065	30	ContinueCursorInput
-0	2497	164	Mode2_BonusSelect
+0	2497	32	Mode2_BonusSelect
+0	24b7	132	Mode2_Init
+0	253b	6	L_00_253b
+0	2541	23	L_00_2541
+0	2558	28	BonusResultWait
+0	2574	87	BonusSelectLoop
+0	25e0	80	MenuCursorInput
 0	2633	23	InitBonusCursor
 0	29ea	61	Mode0_Title
 0	2a27	227	TitleLoop
