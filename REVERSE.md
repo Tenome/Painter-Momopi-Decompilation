@@ -94,6 +94,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - Sound engine detail: `SoundUpdateChannel` handles each of the 8 channel records ($20 bytes at `wSoundChannels`); record byte +1 selects the hardware channel and a
   `jp hl` goes to `SoundWriteChannel1..4` (pulse 1, pulse 2, wave, noise), which write NR1x-NR4x and the shared pan register NR51. `SoundReadNextNote` reads
   note data from the pointer at +3/+4 of the record (bytes $e0 and up are commands). Field layout is listed at the end of `src/constants.inc`.
+- Sound ids: `PlaySound` takes $81-$93. Table `SoundCommandDataTable` ($40f4, indexed by id-$80) holds the start of each song or effect stream; `SoundCommandHandlerTable`
+  ($411a) holds the routine that starts it: $4263 for ids $81 and $84-$8c (music), $4292 for $82, $83 and $8d-$93 (effects). Music streams sit at $5e72-$7f55 (id $8c points at
+  padding, an empty slot); effect streams are at $5c48-$5cba. Verified by queueing every id in `tools/emu.py` (no code outside the trace runs, except the unused id $8c).
 - Emulator: `tools/emu.py` is a small non-cycle-exact interpreter (DMG, MBC1, serial with no partner returns $FF) with an end-of-frame renderer.
 - Graphics loading: bank 2 `$4000` 0x700 bytes and bank 3 `$4000/$5000/$6000/$6e10` blocks are copied to VRAM $8000 (2bpp tiles).
 - Joypad: `ReadJoypad` stores the D-pad in the high nibble and the buttons in the low nibble of `hJoyHeld` (down $80, up $40, left $20, right $10,

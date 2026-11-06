@@ -7,3 +7,5 @@ bank,addr,count,target_bank,kind,comment
 0,14f9,17,0,data,RoomVramJobTable: VRAM copy jobs per room
 0,37af,16,0,data,EnemySlotTable: addresses of the 16 enemy slots in WRAM
 0,3782,6,1,code,EnemyBehaviorTable: routine run by UpdateEnemy indexed by $ffd2
+1,40f4,20,1,data,SoundCommandDataTable: song or effect data start per sound id ($81-$93; $8c is an empty slot that points at padding)
+1,411a,20,1,code,SoundCommandHandlerTable: routine that starts each sound id (music type $4263; effect type $4292)

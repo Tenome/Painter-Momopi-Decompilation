@@ -198,6 +198,7 @@ bank	addr	size	name
 0	3e90	65	L_00_3e90
 0	3ed1	40	L_00_3ed1
 0	3ef9	65	L_00_3ef9
+1	4142	21	L_01_4142
 1	4157	53	SoundUpdate
 1	418c	33	SoundDequeue
 1	41ad	49	SoundStartCommand
@@ -327,3 +328,4 @@ bank	addr	size	name
 1	59ff	42	EnemyBehavior3
 1	5a29	60	L_01_5a29
 1	5a65	17	L_01_5a65
+1	5cba	3	L_01_5cba

@@ -7,11 +7,53 @@ SECTION "bank01", ROMX[$4000], BANK[1]
 SoundSongTable::  ; word offsets of song data (follows the frequency table at $4000)
     INCBIN "orig/painter_momopie.gb", $04048, 172
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
-    INCBIN "orig/painter_momopie.gb", $040f4, 38
-D_01_411a::
-    INCBIN "orig/painter_momopie.gb", $0411a, 39
-D_01_4141::
-    INCBIN "orig/painter_momopie.gb", $04141, 22
+    dw D_00_0027
+    dw D_01_5e72
+    dw D_01_609b
+    dw D_01_6294
+    dw D_01_6492
+    dw D_01_675d
+    dw D_01_6bdd
+    dw D_01_70ab
+    dw D_01_7431
+    dw D_01_789a
+    dw D_01_7b55
+    dw D_01_7d55
+    dw D_01_7f55
+    dw D_01_5c48
+    dw D_01_5c5c
+    dw D_01_5c70
+    dw D_01_5c80
+    dw D_01_5c93
+    dw D_01_5ca7
+    dw L_01_5cba
+    dw L_01_4263
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+L_01_4142::
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -81,7 +123,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld e, a
     ld a, [hl]
     ld d, a
-    ld hl, D_01_411a
+    ld hl, $411a
     add hl, bc
     add hl, bc
     ld a, [hl+]
@@ -149,7 +191,7 @@ L_01_423c::
     ld [$c432], a
     ret
 L_01_4263::
-    ld hl, D_01_4141
+    ld hl, $4141
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -173,7 +215,7 @@ L_01_428c::
     ld [wSoundCmd], a
     ret
 L_01_4292::
-    ld hl, D_01_4141
+    ld hl, $4141
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -2750,4 +2792,43 @@ D_01_5a76::
 D_01_5a84::
     INCBIN "orig/painter_momopie.gb", $05a84, 14
 D_01_5a92::
-    INCBIN "orig/painter_momopie.gb", $05a92, 9582
+    INCBIN "orig/painter_momopie.gb", $05a92, 438
+D_01_5c48::
+    INCBIN "orig/painter_momopie.gb", $05c48, 20
+D_01_5c5c::
+    INCBIN "orig/painter_momopie.gb", $05c5c, 20
+D_01_5c70::
+    INCBIN "orig/painter_momopie.gb", $05c70, 16
+D_01_5c80::
+    INCBIN "orig/painter_momopie.gb", $05c80, 19
+D_01_5c93::
+    INCBIN "orig/painter_momopie.gb", $05c93, 20
+D_01_5ca7::
+    INCBIN "orig/painter_momopie.gb", $05ca7, 19
+L_01_5cba::
+    ld bc, $0380
+    INCBIN "orig/painter_momopie.gb", $05cbd, 437
+D_01_5e72::
+    INCBIN "orig/painter_momopie.gb", $05e72, 553
+D_01_609b::
+    INCBIN "orig/painter_momopie.gb", $0609b, 505
+D_01_6294::
+    INCBIN "orig/painter_momopie.gb", $06294, 510
+D_01_6492::
+    INCBIN "orig/painter_momopie.gb", $06492, 715
+D_01_675d::
+    INCBIN "orig/painter_momopie.gb", $0675d, 1152
+D_01_6bdd::
+    INCBIN "orig/painter_momopie.gb", $06bdd, 1230
+D_01_70ab::
+    INCBIN "orig/painter_momopie.gb", $070ab, 902
+D_01_7431::
+    INCBIN "orig/painter_momopie.gb", $07431, 1129
+D_01_789a::
+    INCBIN "orig/painter_momopie.gb", $0789a, 699
+D_01_7b55::
+    INCBIN "orig/painter_momopie.gb", $07b55, 512
+D_01_7d55::
+    INCBIN "orig/painter_momopie.gb", $07d55, 512
+D_01_7f55::
+    INCBIN "orig/painter_momopie.gb", $07f55, 171

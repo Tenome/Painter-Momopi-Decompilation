@@ -5,7 +5,9 @@ SECTION "bank00", ROM0[$0000]
 
 L_00_0000::
     jp RstJumpTable
-    INCBIN "orig/painter_momopie.gb", $00003, 61
+    INCBIN "orig/painter_momopie.gb", $00003, 36
+D_00_0027::
+    INCBIN "orig/painter_momopie.gb", $00027, 25
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
     INCBIN "orig/painter_momopie.gb", $00043, 5
