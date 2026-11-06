@@ -39,3 +39,6 @@ only bank 2 (3072 spare bytes) and bank 3 (496) have padding, and both hold only
 for the `ld bc` animation pointers, the bank 3 tile sources, the sound writers and the tables (`bcptrs.csv`, `farptrs.csv`), so data can move without
 breaking those references, but there is still no room to move it to. Level packs need either new ROM banks (header and MBC bank-switch code changes) or
 moving large static data (graphics, music) to new banks to free space in banks 0 and 1; see `docs/PORTING.md`.
+
+Possible space to reclaim in bank 1: the eight `UnusedSoundData0-7` regions (424 bytes each, 3392 bytes in total) are never played.
+A mod that wants room for longer data could drop them (this needs the sound handler table and the priority table to be adjusted, because they refer to later streams).
