@@ -37,3 +37,16 @@ DEF wRound          EQU $c522   ; round number, starts at 1 ("ROUND 01")
 DEF wRoundBackup    EQU $c523   ; also set to 1 at boot; incremented together with wRound
 DEF wRoomIndex      EQU $c524   ; selects the room tile set / name (0 = kitchen room)
 DEF hLinkFlags      EQU $ffed   ; bit 0 = 2 player link game
+; ---- play mode (found with tools/emu.py: pressing a direction changes the values below) ----
+; Object record (used by DrawObject via hObjPtr): +0 flags (bit 7 active, bit 5 = flip X), +1/+2 animation pointer, +5 frame,
+; +7/+8 X (16 bit), +$a/+$b Y (16 bit), +$d X velocity, +$f Y velocity.
+DEF wPlayer         EQU $c4be   ; the player's object record
+DEF wPlayerX        EQU $c4c5
+DEF wPlayerY        EQU $c4c8
+DEF wPlayerVelX     EQU $c4cb
+DEF wPlayerVelY     EQU $c4cd
+DEF wPlayerDir      EQU $c4de   ; low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed
+DEF wPlayerStatus   EQU $c4df   ; bit 2 = caught/clear animation started
+DEF wGameFlags      EQU $c51e   ; bit 0 = player caught (frozen), bit 6 = round complete
+DEF wRoomType       EQU $c447   ; compared with 2/4/6/9 for special rooms
+DEF wSubState       EQU $c53a   ; bit 0 = special action in progress
