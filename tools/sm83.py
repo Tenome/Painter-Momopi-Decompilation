@@ -131,7 +131,7 @@ def _build_encoder():
     for op, tpl in list(OPS.items()):
         pat = re.escape(tpl)
         pat = pat.replace(re.escape("+e8"), "@@SP@@").replace("e8", "@@E8@@")
-        for ph, rx in (("j8", r"(?P<j8>[A-Z]\w*|\$[0-9a-f]{4})"), ("a16", r"(?P<a16>[A-Z]\w*|\$[0-9a-f]{4})"), ("n16", r"(?P<n16>\$[0-9a-f]{4}|[A-Z]\w*)"),
+        for ph, rx in (("j8", r"(?P<j8>\.?[A-Z]\w*|\$[0-9a-f]{4})"), ("a16", r"(?P<a16>\.?[A-Z]\w*|\$[0-9a-f]{4})"), ("n16", r"(?P<n16>\$[0-9a-f]{4}|\.?[A-Z]\w*)"),
                        ("a8", r"\$ff(?P<a8>[0-9a-f]{2})"), ("n8", r"\$(?P<n8>[0-9a-f]{2})")):
             pat = pat.replace(ph, rx)
         pat = pat.replace("@@SP@@", r" (?P<sp>[+-]) (?P<e8>\d+)").replace("@@E8@@", r"(?P<e8>-?\d+)")

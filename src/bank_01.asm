@@ -15,9 +15,9 @@ D_01_4141::
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
-    jr nz, L_01_4160
+    jr nz, .L_01_4160
     call SoundDequeue
-L_01_4160::
+.L_01_4160:
     call SoundStartCommand
     call SoundAssignChannels
     ld a, $08
@@ -25,53 +25,53 @@ L_01_4160::
     ld bc, wSoundChannels
     ld h, b
     ld l, c
-L_01_4170::
+.L_01_4170:
     ld a, [hl]
     bit 7, a
-    jr z, L_01_4178
+    jr z, .L_01_4178
     call SoundUpdateChannel
-L_01_4178::
+.L_01_4178:
     ld a, [$c30d]
     dec a
     ld [$c30d], a
-    jr z, L_01_418b
+    jr z, .L_01_418b
     ld de, $0020
     ld h, b
     ld l, c
     add hl, de
     ld b, h
     ld c, l
-    jr L_01_4170
-L_01_418b::
+    jr .L_01_4170
+.L_01_418b:
     ret
 SoundDequeue::  ; pops the next command from the queue into wSoundCmd
     ld a, [wSoundQueueLen]
     and a, a
-    jr z, L_01_41ac
+    jr z, .L_01_41ac
     ld a, [wSoundQueue]
     ld [wSoundCmd], a
     ld hl, wSoundQueue
     ld de, $c318
     ld a, [wSoundQueueLen]
     ld c, a
-L_01_41a2::
+.L_01_41a2:
     ld a, [de]
     ld [hl+], a
     inc de
     dec c
-    jr nz, L_01_41a2
+    jr nz, .L_01_41a2
     ld hl, wSoundQueueLen
     dec [hl]
-L_01_41ac::
+.L_01_41ac:
     ret
 SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld a, [wSoundCmd]
     bit 7, a
-    jr z, L_01_41d5
+    jr z, .L_01_41d5
     cp a, $94
-    jr nc, L_01_41d6
+    jr nc, .L_01_41d6
     sub a, $80
-    jr z, L_01_41d5
+    jr z, .L_01_41d5
     ld hl, SoundCommandDataTable
     ld c, a
     ld b, $00
@@ -91,9 +91,9 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld l, b
     ld b, $00
     jp hl
-L_01_41d5::
+.L_01_41d5:
     ret
-L_01_41d6::
+.L_01_41d6:
     ld de, D_01_4332
     ld b, $00
     jp L_01_4271
@@ -179,9 +179,9 @@ L_01_4292::
     ld b, a
     ld a, [$c310]
     cp a, b
-    jr z, L_01_42a0
+    jr z, .L_01_42a0
     jr nc, L_01_428c
-L_01_42a0::
+.L_01_42a0:
     ld a, b
     ld [$c310], a
     call L_01_423c
@@ -245,15 +245,15 @@ L_01_4306::
     ld a, [de]
     ld [$c30b], a
     inc de
-L_01_430b::
+.L_01_430b:
     ld b, $0a
-L_01_430d::
+.L_01_430d:
     ld a, [de]
     ld [hl], a
     inc hl
     inc de
     dec b
-    jr nz, L_01_430d
+    jr nz, .L_01_430d
     ld a, $20
     ld [hl], a
     inc hl
@@ -262,14 +262,14 @@ L_01_430d::
     inc hl
     xor a, a
     ld b, $14
-L_01_431f::
+.L_01_431f:
     ld [hl+], a
     dec b
-    jr nz, L_01_431f
+    jr nz, .L_01_431f
     ld a, [$c30b]
     dec a
     ld [$c30b], a
-    jr nz, L_01_430b
+    jr nz, .L_01_430b
     ld a, $80
     ld [wSoundCmd], a
     ret
@@ -279,37 +279,37 @@ SoundAssignChannels::
     ld d, $04
     ld hl, wSoundChannels
     ld bc, $0020
-L_01_4366::
+.L_01_4366:
     ld a, [hl]
     and a, $fb
     ld [hl], a
     add hl, bc
     dec d
-    jr nz, L_01_4366
+    jr nz, .L_01_4366
     ld hl, wSoundChannels
     ld a, $04
     ld [wSoundArg], a
     ld de, $c3a7
-L_01_4379::
+.L_01_4379:
     ld a, [de]
     bit 7, a
     inc de
-    jr z, L_01_438b
+    jr z, .L_01_438b
     ld a, [de]
     and a, a
-    jr z, L_01_4387
-L_01_4383::
+    jr z, .L_01_4387
+.L_01_4383:
     add hl, bc
     dec a
-    jr nz, L_01_4383
-L_01_4387::
+    jr nz, .L_01_4383
+.L_01_4387:
     ld a, [hl]
     or a, $04
     ld [hl], a
-L_01_438b::
+.L_01_438b:
     ld a, [wSoundArg]
     dec a
-    jr z, L_01_43a2
+    jr z, .L_01_43a2
     ld [wSoundArg], a
     dec de
     ld h, d
@@ -319,8 +319,8 @@ L_01_438b::
     ld d, h
     ld e, l
     ld hl, wSoundChannels
-    jr L_01_4379
-L_01_43a2::
+    jr .L_01_4379
+.L_01_43a2:
     ret
 SoundUpdateChannel::  ; one of 8 channel records of $20 bytes at wSoundChannels
     ld a, [bc]
@@ -336,7 +336,7 @@ SoundUpdateChannel::  ; one of 8 channel records of $20 bytes at wSoundChannels
     add a, e
     inc hl
     ld [hl], a
-    jr nc, L_01_43d5
+    jr nc, .L_01_43d5
     ld hl, $000c
     add hl, bc
     ld a, [hl]
@@ -347,16 +347,16 @@ SoundUpdateChannel::  ; one of 8 channel records of $20 bytes at wSoundChannels
     add hl, bc
     ld a, [hl]
     cp a, d
-    jr nz, L_01_43d5
+    jr nz, .L_01_43d5
     call SoundReadNextNote
     ld a, [bc]
     bit 0, a
-    jr z, L_01_43d5
+    jr z, .L_01_43d5
     xor a, a
     ld hl, $000d
     add hl, bc
     ld [hl], a
-L_01_43d5::
+.L_01_43d5:
     ld h, b
     ld l, c
     ld a, [hl]
@@ -367,25 +367,25 @@ L_01_43d5::
     add hl, bc
     ld a, [hl]
     cp a, $03
-    jr nz, L_01_43eb
+    jr nz, .L_01_43eb
     ld hl, $4572
     jp hl
-L_01_43eb::
+.L_01_43eb:
     cp a, $02
-    jr nz, L_01_43f3
+    jr nz, .L_01_43f3
     ld hl, $4504
     jp hl
-L_01_43f3::
+.L_01_43f3:
     cp a, $01
-    jr nz, L_01_43fb
+    jr nz, .L_01_43fb
     ld hl, $4484
     jp hl
-L_01_43fb::
+.L_01_43fb:
     cp a, $00
-    jr nz, L_01_4403
+    jr nz, .L_01_4403
     ld hl, $4404
     jp hl
-L_01_4403::
+.L_01_4403:
     ret
 SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) from the channel record
     ld hl, $0015
@@ -397,11 +397,11 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
     add hl, bc
     ld a, [$c427]
     cp a, [hl]
-    jr z, L_01_441f
+    jr z, .L_01_441f
     ld a, [hl]
     ld [$c427], a
     ld [rNR12], a
-L_01_441f::
+.L_01_441f:
     ld hl, $0012
     add hl, bc
     ld a, [hl+]
@@ -418,16 +418,16 @@ L_01_441f::
     pop hl
     ld a, [bc]
     bit 0, a
-    jr nz, L_01_4449
+    jr nz, .L_01_4449
     ld a, [$c428]
     cp a, [hl]
-    jr nz, L_01_4449
+    jr nz, .L_01_4449
     inc hl
     ld a, [$c429]
     cp a, [hl]
     ret z
     dec hl
-L_01_4449::
+.L_01_4449:
     ld a, [hl+]
     ld [rNR13], a
     ld [$c428], a
@@ -438,11 +438,11 @@ L_01_4449::
     ld [wSoundArg], a
     ld a, [bc]
     bit 0, a
-    jr nz, L_01_4468
+    jr nz, .L_01_4468
     ld a, [wSoundArg]
     and a, $7f
     ld [wSoundArg], a
-L_01_4468::
+.L_01_4468:
     ld a, [bc]
     and a, $fe
     ld [bc], a
@@ -467,11 +467,11 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     add hl, bc
     ld a, [$c42a]
     cp a, [hl]
-    jr z, L_01_449f
+    jr z, .L_01_449f
     ld a, [hl]
     ld [$c42a], a
     ld [rNR22], a
-L_01_449f::
+.L_01_449f:
     ld hl, $0012
     add hl, bc
     ld a, [hl+]
@@ -488,16 +488,16 @@ L_01_449f::
     pop hl
     ld a, [bc]
     bit 0, a
-    jr nz, L_01_44c9
+    jr nz, .L_01_44c9
     ld a, [$c42b]
     cp a, [hl]
-    jr nz, L_01_44c9
+    jr nz, .L_01_44c9
     inc hl
     ld a, [$c42c]
     cp a, [hl]
     ret z
     dec hl
-L_01_44c9::
+.L_01_44c9:
     ld a, [hl+]
     ld [rNR23], a
     ld [$c42b], a
@@ -508,11 +508,11 @@ L_01_44c9::
     ld [wSoundArg], a
     ld a, [bc]
     bit 0, a
-    jr nz, L_01_44e8
+    jr nz, .L_01_44e8
     ld a, [wSoundArg]
     and a, $7f
     ld [wSoundArg], a
-L_01_44e8::
+.L_01_44e8:
     ld a, [bc]
     and a, $fe
     ld [bc], a
@@ -537,12 +537,12 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     add hl, bc
     ld a, [$c42d]
     cp a, [hl]
-    jr z, L_01_451f
+    jr z, .L_01_451f
     ld a, [hl]
     ld [$c42d], a
     and a, $60
     ld [rNR32], a
-L_01_451f::
+.L_01_451f:
     ld hl, $0002
     add hl, bc
     ld a, [rNR51]
@@ -553,13 +553,13 @@ L_01_451f::
     add hl, bc
     ld a, [$c42e]
     cp a, [hl]
-    jr nz, L_01_453d
+    jr nz, .L_01_453d
     inc hl
     ld a, [$c42f]
     cp a, [hl]
     ret z
     dec hl
-L_01_453d::
+.L_01_453d:
     ld a, [hl+]
     ld [rNR33], a
     ld [$c42e], a
@@ -569,11 +569,11 @@ L_01_453d::
     ld [wSoundArg], a
     ld a, [bc]
     bit 5, a
-    jr z, L_01_455a
+    jr z, .L_01_455a
     ld a, [wSoundArg]
     and a, $7f
     ld [wSoundArg], a
-L_01_455a::
+.L_01_455a:
     ld a, [wSoundArg]
     ld [rNR34], a
     ret
@@ -590,11 +590,11 @@ SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     add hl, bc
     ld a, [$c430]
     cp a, [hl]
-    jr z, L_01_4583
+    jr z, .L_01_4583
     ld a, [hl]
     ld [$c430], a
     ld [rNR42], a
-L_01_4583::
+.L_01_4583:
     ld hl, $0012
     add hl, bc
     ld a, [hl]
@@ -618,11 +618,11 @@ L_01_4583::
     ld [wSoundArg], a
     ld a, [bc]
     bit 0, a
-    jr z, L_01_45b8
+    jr z, .L_01_45b8
     ld a, [wSoundArg]
     and a, $7f
     ld [wSoundArg], a
-L_01_45b8::
+.L_01_45b8:
     ld a, [bc]
     and a, $fe
     ld [bc], a
@@ -693,13 +693,13 @@ L_01_461f::
     cp a, $e0
     jr nc, L_01_45d1
     bit 7, a
-    jr z, L_01_4666
+    jr z, .L_01_4666
     cp a, $80
-    jr z, L_01_4632
+    jr z, .L_01_4632
     ld hl, $0005
     add hl, bc
     add a, [hl]
-L_01_4632::
+.L_01_4632:
     sla a
     push de
     ld e, a
@@ -726,24 +726,24 @@ L_01_4632::
     ld [hl], a
     ld a, [bc]
     bit 5, a
-    jr z, L_01_465e
+    jr z, .L_01_465e
     ld a, [de]
     inc de
     ld hl, $0014
     add hl, bc
     ld [hl], a
-L_01_465e::
+.L_01_465e:
     ld a, [de]
     bit 7, a
-    jr z, L_01_4665
-    jr L_01_466b
-L_01_4665::
+    jr z, .L_01_4665
+    jr .L_01_466b
+.L_01_4665:
     inc de
-L_01_4666::
+.L_01_4666:
     ld hl, $000b
     add hl, bc
     ld [hl], a
-L_01_466b::
+.L_01_466b:
     ld a, e
     ld hl, $0003
     add hl, bc
@@ -835,10 +835,10 @@ L_01_46d7::
     ld h, a
     ld a, [hl]
     and a, a
-    jr nz, L_01_46e9
+    jr nz, .L_01_46e9
     ld a, [de]
     ld [hl], a
-L_01_46e9::
+.L_01_46e9:
     inc de
     dec [hl]
     jr z, L_01_46fa
@@ -901,11 +901,11 @@ L_01_4728::
     ld a, c
     sub a, l
     cp a, $60
-    jr nc, L_01_4747
+    jr nc, .L_01_4747
     ld a, [$c314]
     ld [$c312], a
     jr L_01_474d
-L_01_4747::
+.L_01_4747:
     ld a, [$c314]
     ld [$c313], a
 L_01_474d::
@@ -926,12 +926,12 @@ L_01_474d::
     ld h, a
     ld c, $30
     ld b, $10
-L_01_4766::
+.L_01_4766:
     ld a, [hl+]
     ldh [c], a
     inc c
     dec b
-    jr nz, L_01_4766
+    jr nz, .L_01_4766
     pop bc
     ld a, $80
     ld [rNR30], a
@@ -944,10 +944,10 @@ L_01_4776::
     ld a, [$c312]
     ld hl, $c314
     cp a, [hl]
-    jr z, L_01_4788
+    jr z, .L_01_4788
     ld [hl], a
     call L_01_474d
-L_01_4788::
+.L_01_4788:
     ld a, $00
     pop hl
     jp L_01_45f4
@@ -1020,35 +1020,35 @@ L_01_47cb::
     ld a, [hl]
     ld [$c30b], a
     cp a, $80
-    jr z, L_01_4809
+    jr z, .L_01_4809
     cp a, $81
-    jr z, L_01_4812
+    jr z, .L_01_4812
     cp a, $82
-    jr z, L_01_481a
+    jr z, .L_01_481a
     cp a, $83
-    jr z, L_01_4800
+    jr z, .L_01_4800
     ld hl, $0012
     jr L_01_4837
-L_01_4800::
+.L_01_4800:
     inc hl
     ld a, [hl]
     ld hl, $000d
     add hl, bc
     ld [hl], a
     jr L_01_47cb
-L_01_4809::
+.L_01_4809:
     ld a, $00
     ld hl, $000d
     add hl, bc
     ld [hl], a
     jr L_01_47cb
-L_01_4812::
+.L_01_4812:
     ld hl, $000d
     add hl, bc
     dec [hl]
     dec [hl]
     jr L_01_47cb
-L_01_481a::
+.L_01_481a:
     ld hl, $000d
     add hl, bc
     dec [hl]
@@ -1076,21 +1076,21 @@ L_01_4837::
     ld a, [$c30b]
     and a, a
     bit 7, a
-    jr nz, L_01_484c
+    jr nz, .L_01_484c
     add a, e
     ld e, a
     ld a, $00
     adc a, d
     ld d, a
-    jr L_01_4853
-L_01_484c::
+    jr .L_01_4853
+.L_01_484c:
     add a, e
     ld e, a
     ld a, d
     ccf
     sbc a, $00
     ld d, a
-L_01_4853::
+.L_01_4853:
     ld hl, $0013
     add hl, bc
     ld [hl-], a
@@ -1146,18 +1146,18 @@ L_01_492f::
 L_01_4937::
     ld a, [wRound]
     cp a, $04
-    jr z, L_01_4951
+    jr z, .L_01_4951
     cp a, $08
-    jr z, L_01_4951
+    jr z, .L_01_4951
     cp a, $0c
-    jr z, L_01_4951
+    jr z, .L_01_4951
     cp a, $14
-    jr z, L_01_4951
+    jr z, .L_01_4951
     cp a, $18
-    jr z, L_01_4951
+    jr z, .L_01_4951
     cp a, $1c
     ret nz
-L_01_4951::
+.L_01_4951:
     ld hl, wGameFlags
     set 6, [hl]
     ret
@@ -1200,7 +1200,7 @@ L_01_496c::
 L_01_49a0::
     ld a, $0f
     ldh [$ff96], a
-L_01_49a4::
+.L_01_49a4:
     ldh a, [$ff96]
     ld hl, EnemySlotTable
     sla a
@@ -1215,7 +1215,7 @@ L_01_49a4::
     ld l, a
     ld a, [hl]
     bit 7, a
-    jr z, L_01_49cc
+    jr z, .L_01_49cc
     push hl
     ld e, $1f
     ld d, $00
@@ -1229,13 +1229,13 @@ L_01_49a4::
     add hl, de
     xor a, a
     ld [hl], a
-L_01_49cc::
+.L_01_49cc:
     ld hl, $ff96
     dec [hl]
     ld a, [hl]
     bit 7, a
     ret nz
-    jr L_01_49a4
+    jr .L_01_49a4
 L_01_49d6::
     ld hl, $c4fe
     call Clear32Bytes
@@ -1275,12 +1275,12 @@ L_01_49d6::
 L_01_4a31::
     ld a, [$c519]
     and a, $02
-    jr z, L_01_4a3d
+    jr z, .L_01_4a3d
     ld hl, D_01_4927
-    jr L_01_4a40
-L_01_4a3d::
+    jr .L_01_4a40
+.L_01_4a3d:
     ld hl, $4929
-L_01_4a40::
+.L_01_4a40:
     ld a, l
     ld [$c4ff], a
     ld a, h
@@ -1395,27 +1395,27 @@ L_01_4b03::
 SelectPlayerAnimation::  ; picks the animation table by direction
     ld a, [wPlayerDir]
     bit 0, a
-    jr nz, L_01_4b38
+    jr nz, .L_01_4b38
     bit 1, a
-    jr nz, L_01_4b42
+    jr nz, .L_01_4b42
     bit 2, a
-    jr nz, L_01_4b4c
+    jr nz, .L_01_4b4c
     ld hl, PlayerAnimPtrs
-    jr L_01_4b4f
+    jr .L_01_4b4f
     INCBIN "orig/painter_momopie.gb", $04b33, 5
-L_01_4b38::
+.L_01_4b38:
     ld hl, wPlayer
     set 5, [hl]
     ld hl, PlayerAnimPtrsFlipped
-    jr L_01_4b4f
-L_01_4b42::
+    jr .L_01_4b4f
+.L_01_4b42:
     ld hl, wPlayer
     res 5, [hl]
     ld hl, PlayerAnimPtrsFlipped
-    jr L_01_4b4f
-L_01_4b4c::
+    jr .L_01_4b4f
+.L_01_4b4c:
     ld hl, D_01_48d4
-L_01_4b4f::
+.L_01_4b4f:
     ld a, l
     ld [$c4e3], a
     ld a, h
@@ -1457,22 +1457,22 @@ L_01_4b79::
     call LookupMapTile
     and a, $0f
     or a, $00
-    jr nz, L_01_4b98
+    jr nz, .L_01_4b98
     ld a, $04
     ld [$c43b], a
     ldh [$ffc7], a
-L_01_4b98::
+.L_01_4b98:
     ld a, c
     add a, $10
     call LookupMapTile
     and a, $0f
     or a, $00
-    jr nz, L_01_4bae
+    jr nz, .L_01_4bae
     ld a, [$c43b]
     or a, $08
     ld [$c43b], a
     ldh [$ffc7], a
-L_01_4bae::
+.L_01_4bae:
     ld a, e
     sub a, $01
     ld e, a
@@ -1480,12 +1480,12 @@ L_01_4bae::
     call LookupMapTile
     and a, $0f
     or a, $00
-    jr nz, L_01_4bc6
+    jr nz, .L_01_4bc6
     ld a, [$c43b]
     or a, $02
     ld [$c43b], a
     ldh [$ffc7], a
-L_01_4bc6::
+.L_01_4bc6:
     ld a, e
     add a, $02
     ld e, a
@@ -1505,29 +1505,29 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     jp nz, RoundCleared
     ldh a, [hSerialByte]
     bit 2, a
-    jr z, L_01_4bf6
+    jr z, .L_01_4bf6
     bit 7, a
     jp nz, L_01_50b1
     bit 3, a
     jp nz, L_01_50b1
-L_01_4bf6::
+.L_01_4bf6:
     ld a, [wPlayerDir]
     bit 5, a
-    jp z, L_01_4c01
+    jp z, .L_01_4c01
     jp PlayerDeath
-L_01_4c01::
+.L_01_4c01:
     call PlayerAction
     ld a, [wRoomType]
     cp a, $02
-    jr nz, L_01_4c12
+    jr nz, .L_01_4c12
     ld a, [wSubState]
     bit 0, a
-    jr nz, L_01_4c1b
-L_01_4c12::
+    jr nz, .L_01_4c1b
+.L_01_4c12:
     call L_01_4c4e
     call LoadPlayerXY
     call L_01_4b79
-L_01_4c1b::
+.L_01_4c1b:
     call HoldDirectionUntilAligned
     call PlayerSetDirection
     call ClampPlayerPosition
@@ -1536,16 +1536,16 @@ L_01_4c1b::
     call L_00_32a2
     ld a, [wRoomType]
     or a, a
-    jr z, L_01_4c42
+    jr z, .L_01_4c42
     ld a, [wSubState]
     bit 0, a
-    jr z, L_01_4c42
+    jr z, .L_01_4c42
     ld hl, $c4d3
     inc [hl]
     ld a, [hl]
     and a, $02
     ret z
-L_01_4c42::
+.L_01_4c42:
     call L_01_4f5a
     ld hl, wPlayer
     call SetObjPtr
@@ -1595,10 +1595,10 @@ PlayerAction::  ; handles the A button (paint action)
     ld e, a
     jr z, L_01_4cf3
 L_01_4ca7::
-    jr c, L_01_4cae
+    jr c, .L_01_4cae
     ld [$c44a], a
     jr L_01_4cbc
-L_01_4cae::
+.L_01_4cae:
     ld a, [$c44b]
     and a, a
     jr z, L_01_4ceb
@@ -1686,69 +1686,69 @@ L_01_4d3e::
 L_01_4d44::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4d52
+    jr nz, .L_01_4d52
     ld a, $a0
     ldh [$ffdf], a
     call L_01_4957
-L_01_4d52::
+.L_01_4d52:
     jp L_01_4962
 L_01_4d55::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4d63
+    jr nz, .L_01_4d63
     ld a, $f0
     ldh [$ffdf], a
     call L_01_4957
-L_01_4d63::
+.L_01_4d63:
     jp L_01_4962
 L_01_4d66::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4d74
+    jr nz, .L_01_4d74
     ld a, $d0
     ldh [$ffdf], a
     call L_01_4957
-L_01_4d74::
+.L_01_4d74:
     xor a, a
     ld [$c43b], a
     jp L_01_4962
 L_01_4d7b::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4d8e
+    jr nz, .L_01_4d8e
     ld a, $d0
     ldh [$ffdf], a
     call L_01_4957
     ld hl, $c49e
     res 7, [hl]
-L_01_4d8e::
+.L_01_4d8e:
     jp L_01_4962
 L_01_4d91::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4d9f
+    jr nz, .L_01_4d9f
     ld a, $b0
     ldh [$ffdf], a
     call L_01_4957
-L_01_4d9f::
+.L_01_4d9f:
     jp L_01_4962
 L_01_4da2::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4db5
+    jr nz, .L_01_4db5
     ld a, $b0
     ldh [$ffdf], a
     call L_01_4957
     ld hl, $c49e
     res 7, [hl]
-L_01_4db5::
+.L_01_4db5:
     jp L_01_4962
 L_01_4db8::
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4dc2
+    jr nz, .L_01_4dc2
     call L_01_49d6
-L_01_4dc2::
+.L_01_4dc2:
     ld hl, $c4fe
     call SetObjPtr
     ld hl, $c519
@@ -1760,10 +1760,10 @@ L_01_4dc2::
     ld b, a
     call L_00_3449
     and a, a
-    jr z, L_01_4de2
+    jr z, .L_01_4de2
     ld hl, $c4fe
     res 7, [hl]
-L_01_4de2::
+.L_01_4de2:
     call L_01_4dee
     call L_00_0b66
     call L_00_09e0
@@ -1771,12 +1771,12 @@ L_01_4de2::
 L_01_4dee::
     ld a, [$c519]
     and a, $02
-    jr z, L_01_4dfa
+    jr z, .L_01_4dfa
     ld hl, $492b
-    jr L_01_4dfd
-L_01_4dfa::
+    jr .L_01_4dfd
+.L_01_4dfa:
     ld hl, $492d
-L_01_4dfd::
+.L_01_4dfd:
     ld a, l
     ld [$c4ff], a
     ld a, h
@@ -1786,10 +1786,10 @@ L_01_4e06::
     ld hl, $c519
     ld a, [wSubState]
     bit 1, a
-    jr nz, L_01_4e16
+    jr nz, .L_01_4e16
     call L_01_496c
     call L_01_49a0
-L_01_4e16::
+.L_01_4e16:
     call L_01_4a49
     ld hl, $c4fe
     call SetObjPtr
@@ -1800,11 +1800,11 @@ L_01_4e16::
     call L_01_4a31
     ld hl, $c449
     dec [hl]
-    jr z, L_01_4e3a
+    jr z, .L_01_4e3a
     ld hl, $c1b6
     inc [hl]
-    jr L_01_4e16
-L_01_4e3a::
+    jr .L_01_4e16
+.L_01_4e3a:
     call L_01_4e47
     ld a, $08
     ld [$c449], a
@@ -1828,12 +1828,12 @@ L_01_4e59::
     res 7, [hl]
     ld a, [wRoomType]
     cp a, $09
-    jr nz, L_01_4e6e
+    jr nz, .L_01_4e6e
     ld a, [wSubState]
     and a, $f8
     ld [wSubState], a
     ret
-L_01_4e6e::
+.L_01_4e6e:
     ld a, [wSubState]
     and a, $08
     ld [wSubState], a
@@ -1841,16 +1841,16 @@ L_01_4e6e::
 L_01_4e77::
     ld a, [wSubState]
     bit 1, a
-    jp nz, L_01_4e86
+    jp nz, .L_01_4e86
     xor a, a
     ld [$c1f8], a
     call L_01_4957
-L_01_4e86::
+.L_01_4e86:
     ld hl, $c519
     inc [hl]
     ld a, [$c1f8]
     cp a, $50
-    jr z, L_01_4ea5
+    jr z, .L_01_4ea5
     inc a
     ld [$c1f8], a
     ld a, $e4
@@ -1861,25 +1861,25 @@ L_01_4e86::
     xor a, a
     ld [rBGP], a
     ret
-L_01_4ea5::
+.L_01_4ea5:
     ld a, $e4
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     ld bc, $00ff
-L_01_4eb3::
+.L_01_4eb3:
     ld hl, wRoomMap
     add hl, bc
     ld a, [hl]
     bit 7, a
-    jr nz, L_01_4ec5
-L_01_4ebc::
+    jr nz, .L_01_4ec5
+.L_01_4ebc:
     dec bc
     ld a, c
     cp a, $ff
     jp z, L_01_4967
-    jr L_01_4eb3
-L_01_4ec5::
+    jr .L_01_4eb3
+.L_01_4ec5:
     and a, $0f
     or a, $10
     ld [hl], a
@@ -1891,16 +1891,16 @@ L_01_4ec5::
     ld hl, wPaintRemaining
     dec [hl]
     jp z, RoundCleared
-    jr L_01_4ebc
+    jr .L_01_4ebc
 L_01_4edd::
     xor a, a
     ldh [$ff96], a
     ld a, $98
     ldh [$ff97], a
-L_01_4ee4::
+.L_01_4ee4:
     ld a, c
     sub a, $10
-    jr c, L_01_4ef8
+    jr c, .L_01_4ef8
     ld c, a
     ldh a, [$ff96]
     add a, $40
@@ -1908,8 +1908,8 @@ L_01_4ee4::
     ldh a, [$ff97]
     adc a, $00
     ldh [$ff97], a
-    jr L_01_4ee4
-L_01_4ef8::
+    jr .L_01_4ee4
+.L_01_4ef8:
     sla c
     ld e, c
     ldh a, [$ff96]
@@ -1924,9 +1924,9 @@ L_01_4f07::
     ldh a, [$ff98]
     and a, $0f
     cp a, $01
-    jr z, L_01_4f15
+    jr z, .L_01_4f15
     ld de, D_01_491b
-L_01_4f15::
+.L_01_4f15:
     ldh a, [$ff96]
     ld l, a
     ldh a, [$ff97]
@@ -1936,22 +1936,22 @@ L_01_4f15::
 ClampPlayerPosition::  ; keeps the player inside X $20-$f0 and Y $28-$f8
     ld a, [wPlayerX]
     cp a, $21
-    jr nc, L_01_4f2d
+    jr nc, .L_01_4f2d
     ld a, $20
     ld [wPlayerX], a
-L_01_4f2d::
+.L_01_4f2d:
     ld a, [wPlayerX]
     cp a, $f0
-    jr c, L_01_4f39
+    jr c, .L_01_4f39
     ld a, $f0
     ld [wPlayerX], a
-L_01_4f39::
+.L_01_4f39:
     ld a, [wPlayerY]
     cp a, $29
-    jr nc, L_01_4f45
+    jr nc, .L_01_4f45
     ld a, $28
     ld [wPlayerY], a
-L_01_4f45::
+.L_01_4f45:
     ld a, [wPlayerY]
     cp a, $f8
     ret c
@@ -2012,12 +2012,12 @@ HoldDirectionUntilAligned::  ; keeps hJoyHeld direction until the player reaches
     ret z
     ldh a, [hJoyHeld]
     and a, $f0
-    jr z, L_01_4fba
+    jr z, .L_01_4fba
     and a, $0f
     or a, d
     ldh [hJoyHeld], a
     ret
-L_01_4fba::
+.L_01_4fba:
     ld hl, wPlayerX
     ld b, [hl]
     ld hl, wPlayerY
@@ -2036,11 +2036,11 @@ L_01_4fba::
 CheckPlayerTileCollision::
     ld a, [wRoomType]
     cp a, $09
-    jr nz, L_01_4fe3
+    jr nz, .L_01_4fe3
     ld a, [wSubState]
     bit 0, a
     ret nz
-L_01_4fe3::
+.L_01_4fe3:
     ld a, [wRoomType]
     cp a, $02
     jp z, L_01_50fa
@@ -2084,9 +2084,9 @@ L_01_5006::
     ldh a, [$ff96]
     and a, $0f
     cp a, $01
-    jr z, L_01_5039
+    jr z, .L_01_5039
     ld de, D_01_491b
-L_01_5039::
+.L_01_5039:
     call QueueVramCopyRows
     call WaitVramCopyDone
     ld hl, wPaintRemaining
@@ -2095,7 +2095,7 @@ L_01_5039::
 RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restores palettes; plays sound $8a; clear animation
     ld a, [wPlayerStatus]
     bit 2, a
-    jr nz, L_01_506f
+    jr nz, .L_01_506f
     ld a, $e4
     ld [rBGP], a
     ld [rOBP0], a
@@ -2110,10 +2110,10 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     ld hl, wGameFlags
     set 0, [hl]
     ret
-L_01_506f::
+.L_01_506f:
     ld a, $97
     ldh [$ff96], a
-L_01_5073::
+.L_01_5073:
     call WaitVBlankFlag
     ldh a, [hSerialByte]
     bit 7, a
@@ -2122,16 +2122,16 @@ L_01_5073::
     jp nz, L_01_50b1
     ld hl, $ff96
     dec [hl]
-    jr nz, L_01_5073
+    jr nz, .L_01_5073
     call FadeOut
     ldh a, [hLinkFlags]
     bit 2, a
-    jr z, L_01_509b
+    jr z, .L_01_509b
     ld hl, hSerialByte
     res 6, [hl]
     ld a, $07
     jp GameModeDispatch
-L_01_509b::
+.L_01_509b:
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, L_01_50b6
@@ -2149,7 +2149,7 @@ L_01_50b1::
 L_01_50b6::
     ld a, [wRound]
     cp a, $21
-    jr z, L_01_50f5
+    jr z, .L_01_50f5
     ld hl, $c47b
     inc [hl]
     ld hl, wRound
@@ -2165,17 +2165,17 @@ L_01_50b6::
     call L_01_4937
     ld a, [wGameFlags]
     bit 6, a
-    jp z, L_01_50eb
+    jp z, .L_01_50eb
     and a, $be
     ld [wGameFlags], a
     ld a, $02
     jp GameModeDispatch
-L_01_50eb::
+.L_01_50eb:
     ld hl, wGameFlags
     res 0, [hl]
     ld a, $03
     jp GameModeDispatch
-L_01_50f5::
+.L_01_50f5:
     ld a, $06
     jp GameModeDispatch
 L_01_50fa::
@@ -2215,12 +2215,12 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld hl, D_01_518d
     ld a, [wRoomType]
     cp a, $01
-    jr nz, L_01_5153
+    jr nz, .L_01_5153
     ld a, [wSubState]
     bit 0, a
-    jr z, L_01_5153
+    jr z, .L_01_5153
     ld hl, D_01_519d
-L_01_5153::
+.L_01_5153:
     add hl, bc
     ld a, [hl+]
     ld [$c4cc], a
@@ -2276,7 +2276,7 @@ L_01_51ad::
     ld [$c4c0], a
     ldh a, [hLinkFlags]
     bit 0, a
-    jr z, L_01_5207
+    jr z, .L_01_5207
     ld a, $01
     ld [$c43e], a
     ld a, $02
@@ -2288,7 +2288,7 @@ L_01_51ad::
     ld a, $06
     ld [$c442], a
     ret
-L_01_5207::
+.L_01_5207:
     ld a, $01
     ld [$c43e], a
     ld a, [wRound]
@@ -2305,14 +2305,14 @@ L_01_5207::
 PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wPlayerDir bit 5)
     ld a, [wPlayerStatus]
     bit 2, a
-    jr nz, L_01_5239
+    jr nz, .L_01_5239
     ld a, $27
     call DelayFrames
     ld a, $8b
     call PlaySound
     ld hl, wPlayerStatus
     set 2, [hl]
-L_01_5239::
+.L_01_5239:
     ld hl, $c4d2
     inc [hl]
     ld a, $3c
@@ -2327,15 +2327,15 @@ L_01_5239::
     ld [$c4d2], a
     ld a, $1e
     cp a, c
-    jr z, L_01_5285
+    jr z, .L_01_5285
     ld a, c
     cp a, $06
-    jr z, L_01_527e
+    jr z, .L_01_527e
     cp a, $10
-    jr z, L_01_527e
+    jr z, .L_01_527e
     ld hl, wPlayer
     res 5, [hl]
-L_01_5267::
+.L_01_5267:
     ld hl, D_01_488c
     ld b, $00
     add hl, bc
@@ -2346,45 +2346,45 @@ L_01_5267::
     ld hl, wPlayer
     call SetObjPtr
     jp DrawObject
-L_01_527e::
+.L_01_527e:
     ld hl, wPlayer
     set 5, [hl]
-    jr L_01_5267
-L_01_5285::
+    jr .L_01_5267
+.L_01_5285:
     xor a, a
     ld [wRoomType], a
     ld [$c4d2], a
     ldh a, [hLinkFlags]
     bit 1, a
-    jr z, L_01_529c
+    jr z, .L_01_529c
     ld hl, hSerialByte
     set 6, [hl]
     ld a, $07
     jp GameModeDispatch
-L_01_529c::
+.L_01_529c:
     ldh a, [hLinkFlags]
     bit 0, a
-    jr z, L_01_52b7
+    jr z, .L_01_52b7
     ld c, $04
     call SerialSendByte
     ld hl, hSerialByte
     set 7, [hl]
     ldh a, [hSerialByte]
     bit 1, a
-    jr nz, L_01_52b7
+    jr nz, .L_01_52b7
     ld a, $07
     jp GameModeDispatch
-L_01_52b7::
+.L_01_52b7:
     ld hl, wLives
     dec [hl]
-    jr nz, L_01_52bf
-    jr L_01_52c9
-L_01_52bf::
+    jr nz, .L_01_52bf
+    jr .L_01_52c9
+.L_01_52bf:
     ld a, $50
     call DelayFrames
     ld a, $03
     jp GameModeDispatch
-L_01_52c9::
+.L_01_52c9:
     xor a, a
     ld [wPlayerDir], a
     ld [wPlayerStatus], a
@@ -2400,13 +2400,13 @@ L_01_52c9::
     call DelayFrames
     ld a, [$c49b]
     and a, a
-    jr nz, L_01_52fc
+    jr nz, .L_01_52fc
     ld a, [$c49c]
     bit 0, a
-    jr nz, L_01_52fc
+    jr nz, .L_01_52fc
     ld a, $04
     jp GameModeDispatch
-L_01_52fc::
+.L_01_52fc:
     ld a, $05
     jp GameModeDispatch
 L_01_5301::
@@ -2424,20 +2424,20 @@ L_01_5311::
     sbc a, $00
     ld [$c1ad], a
     bit 7, a
-    jr nz, L_01_5337
+    jr nz, .L_01_5337
     ld a, [$c1ac]
     cp a, $60
-    jr c, L_01_533e
+    jr c, .L_01_533e
     ld a, $60
     ld [$c1ac], a
     xor a, a
     ld [$c1ad], a
-    jr L_01_533e
-L_01_5337::
+    jr .L_01_533e
+.L_01_5337:
     xor a, a
     ld [$c1ad], a
     ld [$c1ac], a
-L_01_533e::
+.L_01_533e:
     ld a, [wPlayerY]
     sub a, $68
     ld [$c1ae], a
@@ -2445,7 +2445,7 @@ L_01_533e::
     sbc a, $00
     ld [$c1af], a
     bit 7, a
-    jr nz, L_01_5362
+    jr nz, .L_01_5362
     ld a, [$c1ae]
     cp a, $70
     ret c
@@ -2454,7 +2454,7 @@ L_01_533e::
     xor a, a
     ld [$c1af], a
     ret
-L_01_5362::
+.L_01_5362:
     xor a, a
     ld [$c1ae], a
     ld [$c1af], a
@@ -2470,9 +2470,9 @@ L_01_536a::
 L_01_537a::
     call SelectObject2
     call TickObjectTimer
-    jr nz, L_01_5385
+    jr nz, .L_01_5385
     jp L_01_53c4
-L_01_5385::
+.L_01_5385:
     call L_00_3599
     call L_00_39b1
     call L_00_341f
@@ -2481,24 +2481,24 @@ L_01_5385::
 L_01_5394::
     ldh a, [$ffd1]
     bit 0, a
-    jr nz, L_01_53a8
+    jr nz, .L_01_53a8
     bit 1, a
-    jr nz, L_01_53b3
+    jr nz, .L_01_53b3
     bit 2, a
-    jr nz, L_01_53be
+    jr nz, .L_01_53be
     ld de, D_01_53e5
     jp L_00_3651
-L_01_53a8::
+.L_01_53a8:
     ld hl, hObject2
     set 5, [hl]
     ld de, D_01_53ec
     jp L_00_3651
-L_01_53b3::
+.L_01_53b3:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_01_53ec
     jp L_00_3651
-L_01_53be::
+.L_01_53be:
     ld de, D_01_53f3
     jp L_00_3651
 L_01_53c4::
@@ -2508,12 +2508,12 @@ L_01_53c4::
     ldh [$ffcf], a
     ldh a, [hLinkFlags]
     bit 0, a
-    jr z, L_01_53d6
+    jr z, .L_01_53d6
     ld a, $50
-    jr L_01_53d8
-L_01_53d6::
+    jr .L_01_53d8
+.L_01_53d6:
     ld a, $80
-L_01_53d8::
+.L_01_53d8:
     ldh [$ffc9], a
     ld de, D_01_53e5
     call SetObjectAnimation

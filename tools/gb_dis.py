@@ -91,6 +91,7 @@ class Rom:
                 break
         self.data_labels()
         self.pointer_tables()
+        self.classify_labels()
 
     TERM = ("retu", "jpu", "jru", "jpind")
 
@@ -190,6 +191,50 @@ class Rom:
                 return False
             pc += n
         return False
+
+    def classify_labels(self):
+        """Split code labels into routines (global) and branch targets inside one routine (RGBDS local labels)."""
+        self.local = set()
+        roots = set(self.names) | {(b, a) for b, a in self.seeds} | {(0, v) for v in VECTORS}
+        roots |= {(self.home(t, b), t) for (b, _), t in self.dwords.items()} | {(self.cross_bank.get(t, 0), t) for (b, _), t in self.dwords.items() if b == 0 and t >= BANK}
+        branch = {}
+        for (b, pc), (n, kind, tgt) in self.insns.items():
+            o = off(b, pc)
+            op = self.data[o]
+            if op in (0x01, 0x11, 0x21):
+                v = self.data[o + 1] | self.data[o + 2] << 8
+                roots.add((self.home(v, b), v))
+                if b == 0 and v >= BANK:
+                    roots.add((self.cross_bank.get(v, 0), v))
+            if kind in ("call", "rst"):
+                tb = self.home(tgt, b) if kind == "call" else 0
+                roots.add((self.cross_bank.get(tgt, 0) if (b == 0 and tgt >= BANK) else tb, tgt))
+            elif kind in ("jr", "jru", "jp", "jpu"):
+                tb = self.cross_bank.get(tgt, 0) if (b == 0 and tgt >= BANK) else self.home(tgt, b)
+                if tb != b:
+                    roots.add((tb, tgt))
+                else:
+                    branch.setdefault((tb, tgt), []).append((b, pc))
+        cands = {k for k, v in self.targets.items() if v == "code" and k in self.insns}
+        glob = {k for k in cands if k in roots or k not in branch} | {k for k, v in self.targets.items() if v == "data"} | set(self.names)
+        glob |= {(b, 0 if b == 0 else BANK) for b in range(self.nbanks)}
+        by_bank = {}
+        def owner(b, x):
+            lst = by_bank.get(b)
+            return max((g for g in lst if g <= x), default=-1)
+        changed = True
+        while changed:
+            changed = False
+            by_bank = {}
+            for (b, a) in glob:
+                by_bank.setdefault(b, []).append(a)
+            for k in sorted(cands - glob):
+                for (b, pc) in branch.get(k, []):
+                    if owner(b, pc) != owner(k[0], k[1]):
+                        glob.add(k)
+                        changed = True
+                        break
+        self.local = cands - glob
 
     def pointer_tables(self):
         """Tables listed in ptables.csv: emit as `dw label` and label what they point at as data."""
@@ -413,6 +458,8 @@ class Rom:
                 b = self.cross_bank.get(t, 0)
             if t >= 0x8000 or (b, t) not in self.targets and (b, t) not in self.names:
                 return f"${t:04x}"
+            if (b, t) in self.local and (b, t) not in self.names:
+                return f".L_{b:02x}_{t:04x}"
             return self.names.get((b, t)) or (f"{'D' if self.targets.get((b, t)) == 'data' else 'L'}_{b:02x}_{t:04x}")
         return f
 
@@ -435,7 +482,9 @@ class Rom:
                 name = self.names[key]
             elif key in self.targets:
                 name = f"L_{bank:02x}_{pc:04x}" if self.targets[key] == "code" else f"D_{bank:02x}_{pc:04x}"
-            if name:
+            if name and key in self.local and key not in self.names:
+                out.append(f".L_{bank:02x}_{pc:04x}:")
+            elif name:
                 out.append(f"{name}::" + (f"  ; {self.comments[key]}" if key in self.comments else ""))
             if key in self.dwords:
                 out.append("    dw " + lab(self.dwords[key]))
@@ -467,7 +516,7 @@ class Rom:
         """Code labels that are call targets or vectors, with the extent up to the next label/data."""
         starts = sorted(k for k, v in self.targets.items() if v == "code")
         res = []
-        starts = [k for k in starts if k in self.insns]
+        starts = [k for k in starts if k in self.insns and k not in self.local]
         for i, (b, a) in enumerate(starts):
             nxt = starts[i + 1][1] if i + 1 < len(starts) and starts[i + 1][0] == b else 1 << 20
             q = a
