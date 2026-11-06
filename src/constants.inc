@@ -178,3 +178,14 @@ DEF wEndingObject   EQU $c76e   ; object record used by the ending scene
 DEF wCreditsPage    EQU $c790   ; index into CreditsPageTable
 DEF wMusicPriority  EQU $c30f   ; priority of the playing music (SoundStartMusic)
 DEF wEffectPriority EQU $c310   ; priority of the playing effect (SoundStartEffect)
+
+; ---- more names (provisional where the comment says so) ----
+DEF hEnemyAnimLo    EQU $ffb6   ; +1: animation pointer of the enemy record (SetObjectAnimation)
+DEF hEnemyAnimHi    EQU $ffb7   ; +2
+DEF hEnemyBoxHalf   EQU $ffb9   ; +4: half size of the hit box used by ObjectsOverlap (2 or 4)
+DEF hEnemyCounter2  EQU $ffd3   ; +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional)
+DEF wEnemyLoopIdx   EQU $c53e   ; slot index of the running enemy loop (15 down to 0)
+DEF wEnemyLoopStart EQU $c53f   ; incremented each frame so the update order rotates
+DEF wRoundFlags     EQU $c51f   ; bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional)
+DEF wEndingFlags    EQU $c78e   ; ending credits state: bit 0 window shown, bit 1 window slid in, bit 2 credits finished (provisional)
+DEF wEndingTimer    EQU $c78f   ; credit page timer (provisional)

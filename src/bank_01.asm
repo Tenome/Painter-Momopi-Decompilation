@@ -2426,10 +2426,10 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld [wPlayerStatus], a
     ld [$c47b], a
     ld [$c1a8], a
-    ld a, [$c51f]
+    ld a, [wRoundFlags]
     set 0, a
     and a, $f9
-    ld [$c51f], a
+    ld [wRoundFlags], a
     ld a, $03
     ld [wLives], a
     ld a, $50
@@ -2604,9 +2604,9 @@ ProjectileSelectFrame::  ; picks the projectile animation frame pointer from $c4
     inc hl
 .L_01_5563:
     ld a, [hl+]
-    ldh [$ffb6], a
+    ldh [hEnemyAnimLo], a
     ld a, [hl]
-    ldh [$ffb7], a
+    ldh [hEnemyAnimHi], a
     ret
 UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed when the shooter is hit
     ldh a, [hEnemyFlags]
@@ -2698,10 +2698,10 @@ EnemyKind10Animate::  ; toggles between two animations D_01_57ec and D_01_57ee e
     ldh a, [hEnemyKind]
     cp a, $0a
     ret nz
-    ld hl, $ffd3
+    ld hl, hEnemyCounter2
     inc [hl]
     ld hl, D_01_57ec
-    ldh a, [$ffd3]
+    ldh a, [hEnemyCounter2]
     and a, $04
     jr z, .L_01_562d
     ld hl, D_01_57ee
