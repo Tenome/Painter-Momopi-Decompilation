@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "14239",
-  "matched_code": "14239",
+  "total_code": "15165",
+  "matched_code": "15165",
   "matched_code_percent": 100.0,
-  "total_data": "51297",
-  "matched_data": "51297",
+  "total_data": "50371",
+  "matched_data": "50371",
   "matched_data_percent": 100.0,
-  "total_functions": 324,
-  "matched_functions": 324,
+  "total_functions": 347,
+  "matched_functions": 347,
   "matched_functions_percent": 100.0,
-  "complete_code": "14239",
+  "complete_code": "15165",
   "complete_code_percent": 100.0,
-  "complete_data": "51297",
+  "complete_data": "50371",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9413",
-    "matched_code": "9413",
+    "total_code": "9589",
+    "matched_code": "9589",
     "matched_code_percent": 100.0,
-    "total_data": "6971",
-    "matched_data": "6971",
+    "total_data": "6795",
+    "matched_data": "6795",
     "matched_data_percent": 100.0,
-    "total_functions": 196,
-    "matched_functions": 196,
+    "total_functions": 203,
+    "matched_functions": 203,
     "matched_functions_percent": 100.0,
-    "complete_code": "9413",
+    "complete_code": "9589",
     "complete_code_percent": 100.0,
-    "complete_data": "6971",
+    "complete_data": "6795",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9413",
+     "size": "9589",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "6971",
+     "size": "6795",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -764,7 +764,7 @@
      }
     },
     {
-     "name": "L_00_1740",
+     "name": "CursorBlinkStep",
      "size": "29",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -780,7 +780,7 @@
      }
     },
     {
-     "name": "L_00_1760",
+     "name": "SetCursorAnimation",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1436,7 +1436,7 @@
      }
     },
     {
-     "name": "EnemyBehavior0",
+     "name": "EnemyKindIdle",
      "size": "48",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1508,7 +1508,7 @@
      }
     },
     {
-     "name": "EnemyBehavior1",
+     "name": "EnemyKind1",
      "size": "68",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1556,7 +1556,63 @@
      }
     },
     {
-     "name": "L_00_3c91",
+     "name": "EnemyKind11",
+     "size": "114",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15324"
+     }
+    },
+    {
+     "name": "L_00_3c4e",
+     "size": "9",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15438"
+     }
+    },
+    {
+     "name": "L_00_3c57",
+     "size": "23",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15447"
+     }
+    },
+    {
+     "name": "L_00_3c6e",
+     "size": "7",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15470"
+     }
+    },
+    {
+     "name": "L_00_3c75",
+     "size": "8",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15477"
+     }
+    },
+    {
+     "name": "L_00_3c7d",
+     "size": "10",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15485"
+     }
+    },
+    {
+     "name": "L_00_3c87",
+     "size": "5",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15495"
+     }
+    },
+    {
+     "name": "EnemyKind7",
      "size": "36",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1588,7 +1644,7 @@
      }
     },
     {
-     "name": "EnemyBehavior5",
+     "name": "EnemyKind5",
      "size": "47",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1625,18 +1681,18 @@
    "name": "main/bank_01",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "4826",
-    "matched_code": "4826",
+    "total_code": "5576",
+    "matched_code": "5576",
     "matched_code_percent": 100.0,
-    "total_data": "11558",
-    "matched_data": "11558",
+    "total_data": "10808",
+    "matched_data": "10808",
     "matched_data_percent": 100.0,
-    "total_functions": 128,
-    "matched_functions": 128,
+    "total_functions": 144,
+    "matched_functions": 144,
     "matched_functions_percent": 100.0,
-    "complete_code": "4826",
+    "complete_code": "5576",
     "complete_code_percent": 100.0,
-    "complete_data": "11558",
+    "complete_data": "10808",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -1644,12 +1700,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "4826",
+     "size": "5576",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "11558",
+     "size": "10808",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -2575,7 +2631,7 @@
      }
     },
     {
-     "name": "EnemyBehavior4",
+     "name": "EnemyKind4",
      "size": "26",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2599,7 +2655,135 @@
      }
     },
     {
-     "name": "EnemyBehavior2",
+     "name": "EnemyKind10",
+     "size": "39",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "21779"
+     }
+    },
+    {
+     "name": "L_01_553a",
+     "size": "15",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "21818"
+     }
+    },
+    {
+     "name": "L_01_5549",
+     "size": "33",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "21833"
+     }
+    },
+    {
+     "name": "L_01_556a",
+     "size": "82",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "21866"
+     }
+    },
+    {
+     "name": "L_01_55bc",
+     "size": "92",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "21948"
+     }
+    },
+    {
+     "name": "L_01_5618",
+     "size": "30",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22040"
+     }
+    },
+    {
+     "name": "L_01_5636",
+     "size": "52",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22070"
+     }
+    },
+    {
+     "name": "L_01_566a",
+     "size": "13",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22122"
+     }
+    },
+    {
+     "name": "L_01_5677",
+     "size": "43",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22135"
+     }
+    },
+    {
+     "name": "L_01_56a2",
+     "size": "106",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22178"
+     }
+    },
+    {
+     "name": "L_01_570c",
+     "size": "118",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22284"
+     }
+    },
+    {
+     "name": "EnemyKind9",
+     "size": "39",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22512"
+     }
+    },
+    {
+     "name": "L_01_5817",
+     "size": "10",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22551"
+     }
+    },
+    {
+     "name": "L_01_5821",
+     "size": "55",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22561"
+     }
+    },
+    {
+     "name": "L_01_5858",
+     "size": "6",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22616"
+     }
+    },
+    {
+     "name": "L_01_585e",
+     "size": "17",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22622"
+     }
+    },
+    {
+     "name": "EnemyKind2",
      "size": "54",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2647,7 +2831,7 @@
      }
     },
     {
-     "name": "EnemyBehavior3",
+     "name": "EnemyKind3",
      "size": "42",
      "fuzzy_match_percent": 100.0,
      "metadata": {

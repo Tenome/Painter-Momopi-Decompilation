@@ -44,6 +44,31 @@ def session(seed, modes_to_force=(), frames=a.frames):
 
 for seed in range(6):
     session(seed)
+
+
+def round_session(rnd, frames=900):
+    gb = emu.GB(raw)
+    gb.coverage = cov
+    for fr in range(254):
+        gb.joy = 0x80 if 250 <= fr < 253 else 0
+        gb.run_frame()
+    gb.wram[0xC522 - 0xC000] = rnd           # wRound, wRoundBackup, wRoomIndex
+    gb.wram[0xC523 - 0xC000] = rnd
+    gb.wram[0xC524 - 0xC000] = rnd - 1
+    random.seed(rnd)
+    j = 0
+    for fr in range(frames):
+        if fr % 30 == 0:
+            j = random.choice((0, 1, 2, 4, 8, 1, 2, 4, 8))
+        gb.joy = j
+        try:
+            gb.run_frame()
+        except RuntimeError:
+            break
+
+
+for rnd in (5, 8, 9, 13, 14, 16):
+    round_session(rnd)
 for m in range(8):
     session(100 + m, {400: m}, 1500)
 known = set(rom.insns)

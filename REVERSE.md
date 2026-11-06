@@ -113,6 +113,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   pointer (`SetObjectAnimation`), so the many `ld bc, $3abf; jp L_00_3649` sequences select animation data. Writers of `hObject2` flags were found with
   write watches in `tools/emu.py` ($38a0, $99c, $3b79, $3b87 flip bit 5 = facing).
 
+- **Enemy kinds** (seen by forcing each round in `tools/emu.py`; kind = `hEnemyKind`): round 1 = kind 1 (`EnemyKind1`, the chaser); rounds 2-4, 12, 18-20 = kind 2;
+  rounds 5-7 add kinds 7 and 11; round 8 = kind 8 (stationary); round 9 and 11 = kind 11; rounds 13-15 = kinds 0 and 10; round 16 = kinds 3, 5 and 8; rounds 17-32
+  repeat 1-16. `EnemyBehaviorTable` has 12 entries (kinds 0-11).
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

@@ -2498,7 +2498,7 @@ ResetCamera::  ; wCameraX and wCameraY = $20; high bytes 0
     ld [$c1ad], a
     ld [$c1af], a
     ret
-EnemyBehavior4::  ; routine 4 of EnemyBehaviorTable
+EnemyKind4::  ; enemy kind 4
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5385
@@ -2556,8 +2556,429 @@ D_01_53e5::
 D_01_53ec::
     INCBIN "orig/painter_momopie.gb", $053ec, 7
 D_01_53f3::
-    INCBIN "orig/painter_momopie.gb", $053f3, 1190
-EnemyBehavior2::  ; routine 2 of EnemyBehaviorTable
+    INCBIN "orig/painter_momopie.gb", $053f3, 288
+EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
+    call TickObjectTimer
+    jr nz, .L_01_551b
+    jp L_01_56a2
+.L_01_551b:
+    ldh a, [hEnemyFlags]
+    bit 2, a
+    jp nz, EnemyDefeated
+    call L_00_39b1
+    call L_01_5636
+    call L_01_556a
+    call L_01_55bc
+    call L_01_553a
+    call L_01_5549
+    call SelectObject2
+    jp DrawObject
+L_01_553a::
+    ldh a, [hEnemyFlags]
+    and a, $0a
+    cp a, $0a
+    ret nz
+    ld hl, $c49e
+    res 7, [hl]
+    jp L_00_3525
+L_01_5549::
+    ldh a, [$ffd0]
+    and a, $04
+    jr z, .L_01_5559
+    ld a, [$c499]
+    ld l, a
+    ld a, [$c49a]
+    ld h, a
+    jr .L_01_5563
+.L_01_5559:
+    ld a, [$c499]
+    ld l, a
+    ld a, [$c49a]
+    ld h, a
+    inc hl
+    inc hl
+.L_01_5563:
+    ld a, [hl+]
+    ldh [$ffb6], a
+    ld a, [hl]
+    ldh [$ffb7], a
+    ret
+L_01_556a::
+    ldh a, [hEnemyFlags]
+    bit 0, a
+    ret nz
+    ldh a, [hEnemyFlags]
+    bit 3, a
+    jr z, .L_01_557b
+    ld hl, $c49e
+    res 7, [hl]
+    ret
+.L_01_557b:
+    ldh a, [hEnemyX]
+    ld c, a
+    ldh a, [hEnemyY]
+    ld b, a
+    call L_00_3449
+    ret nz
+    ld hl, $ffca
+    dec [hl]
+    ret nz
+    call L_01_570c
+    ldh a, [hEnemyX]
+    ld [$c4a5], a
+    ldh a, [hEnemyY]
+    ld [$c4a8], a
+    ld a, $86
+    ld [$c49e], a
+    ldh a, [hEnemyKind]
+    cp a, $0a
+    jr nz, .L_01_55a7
+    ld de, D_01_57ec
+    jr .L_01_55aa
+.L_01_55a7:
+    ld de, D_01_57c9
+.L_01_55aa:
+    ld a, e
+    ld [$c49f], a
+    ld a, d
+    ld [$c4a0], a
+    ld a, $50
+    ldh [$ffca], a
+    ld hl, hEnemyFlags
+    set 0, [hl]
+    ret
+L_01_55bc::
+    ldh a, [hEnemyFlags]
+    bit 0, a
+    ret z
+    ld a, [$c4a5]
+    ldh [hScratch00], a
+    ld a, [$c4a6]
+    ldh [hScratch01], a
+    ld a, [$c4a8]
+    ldh [hScratch02], a
+    ld a, [$c4a9]
+    ldh [hScratch03], a
+    call L_01_5677
+    and a, a
+    jr z, .L_01_560d
+    ld hl, hEnemyDir
+    set 5, [hl]
+    ld a, $0b
+    ld [$c4af], a
+    ld a, [wRoomType]
+    cp a, $03
+    jr nz, .L_01_55fb
+    ld a, [wSubState]
+    bit 0, a
+    jp z, .L_01_55fb
+    xor a, a
+    ldh [hEnemyAnimState], a
+    xor a, a
+    ld [$c4af], a
+.L_01_55fb:
+    call L_01_5618
+    ld hl, $c49e
+    call SetObjPtr
+    call L_00_0b66
+    call L_00_09e0
+    jp DrawObject
+.L_01_560d:
+    ld hl, $c49e
+    res 7, [hl]
+    ld hl, hEnemyFlags
+    set 1, [hl]
+    ret
+L_01_5618::
+    ldh a, [hEnemyKind]
+    cp a, $0a
+    ret nz
+    ld hl, $ffd3
+    inc [hl]
+    ld hl, D_01_57ec
+    ldh a, [$ffd3]
+    and a, $04
+    jr z, .L_01_562d
+    ld hl, D_01_57ee
+.L_01_562d:
+    ld a, l
+    ld [$c49f], a
+    ld a, h
+    ld [$c4a0], a
+    ret
+L_01_5636::
+    ldh a, [hEnemyDir]
+    and a, $0f
+    srl a
+    ld c, a
+    ld b, $00
+    ld hl, D_01_5782
+    add hl, bc
+    ld a, [hl]
+    ldh [$ffc5], a
+    call SelectObject2
+    call L_00_0b66
+    call L_00_09e0
+    ldh a, [hEnemyX]
+    ldh [hScratch00], a
+    ldh a, [hEnemyXHi]
+    ldh [hScratch01], a
+    ldh a, [hEnemyY]
+    ldh [hScratch02], a
+    ldh a, [hEnemyYHi]
+    ldh [hScratch03], a
+    call L_01_5677
+    and a, a
+    ret nz
+    ld hl, hEnemyFlags
+    set 3, [hl]
+    ret
+L_01_566a::
+    ldh a, [hEnemyDir]
+    bit 5, a
+    jr nz, .L_01_5671
+    ret
+.L_01_5671:
+    ld hl, hEnemyFlags
+    set 3, [hl]
+    ret
+L_01_5677::
+    ldh a, [hScratch01]
+    cp a, $ff
+    jr z, .L_01_56a0
+    cp a, $01
+    jr z, .L_01_568e
+    ldh a, [hScratch03]
+    cp a, $ff
+    jr z, .L_01_56a0
+    cp a, $01
+    jr z, .L_01_5697
+    ld a, $01
+    ret
+.L_01_568e:
+    ldh a, [hScratch00]
+    cp a, $08
+    jr nc, .L_01_56a0
+    ld a, $01
+    ret
+.L_01_5697:
+    ldh a, [hScratch02]
+    cp a, $20
+    jr nc, .L_01_56a0
+    ld a, $01
+    ret
+.L_01_56a0:
+    xor a, a
+    ret
+L_01_56a2::
+    ld hl, $c49e
+    call Clear32Bytes
+    ld a, $01
+    ld [$c4a2], a
+    xor a, a
+    ld [hEnemyFlags], a
+    ld a, $20
+    ldh [hEnemyCounter], a
+    ld a, $30
+    ldh [$ffca], a
+    ldh a, [hEnemyKind]
+    cp a, $0a
+    jr nz, .L_01_56ca
+    ld bc, $5793
+    ld de, D_01_579b
+    ld hl, D_01_5797
+    jr .L_01_56d3
+.L_01_56ca:
+    ld bc, $5787
+    ld de, D_01_578f
+    ld hl, D_01_578b
+.L_01_56d3:
+    call L_00_340c
+    push af
+    push de
+    swap a
+    and a, $10
+    sla a
+    ld e, a
+    ldh a, [hObject2]
+    or a, e
+    or a, $86
+    ldh [hObject2], a
+    pop de
+    pop af
+    and a, $03
+    jr nz, .L_01_5701
+    ldh a, [hEnemyDir]
+    bit 3, a
+    jr z, .L_01_56f6
+    push bc
+    pop hl
+    jr .L_01_5701
+.L_01_56f6:
+    bit 4, a
+    jr z, .L_01_56fe
+    push de
+    pop hl
+    jr .L_01_5701
+.L_01_56fe:
+    ld hl, D_01_578b
+.L_01_5701:
+    ld a, l
+    ld [$c499], a
+    ld a, h
+    ld [$c49a], a
+    jp L_01_5549
+L_01_570c::
+    ld a, [wPlayerY]
+    ld e, a
+    ld a, [hEnemyY]
+    sub a, $10
+    cp a, e
+    jr nc, .L_01_5738
+    ld a, [wPlayerY]
+    ld e, a
+    ld a, [hEnemyY]
+    add a, $10
+    cp a, e
+    jr c, .L_01_575c
+    ld a, [wPlayerX]
+    ld e, a
+    ld a, [hEnemyX]
+    cp a, e
+    jr c, .L_01_5733
+    ld a, $10
+    jp .L_01_577e
+.L_01_5733:
+    ld a, $08
+    jp .L_01_577e
+.L_01_5738:
+    ld a, [wPlayerX]
+    ld e, a
+    ldh a, [hEnemyX]
+    sub a, $10
+    cp a, e
+    jr nc, .L_01_5752
+    ld a, [wPlayerX]
+    ld e, a
+    ldh a, [hEnemyX]
+    add a, $10
+    cp a, e
+    jr c, .L_01_5757
+    xor a, a
+    jp .L_01_577e
+.L_01_5752:
+    ld a, $1c
+    jp .L_01_577e
+.L_01_5757:
+    ld a, $04
+    jp .L_01_577e
+.L_01_575c:
+    ld a, [wPlayerX]
+    ld e, a
+    ldh a, [hEnemyX]
+    sub a, $10
+    cp a, e
+    jr nc, .L_01_5777
+    ld a, [wPlayerX]
+    ld e, a
+    ldh a, [hEnemyX]
+    add a, $10
+    cp a, e
+    jr c, .L_01_577c
+    ld a, $10
+    jp .L_01_577e
+.L_01_5777:
+    ld a, $14
+    jp .L_01_577e
+.L_01_577c:
+    ld a, $0c
+.L_01_577e:
+    ld [$c4ae], a
+    ret
+D_01_5782::
+    INCBIN "orig/painter_momopie.gb", $05782, 9
+D_01_578b::
+    INCBIN "orig/painter_momopie.gb", $0578b, 4
+D_01_578f::
+    INCBIN "orig/painter_momopie.gb", $0578f, 8
+D_01_5797::
+    INCBIN "orig/painter_momopie.gb", $05797, 4
+D_01_579b::
+    INCBIN "orig/painter_momopie.gb", $0579b, 46
+D_01_57c9::
+    INCBIN "orig/painter_momopie.gb", $057c9, 35
+D_01_57ec::
+    INCBIN "orig/painter_momopie.gb", $057ec, 2
+D_01_57ee::
+    INCBIN "orig/painter_momopie.gb", $057ee, 2
+EnemyKind9::  ; enemy kind 9
+    call SelectObject2
+    call TickObjectTimer
+    jr nz, .L_01_57fb
+    jp L_01_585e
+.L_01_57fb:
+    ldh a, [hEnemyFlags]
+    bit 2, a
+    jp nz, EnemyDefeated
+    call EnemyComputeBlockedDirs
+    call L_00_3599
+    call L_00_39b1
+    call L_00_392e
+    call CheckEnemyTouchesPlayer
+    call L_01_5821
+    jp DrawObject
+L_01_5817::
+    ld a, $06
+    ldh [hEnemyAnimState], a
+    call L_00_3603
+    jp L_00_3643
+L_01_5821::
+    ld hl, hObject2
+    res 5, [hl]
+    ldh a, [hEnemyDir]
+    bit 2, a
+    jr nz, .L_01_583e
+    bit 3, a
+    jr nz, .L_01_5847
+    bit 0, a
+    call nz, L_01_5858
+    ld de, D_01_587d
+    ld bc, $5884
+    jp .L_01_584d
+.L_01_583e:
+    ld de, D_01_588b
+    ld bc, $5892
+    jp .L_01_584d
+.L_01_5847:
+    ld de, D_01_586f
+    ld bc, $5876
+.L_01_584d:
+    ldh a, [$ffd0]
+    and a, $08
+    jr z, .L_01_5855
+    push bc
+    pop de
+.L_01_5855:
+    jp SetObjectAnimation
+L_01_5858::
+    ld hl, hObject2
+    set 5, [hl]
+    ret
+L_01_585e::
+    ld a, $06
+    ldh [hEnemyAnimState], a
+    ld a, $20
+    ldh [hEnemyCounter], a
+    ld de, D_01_586f
+    call SetObjectAnimation
+    jp L_00_340c
+D_01_586f::
+    INCBIN "orig/painter_momopie.gb", $0586f, 14
+D_01_587d::
+    INCBIN "orig/painter_momopie.gb", $0587d, 14
+D_01_588b::
+    INCBIN "orig/painter_momopie.gb", $0588b, 14
+EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
     jr nz, .L_01_58a1
     jp L_01_59b6
@@ -2718,7 +3139,7 @@ D_01_59f5::
     INCBIN "orig/painter_momopie.gb", $059f5, 5
 D_01_59fa::
     INCBIN "orig/painter_momopie.gb", $059fa, 5
-EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
+EnemyKind3::  ; enemy kind 3
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5a0a

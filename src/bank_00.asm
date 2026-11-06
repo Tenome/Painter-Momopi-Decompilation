@@ -4664,16 +4664,19 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     ldh [hEnemyCounter], a
     ret
 EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
-    dw EnemyBehavior0
-    dw EnemyBehavior1
-    dw EnemyBehavior2
-    dw EnemyBehavior3
-    dw EnemyBehavior4
-    dw EnemyBehavior5
-    dw EnemyBehavior0
-    dw L_00_3c91
-    dw EnemyBehavior0
-    INCBIN "orig/painter_momopie.gb", $03794, 10
+    dw EnemyKindIdle
+    dw EnemyKind1
+    dw EnemyKind2
+    dw EnemyKind3
+    dw EnemyKind4
+    dw EnemyKind5
+    dw EnemyKindIdle
+    dw EnemyKind7
+    dw EnemyKindIdle
+    dw EnemyKind9
+    dw EnemyKind10
+    dw EnemyKind11
+    INCBIN "orig/painter_momopie.gb", $0379a, 4
 SelectEnemySlot::  ; HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
     sla a
     ld c, a
@@ -4878,7 +4881,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl]
     ldh [hEnemyFlags], a
     ret
-EnemyBehavior0::  ; routine 0 of EnemyBehaviorTable
+EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 appears in rounds 13-15 and 29-31)
     call TickObjectTimer
     jr nz, .L_00_3906
     jp L_00_3a75
@@ -5127,7 +5130,7 @@ L_00_3aed::
     ld [bc], a
     nop
     ld [bc], a
-EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then moves on the tile grid
+EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3b02
@@ -5230,8 +5233,101 @@ D_00_3bbe::
 D_00_3bc8::
     INCBIN "orig/painter_momopie.gb", $03bc8, 10
 D_00_3bd2::
-    INCBIN "orig/painter_momopie.gb", $03bd2, 191
-L_00_3c91::
+    INCBIN "orig/painter_momopie.gb", $03bd2, 10
+EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
+    call TickObjectTimer
+    jr nz, .L_00_3be4
+    jp L_00_3c57
+.L_00_3be4:
+    ldh a, [hEnemyFlags]
+    bit 2, a
+    jr z, .L_00_3bfb
+    ldh a, [hEnemyDir]
+    bit 1, a
+    jp nz, EnemyDefeated
+    set 1, a
+    ldh [hEnemyDir], a
+    call L_00_3c6e
+    jp EnemyDefeated
+.L_00_3bfb:
+    ldh a, [hEnemyDir]
+    bit 0, a
+    jr nz, .L_00_3c09
+    call L_00_3c75
+    ld hl, hEnemyDir
+    set 0, [hl]
+.L_00_3c09:
+    ldh a, [$ffcb]
+    sub a, $01
+    ldh [$ffcb], a
+    jr nc, .L_00_3c1a
+    call L_00_3c7d
+    ldh a, [$ffcc]
+    ld [hl], a
+    jp L_00_3525
+.L_00_3c1a:
+    ld a, [wRoomType]
+    cp a, $04
+    jp nz, .L_00_3c2b
+    ld a, [wSubState]
+    bit 0, a
+    jr z, .L_00_3c2b
+    jr .L_00_3c3a
+.L_00_3c2b:
+    ld a, [wRoomType]
+    cp a, $06
+    jp nz, .L_00_3c42
+    ld a, [wSubState]
+    bit 0, a
+    jr z, .L_00_3c42
+.L_00_3c3a:
+    call L_00_3c7d
+    ldh a, [$ffcc]
+    ld [hl], a
+    jr .L_00_3c45
+.L_00_3c42:
+    call L_00_3c75
+.L_00_3c45:
+    call L_00_3c4e
+    call SelectObject2
+    jp DrawObject
+L_00_3c4e::
+    ld de, $3c87
+    ld bc, $3c8c
+    jp SetAnimationVariant
+L_00_3c57::
+    ld a, $20
+    ldh [hEnemyCounter], a
+    call L_00_3c7d
+    ldh [$ffcc], a
+    ld a, $fe
+    ldh [$ffcb], a
+    ld a, $90
+    ldh [hEnemyDir], a
+    ld de, $3c87
+    jp SetObjectAnimation
+L_00_3c6e::
+    call L_00_3c7d
+    ldh a, [$ffcc]
+    ld [hl], a
+    ret
+L_00_3c75::
+    call L_00_3c7d
+    ldh [$ffca], a
+    xor a, a
+    ld [hl], a
+    ret
+L_00_3c7d::
+    ldh a, [hEnemyX]
+    call PixelXToColumn
+    ldh a, [hEnemyY]
+    jp LookupMapTile
+L_00_3c87::
+    ld bc, $c9c8
+    ret c
+    reti
+    INCBIN "orig/painter_momopie.gb", $03c8c, 5
+EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3c9c
@@ -5374,7 +5470,7 @@ D_00_3e4d::
     INCBIN "orig/painter_momopie.gb", $03e4d, 10
 D_00_3e57::
     INCBIN "orig/painter_momopie.gb", $03e57, 10
-EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
+EnemyKind5::  ; enemy kind 5
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3e6c
