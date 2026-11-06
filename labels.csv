@@ -383,3 +383,21 @@ bank,addr,name,comment
 0,3d18,EnemyKind7NextStep,reads the next path entry from wEnemyPathPtr (name provisional)
 0,3e90,EnemyIdleAnimate,counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
 0,3ef9,EnemyBuildTeleportTable,fills the position table at $c489 around the enemy (+-$10) (name provisional)
+0,352f,EnemyPaintStep,paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
+0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
+0,39b1,EnemyTurnOrAnimate,like EnemyTurnIfBlocked and then picks the animation table D_00_3ae3 or D_00_3aed (name provisional)
+0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
+0,10a2,LowNibbleToDigitTile,A and $0f then falls into NumberToTile
+0,175d,SetCursorDefaultAnimation,cursor object animation = D_00_1a30
+0,1769,ResetMagicCursorAnimation,clears wMagicScreenFlags bit 2 and sets the default cursor animation
+0,196f,SetMagicRowAndReturn,stores A in wMagicRow (tail of a cursor move; name provisional)
+0,2df1,RunEndingTextListAndWait,queues the VRAM copy list at $2dff and waits until it is done (name provisional)
+0,10a4,NumberToTile,digit in A to its tile id using the table at 10ab
+1,4e47,MagicTimerCountdown,decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
+0,392e,EnemyPaintUnderB0M,with the B.O.M card active paints the cell under an enemy that is not frozen (name provisional)
+0,3956,EnemySelectAnimByKind,sets the animation pair for kinds 6 and 8 (D_00_3acf and D_00_3ad9) or the default (name provisional)
+0,3c4e,EnemyKind7SetAnimation,animation pair at $3c87 and $3c8c (name provisional)
+0,3c57,EnemyKind7Start,counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87 (name provisional)
+0,3c6e,EnemyStoreAuxToTile,stores hEnemyAux into the map cell under the enemy (name provisional)
+0,3c75,EnemyClearTileSaveStep,hEnemyStep = map tile under the enemy and clears that cell (name provisional)
+0,09d1,MoveObjectHalfStep,adds the X and Y deltas at offsets 6 and 8 to the position (name provisional)

@@ -39,6 +39,8 @@ class Rom:
         for r in read_csv(os.path.join(ROOT, "labels.csv")):
             if r[0] == "bank":
                 continue
+            if r[2] in self.names.values():
+                raise SystemExit(f"labels.csv: the name {r[2]} is used twice")
             self.names[(int(r[0]), int(r[1], 16))] = r[2]
             if len(r) > 3 and r[3]:
                 self.comments[(int(r[0]), int(r[1], 16))] = r[3]
@@ -65,6 +67,8 @@ class Rom:
         self.nocode = {(int(r[0]), int(r[1], 16)) for r in read_csv(os.path.join(ROOT, "nocode.csv")) if r[0] != "bank"}
         self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3]), r[4]) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
                         if r[0] != "bank"]
+        self.bcptrs = {(int(r[0]), int(r[1], 16)) for r in read_csv(os.path.join(ROOT, "bcptrs.csv")) if r[0] != "bank"}
+        self.farptrs = {(int(r[0]), int(r[1], 16)): r[2] for r in read_csv(os.path.join(ROOT, "farptrs.csv")) if r[0] != "bank"}
         self.table_len = {(int(r[0]), int(r[1], 16)): int(r[2]) for r in read_csv(os.path.join(ROOT, "tables.csv"))
                           if r[0] != "bank"}
         self.dwords = {}     # (bank, addr) -> target of a table word
@@ -275,9 +279,11 @@ class Rom:
         n = 0
         for (b, pc) in sorted(self.insns):
             o = off(b, pc)
-            if self.data[o] not in (0x11, 0x21):      # not BC: it usually holds a length
-                continue
             t = self.data[o + 1] | self.data[o + 2] << 8
+            if self.data[o] == 0x01 and (self.home(t, b), t) not in self.bcptrs:
+                continue                          # BC usually holds a length unless listed in bcptrs.csv
+            if self.data[o] not in (0x01, 0x11, 0x21):
+                continue
             if not (0x150 <= t < 0x8000) or (b == 0 and t >= BANK):
                 continue
             tb = self.home(t, b)
@@ -510,11 +516,15 @@ class Rom:
             if key in self.insns:
                 n, kind, tgt = self.insns[key]
                 _, text, _, _ = sm83.decode(self.data, pc, base + pc - start, lab)
-                if self.data[base + pc - start] in (0x11, 0x21) and not (bank == 0 and
+                if self.data[base + pc - start] in (0x01, 0x11, 0x21) and not (bank == 0 and
                         (self.data[base + pc - start + 1] | self.data[base + pc - start + 2] << 8) >= BANK):
                     v = self.data[base + pc - start + 1] | self.data[base + pc - start + 2] << 8
+                    if self.data[base + pc - start] == 0x01 and (self.home(v, bank), v) not in self.bcptrs:
+                        v = 0
                     if 0x150 <= v < 0x8000 and self.targets.get((self.home(v, bank), v)) == "data":
                         text = text.rsplit("$", 1)[0] + lab(v)
+                if key in self.farptrs:            # pointer into another bank: use that bank's label
+                    text = text.rsplit("$", 1)[0] + self.farptrs[key]
                 if kind not in ("jr", "jru", "jp", "jpu", "call"):
                     text = re.sub(r"\$([0-9a-f]{4})", lambda m: self.by_value.get(int(m[1], 16), m[0]), text)
                 out.append("    " + text)

@@ -492,7 +492,7 @@
      }
     },
     {
-     "name": "L_00_09d1",
+     "name": "MoveObjectHalfStep",
      "size": "15",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -628,7 +628,7 @@
      }
     },
     {
-     "name": "L_00_10a2",
+     "name": "LowNibbleToDigitTile",
      "size": "2",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -636,7 +636,7 @@
      }
     },
     {
-     "name": "L_00_10a4",
+     "name": "NumberToTile",
      "size": "7",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -740,7 +740,7 @@
      }
     },
     {
-     "name": "L_00_175d",
+     "name": "SetCursorDefaultAnimation",
      "size": "3",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -756,7 +756,7 @@
      }
     },
     {
-     "name": "L_00_1769",
+     "name": "ResetMagicCursorAnimation",
      "size": "7",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -812,7 +812,7 @@
      }
     },
     {
-     "name": "L_00_196f",
+     "name": "SetMagicRowAndReturn",
      "size": "4",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1028,7 +1028,7 @@
      }
     },
     {
-     "name": "L_00_2df1",
+     "name": "RunEndingTextListAndWait",
      "size": "14",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1204,7 +1204,7 @@
      }
     },
     {
-     "name": "L_00_352f",
+     "name": "EnemyPaintStep",
      "size": "106",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1228,7 +1228,7 @@
      }
     },
     {
-     "name": "L_00_3603",
+     "name": "EnemyTurnIfBlocked",
      "size": "58",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1404,7 +1404,7 @@
      }
     },
     {
-     "name": "L_00_392e",
+     "name": "EnemyPaintUnderB0M",
      "size": "31",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1420,7 +1420,7 @@
      }
     },
     {
-     "name": "L_00_3956",
+     "name": "EnemySelectAnimByKind",
      "size": "91",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1428,7 +1428,7 @@
      }
     },
     {
-     "name": "L_00_39b1",
+     "name": "EnemyTurnOrAnimate",
      "size": "72",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1436,7 +1436,7 @@
      }
     },
     {
-     "name": "L_00_39f9",
+     "name": "EnemyGridStep",
      "size": "31",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1516,7 +1516,7 @@
      }
     },
     {
-     "name": "L_00_3c4e",
+     "name": "EnemyKind7SetAnimation",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1524,7 +1524,7 @@
      }
     },
     {
-     "name": "L_00_3c57",
+     "name": "EnemyKind7Start",
      "size": "23",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1532,7 +1532,7 @@
      }
     },
     {
-     "name": "L_00_3c6e",
+     "name": "EnemyStoreAuxToTile",
      "size": "7",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1540,7 +1540,7 @@
      }
     },
     {
-     "name": "L_00_3c75",
+     "name": "EnemyClearTileSaveStep",
      "size": "8",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2375,7 +2375,7 @@
      }
     },
     {
-     "name": "L_01_4e47",
+     "name": "MagicTimerCountdown",
      "size": "12",
      "fuzzy_match_percent": 100.0,
      "metadata": {

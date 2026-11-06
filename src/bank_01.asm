@@ -405,22 +405,22 @@ SoundUpdateChannel::  ; one of 8 channel records of $20 bytes at wSoundChannels
     ld a, [hl]
     cp a, $03
     jr nz, .L_01_43eb
-    ld hl, $4572
+    ld hl, SoundWriteChannel4
     jp hl
 .L_01_43eb:
     cp a, $02
     jr nz, .L_01_43f3
-    ld hl, $4504
+    ld hl, SoundWriteChannel3
     jp hl
 .L_01_43f3:
     cp a, $01
     jr nz, .L_01_43fb
-    ld hl, $4484
+    ld hl, SoundWriteChannel2
     jp hl
 .L_01_43fb:
     cp a, $00
     jr nz, .L_01_4403
-    ld hl, $4404
+    ld hl, SoundWriteChannel1
     jp hl
 .L_01_4403:
     ret
@@ -681,7 +681,7 @@ SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word ta
     push de
     ld e, a
     ld d, $00
-    ld hl, $467b
+    ld hl, SoundCommandTable
     add hl, de
     ld d, h
     ld e, l
@@ -952,7 +952,7 @@ SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the 
     ld [$c313], a
 SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wave RAM
     push bc
-    ld bc, $3fb8
+    ld bc, D_00_3fb8
     sla a
     ld l, a
     ld h, $00
@@ -1655,7 +1655,7 @@ RunMagicEffect::  ; jumps to the effect routine of wActiveMagic (clears wMagicSt
     ld a, [wMagicState]
     res 2, a
     ld [wMagicState], a
-    ld hl, $4cd7
+    ld hl, MagicEffectTable
     ld a, [wActiveMagic]
     sla a
     ld c, a
@@ -1841,13 +1841,13 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     inc [hl]
     jr .L_01_4e16
 .L_01_4e3a:
-    call L_01_4e47
+    call MagicTimerCountdown
     ld a, $08
     ld [$c449], a
     xor a, a
     ld [wTrailIdx], a
     ret
-L_01_4e47::
+MagicTimerCountdown::  ; decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
     ldh a, [hMagicTimer]
     dec a
     ldh [hMagicTimer], a
@@ -2510,7 +2510,7 @@ EnemyKind4::  ; enemy kind 4
     jp EnemyKind4Init
 .L_01_5385:
     call EnemyAimAtPlayer
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call CheckEnemyTouchesPlayer
     call SelectKind4Animation
     jp DrawObject
@@ -2570,7 +2570,7 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call EnemyKind10Move
     call UpdateProjectile
     call ProjectileCheckPlayerHit
@@ -2789,12 +2789,12 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ldh a, [hEnemyKind]
     cp a, $0a
     jr nz, .L_01_56ca
-    ld bc, $5793
+    ld bc, D_01_5793
     ld de, D_01_579b
     ld hl, D_01_5797
     jr .L_01_56d3
 .L_01_56ca:
-    ld bc, $5787
+    ld bc, D_01_5787
     ld de, D_01_578f
     ld hl, D_01_578b
 .L_01_56d3:
@@ -2902,10 +2902,14 @@ L_01_570c::
     ret
 D_01_5782::
     INCBIN "assets/bank_01/5782.bin"
+D_01_5787::
+    INCBIN "assets/bank_01/5787.bin"
 D_01_578b::
     INCBIN "assets/bank_01/578b.bin"
 D_01_578f::
     INCBIN "assets/bank_01/578f.bin"
+D_01_5793::
+    INCBIN "assets/bank_01/5793.bin"
 D_01_5797::
     INCBIN "assets/bank_01/5797.bin"
 D_01_579b::
@@ -2927,15 +2931,15 @@ EnemyKind9::  ; enemy kind 9
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
     call EnemyAimAtPlayer
-    call L_00_39b1
-    call L_00_392e
+    call EnemyTurnOrAnimate
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
 EnemyKind9Move::  ; sets hEnemyAnimState 6 then moves and clamps (name provisional)
     ld a, $06
     ldh [hEnemyAnimState], a
-    call L_00_3603
+    call EnemyTurnIfBlocked
     jp MoveAndClampObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
@@ -2948,15 +2952,15 @@ SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     bit 0, a
     call nz, SetObjectFlipFlag
     ld de, D_01_587d
-    ld bc, $5884
+    ld bc, D_01_5884
     jp .L_01_584d
 .L_01_583e:
     ld de, D_01_588b
-    ld bc, $5892
+    ld bc, D_01_5892
     jp .L_01_584d
 .L_01_5847:
     ld de, D_01_586f
-    ld bc, $5876
+    ld bc, D_01_5876
 .L_01_584d:
     ldh a, [hEnemyTick]
     and a, $08
@@ -2979,10 +2983,16 @@ EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     jp EnemySnapToGrid
 D_01_586f::
     INCBIN "assets/bank_01/586f.bin"
+D_01_5876::
+    INCBIN "assets/bank_01/5876.bin"
 D_01_587d::
     INCBIN "assets/bank_01/587d.bin"
+D_01_5884::
+    INCBIN "assets/bank_01/5884.bin"
 D_01_588b::
     INCBIN "assets/bank_01/588b.bin"
+D_01_5892::
+    INCBIN "assets/bank_01/5892.bin"
 EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
     jr nz, .L_01_58a1
@@ -2992,13 +3002,13 @@ EnemyKind2::  ; enemy kind 2
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
-    call L_00_39f9
+    call EnemyGridStep
     call EnemyChooseDirection
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call EnemyShootIfReady
     call L_01_58ee
     call ProjectileFrame
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call SelectKind2Animation
@@ -3099,20 +3109,20 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     ld hl, hObject2
     set 5, [hl]
     ld de, D_01_59d9
-    ld bc, $59e0
+    ld bc, D_01_59e0
     jr .L_01_59ab
 .L_01_5990:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_01_59d9
-    ld bc, $59e0
+    ld bc, D_01_59e0
     jr .L_01_59ab
 .L_01_599d:
-    ld bc, $59e7
+    ld bc, D_01_59e7
     ld de, D_01_59ee
     jr .L_01_59ab
 .L_01_59a5:
-    ld bc, $59cb
+    ld bc, D_01_59cb
     ld de, D_01_59d2
 .L_01_59ab:
     ldh a, [hEnemyTick]
@@ -3138,6 +3148,10 @@ D_01_59d2::
     INCBIN "assets/bank_01/59d2.bin"
 D_01_59d9::
     INCBIN "assets/bank_01/59d9.bin"
+D_01_59e0::
+    INCBIN "assets/bank_01/59e0.bin"
+D_01_59e7::
+    INCBIN "assets/bank_01/59e7.bin"
 D_01_59ee::
     INCBIN "assets/bank_01/59ee.bin"
 D_01_59f5::
@@ -3155,9 +3169,9 @@ EnemyKind3::  ; enemy kind 3
     jp nz, EnemyDefeated
     call EnemyAimAtPlayer
     call EnemyFlagOnPaintedTile
-    call L_00_3603
+    call EnemyTurnIfBlocked
     call MoveAndClampObject
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind3Animation
     jp DrawObject
@@ -3170,23 +3184,23 @@ SelectKind3Animation::  ; animation pointers of enemy kind 3 by hEnemyDir
     bit 2, a
     jr nz, .L_01_5a5c
     ld de, D_01_5a76
-    ld bc, $5a7d
+    ld bc, D_01_5a7d
     jp SetAnimationVariant
 .L_01_5a40:
     ld hl, hObject2
     set 5, [hl]
     ld de, D_01_5a84
-    ld bc, $5a8b
+    ld bc, D_01_5a8b
     jp SetAnimationVariant
 .L_01_5a4e:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_01_5a84
-    ld bc, $5a8b
+    ld bc, D_01_5a8b
     jp SetAnimationVariant
 .L_01_5a5c:
     ld de, D_01_5a92
-    ld bc, $5a99
+    ld bc, D_01_5a99
     jp SetAnimationVariant
 EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ld de, D_01_5a76
@@ -3198,10 +3212,16 @@ EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     jp EnemySnapToGrid
 D_01_5a76::
     INCBIN "assets/bank_01/5a76.bin"
+D_01_5a7d::
+    INCBIN "assets/bank_01/5a7d.bin"
 D_01_5a84::
     INCBIN "assets/bank_01/5a84.bin"
+D_01_5a8b::
+    INCBIN "assets/bank_01/5a8b.bin"
 D_01_5a92::
     INCBIN "assets/bank_01/5a92.bin"
+D_01_5a99::
+    INCBIN "assets/bank_01/5a99.bin"
 Sound8DEffectData::  ; stream of sound id $8d
     INCBIN "assets/bank_01/5c48_Sound8DEffectData.bin"
 Sound8EEffectData::  ; stream of sound id $8e

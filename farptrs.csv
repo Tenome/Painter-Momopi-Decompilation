@@ -1,0 +1,14 @@
+# bank,pc,label -- `ld rr, imm16` at pc whose value is a label in another bank (the bank is switched before the data is read)
+bank,pc,label
+0,01c3,SpriteTiles
+0,01e7,TilesTitle
+0,01ec,TilesIcons
+0,01f1,TilesFont2
+0,01f9,TilesEnding
+1,43e7,SoundWriteChannel4
+1,43ef,SoundWriteChannel3
+1,43f7,SoundWriteChannel2
+1,43ff,SoundWriteChannel1
+1,45dd,SoundCommandTable
+1,4cc4,MagicEffectTable
+0,2534,BonusModeJumpTable
