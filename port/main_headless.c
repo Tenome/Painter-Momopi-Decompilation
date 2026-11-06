@@ -10,6 +10,7 @@ static int npress;
 static unsigned shots[MAXP];
 static int nshots;
 static unsigned limit;
+static int force_round;
 static unsigned rnd_seed;
 static int random_mode;
 static unsigned rnd(void) { rnd_seed = rnd_seed * 1103515245u + 12345u; return rnd_seed >> 16; }
@@ -31,6 +32,7 @@ static void hook(unsigned frame) {
         if (frame % 25 == 0) { static const uint8_t pick[] = {0, 1, 2, 4, 8, 1, 2, 4, 8, 0x10, 0x20, 0x80, 0x40}; cur = pick[rnd() % 13]; }
         j |= cur;
     }
+    if (force_round && frame == 254) { wr(0xC522, force_round); wr(0xC523, force_round); wr(0xC524, force_round - 1); }
     gb_joy = j;
     for (int i = 0; i < nshots; i++)
         if (shots[i] == frame) {
@@ -68,6 +70,7 @@ int main(int argc, char **argv) {
             char b[32]; unsigned fr, h;
             if (sscanf(argv[++i], "%u:%31[^:]:%u", &fr, b, &h) == 3) { press[npress].from = fr; press[npress].hold = h; press[npress].bit = button(b); npress++; }
         } else if (!strcmp(argv[i], "--shot") && i + 1 < argc && nshots < MAXP) shots[nshots++] = (unsigned)atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
         else if (!strcmp(argv[i], "--random") && i + 1 < argc) { random_mode = 1; rnd_seed = (unsigned)atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--wav") && i + 1 < argc) { wav = fopen(argv[++i], "wb"); for (int k = 0; k < 44; k++) fputc(0, wav); }
