@@ -140,6 +140,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   (the other player lost: `GotoLinkLose` runs from `PlayFrame`); `$08` sets `hLinkFlags` bit 2; a transfer started with the internal clock sets `hSerialByte` bits 0 and 2.
   `LinkSyncFrame` ($4cf3) sends `$02` every frame while `wMagicPoints` high byte is 0 and reacts to the answer. Not testable in `tools/emu.py` (no partner).
 
+- **Card effects measured in the emulator** (cast each card at MP 128, hold right/down for 240 frames): MP drops by the cost exactly. S.UP: the painter moves about twice as fast for $f0 frames.
+  W.IN: the painter passes through walls for $d0 frames. T.STOP ($d0 frames), GHOST ($b0), FRIEND ($b0) and SEALED ($a0) leave the painter's own movement unchanged and act on enemies and
+  projectiles (T.STOP freezes enemies, FRIEND and T.STOP remove the projectile). B.O.M ends in one frame (immediate explosion), CLEAR runs a short sequence and PYON has no timer.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

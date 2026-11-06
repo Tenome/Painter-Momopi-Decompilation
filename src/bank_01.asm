@@ -1724,7 +1724,7 @@ MagicEffectSealed::  ; card 6 SEALED: $a0 frames
     call BeginMagicCast
 .L_01_4d52:
     jp MagicTimerTick
-MagicEffectSUp::  ; card 1 S.UP (also id 0): runs for $f0 frames
+MagicEffectSUp::  ; card 1 S.UP: the player moves faster for $f0 frames (measured: reaches the same wall in about half the time)
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d63
@@ -1733,7 +1733,7 @@ MagicEffectSUp::  ; card 1 S.UP (also id 0): runs for $f0 frames
     call BeginMagicCast
 .L_01_4d63:
     jp MagicTimerTick
-MagicEffectWIn::  ; card 2 W.IN: $d0 frames; clears wPlayerBlocked
+MagicEffectWIn::  ; card 2 W.IN: $d0 frames; the player is no longer stopped by walls (measured: positions leave the room map); clears wPlayerBlocked
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d74

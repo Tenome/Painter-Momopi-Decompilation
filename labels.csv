@@ -244,8 +244,8 @@ bank,addr,name,comment
 0,19cd,MagicCardCostJobs,10 pointers to the MP cost VRAM jobs
 1,4cd7,MagicEffectTable,10 pointers to the card effect routines (index = card id)
 1,4cbc,RunMagicEffect,jumps to the effect routine of wActiveMagic (clears wMagicState bit 2 first)
-1,4d55,MagicEffectSUp,card 1 S.UP (also id 0): runs for $f0 frames
-1,4d66,MagicEffectWIn,card 2 W.IN: $d0 frames; clears wPlayerBlocked
+1,4d55,MagicEffectSUp,card 1 S.UP: the player moves faster for $f0 frames (measured: reaches the same wall in about half the time)
+1,4d66,MagicEffectWIn,card 2 W.IN: $d0 frames; the player is no longer stopped by walls (measured: positions leave the room map); clears wPlayerBlocked
 1,4d7b,MagicEffectTStop,card 3 T.STOP: $d0 frames; removes the object at $c49e
 1,4d91,MagicEffectGhost,card 4 GHOST: $b0 frames
 1,4da2,MagicEffectFriend,card 5 FRIEND: $b0 frames; removes the object at $c49e
