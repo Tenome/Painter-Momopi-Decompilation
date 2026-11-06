@@ -788,14 +788,18 @@ L_01_467a::
     dw L_01_45ef
     dw L_01_46d7
     dw L_01_46ed
-    INCBIN "orig/painter_momopie.gb", $04687, 8
+    dw L_01_46fd
+    dw L_01_4705
+    dw L_01_470e
+    INCBIN "orig/painter_momopie.gb", $0468d, 2
     dw L_01_4728
     dw L_01_4776
     dw L_01_478e
     dw L_01_4793
     dw L_01_4798
     dw L_01_479d
-    INCBIN "orig/painter_momopie.gb", $0469b, 4
+    dw L_01_4718
+    INCBIN "orig/painter_momopie.gb", $0469d, 2
 L_01_469f::
     ld hl, $000a
     add hl, bc
@@ -879,7 +883,8 @@ L_01_46fa::
     inc de
     inc de
     ret
-    INCBIN "orig/painter_momopie.gb", $046fd, 3
+L_01_46fd::
+    ld hl, $0007
 L_01_4700::
     add hl, bc
     ld a, [de]
@@ -897,7 +902,11 @@ L_01_4705::
 L_01_470e::
     ld hl, $0015
     jr L_01_4700
-    INCBIN "orig/painter_momopie.gb", $04713, 15
+    INCBIN "orig/painter_momopie.gb", $04713, 5
+L_01_4718::
+    ld hl, $0006
+    jr L_01_4700
+    INCBIN "orig/painter_momopie.gb", $0471d, 5
 L_01_4722::
     ld a, [de]
     inc de

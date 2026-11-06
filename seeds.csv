@@ -9,3 +9,5 @@ bank,addr,comment
 1,5301,entered from bank 0
 1,536a,entered from bank 0
 1,470e,executed in the emulator
+1,46fd,executed in the emulator (sound command handler)
+1,4718,executed in the emulator (sound command handler)
