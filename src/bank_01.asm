@@ -132,7 +132,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
 .L_01_41d6:
     ld de, D_01_4332
     ld b, $00
-    jp L_01_4271
+    jp SoundStartMusicNow
 SoundClearChannels::  ; clears the first byte of all 8 channel records and sets NR50 default ($77)
     ld a, $00
     ld [wSoundChannels], a
@@ -191,9 +191,9 @@ SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces low
     ld b, a
     ld a, [wMusicPriority]
     cp a, b
-    jr z, L_01_4271
+    jr z, SoundStartMusicNow
     jr nc, L_01_428c
-L_01_4271::
+SoundStartMusicNow::  ; music accepted by the priority check: records the priority
     ld a, b
     ld [wMusicPriority], a
     call SoundClearChannels
@@ -695,7 +695,7 @@ SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word ta
 SoundCmdStop::  ; command $e3: ends the stream; the channel is silenced
     ld a, $00
     ld [wMusicPriority], a
-L_01_45f4::
+SoundSilenceRecordChannel::  ; ends a stream: silences the hardware channel of the record (1 pulse1 2 pulse2 3 wave 4 noise)
     ld [bc], a
     ld hl, $0001
     add hl, bc
@@ -991,7 +991,7 @@ SoundCmdEnd::  ; sound command $eb: discards the caller's return address and end
 .L_01_4788:
     ld a, $00
     pop hl
-    jp L_01_45f4
+    jp SoundSilenceRecordChannel
 SoundCmdMuteOn::  ; command $ec: sets bit 5 of the record flags
     ld a, [bc]
     or a, $20
@@ -1031,7 +1031,7 @@ SoundApplyPitchSlide::  ; copies the pitch word at +$e into +$12 (frequency) for
     ret z
     ld a, [bc]
     bit 5, a
-    call nz, L_01_4820
+    call nz, SoundPitchSlideStep
     ld hl, $0006
     add hl, bc
     ld a, [hl]
@@ -1069,7 +1069,7 @@ SoundSetFrequency::  ; frequency for the current note from the pitch tables at $
     cp a, $83
     jr z, .L_01_4800
     ld hl, $0012
-    jr L_01_4837
+    jr SoundAddSigned16
 .L_01_4800:
     inc hl
     ld a, [hl]
@@ -1094,13 +1094,13 @@ SoundSetFrequency::  ; frequency for the current note from the pitch tables at $
     add hl, bc
     dec [hl]
     ret
-L_01_4820::
+SoundPitchSlideStep::  ; adds the signed slide in record +$14 to the 16 bit pitch at +$10
     ld hl, $0014
     add hl, bc
     ld a, [hl]
     ld [$c30b], a
     ld hl, $0010
-    call L_01_4837
+    call SoundAddSigned16
     ld hl, $0011
     add hl, bc
     ld a, d
@@ -1108,7 +1108,7 @@ L_01_4820::
     ld a, e
     ld [hl], a
     ret
-L_01_4837::
+SoundAddSigned16::  ; DE = word at record[HL] plus the signed byte in $c30b
     add hl, bc
     ld a, [hl+]
     ld e, a
@@ -1216,7 +1216,7 @@ EndMagic::  ; clears wMagicState
     xor a, a
     ld [wMagicState], a
     ret
-L_01_496c::
+SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 animation) and sets wPlayerStatus bit 4
     ld hl, wPaintObject
     call Clear32Bytes
     ld a, $08
@@ -1236,7 +1236,7 @@ L_01_496c::
     ld [$c449], a
     ld a, $82
     ld [wPaintObject], a
-    call L_01_4a9d
+    call InitTrailSegments
     jp BeginMagicCast
 L_01_49a0::
     ld a, $0f
@@ -1327,7 +1327,7 @@ L_01_4a31::
     ld a, h
     ld [$c500], a
     ret
-L_01_4a49::
+LoadTrailSegment::  ; copies the 7 byte trail segment $c1b6 of $c1b7.. into the paint blob object
     ld a, [$c1b6]
     ld e, $07
     call MultiplyByDE
@@ -1350,7 +1350,7 @@ L_01_4a49::
     ld a, [hl]
     ld [$c50e], a
     ret
-L_01_4a75::
+StoreTrailSegment::  ; copies the paint blob object back into trail segment $c1b6
     ld a, [$c1b6]
     ld e, $07
     call MultiplyByDE
@@ -1371,7 +1371,7 @@ L_01_4a75::
     ld a, [$c509]
     ld [hl], a
     ret
-L_01_4a9d::
+InitTrailSegments::  ; creates 8 trail segments of 7 bytes around the player at $c1b7
     ld bc, $0040
     ld hl, $c1b7
     call ClearMemory
@@ -1379,42 +1379,42 @@ L_01_4a9d::
     ld d, $10
     ld e, $00
     ld a, $08
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1be
     ld d, $10
     ld e, $f0
     ld a, $04
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1c5
     ld d, $00
     ld e, $f0
     ld a, $00
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1cc
     ld d, $f0
     ld e, $00
     ld a, $1c
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1d3
     ld d, $f0
     ld e, $00
     ld a, $18
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1da
     ld d, $f0
     ld e, $10
     ld a, $14
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1e1
     ld d, $00
     ld e, $10
     ld a, $10
-    call L_01_4b03
+    call InitTrailSegment
     ld hl, $c1e8
     ld d, $10
     ld e, $10
     ld a, $0c
-L_01_4b03::
+InitTrailSegment::  ; sets one trail segment: HL = segment; A = type; D/E = offsets from the player
     push hl
     ld bc, $0006
     add hl, bc
@@ -1796,11 +1796,11 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     ld hl, wPaintObject
     res 7, [hl]
 .L_01_4de2:
-    call L_01_4dee
+    call SelectBlobAnimation
     call L_00_0b66
     call L_00_09e0
     jp DrawObject
-L_01_4dee::
+SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
     ld a, [$c519]
     and a, $02
     jr z, .L_01_4dfa
@@ -1819,16 +1819,16 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4e16
-    call L_01_496c
+    call SpawnBombBlob
     call L_01_49a0
 .L_01_4e16:
-    call L_01_4a49
+    call LoadTrailSegment
     ld hl, wPaintObject
     call SetObjPtr
     call L_00_0b66
     call L_00_09e0
     call DrawObject
-    call L_01_4a75
+    call StoreTrailSegment
     call L_01_4a31
     ld hl, $c449
     dec [hl]
@@ -2075,7 +2075,7 @@ PaintUnderPlayer::  ; when the player is on the tile grid and the map cell is a 
 .L_01_4fe3:
     ld a, [wActiveMagic]
     cp a, $02
-    jp z, L_01_50fa
+    jp z, PaintUnderPlayerAligned
 PaintUnderPlayerCell::  ; looks up the cell under the player and paints it (shared tail of PaintUnderPlayer)
     ld a, [wPlayerX]
     call PixelXToColumn
@@ -2210,7 +2210,7 @@ NextRound::  ; wRound and room index advance by one (round $21 ends the game); c
 .L_01_50f5:
     ld a, $06
     jp GameModeDispatch
-L_01_50fa::
+PaintUnderPlayerAligned::  ; paints the cell under the player at the grid aligned Y
     ld a, [wPlayerX]
     call PixelXToColumn
     ld a, [wPlayerY]
@@ -2503,14 +2503,14 @@ EnemyKind4::  ; enemy kind 4
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5385
-    jp L_01_53c4
+    jp EnemyKind4Init
 .L_01_5385:
     call EnemyAimAtPlayer
     call L_00_39b1
     call CheckEnemyTouchesPlayer
-    call L_01_5394
+    call SelectKind4Animation
     jp DrawObject
-L_01_5394::
+SelectKind4Animation::  ; animation pointers of enemy kind 4 by hEnemyDir
     ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_53a8
@@ -2533,7 +2533,7 @@ L_01_5394::
 .L_01_53be:
     ld de, D_01_53f3
     jp L_00_3651
-L_01_53c4::
+EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
     ld a, $08
     ldh [hEnemyAnimState], a
     ld a, $01
@@ -2916,7 +2916,7 @@ EnemyKind9::  ; enemy kind 9
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_57fb
-    jp L_01_585e
+    jp EnemyKind9Init
 .L_01_57fb:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -2926,14 +2926,14 @@ EnemyKind9::  ; enemy kind 9
     call L_00_39b1
     call L_00_392e
     call CheckEnemyTouchesPlayer
-    call L_01_5821
+    call SelectKind9Animation
     jp DrawObject
 L_01_5817::
     ld a, $06
     ldh [hEnemyAnimState], a
     call L_00_3603
     jp L_00_3643
-L_01_5821::
+SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
     res 5, [hl]
     ldh a, [hEnemyDir]
@@ -2965,7 +2965,7 @@ L_01_5858::
     ld hl, hObject2
     set 5, [hl]
     ret
-L_01_585e::
+EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ld a, $06
     ldh [hEnemyAnimState], a
     ld a, $20
@@ -2982,7 +2982,7 @@ D_01_588b::
 EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
     jr nz, .L_01_58a1
-    jp L_01_59b6
+    jp EnemyKind2Init
 .L_01_58a1:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -2997,7 +2997,7 @@ EnemyKind2::  ; enemy kind 2
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
-    call L_01_596f
+    call SelectKind2Animation
     call SelectObject2
     jp DrawObject
 L_01_58cf::
@@ -3080,7 +3080,7 @@ SpawnEnemyProjectile::  ; creates the projectile at wProjectile in front of the 
     ld a, $82
     ld [wProjectile], a
     ret
-L_01_596f::
+SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     ld a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_5983
@@ -3118,7 +3118,7 @@ L_01_596f::
     pop de
 .L_01_59b3:
     jp L_00_3651
-L_01_59b6::
+EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld a, $05
     ldh [hEnemyAnimState], a
     ld a, $20
@@ -3144,7 +3144,7 @@ EnemyKind3::  ; enemy kind 3
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5a0a
-    jp L_01_5a65
+    jp EnemyKind3Init
 .L_01_5a0a:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -3155,9 +3155,9 @@ EnemyKind3::  ; enemy kind 3
     call L_00_3643
     call L_00_392e
     call CheckEnemyTouchesPlayer
-    call L_01_5a29
+    call SelectKind3Animation
     jp DrawObject
-L_01_5a29::
+SelectKind3Animation::  ; animation pointers of enemy kind 3 by hEnemyDir
     ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_5a40
@@ -3184,7 +3184,7 @@ L_01_5a29::
     ld de, D_01_5a92
     ld bc, $5a99
     jp SetAnimationVariant
-L_01_5a65::
+EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ld de, D_01_5a76
     call SetObjectAnimation
     ld a, $05

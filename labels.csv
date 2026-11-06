@@ -286,3 +286,22 @@ bank,addr,name,comment
 0,11b4,CheckExtraLife,when a score digit reaches the next threshold (table $11e7): wLives += 1 (once per threshold)
 0,0c49,PaintCellCountTable,number of path cells to paint per round (index (round-1)&15): initial wPaintRemaining
 0,14f0,RoundTimeTable,seconds per round block (index wRound/4): initial hTimeSeconds
+1,4271,SoundStartMusicNow,music accepted by the priority check: records the priority, clears the channels and loads the stream header
+1,45f4,SoundSilenceRecordChannel,ends a stream: silences the hardware channel of the record (1 pulse1 2 pulse2 3 wave 4 noise)
+1,4820,SoundPitchSlideStep,adds the signed slide in record +$14 to the 16 bit pitch at +$10
+1,4837,SoundAddSigned16,DE = word at record[HL] plus the signed byte in $c30b
+1,496c,SpawnBombBlob,creates the paint blob object for the B.O.M card ($4929 animation) and sets wPlayerStatus bit 4
+1,4a49,LoadTrailSegment,copies the 7 byte trail segment $c1b6 of $c1b7.. into the paint blob object
+1,4a75,StoreTrailSegment,copies the paint blob object back into trail segment $c1b6
+1,4a9d,InitTrailSegments,creates 8 trail segments of 7 bytes around the player at $c1b7
+1,4b03,InitTrailSegment,sets one trail segment: HL = segment; A = type; D/E = offsets from the player
+1,4dee,SelectBlobAnimation,chooses the paint blob animation pointer ($492b or $492d) from $c519
+1,50fa,PaintUnderPlayerAligned,paints the cell under the player at the grid aligned Y
+1,5394,SelectKind4Animation,animation pointers of enemy kind 4 by hEnemyDir
+1,53c4,EnemyKind4Init,sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
+1,596f,SelectKind2Animation,animation pointers of enemy kind 2 by hEnemyDir
+1,59b6,EnemyKind2Init,sets the counters and the first animation of enemy kind 2
+1,5a29,SelectKind3Animation,animation pointers of enemy kind 3 by hEnemyDir
+1,5a65,EnemyKind3Init,sets the counters and the first animation of enemy kind 3
+1,5821,SelectKind9Animation,animation pointers of enemy kind 9 by hEnemyDir
+1,585e,EnemyKind9Init,sets the counters and the first animation of enemy kind 9
