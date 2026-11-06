@@ -80,3 +80,11 @@ bank,addr,name,comment
 1,48c4,PlayerAnimPtrs,player animation pointers (down/up/side) chosen by SelectPlayerAnimation
 1,48cc,PlayerAnimPtrsFlipped,pointers for the side animation drawn flipped
 1,5178,DirectionToAnimIndex,dpad direction nibble to animation index
+0,0aaf,LookupWord,HL = word at HL + A*2 (also copied to DE and BC)
+0,0bf8,MultiplyByDE,signed multiply of A by DE (shift and add)
+0,0a49,SerialSendByte,sends C over the link port with the internal clock and waits for the reply
+0,0a6b,ByteToBCD,converts a byte in A (and C flag) to decimal digits using daa
+0,3654,SelectObject2,hObjPtr = hObject2
+0,365f,SetObjectTarget,stores DE at $ffb6/$ffb7 (movement target)
+1,4b58,PixelXToColumn,E = (X+8)/16 - 1
+1,4b62,LookupMapTile,A = wRoomMap tile at pixel Y with column E

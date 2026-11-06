@@ -50,3 +50,5 @@ DEF wPlayerStatus   EQU $c4df   ; bit 2 = caught/clear animation started
 DEF wGameFlags      EQU $c51e   ; bit 0 = player caught (frozen), bit 6 = round complete
 DEF wRoomType       EQU $c447   ; compared with 2/4/6/9 for special rooms
 DEF wSubState       EQU $c53a   ; bit 0 = special action in progress
+DEF wRoomMap        EQU $c0a7   ; tile map of the room: 16 bytes per row; pixel Y $18 + row*16, column from PixelXToColumn
+DEF hObject2        EQU $ffb5   ; a second object record kept in HRAM (flags at +0, target at $ffb6/$ffb7)

@@ -1222,7 +1222,7 @@ L_00_0a3f::
     inc b
     jr L_00_0a5d
     INCBIN "orig/painter_momopie.gb", $00a45, 4
-L_00_0a49::
+SerialSendByte::  ; sends C over the link port with the internal clock and waits for the reply
     ld a, [rSC]
     res 7, a
     ld [rSC], a
@@ -1237,7 +1237,7 @@ L_00_0a5d::
     ld [rSC], a
     call WaitSerialByte
     jp WaitVBlankFlag
-L_00_0a6b::
+ByteToBCD::  ; converts a byte in A (and C flag) to decimal digits using daa
     ldh [$ff96], a
     ld a, c
     ldh [$ff97], a
@@ -1281,7 +1281,7 @@ LookupByte::  ; A = byte at HL + C (table lookup)
     add hl, bc
     ld a, [hl]
     ret
-L_00_0aaf::
+LookupWord::  ; HL = word at HL + A*2 (also copied to DE and BC)
     sla a
     ld c, a
     ld b, $00
@@ -1431,7 +1431,7 @@ L_00_0b66::
     push af
     inc hl
     ld a, [hl]
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -1446,7 +1446,7 @@ L_00_0b66::
     ld [hl], a
     pop af
     pop de
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -1462,7 +1462,7 @@ L_00_0b66::
     ret
 D_00_0bb6::
     INCBIN "orig/painter_momopie.gb", $00bb6, 66
-L_00_0bf8::
+MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     push af
     bit 7, a
     jr z, L_00_0c00
@@ -1524,7 +1524,7 @@ D_00_0c49::
 L_00_0d0e::
     ld c, $00
     ld b, $01
-    ld de, $c0a7
+    ld de, wRoomMap
 L_00_0d15::
     push hl
     ld a, $04
@@ -1598,7 +1598,7 @@ L_00_100b::
     ld a, e
     add a, [hl]
     ld [$c47a], a
-    call L_00_0a6b
+    call ByteToBCD
     ldh a, [$ff99]
     and a, a
     jr z, L_00_1027
@@ -1651,7 +1651,7 @@ L_00_1084::
     ld a, [hl]
     push bc
     ld c, $00
-    call L_00_0a6b
+    call ByteToBCD
     pop bc
     ldh a, [$ff98]
     ld d, a
@@ -1705,7 +1705,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld hl, D_00_16da
     call L_00_142a
     ld hl, $9800
-    ld de, $c0a7
+    ld de, wRoomMap
     ld a, $0f
     ld [$c7c0], a
     call L_00_0527
@@ -1899,7 +1899,7 @@ L_00_1265::
     ld a, [$c44b]
     ld c, a
     ld a, [$c44a]
-    call L_00_0a6b
+    call ByteToBCD
     ldh a, [$ff98]
     and a, $0f
     call L_00_10a4
@@ -1921,7 +1921,7 @@ L_00_1265::
     call L_00_0628
     ldh a, [hCountdownHi]
     ld c, $00
-    call L_00_0a6b
+    call ByteToBCD
     ldh a, [$ff98]
     and a, $0f
     call L_00_10a4
@@ -2114,7 +2114,7 @@ L_00_142a::
 L_00_1433::
     and a, $0f
 L_00_1435::
-    jp L_00_0aaf
+    jp LookupWord
 L_00_1438::
     ldh a, [hLinkFlags]
     bit 0, a
@@ -2235,7 +2235,7 @@ L_00_17a9::
 L_00_17b2::
     ld a, [$c43d]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [$ff96]
     ld d, a
     ld a, [$c43c]
@@ -2262,7 +2262,7 @@ L_00_17e2::
     call PlaySound
     ld a, [$c43d]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [$ff96]
     ld d, a
     ld a, [$c43c]
@@ -2283,7 +2283,7 @@ L_00_180f::
     jr z, L_00_1834
     ld a, [$c43d]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [$ff96]
     ld e, a
     ld a, [$c43c]
@@ -2311,7 +2311,7 @@ L_00_1839::
 L_00_1844::
     ld a, [$c43d]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [$ff96]
     add a, $02
     ld c, a
@@ -2330,7 +2330,7 @@ L_00_185f::
     dec [hl]
     ld a, [hl]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     jr L_00_18a3
 L_00_1871::
     xor a, a
@@ -2343,7 +2343,7 @@ L_00_1876::
     ld a, [$c43d]
     inc a
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ldh a, [$ff96]
     ld d, a
     ld a, [$c43c]
@@ -2357,7 +2357,7 @@ L_00_1876::
     inc [hl]
     ld a, [$c43d]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
 L_00_18a3::
     ldh a, [$ff96]
     ld c, a
@@ -2365,7 +2365,7 @@ L_00_18a3::
     call LookupByte
     ldh [$ff98], a
     ld hl, D_00_19a5
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d02
@@ -2373,7 +2373,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19b9
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d42
@@ -2381,7 +2381,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19cd
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9de2
@@ -2395,7 +2395,7 @@ L_00_18a3::
     call LookupByte
     ldh [$ff98], a
     ld hl, D_00_19a5
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d08
@@ -2403,7 +2403,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19b9
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d48
@@ -2411,7 +2411,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19cd
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9de8
@@ -2425,7 +2425,7 @@ L_00_18a3::
     call LookupByte
     ldh [$ff98], a
     ld hl, D_00_19a5
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d0e
@@ -2433,7 +2433,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19b9
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9d4e
@@ -2441,7 +2441,7 @@ L_00_18a3::
     call WaitVramCopyDone
     ldh a, [$ff98]
     ld hl, D_00_19cd
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9dee
@@ -2556,7 +2556,7 @@ L_00_1cfd::
     ld a, $01
     ldh [$ffa1], a
     ld a, b
-    call L_00_0a6b
+    call ByteToBCD
     ldh [$ff96], a
     and a, $f0
     swap a
@@ -2784,7 +2784,7 @@ L_00_1fc2::
     bit 0, a
     jr z, L_00_2014
     ld c, $10
-    call L_00_0a49
+    call SerialSendByte
 L_00_2014::
     ld a, [$c49c]
     bit 0, a
@@ -2809,7 +2809,7 @@ L_00_2029::
     ld a, [wRound]
     or a, $80
     ld c, a
-    call L_00_0a49
+    call SerialSendByte
 L_00_2042::
     ld hl, $c51f
     res 2, [hl]
@@ -2866,7 +2866,7 @@ L_00_24b7::
     di
     ld a, [$c43b]
     ld hl, D_00_2709
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld bc, $270f
@@ -2887,14 +2887,14 @@ L_00_24e9::
     jr nz, L_00_250f
     ld a, [$c75a]
     ld hl, D_00_269b
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $9886
     call L_00_0628
     ld a, [$c75a]
     ld hl, D_00_2651
-    call L_00_0aaf
+    call LookupWord
     push hl
     pop de
     ld hl, $98c9
@@ -2916,7 +2916,7 @@ L_00_250f::
     ei
     ld a, [$c43b]
     ld hl, $253b
-    call L_00_0aaf
+    call LookupWord
     jp hl
 L_00_253b::
     ld b, c
@@ -2964,7 +2964,7 @@ L_00_257d::
     jr z, L_00_257d
     ld a, [$c487]
     ld e, $03
-    call L_00_0bf8
+    call MultiplyByDE
     ld c, a
     ld b, $00
     ld hl, D_00_25cb
@@ -3127,7 +3127,7 @@ L_00_2a61::
     ld a, [wRound]
     or a, $80
     ld c, a
-    call L_00_0a49
+    call SerialSendByte
     ld a, [rSB]
     cp a, $ee
     jr z, L_00_2a8b
@@ -3439,7 +3439,7 @@ L_00_2dd9::
     call L_00_2fa5
     ld a, [$c790]
     ld hl, D_00_2e0f
-    call L_00_0aaf
+    call LookupWord
     call QueueVramCopyList
     jp WaitVramCopyDone
 L_00_2df1::
@@ -3644,14 +3644,14 @@ L_00_31f1::
     ld a, [wRound]
     dec a
     ld hl, D_00_0d3d
-    call L_00_0aaf
+    call LookupWord
     ld a, [$c483]
     cp a, $06
     jr nz, L_00_3206
     xor a, a
     ld [$c483], a
 L_00_3206::
-    call L_00_0aaf
+    call LookupWord
     ld a, l
     ld [$c481], a
     ld a, h
@@ -3827,7 +3827,7 @@ L_00_333b::
     ldh [$ffb6], a
     ld a, h
     ldh [$ffb7], a
-    call L_00_3654
+    call SelectObject2
     call DrawObject
     pop hl
     ld a, [wPlayerStatus]
@@ -3841,9 +3841,9 @@ L_00_333b::
     call SetObjPtr
     call DrawObject
 L_00_3361::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 6, [hl]
-    call L_00_3654
+    call SelectObject2
     call DrawObject
     ld a, [wPlayerStatus]
     bit 4, a
@@ -3854,10 +3854,10 @@ L_00_3361::
     call SetObjPtr
     call DrawObject
 L_00_3381::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 5, [hl]
     res 6, [hl]
-    call L_00_3654
+    call SelectObject2
     call DrawObject
     ld a, [wPlayerStatus]
     bit 4, a
@@ -3869,9 +3869,9 @@ L_00_3381::
     call SetObjPtr
     call DrawObject
 L_00_33a5::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 6, [hl]
-    call L_00_3654
+    call SelectObject2
     call DrawObject
     ld a, [wPlayerStatus]
     bit 4, a
@@ -3882,9 +3882,9 @@ L_00_33a5::
     call SetObjPtr
     call DrawObject
 L_00_33c5::
-    ldh a, [$ffb5]
+    ldh a, [hObject2]
     and a, $9f
-    ldh [$ffb5], a
+    ldh [hObject2], a
     ld a, [wPlayerStatus]
     bit 4, a
     ret z
@@ -3952,7 +3952,7 @@ L_00_3432::
     ldh [$ffa4], a
     ld a, h
     ldh [$ffa5], a
-    call L_00_3654
+    call SelectObject2
     call L_00_0abf
     and a, a
     ret z
@@ -4005,7 +4005,7 @@ L_00_3481::
     ld a, b
     add a, $08
     and a, $f0
-    call L_01_4b58
+    call PixelXToColumn
     ld a, c
     and a, $f0
     add a, $08
@@ -4015,7 +4015,7 @@ L_00_3481::
     and a, $f0
     add a, $08
     sub a, $10
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_00_34ae
@@ -4025,7 +4025,7 @@ L_00_34ae::
     ld a, b
     add a, $08
     and a, $f0
-    call L_01_4b58
+    call PixelXToColumn
     ld a, c
     and a, $f0
     add a, $08
@@ -4036,7 +4036,7 @@ L_00_34ae::
     and a, $f0
     add a, $08
     add a, $10
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_00_34d5
@@ -4051,14 +4051,14 @@ L_00_34d5::
     jr c, L_00_34fc
     add a, $08
     and a, $f0
-    call L_01_4b58
+    call PixelXToColumn
     ld a, e
     sub a, $01
     ld e, a
     ld a, c
     and a, $f0
     add a, $08
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_00_34fc
@@ -4076,14 +4076,14 @@ L_00_34fc::
     ld a, b
     add a, $08
     and a, $f0
-    call L_01_4b58
+    call PixelXToColumn
     ld a, e
     add a, $01
     ld e, a
     ld a, c
     and a, $f0
     add a, $08
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     ret nz
@@ -4092,7 +4092,7 @@ L_00_34fc::
     ldh [$ffc7], a
     ret
 L_00_3525::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 7, [hl]
     ld hl, $c47e
     dec [hl]
@@ -4114,11 +4114,11 @@ L_00_3541::
     ld hl, $ffd1
     res 5, [hl]
     ldh a, [$ffbc]
-    call L_01_4b58
+    call PixelXToColumn
     ldh a, [$ffbf]
     and a, $f0
     add a, $08
-    call L_01_4b62
+    call LookupMapTile
     ld e, a
     bit 7, a
     ret nz
@@ -4267,15 +4267,15 @@ L_00_3649::
     push bc
     pop de
 L_00_3651::
-    jp L_00_365f
-L_00_3654::
-    ld hl, $ffb5
+    jp SetObjectTarget
+SelectObject2::  ; hObjPtr = hObject2
+    ld hl, hObject2
     ld a, l
     ldh [hObjPtrLo], a
     ld a, $ff
     ldh [hObjPtrHi], a
     ret
-L_00_365f::
+SetObjectTarget::  ; stores DE at $ffb6/$ffb7 (movement target)
     ld a, e
     ldh [$ffb6], a
     ld a, d
@@ -4291,11 +4291,11 @@ L_00_3666::
     ret
 L_00_3673::
     ldh a, [$ffbc]
-    call L_01_4b58
+    call PixelXToColumn
     ldh a, [$ffbf]
     and a, $f0
     add a, $08
-    jp L_01_4b62
+    jp LookupMapTile
 L_00_3681::
     ld hl, $ffbc
     ld c, [hl]
@@ -4317,7 +4317,7 @@ L_00_3693::
     ldh [$ffa4], a
     ld a, h
     ldh [$ffa5], a
-    call L_00_3654
+    call SelectObject2
     call L_00_0abf
     and a, a
     ret z
@@ -4428,7 +4428,7 @@ L_00_375e::
     ldh a, [$ffde]
     bit 2, a
     ret z
-    ld hl, $ffb5
+    ld hl, hObject2
     ld a, l
     ldh [hObjPtrLo], a
     ld a, $ff
@@ -4486,7 +4486,7 @@ L_00_37f9::
 L_00_3810::
     call L_00_382a
     ld a, $82
-    ldh [$ffb5], a
+    ldh [hObject2], a
     ldh a, [$ff9d]
     ldh [$ffd2], a
     ldh a, [$ff9e]
@@ -4497,14 +4497,14 @@ L_00_3810::
     ldh [$ffcf], a
     jp L_00_3830
 L_00_382a::
-    ld hl, $ffb5
+    ld hl, hObject2
     jp Clear32Bytes
 L_00_3830::
     ldh a, [$ffd7]
     ld l, a
     ldh a, [$ffd8]
     ld h, a
-    ldh a, [$ffb5]
+    ldh a, [hObject2]
     ld [hl+], a
     ldh a, [$ffb6]
     ld [hl+], a
@@ -4575,7 +4575,7 @@ L_00_3897::
     ldh a, [$ffd8]
     ld h, a
     ld a, [hl+]
-    ldh [$ffb5], a
+    ldh [hObject2], a
     ld a, [hl+]
     ldh [$ffb6], a
     ld a, [hl+]
@@ -4656,7 +4656,7 @@ L_00_3906::
     call L_00_341f
     call L_00_3693
     call L_00_3956
-    call L_00_3654
+    call SelectObject2
     jp DrawObject
 L_00_392e::
     ld a, [wRoomType]
@@ -4708,13 +4708,13 @@ L_00_3975::
     ld bc, $3aab
     jp L_00_3649
 L_00_398c::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3ab0
     ld bc, $3ab5
     jp L_00_3649
 L_00_399a::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3ab0
     ld bc, $3ab5
@@ -4761,7 +4761,7 @@ L_00_39ec::
     ldh [$ffc2], a
     ld a, [hl]
     ldh [$ffc4], a
-    call L_00_3654
+    call SelectObject2
     jp L_00_09e0
 L_00_39f9::
     call L_00_3478
@@ -4851,15 +4851,15 @@ L_00_3a75::
     cp a, $08
     jr z, L_00_3a99
     ld de, D_00_3aa6
-    call L_00_365f
+    call SetObjectTarget
     jp L_00_340c
 L_00_3a90::
     ld de, D_00_3acf
-    call L_00_365f
+    call SetObjectTarget
     jp L_00_340c
 L_00_3a99::
     ld de, D_00_3ad9
-    call L_00_365f
+    call SetObjectTarget
     jp L_00_340c
 D_00_3aa2::
     INCBIN "orig/painter_momopie.gb", $03aa2, 4
@@ -4888,7 +4888,7 @@ L_00_3aed::
     ld [bc], a
     nop
     ld [bc], a
-    call L_00_3654
+    call SelectObject2
     call L_00_31e2
     jr nz, L_00_3b02
     jp L_00_3bad
@@ -4950,13 +4950,13 @@ L_00_3b5d::
     ld bc, $3bc3
     jp L_00_3649
 L_00_3b74::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3bc8
     ld bc, $3bcd
     jp L_00_3649
 L_00_3b82::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3bc8
     ld bc, $3bcd
@@ -4983,7 +4983,7 @@ L_00_3bad::
     ld a, $20
     ldh [$ffc9], a
     ld de, D_00_3bbe
-    call L_00_365f
+    call SetObjectTarget
     jp L_00_340c
 D_00_3bbe::
     INCBIN "orig/painter_momopie.gb", $03bbe, 10
@@ -4995,7 +4995,7 @@ L_00_3bd2::
     reti
     INCBIN "orig/painter_momopie.gb", $03bd7, 186
 L_00_3c91::
-    call L_00_3654
+    call SelectObject2
     call L_00_31e2
     jr nz, L_00_3c9c
     jp L_00_3e20
@@ -5022,10 +5022,10 @@ L_00_3cb5::
     ld bc, $3e4d
     jp L_00_3649
 L_00_3ccd::
-    ldh a, [$ffb5]
+    ldh a, [hObject2]
     set 5, a
     set 6, a
-    ldh [$ffb5], a
+    ldh [hObject2], a
     ldh a, [$ffc9]
     cp a, $00
     jr z, L_00_3ce7
@@ -5036,13 +5036,13 @@ L_00_3ccd::
     cp a, $18
     jr z, L_00_3d0c
 L_00_3ce7::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 6, [hl]
     ld de, D_00_3e4d
     ld bc, $3e52
     jp L_00_3649
 L_00_3cf5::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 5, [hl]
     ld de, $3e57
     ld bc, $3e5c
@@ -5113,16 +5113,16 @@ L_00_3e20::
     ld a, $20
     ldh [$ffc9], a
     ldh [$ffcc], a
-    ld hl, $ffb5
+    ld hl, hObject2
     set 6, [hl]
     ld de, D_00_3e4d
-    call L_00_365f
+    call SetObjectTarget
     call L_00_340c
     ldh a, [$ffd1]
     and a, $0f
     srl a
     ld hl, D_00_3d6a
-    call L_00_0aaf
+    call LookupWord
     ld a, l
     ld [$c533], a
     ld a, h
@@ -5136,7 +5136,7 @@ L_00_3e57::
     add a, $c7
     sub a, $d7
 L_00_3e61::
-    call L_00_3654
+    call SelectObject2
     call L_00_31e2
     jr nz, L_00_3e6c
     jp L_00_3ef9
@@ -5213,7 +5213,7 @@ L_00_3ed1::
     ld hl, $ffca
     inc [hl]
     ld de, D_00_3f44
-    jp L_00_365f
+    jp SetObjectTarget
 L_00_3ef9::
     ld a, $20
     ldh [$ffc9], a
@@ -5238,7 +5238,7 @@ L_00_3ef9::
     xor a, a
     ld [$c493], a
     ld de, D_00_3f3a
-    call L_00_365f
+    call SetObjectTarget
     ld a, $90
     ldh [$ffd1], a
     ret

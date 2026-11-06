@@ -1323,7 +1323,7 @@ L_01_4a40::
 L_01_4a49::
     ld a, [$c1b6]
     ld e, $07
-    call L_00_0bf8
+    call MultiplyByDE
     ld c, a
     ld b, $00
     ld hl, $c1b7
@@ -1346,7 +1346,7 @@ L_01_4a49::
 L_01_4a75::
     ld a, [$c1b6]
     ld e, $07
-    call L_00_0bf8
+    call MultiplyByDE
     ld c, a
     ld b, $00
     ld hl, $c1b7
@@ -1455,18 +1455,18 @@ L_01_4b4f::
     ld a, h
     ld [$c4e4], a
     ret
-L_01_4b58::
+PixelXToColumn::  ; E = (X+8)/16 - 1
     add a, $08
     and a, $f0
     swap a
     sub a, $01
     ld e, a
     ret
-L_01_4b62::
+LookupMapTile::  ; A = wRoomMap tile at pixel Y with column E
     push bc
     sub a, $18
     add a, e
-    ld hl, $c0a7
+    ld hl, wRoomMap
     ld c, a
     call LookupByte
     pop bc
@@ -1485,10 +1485,10 @@ L_01_4b79::
     call IsOnTileGrid
     ret nz
     ld a, b
-    call L_01_4b58
+    call PixelXToColumn
     ld a, c
     sub a, $10
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_01_4b98
@@ -1498,7 +1498,7 @@ L_01_4b79::
 L_01_4b98::
     ld a, c
     add a, $10
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_01_4bae
@@ -1511,7 +1511,7 @@ L_01_4bae::
     sub a, $01
     ld e, a
     ld a, c
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     jr nz, L_01_4bc6
@@ -1524,7 +1524,7 @@ L_01_4bc6::
     add a, $02
     ld e, a
     ld a, c
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     or a, $00
     ret nz
@@ -1592,9 +1592,9 @@ L_01_4c4e::
     call IsOnTileGrid
     ret nz
     ld a, [wPlayerX]
-    call L_01_4b58
+    call PixelXToColumn
     ld a, [wPlayerY]
-    call L_01_4b62
+    call LookupMapTile
     and a, $0f
     ret nz
     ld hl, wPlayerDir
@@ -1902,7 +1902,7 @@ L_01_4ea5::
     ld [rOBP1], a
     ld bc, $00ff
 L_01_4eb3::
-    ld hl, $c0a7
+    ld hl, wRoomMap
     add hl, bc
     ld a, [hl]
     bit 7, a
@@ -2080,9 +2080,9 @@ L_01_4fe3::
     jp z, L_01_50fa
 L_01_4feb::
     ld a, [wPlayerX]
-    call L_01_4b58
+    call PixelXToColumn
     ld a, [wPlayerY]
-    call L_01_4b62
+    call LookupMapTile
     or a, a
     ret z
     ld hl, wPlayerX
@@ -2093,9 +2093,9 @@ L_01_4feb::
     ret nz
     ld a, b
 L_01_5006::
-    call L_01_4b58
+    call PixelXToColumn
     ld a, c
-    call L_01_4b62
+    call LookupMapTile
     ldh [$ff96], a
     and a, $10
     ret nz
@@ -2170,7 +2170,7 @@ L_01_509b::
     bit 0, a
     jr z, L_01_50b6
     ld c, $08
-    call L_00_0a49
+    call SerialSendByte
     ldh a, [hSerialByte]
     bit 1, a
     ret nz
@@ -2214,11 +2214,11 @@ L_01_50f5::
     jp GameModeDispatch
 L_01_50fa::
     ld a, [wPlayerX]
-    call L_01_4b58
+    call PixelXToColumn
     ld a, [wPlayerY]
     and a, $f0
     add a, $08
-    call L_01_4b62
+    call LookupMapTile
     or a, a
     ret z
     jp L_01_4feb
@@ -2400,7 +2400,7 @@ L_01_529c::
     bit 0, a
     jr z, L_01_52b7
     ld c, $04
-    call L_00_0a49
+    call SerialSendByte
     ld hl, hSerialByte
     set 7, [hl]
     ldh a, [hSerialByte]
@@ -2502,7 +2502,7 @@ L_01_536a::
     ld [$c1af], a
     ret
 L_01_537a::
-    call L_00_3654
+    call SelectObject2
     call L_00_31e2
     jr nz, L_01_5385
     jp L_01_53c4
@@ -2523,12 +2523,12 @@ L_01_5394::
     ld de, D_01_53e5
     jp L_00_3651
 L_01_53a8::
-    ld hl, $ffb5
+    ld hl, hObject2
     set 5, [hl]
     ld de, D_01_53ec
     jp L_00_3651
 L_01_53b3::
-    ld hl, $ffb5
+    ld hl, hObject2
     res 5, [hl]
     ld de, D_01_53ec
     jp L_00_3651
@@ -2550,7 +2550,7 @@ L_01_53d6::
 L_01_53d8::
     ldh [$ffc9], a
     ld de, D_01_53e5
-    call L_00_365f
+    call SetObjectTarget
     ld a, $91
     ldh [$ffd1], a
     ret

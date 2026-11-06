@@ -110,13 +110,13 @@ bank	addr	size	name
 0	09fd	22	L_00_09fd
 0	0a13	44	L_00_0a13
 0	0a3f	6	L_00_0a3f
-0	0a49	20	L_00_0a49
+0	0a49	20	SerialSendByte
 0	0a5d	14	L_00_0a5d
-0	0a6b	27	L_00_0a6b
+0	0a6b	27	ByteToBCD
 0	0a86	25	L_00_0a86
 0	0a9f	11	L_00_0a9f
 0	0aaa	5	LookupByte
-0	0aaf	16	L_00_0aaf
+0	0aaf	16	LookupWord
 0	0abf	68	L_00_0abf
 0	0b03	3	L_00_0b03
 0	0b06	4	L_00_0b06
@@ -128,7 +128,7 @@ bank	addr	size	name
 0	0b5b	2	L_00_0b5b
 0	0b5d	9	L_00_0b5d
 0	0b66	80	L_00_0b66
-0	0bf8	8	L_00_0bf8
+0	0bf8	8	MultiplyByDE
 0	0c00	6	L_00_0c00
 0	0c06	5	L_00_0c06
 0	0c0b	24	L_00_0c0b
@@ -351,8 +351,8 @@ bank	addr	size	name
 0	3643	6	L_00_3643
 0	3649	8	L_00_3649
 0	3651	3	L_00_3651
-0	3654	11	L_00_3654
-0	365f	7	L_00_365f
+0	3654	11	SelectObject2
+0	365f	7	SetObjectTarget
 0	3666	13	L_00_3666
 0	3673	14	L_00_3673
 0	3681	9	L_00_3681
@@ -567,8 +567,8 @@ bank	addr	size	name
 1	4b42	10	L_01_4b42
 1	4b4c	3	L_01_4b4c
 1	4b4f	9	L_01_4b4f
-1	4b58	10	L_01_4b58
-1	4b62	13	L_01_4b62
+1	4b58	10	PixelXToColumn
+1	4b62	13	LookupMapTile
 1	4b6f	10	IsOnTileGrid
 1	4b79	31	L_01_4b79
 1	4b98	22	L_01_4b98
