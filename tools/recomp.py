@@ -181,9 +181,9 @@ class Recomp:
                 else:
                     call = f"CALL({self.fname(tb, n16)});"
             out.append(call if op == 0xCD else f"if ({COND[(op >> 3) & 3]}) {{ {call} }}")
-        elif op == 0xC9: out.append("return 0;")
-        elif op == 0xD9: out.append("ime = 1; return 0;")
-        elif op in (0xC0, 0xC8, 0xD0, 0xD8): out.append(f"if ({COND[(op >> 3) & 3]}) return 0;")
+        elif op == 0xC9: out.append("r.sp += 2; return 0;")
+        elif op == 0xD9: out.append("ime = 1; r.sp += 2; return 0;")
+        elif op in (0xC0, 0xC8, 0xD0, 0xD8): out.append(f"if ({COND[(op >> 3) & 3]}) {{ r.sp += 2; return 0; }}")
         elif op == 0xC7:                       # rst $00: word jump table follows
             ents = []
             q = pc + 1

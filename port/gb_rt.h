@@ -43,7 +43,9 @@ void gb_dma_routine(void);
 extern int gb_trace;
 void gb_trace_fn(fn_t f);
 static inline void gb_run(fn_t f) { while (f) { if (gb_trace) gb_trace_fn(f); f = (fn_t)f(); } }
-#define CALL(fn) do { r.sp -= 2; gb_run((fn_t)(fn)); r.sp += 2; } while (0)
+/* `call` reserves the return address slot; `ret` releases it. A callee that discarded its return address (pop hl; ... ret) makes
+ * the stack end above where we left it: that ret already returned for us too, so this routine returns as well. */
+#define CALL(fn) do { uint16_t sp0_ = r.sp; r.sp -= 2; gb_run((fn_t)(fn)); if (r.sp > sp0_) return 0; } while (0)
 /* Called on every backward branch: this is where waiting loops let interrupts and the PPU run. */
 #define BACKEDGE() gb_service()
 
