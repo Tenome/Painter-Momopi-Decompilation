@@ -145,3 +145,4 @@ DEF wScoreDigits    EQU $c464   ; 8 BCD digits of the score (SCR on the magic sc
 DEF wMagicCol       EQU $c43c   ; magic screen cursor column (0-2)
 DEF wMagicRow       EQU $c43d   ; magic screen cursor row (0-2)
 DEF wMagicCards     EQU $c43e   ; 9 bytes: card id per slot of the 3x3 inventory (0 = empty); round 1 starts with S. UP in slot 0
+DEF wPlayerBlocked  EQU $c43b   ; mask of directions the player cannot walk (set by PlayerComputeBlockedDirs); the bonus screens reuse it as a step counter

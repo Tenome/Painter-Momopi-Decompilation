@@ -2897,7 +2897,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld [rLCDC], a
     ei
     ld a, $f0
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
 .L_00_1fc2:
     call WaitFrameAndSyncOam
     ldh a, [hSerialByte]
@@ -2911,7 +2911,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld hl, wCursorObject
     call SetObjPtr
     call DrawObjectBytePos
-    ld hl, $c43b
+    ld hl, wPlayerBlocked
     dec [hl]
     jp z, Entry
     ldh a, [hJoyNew]
@@ -3035,7 +3035,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld hl, $c487
     inc [hl]
     xor a, a
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ld a, SND_MUSIC_BONUS_SELECT
     call PlaySound
     call LcdOff
@@ -3048,7 +3048,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
 Mode2_Init::  ; bonus select setup after LcdOff
     call LcdOff
     di
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     ld hl, BonusSelectJobTable
     call LookupWord
     push hl
@@ -3060,7 +3060,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     call L_00_051d
     ld bc, $29b1
     call RunVramCopyList
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     and a, a
     jr nz, .L_00_24e9
     ld de, D_00_264a
@@ -3098,7 +3098,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     ld hl, $253b
     call LookupWord
     jp hl
@@ -3117,7 +3117,7 @@ L_00_253b::
     ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_2545
-    ld hl, $c43b
+    ld hl, wPlayerBlocked
     inc [hl]
     jp Mode2_Init
 L_00_2558::
@@ -3137,7 +3137,7 @@ L_00_2558::
 L_00_2574::
     ld a, $10
     call DelayFrames
-    ld hl, $c43b
+    ld hl, wPlayerBlocked
     inc [hl]
 .L_00_257d:
     call WaitFrameAndSyncOam

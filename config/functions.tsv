@@ -275,9 +275,9 @@ bank	addr	size	name
 1	4b58	10	PixelXToColumn
 1	4b62	13	LookupMapTile
 1	4b6f	10	IsOnTileGrid
-1	4b79	101	L_01_4b79
+1	4b79	101	PlayerComputeBlockedDirs
 1	4bde	112	PlayFrame
-1	4c4e	33	L_01_4c4e
+1	4c4e	33	PlayerCheckOffPath
 1	4c6f	56	PlayerAction
 1	4ca7	21	L_01_4ca7
 1	4cbc	27	L_01_4cbc

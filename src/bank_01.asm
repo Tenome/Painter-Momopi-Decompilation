@@ -1486,9 +1486,9 @@ IsOnTileGrid::  ; B = X and C = Y: Z when both are multiples of 16
     and a, $0f
     cp a, $08
     ret
-L_01_4b79::
+PlayerComputeBlockedDirs::  ; fills wPlayerBlocked from the room map cells around the player
     xor a, a
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     call IsOnTileGrid
     ret nz
     ld a, b
@@ -1500,7 +1500,7 @@ L_01_4b79::
     or a, $00
     jr nz, .L_01_4b98
     ld a, $04
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ldh [hEnemyBlocked], a
 .L_01_4b98:
     ld a, c
@@ -1509,9 +1509,9 @@ L_01_4b79::
     and a, $0f
     or a, $00
     jr nz, .L_01_4bae
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     or a, $08
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ldh [hEnemyBlocked], a
 .L_01_4bae:
     ld a, e
@@ -1522,9 +1522,9 @@ L_01_4b79::
     and a, $0f
     or a, $00
     jr nz, .L_01_4bc6
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     or a, $02
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ldh [hEnemyBlocked], a
 .L_01_4bc6:
     ld a, e
@@ -1535,9 +1535,9 @@ L_01_4b79::
     and a, $0f
     or a, $00
     ret nz
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     or a, $01
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ldh [hEnemyBlocked], a
     ret
 PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the player
@@ -1565,9 +1565,9 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     bit 0, a
     jr nz, .L_01_4c1b
 .L_01_4c12:
-    call L_01_4c4e
+    call PlayerCheckOffPath
     call LoadPlayerXY
-    call L_01_4b79
+    call PlayerComputeBlockedDirs
 .L_01_4c1b:
     call HoldDirectionUntilAligned
     call PlayerSetDirection
@@ -1591,7 +1591,7 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     ld hl, wPlayer
     call SetObjPtr
     jp DrawObject
-L_01_4c4e::
+PlayerCheckOffPath::  ; sets wPlayerDir bit 5 (death) when the player stands on a tile grid cell that is not a path
     ld a, [wPlayerX]
     ld b, a
     ld a, [wPlayerY]
@@ -1741,7 +1741,7 @@ L_01_4d66::
     call L_01_4957
 .L_01_4d74:
     xor a, a
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     jp L_01_4962
 L_01_4d7b::
     ld a, [wSubState]
@@ -2222,7 +2222,7 @@ L_01_50fa::
 PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ldh a, [hJoyHeld]
     ld e, a
-    ld a, [$c43b]
+    ld a, [wPlayerBlocked]
     swap a
     and a, e
     jp nz, L_01_5183
@@ -2295,7 +2295,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     xor a, a
     ld [$c4d2], a
     ld [$c4c2], a
-    ld [$c43b], a
+    ld [wPlayerBlocked], a
     ld [$c1b6], a
     ld [wPlayerDir], a
     ld [wPlayerStatus], a

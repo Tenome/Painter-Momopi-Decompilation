@@ -237,3 +237,5 @@ bank,addr,name,comment
 0,185f,MagicCursorUp,moves the magic card cursor one row up
 0,1876,MagicCursorDown,moves the magic card cursor one row down
 0,18a3,DrawMagicCard,draws the card at the cursor (id from wMagicCards) and its cost
+1,4b79,PlayerComputeBlockedDirs,fills wPlayerBlocked from the room map cells around the player
+1,4c4e,PlayerCheckOffPath,sets wPlayerDir bit 5 (death) when the player stands on a tile grid cell that is not a path
