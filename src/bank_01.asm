@@ -1607,7 +1607,7 @@ PlayerCheckOffPath::  ; sets wPlayerDir bit 5 (death) when the player stands on 
     ld hl, wPlayerDir
     set 5, [hl]
     ret
-PlayerAction::  ; handles the A button (paint action)
+PlayerAction::  ; A button in play: casts the card selected on the magic screen (wActiveMagic): sets wMagicState bit 0
     ld a, [wMagicState]
     bit 0, a
     jr nz, RunMagicEffect
@@ -1635,7 +1635,7 @@ PlayerAction::  ; handles the A button (paint action)
     sub a, c
     ld e, a
     jr z, LinkSyncFrame
-L_01_4ca7::
+PayMagicCost::  ; subtracts the card cost from wMagicPoints (borrowing from the high byte) and starts the effect; cancels the cast when MP is too low
     jr c, .L_01_4cae
     ld [wMagicPoints], a
     jr RunMagicEffect
@@ -1671,7 +1671,7 @@ MagicEffectTable::  ; 10 pointers to the card effect routines (index = card id)
     dw MagicEffectGhost
     dw MagicEffectFriend
     dw MagicEffectSealed
-    dw MagicEffectDom
+    dw MagicEffectBom
     dw MagicEffectClear
     dw MagicEffectPyon
 CancelMagic::  ; clears wActiveMagic and wMagicState
@@ -1682,10 +1682,10 @@ CancelMagic::  ; clears wActiveMagic and wMagicState
 LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ldh a, [hLinkFlags]
     bit 0, a
-    jr z, L_01_4ca7
+    jr z, PayMagicCost
     ld a, [wMagicPointsHi]
     and a, a
-    jr nz, L_01_4ca7
+    jr nz, PayMagicCost
     ldh a, [hSerialByte]
     and a, $20
     ld [$c7bf], a
@@ -1814,7 +1814,7 @@ L_01_4dee::
     ld a, h
     ld [$c500], a
     ret
-MagicEffectDom::  ; card 7 D.O.M: spawns the paint blob object and draws it
+MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld hl, $c519
     ld a, [wMagicState]
     bit 1, a

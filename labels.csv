@@ -55,7 +55,7 @@ bank,addr,name,comment
 0,0840,DrawObject,builds OAM sprites for the object record at hObjPtr from its animation data
 0,0aaa,LookupByte,A = byte at HL + C (table lookup)
 1,4bde,PlayFrame,one frame of play mode: input; movement; collisions; drawing the player
-1,4c6f,PlayerAction,handles the A button (paint action)
+1,4c6f,PlayerAction,A button in play: casts the card selected on the magic screen (wActiveMagic): sets wMagicState bit 0, subtracts the MP cost, then RunMagicEffect each frame while it runs; otherwise sets wPlayerDir bit 6
 1,4b6f,IsOnTileGrid,B = X and C = Y: Z when both are multiples of 16
 1,4f51,LoadPlayerXY,B = wPlayerX and C = wPlayerY
 1,4f21,ClampPlayerPosition,keeps the player inside X $20-$f0 and Y $28-$f8
@@ -250,7 +250,7 @@ bank,addr,name,comment
 1,4d91,MagicEffectGhost,card 4 GHOST: $b0 frames
 1,4da2,MagicEffectFriend,card 5 FRIEND: $b0 frames; removes the object at $c49e
 1,4d44,MagicEffectSealed,card 6 SEALED: $a0 frames
-1,4e06,MagicEffectDom,card 7 D.O.M: spawns the paint blob object and draws it
+1,4e06,MagicEffectBom,card 7 B.O.M: spawns the paint blob object and draws it
 1,4e77,MagicEffectClear,card 8 CLEAR: $50 steps
 1,4db8,MagicEffectPyon,card 9 PYON: creates the paint blob object at the player
 1,4957,BeginMagicCast,plays SND_SFX_82 and sets wMagicState bit 1
@@ -279,3 +279,4 @@ bank,addr,name,comment
 0,37f5,FindFreeEnemySlot,scans slots 15 down to 0 for one whose bit 7 is clear
 0,0b44,NextRandomDirection,derives a pseudo random direction nibble from hFrameSpin
 0,2065,ContinueCursorInput,A or B moves the YES/NO cursor (wCursorX $3c or $74) in the continue mode
+1,4ca7,PayMagicCost,subtracts the card cost from wMagicPoints (borrowing from the high byte) and starts the effect; cancels the cast when MP is too low

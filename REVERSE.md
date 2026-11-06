@@ -119,16 +119,17 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 - **Magic screen** (found by pressing B in play with `tools/emu.py`): MOMOPIE'S MAGIC shows SCR (8 BCD score digits at `wScoreDigits`), Rn (`wRound`), MP (`wMagicPoints`,
   16 bit, initial value from `MagicPointsTable` by round: 50 in round 1), TIME (`hTimeSeconds`, counted down once per `hTimeFrames` = 60 frames) and three magic cards
-  (card ids and costs read from the screen: 1 S.UP 10MP, 2 W.IN 50, 3 T.STOP 40, 4 GHOST 90, 5 FRIEND 60, 6 SEALED 30, 7 D.O.M 80, 8 CLEAR 70, 9 PYON 20; a new game starts with S.UP, round 2 adds PYON, the link game starts with 1 2 3 5 6). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
+  (card ids and costs read from the screen: 1 S.UP 10MP, 2 W.IN 50, 3 T.STOP 40, 4 GHOST 90, 5 FRIEND 60, 6 SEALED 30, 7 B.O.M 80, 8 CLEAR 70, 9 PYON 20; a new game starts with S.UP, round 2 adds PYON, the link game starts with 1 2 3 5 6). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
 
 - **Animation and shape data** (decoded from `DrawObject` $0866 and checked against the data): the animation pointer of an object (record +1/+2) points at frames of
   `shape id, tile id x count` where `count` is the first byte of the shape; `ObjectShapeTable` ($06a4) maps the shape id to `count, (y offset, x offset) x count` with signed
   pixel offsets (for example shape 1 = four parts at (-8,-8) (0,-8) (-8,0) (0,0), a 16x16 sprite, with tile ids such as $bc $bd $cc $cd). Record flags bit 5 and 6 mirror the offsets.
   `SetAnimationVariant` picks between the two pointers of each animation pair depending on bit 3 of `$ffd0`.
 
-- **Casting a card** (`MagicScreenInput` $1770): A on a slot reads the card id from `wMagicCards`, compares the cost from `MagicCostTable` ($199b: 0 10 50 40 90 60 30 80 70 20 MP) with `wMagicPoints`, plays
-  `SND_SFX_90`, stores the id in `wActiveMagic` (formerly misnamed wRoomType) and sets `wMagicState` bits 1 and 2. Next frame `RunMagicEffect` jumps through `MagicEffectTable` ($4cd7) to the card's
-  routine, which starts `BeginMagicCast` and a frame countdown in `$ffdf` (`MagicTimerTick`). Enemy routines test `wActiveMagic` (T.STOP and others) and `wMagicState` bit 0 to change their behaviour.
+- **Casting a card** is two steps. On the magic screen (`MagicScreenInput` $1770) A *selects* a card: its id goes to `wActiveMagic` (formerly misnamed wRoomType), cost >= MP is refused, `SND_SFX_90` plays,
+  and B closes the screen. Back in play, A (`PlayerAction` $4c6f) *casts* it while `wPlayerStatus` bit 0 is set: `wMagicState` bit 0 = running, `PayMagicCost` subtracts the cost from `wMagicPoints`, and each frame
+  `RunMagicEffect` jumps through `MagicEffectTable` ($4cd7) to the card's routine, which starts `BeginMagicCast` and a countdown in `hMagicTimer` (`MagicTimerTick`). Enemy routines test `wActiveMagic`
+  (T.STOP and others) and `wMagicState` bit 0 to change behaviour.
 
 - **Enemy spawning** (`StepEnemySpawnScript` $31f1): `RoundDataTable[wRound-1]` points to 6 wave lists; a wave list is `count` then `count` entries of 4 bytes: spawn delay (compared with
   `hTimeSeconds`), X, Y and a kind/flavour byte (`and $f8` is stored as the kind data, bit 0 or bit 1 picks the variant from round 17 on). An enemy is created when the delay has

@@ -279,7 +279,7 @@ bank	addr	size	name
 1	4bde	112	PlayFrame
 1	4c4e	33	PlayerCheckOffPath
 1	4c6f	56	PlayerAction
-1	4ca7	21	L_01_4ca7
+1	4ca7	21	PayMagicCost
 1	4cbc	27	RunMagicEffect
 1	4ceb	8	CancelMagic
 1	4cf3	75	LinkSyncFrame
@@ -292,7 +292,7 @@ bank	addr	size	name
 1	4da2	22	MagicEffectFriend
 1	4db8	54	MagicEffectPyon
 1	4dee	24	L_01_4dee
-1	4e06	65	MagicEffectDom
+1	4e06	65	MagicEffectBom
 1	4e47	12	L_01_4e47
 1	4e53	6	L_01_4e53
 1	4e59	30	L_01_4e59

@@ -147,14 +147,14 @@ DEF wMagicRow       EQU $c43d   ; magic screen cursor row (0-2)
 DEF wMagicCards     EQU $c43e   ; 9 bytes: card id per slot of the 3x3 inventory (0 = empty); round 1 starts with S. UP in slot 0
 DEF wPlayerBlocked  EQU $c43b   ; mask of directions the player cannot walk (set by PlayerComputeBlockedDirs); the bonus screens reuse it as a step counter
 ; Magic card ids (wMagicCards) and MP costs, read from the magic screen: 1 S.UP 10, 2 W.IN 50, 3 T.STOP 40, 4 GHOST 90, 5 FRIEND 60, 6 SEALED 30,
-; 7 D.O.M 80, 8 CLEAR 70, 9 PYON 20 (0 = empty slot)
+; 7 B.O.M 80, 8 CLEAR 70, 9 PYON 20 (0 = empty slot)
 DEF CARD_S_UP       EQU 1
 DEF CARD_W_IN       EQU 2
 DEF CARD_T_STOP     EQU 3
 DEF CARD_GHOST      EQU 4
 DEF CARD_FRIEND     EQU 5
 DEF CARD_SEALED     EQU 6
-DEF CARD_DOM        EQU 7
+DEF CARD_BOM        EQU 7
 DEF CARD_CLEAR      EQU 8
 DEF CARD_PYON       EQU 9
 DEF wProjectile     EQU $c49e   ; object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it)
