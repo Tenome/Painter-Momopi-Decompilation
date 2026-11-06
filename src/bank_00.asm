@@ -1560,8 +1560,74 @@ UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked 
     or a, b
     jr nz, .L_00_0d15
     ret
-D_00_0d3d::
-    INCBIN "orig/painter_momopie.gb", $00d3d, 718
+RoundDataTable::  ; 33 pointers indexed by wRound-1
+    dw D_00_0d7f
+    dw D_00_0da5
+    dw D_00_0dd0
+    dw D_00_0dff
+    dw D_00_0e25
+    dw D_00_0e4b
+    dw D_00_0e75
+    dw D_00_0ea8
+    dw D_00_0ec1
+    dw D_00_0eee
+    dw D_00_0f0b
+    dw D_00_0f30
+    dw D_00_0f56
+    dw D_00_0f73
+    dw D_00_0f94
+    dw D_00_0fbd
+    dw D_00_0d7f
+    dw D_00_0da5
+    dw D_00_0dd0
+    dw D_00_0dff
+    dw D_00_0e25
+    dw D_00_0e4b
+    dw D_00_0e75
+    dw D_00_0ea8
+    dw D_00_0ec1
+    dw D_00_0eee
+    dw D_00_0f0b
+    dw D_00_0f30
+    dw D_00_0f56
+    dw D_00_0f73
+    dw D_00_0f94
+    dw D_00_0fbd
+    dw D_00_0fda
+D_00_0d7f::
+    INCBIN "orig/painter_momopie.gb", $00d7f, 38
+D_00_0da5::
+    INCBIN "orig/painter_momopie.gb", $00da5, 43
+D_00_0dd0::
+    INCBIN "orig/painter_momopie.gb", $00dd0, 47
+D_00_0dff::
+    INCBIN "orig/painter_momopie.gb", $00dff, 38
+D_00_0e25::
+    INCBIN "orig/painter_momopie.gb", $00e25, 38
+D_00_0e4b::
+    INCBIN "orig/painter_momopie.gb", $00e4b, 42
+D_00_0e75::
+    INCBIN "orig/painter_momopie.gb", $00e75, 51
+D_00_0ea8::
+    INCBIN "orig/painter_momopie.gb", $00ea8, 25
+D_00_0ec1::
+    INCBIN "orig/painter_momopie.gb", $00ec1, 45
+D_00_0eee::
+    INCBIN "orig/painter_momopie.gb", $00eee, 29
+D_00_0f0b::
+    INCBIN "orig/painter_momopie.gb", $00f0b, 37
+D_00_0f30::
+    INCBIN "orig/painter_momopie.gb", $00f30, 38
+D_00_0f56::
+    INCBIN "orig/painter_momopie.gb", $00f56, 29
+D_00_0f73::
+    INCBIN "orig/painter_momopie.gb", $00f73, 33
+D_00_0f94::
+    INCBIN "orig/painter_momopie.gb", $00f94, 41
+D_00_0fbd::
+    INCBIN "orig/painter_momopie.gb", $00fbd, 29
+D_00_0fda::
+    INCBIN "orig/painter_momopie.gb", $00fda, 49
 L_00_100b::
     ld bc, $0000
     ld hl, $c464
@@ -2563,7 +2629,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld hl, $992c
     call DrawTwoDigitNumber
     ld a, [wRound]
-    ld hl, D_00_1d39
+    ld hl, RoomNameJobTable
     call TableIndexFromRoundDec
     ld hl, $98c3
     call L_00_0628
@@ -2634,8 +2700,36 @@ L_00_1d23::
     ret
 D_00_1d2f::
     INCBIN "orig/painter_momopie.gb", $01d2f, 10
-D_00_1d39::
-    INCBIN "orig/painter_momopie.gb", $01d39, 135
+RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
+    dw D_00_1d5b
+    dw D_00_1d5b
+    dw D_00_1d5b
+    dw D_00_1d7e
+    dw D_00_1d64
+    dw D_00_1d64
+    dw D_00_1d64
+    dw D_00_1d7e
+    dw D_00_1d6c
+    dw D_00_1d6c
+    dw D_00_1d6c
+    dw D_00_1d7e
+    dw D_00_1d75
+    dw D_00_1d75
+    dw D_00_1d75
+    dw D_00_1d7e
+    dw D_00_1d87
+D_00_1d5b::
+    INCBIN "orig/painter_momopie.gb", $01d5b, 9
+D_00_1d64::
+    INCBIN "orig/painter_momopie.gb", $01d64, 8
+D_00_1d6c::
+    INCBIN "orig/painter_momopie.gb", $01d6c, 9
+D_00_1d75::
+    INCBIN "orig/painter_momopie.gb", $01d75, 9
+D_00_1d7e::
+    INCBIN "orig/painter_momopie.gb", $01d7e, 9
+D_00_1d87::
+    INCBIN "orig/painter_momopie.gb", $01d87, 57
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld sp, $dfff
     call LcdOff
@@ -2956,7 +3050,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     call LcdOff
     di
     ld a, [$c43b]
-    ld hl, D_00_2709
+    ld hl, BonusSelectJobTable
     call LookupWord
     push hl
     pop de
@@ -3152,8 +3246,17 @@ D_00_269b::
     INCBIN "orig/painter_momopie.gb", $0269b, 105
 D_00_2704::
     INCBIN "orig/painter_momopie.gb", $02704, 5
-D_00_2709::
-    INCBIN "orig/painter_momopie.gb", $02709, 737
+BonusSelectJobTable::  ; 3 pointers to VRAM job lists
+    dw D_00_28a3
+    dw D_00_28fd
+    dw D_00_2957
+    INCBIN "orig/painter_momopie.gb", $0270f, 404
+D_00_28a3::
+    INCBIN "orig/painter_momopie.gb", $028a3, 90
+D_00_28fd::
+    INCBIN "orig/painter_momopie.gb", $028fd, 90
+D_00_2957::
+    INCBIN "orig/painter_momopie.gb", $02957, 147
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
     ld sp, $dfff
     call LcdOff
@@ -3529,7 +3632,7 @@ L_00_2dd9::
     call L_00_2df1
     call L_00_2fa5
     ld a, [$c790]
-    ld hl, D_00_2e0f
+    ld hl, CreditsPageTable
     call LookupWord
     call QueueVramCopyList
     jp WaitVramCopyDone
@@ -3542,8 +3645,34 @@ L_00_2df1::
     jr nz, .L_00_2df7
     ret
     INCBIN "orig/painter_momopie.gb", $02dff, 16
-D_00_2e0f::
-    INCBIN "orig/painter_momopie.gb", $02e0f, 279
+CreditsPageTable::  ; 9 pointers to credit pages
+    dw D_00_2e21
+    dw D_00_2e2d
+    dw D_00_2e88
+    dw D_00_2ea7
+    dw D_00_2ec6
+    dw D_00_2e4c
+    dw D_00_2e6c
+    dw D_00_2ee5
+    dw D_00_2eff
+D_00_2e21::
+    INCBIN "orig/painter_momopie.gb", $02e21, 12
+D_00_2e2d::
+    INCBIN "orig/painter_momopie.gb", $02e2d, 31
+D_00_2e4c::
+    INCBIN "orig/painter_momopie.gb", $02e4c, 32
+D_00_2e6c::
+    INCBIN "orig/painter_momopie.gb", $02e6c, 28
+D_00_2e88::
+    INCBIN "orig/painter_momopie.gb", $02e88, 31
+D_00_2ea7::
+    INCBIN "orig/painter_momopie.gb", $02ea7, 31
+D_00_2ec6::
+    INCBIN "orig/painter_momopie.gb", $02ec6, 31
+D_00_2ee5::
+    INCBIN "orig/painter_momopie.gb", $02ee5, 26
+D_00_2eff::
+    INCBIN "orig/painter_momopie.gb", $02eff, 39
 L_00_2f26::
     call L_00_2f2c
     jp L_00_2f76
@@ -3734,7 +3863,7 @@ L_00_31eb::
 L_00_31f1::
     ld a, [wRound]
     dec a
-    ld hl, D_00_0d3d
+    ld hl, RoundDataTable
     call LookupWord
     ld a, [$c483]
     cp a, $06
@@ -5218,7 +5347,12 @@ L_00_3d18::
     ld [$c534], a
     jr .L_00_3d2f
 D_00_3d6a::
-    INCBIN "orig/painter_momopie.gb", $03d6a, 182
+    dw D_00_3d6e
+    dw D_00_3dc7
+D_00_3d6e::
+    INCBIN "orig/painter_momopie.gb", $03d6e, 89
+D_00_3dc7::
+    INCBIN "orig/painter_momopie.gb", $03dc7, 89
 L_00_3e20::
     ld a, $05
     ldh [$ffc6], a
@@ -5359,4 +5493,17 @@ D_00_3f3a::
 D_00_3f44::
     INCBIN "orig/painter_momopie.gb", $03f44, 8
 D_00_3f4c::
-    INCBIN "orig/painter_momopie.gb", $03f4c, 180
+    dw $cecd
+    dw D_00_3f56
+    dw D_00_3f95
+    dw D_00_3f9e
+    dw D_00_3faf
+D_00_3f56::
+    dw L_00_0000
+    INCBIN "orig/painter_momopie.gb", $03f58, 61
+D_00_3f95::
+    INCBIN "orig/painter_momopie.gb", $03f95, 9
+D_00_3f9e::
+    INCBIN "orig/painter_momopie.gb", $03f9e, 17
+D_00_3faf::
+    INCBIN "orig/painter_momopie.gb", $03faf, 81

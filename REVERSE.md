@@ -120,6 +120,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - **VRAM copy data** (`VramCopyRows` $0618): a job is `DE` = source stream, `HL` = destination; the stream is repeated `count, rows, tile...` records where
   `count` bit 7 means "repeat the single tile" instead of reading `count` tiles, `rows` = number of rows (the destination advances by $20 per row), terminated by
   the caller's job count. `VramCopyList` ($0663) runs a list of such jobs `{dstLo?, dstHi?, srcLo, srcHi}`.
+  Exact list format (`RunVramCopyList` $066b / `VramCopyList` $0663): `count` byte, then `count` entries of 4 bytes `{dest word (VRAM address), source word (a stream as above)}`.
+  `VramCopyRows` ($0618) runs one such pair (dest $c0a5/6, source $c0a3/4) and `QueueVramCopyRows` / `QueueVramCopyList` set them for the next VBlank.
+  Pointer tables to these lists: `RoomVramJobTable` $14f9, `RoomNameJobTable` $1d39, `BonusSelectJobTable` $2709, `CreditsPageTable` $2e0f, `RoundDataTable` $0d3d.
   Examples in bank 0: room names KITCHEN / BED(ROOM) / ROUYA / TAKARA / ROUKA / KING at $1d5d-$1d8a, `READY !!` $1db0, `GAME OVER` $1f12, `CONTINUE ?` $2094,
   title strings $2c54-$2c70, staff credits (PLANNER, DESIGNER, PROGRAMMER, PRESENTED...) $2e38-$2f1x for the ending.
 

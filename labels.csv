@@ -161,3 +161,7 @@ bank,addr,name,comment
 1,5c93,Sound91EffectData,stream of sound id $91
 1,5ca7,Sound92EffectData,stream of sound id $92
 1,5cba,Sound93EffectData,stream of sound id $93
+0,0d3d,RoundDataTable,33 pointers indexed by wRound-1
+0,2709,BonusSelectJobTable,3 pointers to VRAM job lists
+0,2e0f,CreditsPageTable,9 pointers to credit pages
+0,1d39,RoomNameJobTable,17 pointers to the room name VRAM jobs

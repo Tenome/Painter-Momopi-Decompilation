@@ -9,3 +9,9 @@ bank,addr,count,target_bank,kind,comment
 0,3782,6,1,code,EnemyBehaviorTable: routine run by UpdateEnemy indexed by $ffd2
 1,40f4,20,1,data,SoundCommandDataTable: song or effect data start per sound id ($81-$93; $8c is an empty slot that points at padding)
 1,411a,20,1,code,SoundCommandHandlerTable: routine that starts each sound id (music type $4263; effect type $4292)
+0,0d3d,33,0,data,RoundDataTable: data per round (index wRound-1)
+0,2709,3,0,data,BonusSelectJobTable: VRAM job lists indexed by $c43b
+0,2e0f,9,0,data,CreditsPageTable: VRAM job lists for the staff credits pages
+0,3d6a,2,0,data,SmallPointerTable3D6A
+0,3f4c,6,0,data,PointerTable3F4C: first word is not a pointer
+0,1d39,17,0,data,RoomNameJobTable: VRAM job list (room name) per room index
