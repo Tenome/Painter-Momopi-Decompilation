@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "15106",
-  "matched_code": "15106",
+  "total_code": "15099",
+  "matched_code": "15099",
   "matched_code_percent": 100.0,
-  "total_data": "50430",
-  "matched_data": "50430",
+  "total_data": "50437",
+  "matched_data": "50437",
   "matched_data_percent": 100.0,
-  "total_functions": 339,
-  "matched_functions": 339,
+  "total_functions": 338,
+  "matched_functions": 338,
   "matched_functions_percent": 100.0,
-  "complete_code": "15106",
+  "complete_code": "15099",
   "complete_code_percent": 100.0,
-  "complete_data": "50430",
+  "complete_data": "50437",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9541",
-    "matched_code": "9541",
+    "total_code": "9534",
+    "matched_code": "9534",
     "matched_code_percent": 100.0,
-    "total_data": "6843",
-    "matched_data": "6843",
+    "total_data": "6850",
+    "matched_data": "6850",
     "matched_data_percent": 100.0,
-    "total_functions": 197,
-    "matched_functions": 197,
+    "total_functions": 196,
+    "matched_functions": 196,
     "matched_functions_percent": 100.0,
-    "complete_code": "9541",
+    "complete_code": "9534",
     "complete_code_percent": 100.0,
-    "complete_data": "6843",
+    "complete_data": "6850",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9541",
+     "size": "9534",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "6843",
+     "size": "6850",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -996,11 +996,11 @@
      }
     },
     {
-     "name": "AnimFrames0_2b84",
-     "size": "18",
+     "name": "L_00_2b86",
+     "size": "16",
      "fuzzy_match_percent": 100.0,
      "metadata": {
-      "virtual_address": "11140"
+      "virtual_address": "11142"
      }
     },
     {
@@ -1548,19 +1548,11 @@
      }
     },
     {
-     "name": "L_00_3c7d",
+     "name": "EnemyMapTile",
      "size": "10",
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "15485"
-     }
-    },
-    {
-     "name": "AnimFrames0_3c87",
-     "size": "5",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "15495"
      }
     },
     {
@@ -1588,7 +1580,7 @@
      }
     },
     {
-     "name": "L_00_3e20",
+     "name": "EnemyKind7Init",
      "size": "45",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1612,7 +1604,7 @@
      }
     },
     {
-     "name": "L_00_3ed1",
+     "name": "EnemyKind7Teleport",
      "size": "40",
      "fuzzy_match_percent": 100.0,
      "metadata": {

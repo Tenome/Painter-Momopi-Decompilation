@@ -71,3 +71,5 @@ bank,addr,type,name,count
 0,314c,anim,anim_00_314c,10
 1,48ac,anim,anim_01_48ac,24
 1,48dc,anim,anim_01_48dc,63
+0,2b84,anim,anim_00_2b84,2
+0,3c87,anim,anim_00_3c87,10

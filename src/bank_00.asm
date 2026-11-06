@@ -3511,11 +3511,11 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     ld [wCursorY], a
     ld a, $80
     ld [wCursorObject], a
-    ld hl, $2b84
+    ld hl, AnimFrames0_2b84
     jp SetCursorAnimation
 AnimFrames0_2b84::  ; animation frames (typed text form)
-    rlca
-    or a, [hl]
+    INCBIN "assets/bank_00/2b84_AnimFrames0_2b84.bin"
+L_00_2b86::
     ld c, $04
     sbc a, b
     cp a, a
@@ -5308,7 +5308,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     sub a, $01
     ldh [$ffcb], a
     jr nc, .L_00_3c1a
-    call L_00_3c7d
+    call EnemyMapTile
     ldh a, [hEnemyAux]
     ld [hl], a
     jp RemoveEnemy
@@ -5328,7 +5328,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     bit 0, a
     jr z, .L_00_3c42
 .L_00_3c3a:
-    call L_00_3c7d
+    call EnemyMapTile
     ldh a, [hEnemyAux]
     ld [hl], a
     jr .L_00_3c45
@@ -5339,46 +5339,43 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call SelectObject2
     jp DrawObject
 L_00_3c4e::
-    ld de, $3c87
+    ld de, AnimFrames0_3c87
     ld bc, $3c8c
     jp SetAnimationVariant
 L_00_3c57::
     ld a, $20
     ldh [hEnemyCounter], a
-    call L_00_3c7d
+    call EnemyMapTile
     ldh [hEnemyAux], a
     ld a, $fe
     ldh [$ffcb], a
     ld a, $90
     ldh [hEnemyDir], a
-    ld de, $3c87
+    ld de, AnimFrames0_3c87
     jp SetObjectAnimation
 L_00_3c6e::
-    call L_00_3c7d
+    call EnemyMapTile
     ldh a, [hEnemyAux]
     ld [hl], a
     ret
 L_00_3c75::
-    call L_00_3c7d
+    call EnemyMapTile
     ldh [hEnemyStep], a
     xor a, a
     ld [hl], a
     ret
-L_00_3c7d::
+EnemyMapTile::  ; A = room map tile at the enemy position (X to column
     ldh a, [hEnemyX]
     call PixelXToColumn
     ldh a, [hEnemyY]
     jp LookupMapTile
 AnimFrames0_3c87::  ; animation frames (typed text form)
-    ld bc, $c9c8
-    ret c
-    reti
-    INCBIN "assets/bank_00/3c8c.bin"
+    INCBIN "assets/bank_00/3c87_AnimFrames0_3c87.bin"
 EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3c9c
-    jp L_00_3e20
+    jp EnemyKind7Init
 .L_00_3c9c:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5492,7 +5489,7 @@ D_00_3d6e::
     INCBIN "assets/bank_00/3d6e.bin"
 D_00_3dc7::
     INCBIN "assets/bank_00/3dc7.bin"
-L_00_3e20::
+EnemyKind7Init::  ; sets hEnemyAnimState 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
     ld a, $05
     ldh [hEnemyAnimState], a
     ld a, $20
@@ -5537,7 +5534,7 @@ EnemyKind5::  ; enemy kind 5
 .L_00_3e84:
     call CheckPaintHitsEnemy
     call L_00_3e90
-    call L_00_3ed1
+    call EnemyKind7Teleport
     jp DrawObject
 L_00_3e90::
     ldh a, [hEnemyDir]
@@ -5574,7 +5571,7 @@ L_00_3e90::
     ld hl, hEnemyDir
     set 0, [hl]
     ret
-L_00_3ed1::
+EnemyKind7Teleport::  ; moves the enemy to the next position in the table at $c489 or removes it (name provisional)
     ldh a, [hEnemyDir]
     bit 0, a
     ret z

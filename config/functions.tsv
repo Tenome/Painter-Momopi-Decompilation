@@ -117,7 +117,7 @@ bank	addr	size	name
 0	2b0a	25	PickRandomRound
 0	2b23	35	TitleCursorUpdate
 0	2b46	62	InitTitleVariables
-0	2b84	18	AnimFrames0_2b84
+0	2b86	16	L_00_2b86
 0	2c70	237	Mode6_Ending
 0	2d5d	124	EndingCreditsWindow
 0	2dd9	24	EndingShowCreditsPage
@@ -186,15 +186,14 @@ bank	addr	size	name
 0	3c57	23	L_00_3c57
 0	3c6e	7	L_00_3c6e
 0	3c75	8	L_00_3c75
-0	3c7d	10	L_00_3c7d
-0	3c87	5	AnimFrames0_3c87
+0	3c7d	10	EnemyMapTile
 0	3c91	36	EnemyKind7
 0	3cb5	99	L_00_3cb5
 0	3d18	82	L_00_3d18
-0	3e20	45	L_00_3e20
+0	3e20	45	EnemyKind7Init
 0	3e61	47	EnemyKind5
 0	3e90	65	L_00_3e90
-0	3ed1	40	L_00_3ed1
+0	3ed1	40	EnemyKind7Teleport
 0	3ef9	65	L_00_3ef9
 1	4157	53	SoundUpdate
 1	418c	33	SoundDequeue
