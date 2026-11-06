@@ -1574,7 +1574,7 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     call ClampPlayerPosition
     call CheckPlayerTileCollision
     call SelectPlayerAnimation
-    call L_00_32a2
+    call ProjectileFrame
     ld a, [wActiveMagic]
     or a, a
     jr z, .L_01_4c42
@@ -2505,7 +2505,7 @@ EnemyKind4::  ; enemy kind 4
     jr nz, .L_01_5385
     jp L_01_53c4
 .L_01_5385:
-    call L_00_3599
+    call EnemyAimAtPlayer
     call L_00_39b1
     call CheckEnemyTouchesPlayer
     call L_01_5394
@@ -2922,7 +2922,7 @@ EnemyKind9::  ; enemy kind 9
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
-    call L_00_3599
+    call EnemyAimAtPlayer
     call L_00_39b1
     call L_00_392e
     call CheckEnemyTouchesPlayer
@@ -2993,7 +2993,7 @@ EnemyKind2::  ; enemy kind 2
     call L_00_39b1
     call L_01_58cf
     call L_01_58ee
-    call L_00_32a2
+    call ProjectileFrame
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
@@ -3149,7 +3149,7 @@ EnemyKind3::  ; enemy kind 3
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    call L_00_3599
+    call EnemyAimAtPlayer
     call L_00_3b99
     call L_00_3603
     call L_00_3643

@@ -273,3 +273,9 @@ bank,addr,name,comment
 0,2dd9,EndingShowCreditsPage,queues the credit page $c790 from CreditsPageTable
 0,2574,BonusSelectLoop,per-frame loop of the three-door choice: cursor input, ball bounce, result
 0,2558,BonusResultWait,waits $e0 frames after the door result then goes to mode 3
+0,32a2,ProjectileFrame,per frame step and draw of the projectile object at wProjectile (skipped while SEALED or GHOST magic runs)
+0,3599,EnemyAimAtPlayer,when on the tile grid: compares enemy and player positions to set the direction bits towards the player
+0,36fa,ClearAllEnemies,clears the flag byte of all 16 enemy slots
+0,37f5,FindFreeEnemySlot,scans slots 15 down to 0 for one whose bit 7 is clear
+0,0b44,NextRandomDirection,derives a pseudo random direction nibble from hFrameSpin
+0,2065,ContinueCursorInput,A or B moves the YES/NO cursor (wCursorX $3c or $74) in the continue mode

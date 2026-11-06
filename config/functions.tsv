@@ -66,7 +66,7 @@ bank	addr	size	name
 0	0aaf	16	LookupWord
 0	0abf	75	ObjectsOverlap
 0	0b0a	58	CompareObjectCoordinate
-0	0b44	34	L_00_0b44
+0	0b44	34	NextRandomDirection
 0	0b66	80	L_00_0b66
 0	0bf8	50	MultiplyByDE
 0	0c2a	31	L_00_0c2a
@@ -107,7 +107,7 @@ bank	addr	size	name
 0	1dc0	110	Mode7_LinkLose
 0	1ea4	108	Mode4_GameOver
 0	1f1c	329	Mode5_Continue
-0	2065	30	L_00_2065
+0	2065	30	ContinueCursorInput
 0	2497	32	Mode2_BonusSelect
 0	24b7	132	Mode2_Init
 0	253b	29	L_00_253b
@@ -138,7 +138,7 @@ bank	addr	size	name
 0	31e2	9	TickObjectTimer
 0	31eb	6	L_00_31eb
 0	31f1	177	StepEnemySpawnScript
-0	32a2	61	L_00_32a2
+0	32a2	61	ProjectileFrame
 0	32df	286	EnemyDefeated
 0	33fd	15	L_00_33fd
 0	340c	19	L_00_340c
@@ -148,7 +148,7 @@ bank	addr	size	name
 0	3481	164	EnemyComputeBlockedDirs
 0	3525	10	L_00_3525
 0	352f	106	L_00_352f
-0	3599	95	L_00_3599
+0	3599	95	EnemyAimAtPlayer
 0	35f8	11	L_00_35f8
 0	3603	58	L_00_3603
 0	3643	6	L_00_3643
@@ -163,12 +163,12 @@ bank	addr	size	name
 0	3693	41	CheckPaintHitsEnemy
 0	36c6	3	L_00_36c6
 0	36c9	49	EnemyEdgeBlockedDirs
-0	36fa	25	L_00_36fa
+0	36fa	25	ClearAllEnemies
 0	3713	9	UpdateAllEnemies
 0	371c	42	UpdateEnemyLoop
 0	3746	60	UpdateEnemy
 0	379e	17	SelectEnemySlot
-0	37f5	53	L_00_37f5
+0	37f5	53	FindFreeEnemySlot
 0	382a	6	ClearEnemySlot
 0	3830	103	StoreEnemySlot
 0	3897	103	LoadEnemySlot

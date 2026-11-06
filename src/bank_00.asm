@@ -1387,7 +1387,7 @@ CompareObjectCoordinate::  ; compares a coordinate (offset in DE) of the two obj
     ld hl, hScratch06
     cp a, [hl]
     ret
-L_00_0b44::
+NextRandomDirection::  ; derives a pseudo random direction nibble from hFrameSpin
     ldh a, [hFrameSpin]
     and a, $10
     jr z, .L_00_0b55
@@ -1771,7 +1771,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld [wGameFlags], a
     call InitPlayer
 .L_00_1147:
-    call L_00_36fa
+    call ClearAllEnemies
     ld hl, wProjectile
     call Clear32Bytes
     call SerialStartTransfer
@@ -1877,7 +1877,7 @@ L_00_11ec::
     ldh [hScratch08], a
     ld a, $98
     ldh [hScratch0A], a
-    call L_00_37f5
+    call FindFreeEnemySlot
     jp SerialStartTransfer
 ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld a, [wPlayerDir]
@@ -2992,7 +2992,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     bit 3, a
     jr nz, .L_00_2024
     call ReadJoypad
-    call L_00_2065
+    call ContinueCursorInput
     ld hl, wCursorObject
     call SetObjPtr
     call DrawObjectBytePos
@@ -3060,7 +3060,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     dec a
     ld [wRoomIndex], a
     jr .L_00_2042
-L_00_2065::
+ContinueCursorInput::  ; A or B moves the YES/NO cursor (wCursorX $3c or $74) in the continue mode
     ldh a, [hJoyNew]
     and a, $30
     ret z
@@ -3475,7 +3475,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld [wRoomIndex], a
     jr .L_00_2ab7
 PickRandomRound::  ; title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
-    call L_00_0b44
+    call NextRandomDirection
     ldh a, [hRngCounter]
     and a, $1f
     jr z, PickRandomRound
@@ -4042,8 +4042,8 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     inc [hl]
     ld hl, wPlayerStatus
     res 5, [hl]
-    jp L_00_37f5
-L_00_32a2::
+    jp FindFreeEnemySlot
+ProjectileFrame::  ; per frame step and draw of the projectile object at wProjectile (skipped while SEALED or GHOST magic runs)
     ld a, [wActiveMagic]
     cp a, $06
     jr nz, .L_00_32af
@@ -4459,7 +4459,7 @@ L_00_352f::
     ld hl, wPaintRemaining
     inc [hl]
     ret
-L_00_3599::
+EnemyAimAtPlayer::  ; when on the tile grid: compares enemy and player positions to set the direction bits towards the player
     ldh a, [hEnemyX]
     ld b, a
     ldh a, [hEnemyY]
@@ -4671,7 +4671,7 @@ EnemyEdgeBlockedDirs::  ; adds the screen edge limits (X $20-$f0; Y $28-$f8) to 
     or a, $08
     ldh [hEnemyBlocked], a
     ret
-L_00_36fa::
+ClearAllEnemies::  ; clears the flag byte of all 16 enemy slots
     ld a, $0f
     ld [$c53e], a
 .L_00_36ff:
@@ -4794,7 +4794,7 @@ EnemySlotTable::  ; 16 word addresses of the enemy slots: $c542 + $20 * i
     dw $c702
     dw $c722
     INCBIN "orig/painter_momopie.gb", $037cf, 38
-L_00_37f5::
+FindFreeEnemySlot::  ; scans slots 15 down to 0 for one whose bit 7 is clear
     ld a, $0f
     ldh [hScratch06], a
 .L_00_37f9:
@@ -5128,7 +5128,7 @@ EnemyChooseDirection::  ; when hEnemyDir bit 6 is set: picks a new direction amo
     cp a, $0f
     jr z, .L_00_3a67
 .L_00_3a37:
-    call L_00_0b44
+    call NextRandomDirection
     ldh a, [hRngCounter]
     and a, $0f
     ld b, a
