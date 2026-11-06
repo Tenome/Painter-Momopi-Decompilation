@@ -96,3 +96,49 @@ void *gb_native_LookupMapTile(void) {
     r.c = save_c;
     return 0;
 }
+
+#define hScratch00 0xFF96
+#define hScratch01 0xFF97
+#define hEnemyBlocked 0xFFC7
+#define hEnemyX 0xFFBC
+#define hEnemyY 0xFFBF
+#define wCameraX 0xC1AC
+#define wCameraY 0xC1AE
+
+/* EnemyEdgeBlockedDirs: hEnemyBlocked = the directions the screen edges forbid (bit 0 right, 1 left, 2 up, 3 down; limits X $20-$ef, Y $28-$f7). */
+void *gb_native_EnemyEdgeBlockedDirs(void) {
+    uint8_t x = rd(hEnemyX), y = rd(hEnemyY), blocked = 0;
+    if (x < 0x21) blocked = 0x02;
+    if (x >= 0xF0) blocked |= 0x01;
+    if (y < 0x29) blocked |= 0x04;
+    if (y < 0xF8) {            /* the original returns with the flags of this compare and A = Y */
+        wr(hEnemyBlocked, blocked);
+        r.a = y;
+        alu_cp(0xF8);
+        return 0;
+    }
+    blocked |= 0x08;
+    wr(hEnemyBlocked, blocked);
+    r.a = blocked;
+    r.f = 0;                   /* result of `or a, $08` is never zero */
+    return 0;
+}
+
+/* EnemyScreenPosition: C = X and B = Y of an enemy (world pixels). Writes the position relative to the camera to hScratch00 (X) and hScratch01 (Y);
+ * A = 0 when it is inside the visible area (X $08-$a7, Y $10-$a7), else 1. HL is preserved. */
+void *gb_native_EnemyScreenPosition(void) {
+    uint8_t sx = (uint8_t)(r.c - rd(wCameraX)), sy = (uint8_t)(r.b - rd(wCameraY));
+    wr(hScratch00, sx);
+    wr(hScratch01, sy);
+    r.a = sx; alu_cp(0xA8);
+    if (!CF()) { r.a = 1; return 0; }
+    r.a = sx; alu_cp(0x08);
+    if (CF()) { r.a = 1; return 0; }
+    r.a = sy; alu_cp(0xA8);
+    if (!CF()) { r.a = 1; return 0; }
+    r.a = sy; alu_cp(0x10);
+    if (CF()) { r.a = 1; return 0; }
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}

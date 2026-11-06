@@ -15,3 +15,5 @@ CopyMemory
 Clear32Bytes
 PixelXToColumn
 LookupMapTile
+EnemyEdgeBlockedDirs
+EnemyScreenPosition
