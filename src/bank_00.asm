@@ -76,10 +76,10 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     ld de, $8000
     ld bc, $0700
     call CopyMemory
-    ld hl, D_00_16fc
+    ld hl, RoomSpriteSetTable
     ld a, [wRoomIndex]
 L_00_01d5::
-    call L_00_142a
+    call TableIndexFromRound
     ld de, $8700
     ld bc, $0900
     call CopyMemory
@@ -561,7 +561,7 @@ L_00_051d::
     ld [$ff97], a
     ld a, $0a
     ld [$ff96], a
-L_00_0527::
+DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatile table; DE cell map; mask in $c7c0
     ld a, l
     ldh [$ff9c], a
     ldh [$ff9e], a
@@ -774,7 +774,7 @@ VramCopyList::  ; runs a list of VramCopyRows jobs (from VBlank)
     ld c, a
     ld a, [wVramListPtrHi]
     ld b, a
-L_00_066b::
+RunVramCopyList::  ; BC = list of VRAM copy jobs run immediately
     ld a, [bc]
     ldh [$ffab], a
     inc bc
@@ -1521,7 +1521,7 @@ L_00_0c45::
     ret
 D_00_0c49::
     INCBIN "orig/painter_momopie.gb", $00c49, 197
-L_00_0d0e::
+UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked to the 256 byte wRoomMap
     ld c, $00
     ld b, $01
     ld de, wRoomMap
@@ -1693,26 +1693,26 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call FillBackwardsFF
     call LoadGfxBank2
     call ClearOamShadow
-    ld hl, D_00_171e
+    ld hl, RoomMapTable
     ld a, [wRound]
-    call L_00_1429
-    call L_00_0d0e
+    call TableIndexFromRoundDec
+    call UnpackRoomMap
     ld a, $10
     ld [$ff97], a
     ld a, $10
     ld [$ff96], a
     ld a, [wRoomIndex]
-    ld hl, D_00_16da
-    call L_00_142a
+    ld hl, RoomMetatileTable
+    call TableIndexFromRound
     ld hl, $9800
     ld de, wRoomMap
     ld a, $0f
     ld [$c7c0], a
-    call L_00_0527
+    call DrawMetatileMap
     ld a, [wRoomIndex]
-    ld hl, D_00_14f9
-    call L_00_142a
-    call L_00_066b
+    ld hl, RoomVramJobTable
+    call TableIndexFromRound
+    call RunVramCopyList
     ld c, $10
     ld a, [wRound]
     dec a
@@ -1874,9 +1874,9 @@ L_00_121c::
     ld hl, hVBlankTasks
     res 4, [hl]
     ld bc, $1a94
-    call L_00_066b
+    call RunVramCopyList
     ld bc, $1a57
-    call L_00_066b
+    call RunVramCopyList
     ld bc, $0010
     ld hl, $9cd0
     call L_00_04fc
@@ -2103,9 +2103,9 @@ L_00_1409::
     add a, $05
     ld [$c463], a
     jp L_00_132c
-L_00_1429::
+TableIndexFromRoundDec::  ; dec a then falls into TableIndexFromRound
     dec a
-L_00_142a::
+TableIndexFromRound::  ; A = (A-1)&15 or 16 for 32; then LookupWord
     ld c, $10
     cp a, $20
     jr nz, L_00_1433
@@ -2168,14 +2168,108 @@ L_00_14a6::
     INCBIN "orig/painter_momopie.gb", $014e4, 12
 D_00_14f0::
     INCBIN "orig/painter_momopie.gb", $014f0, 9
-D_00_14f9::
-    INCBIN "orig/painter_momopie.gb", $014f9, 481
-D_00_16da::
-    INCBIN "orig/painter_momopie.gb", $016da, 34
-D_00_16fc::
-    INCBIN "orig/painter_momopie.gb", $016fc, 34
-D_00_171e::
-    INCBIN "orig/painter_momopie.gb", $0171e, 34
+RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
+    dw D_00_151b
+    dw D_00_1538
+    dw D_00_1551
+    dw D_00_1637
+    dw D_00_156a
+    dw D_00_1583
+    dw D_00_1598
+    dw D_00_1640
+    dw D_00_15b1
+    dw D_00_15d7
+    dw D_00_15c2
+    dw D_00_1637
+    dw D_00_15f0
+    dw D_00_1609
+    dw D_00_161e
+    dw D_00_1640
+    dw D_00_1649
+D_00_151b::
+    INCBIN "orig/painter_momopie.gb", $0151b, 29
+D_00_1538::
+    INCBIN "orig/painter_momopie.gb", $01538, 25
+D_00_1551::
+    INCBIN "orig/painter_momopie.gb", $01551, 25
+D_00_156a::
+    INCBIN "orig/painter_momopie.gb", $0156a, 25
+D_00_1583::
+    INCBIN "orig/painter_momopie.gb", $01583, 21
+D_00_1598::
+    INCBIN "orig/painter_momopie.gb", $01598, 25
+D_00_15b1::
+    INCBIN "orig/painter_momopie.gb", $015b1, 17
+D_00_15c2::
+    INCBIN "orig/painter_momopie.gb", $015c2, 21
+D_00_15d7::
+    INCBIN "orig/painter_momopie.gb", $015d7, 25
+D_00_15f0::
+    INCBIN "orig/painter_momopie.gb", $015f0, 25
+D_00_1609::
+    INCBIN "orig/painter_momopie.gb", $01609, 21
+D_00_161e::
+    INCBIN "orig/painter_momopie.gb", $0161e, 25
+D_00_1637::
+    INCBIN "orig/painter_momopie.gb", $01637, 9
+D_00_1640::
+    INCBIN "orig/painter_momopie.gb", $01640, 9
+D_00_1649::
+    INCBIN "orig/painter_momopie.gb", $01649, 145
+RoomMetatileTable::  ; 17 pointers to metatile definitions per room theme
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20a7
+    dw D_00_20b7
+    dw D_00_20b7
+    dw D_00_20b7
+    dw D_00_20a7
+    dw D_00_20c7
+    dw D_00_20c7
+    dw D_00_20c7
+    dw D_00_20a7
+    dw D_00_20c7
+RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
+    dw SpriteTilesPart2
+    dw SpriteTilesPart2
+    dw SpriteTilesPart2
+    dw D_02_6200
+    dw D_02_6200
+    dw D_02_6200
+    dw D_02_6200
+    dw D_02_6b00
+    dw D_02_5900
+    dw D_02_5900
+    dw D_02_5900
+    dw D_02_6200
+    dw D_02_5000
+    dw D_02_5000
+    dw D_02_5000
+    dw D_02_6b00
+    dw D_02_5000
+RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
+    dw D_00_20d7
+    dw D_00_2117
+    dw D_00_2157
+    dw D_00_2197
+    dw D_00_21d7
+    dw D_00_2217
+    dw D_00_2257
+    dw D_00_2297
+    dw D_00_22d7
+    dw D_00_2317
+    dw D_00_2357
+    dw D_00_2197
+    dw D_00_2397
+    dw D_00_23d7
+    dw D_00_2417
+    dw D_00_2297
+    dw D_00_2457
 L_00_1740::
     ld a, [$c53b]
     bit 2, a
@@ -2491,7 +2585,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     call LoadTilesBank3A
     call ClearOamShadow
     ld bc, $1d90
-    call L_00_066b
+    call RunVramCopyList
     ld a, [wRound]
     ld b, a
     ld hl, $986c
@@ -2509,7 +2603,7 @@ L_00_1c91::
     call L_00_1cfd
     ld a, [wRound]
     ld hl, D_00_1d39
-    call L_00_1429
+    call TableIndexFromRoundDec
     ld hl, $98c3
     call L_00_0628
     call RequestOamDma
@@ -2595,11 +2689,11 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     bit 6, a
     jr nz, L_00_1de6
     ld bc, $1e2e
-    call L_00_066b
+    call RunVramCopyList
     jr L_00_1dec
 L_00_1de6::
     ld bc, $1e57
-    call L_00_066b
+    call RunVramCopyList
 L_00_1dec::
     xor a, a
     ld [wScrollX], a
@@ -2694,7 +2788,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     call LoadTilesBank3A
     call ClearOamShadow
     ld bc, $2085
-    call L_00_066b
+    call RunVramCopyList
     ld hl, D_00_2083
     call L_00_1760
     ld a, $3c
@@ -2845,7 +2939,43 @@ L_00_2078::
     ld [$c43c], a
     ret
 D_00_2083::
-    INCBIN "orig/painter_momopie.gb", $02083, 1044
+    INCBIN "orig/painter_momopie.gb", $02083, 36
+D_00_20a7::
+    INCBIN "orig/painter_momopie.gb", $020a7, 16
+D_00_20b7::
+    INCBIN "orig/painter_momopie.gb", $020b7, 16
+D_00_20c7::
+    INCBIN "orig/painter_momopie.gb", $020c7, 16
+D_00_20d7::
+    INCBIN "orig/painter_momopie.gb", $020d7, 64
+D_00_2117::
+    INCBIN "orig/painter_momopie.gb", $02117, 64
+D_00_2157::
+    INCBIN "orig/painter_momopie.gb", $02157, 64
+D_00_2197::
+    INCBIN "orig/painter_momopie.gb", $02197, 64
+D_00_21d7::
+    INCBIN "orig/painter_momopie.gb", $021d7, 64
+D_00_2217::
+    INCBIN "orig/painter_momopie.gb", $02217, 64
+D_00_2257::
+    INCBIN "orig/painter_momopie.gb", $02257, 64
+D_00_2297::
+    INCBIN "orig/painter_momopie.gb", $02297, 64
+D_00_22d7::
+    INCBIN "orig/painter_momopie.gb", $022d7, 64
+D_00_2317::
+    INCBIN "orig/painter_momopie.gb", $02317, 64
+D_00_2357::
+    INCBIN "orig/painter_momopie.gb", $02357, 64
+D_00_2397::
+    INCBIN "orig/painter_momopie.gb", $02397, 64
+D_00_23d7::
+    INCBIN "orig/painter_momopie.gb", $023d7, 64
+D_00_2417::
+    INCBIN "orig/painter_momopie.gb", $02417, 64
+D_00_2457::
+    INCBIN "orig/painter_momopie.gb", $02457, 64
 Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld sp, $dfff
     ld hl, $c487
@@ -2875,7 +3005,7 @@ L_00_24b7::
     ld [$c7c0], a
     call L_00_051d
     ld bc, $29b1
-    call L_00_066b
+    call RunVramCopyList
     ld a, [$c43b]
     and a, a
     jr nz, L_00_24e9
@@ -3073,7 +3203,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     ld hl, $9bff
     call FillBackwardsFF
     ld bc, $2b86
-    call L_00_066b
+    call RunVramCopyList
     call RequestOamDma
     ld hl, $c74e
     call Clear32Bytes
@@ -3290,7 +3420,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld de, D_00_31a6
     ld a, $ff
     ld [$c7c0], a
-    call L_00_0527
+    call DrawMetatileMap
     ld hl, $c76e
     ld bc, $0041
     call ClearMemory
@@ -3542,7 +3672,7 @@ L_00_2fb9::
     ld [$c1ac], a
     ld [$c1ae], a
     ld bc, $30c4
-    call L_00_066b
+    call RunVramCopyList
     ld a, $80
     ld [$c76e], a
     ld a, $c8
@@ -3552,7 +3682,7 @@ L_00_2fb9::
     ld a, $0a
     ld [$c781], a
     ld bc, $3009
-    call L_00_066b
+    call RunVramCopyList
     xor a, a
     ld [rIF], a
     ld a, $01

@@ -60,7 +60,7 @@ bank	addr	size	name
 0	0510	6	L_00_0510
 0	0516	7	SetObjPtr
 0	051d	10	L_00_051d
-0	0527	33	L_00_0527
+0	0527	33	DrawMetatileMap
 0	0548	64	L_00_0548
 0	0588	2	L_00_0588
 0	058a	25	L_00_058a
@@ -78,7 +78,7 @@ bank	addr	size	name
 0	0655	2	L_00_0655
 0	0657	12	L_00_0657
 0	0663	8	VramCopyList
-0	066b	4	L_00_066b
+0	066b	4	RunVramCopyList
 0	066f	39	L_00_066f
 0	0696	6	L_00_0696
 0	069c	8	WaitVramCopyDone
@@ -136,7 +136,7 @@ bank	addr	size	name
 0	0c2a	9	L_00_0c2a
 0	0c33	18	L_00_0c33
 0	0c45	4	L_00_0c45
-0	0d0e	7	L_00_0d0e
+0	0d0e	7	UnpackRoomMap
 0	0d15	10	L_00_0d15
 0	0d1f	30	L_00_0d1f
 0	0fa0	21	L_00_0fa0
@@ -176,8 +176,8 @@ bank	addr	size	name
 0	13e6	26	L_00_13e6
 0	1400	9	L_00_1400
 0	1409	32	L_00_1409
-0	1429	1	L_00_1429
-0	142a	9	L_00_142a
+0	1429	1	TableIndexFromRoundDec
+0	142a	9	TableIndexFromRound
 0	1433	2	L_00_1433
 0	1435	3	L_00_1435
 0	1438	18	L_00_1438

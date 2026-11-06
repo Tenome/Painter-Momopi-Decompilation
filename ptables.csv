@@ -1,0 +1,6 @@
+# bank,addr,count,target_bank,comment -- tables of 16 bit pointers to data (target_bank 0 = same as table, or the bank the pointers lead into)
+bank,addr,count,target_bank,comment
+0,16da,17,0,RoomMetatileTable: metatile definitions per room theme (index = (round-1)&15, 16 = bonus)
+0,16fc,17,2,RoomSpriteSetTable: source of the second sprite tile set in bank 2
+0,171e,17,0,RoomMapTable: packed 2 bit room maps (64 bytes each)
+0,14f9,17,0,RoomVramJobTable: VRAM copy jobs per room

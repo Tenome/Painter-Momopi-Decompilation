@@ -60,6 +60,8 @@ class Rom:
         self.cross = set()
         self.tables = set()  # rst-table vectors
         self.cross_bank = {}
+        self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3])) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
+                        if r[0] != "bank"]
         self.table_len = {(int(r[0]), int(r[1], 16)): int(r[2]) for r in read_csv(os.path.join(ROOT, "tables.csv"))
                           if r[0] != "bank"}
         self.dwords = {}     # (bank, addr) -> target of a table word
@@ -88,6 +90,7 @@ class Rom:
             if not self.orphan_scan() and not self.imm_scan() and not self.table_scan():
                 break
         self.data_labels()
+        self.pointer_tables()
 
     TERM = ("retu", "jpu", "jru", "jpind")
 
@@ -167,6 +170,21 @@ class Rom:
             if self.plausible(tb, t) and self.try_run(tb, t):
                 found += 1
         return found
+
+    def pointer_tables(self):
+        """Tables listed in ptables.csv: emit as `dw label` and label what they point at as data."""
+        for b, a, n, tbank in self.ptables:
+            for i in range(n):
+                q = a + 2 * i
+                o = off(b, q)
+                t = self.data[o] | self.data[o + 1] << 8
+                self.dwords[(b, q)] = t
+                self.code_bytes.update({(b, q), (b, q + 1)})
+                tb = tbank if (tbank and t >= BANK) else self.home(t, b)
+                if (tb, t) not in self.code_bytes and (tb, t) not in self.targets:
+                    self.targets[(tb, t)] = "data"
+                if b == 0 and t >= BANK:
+                    self.cross_bank[t] = tb
 
     def data_labels(self):
         """Label ROM data that code points at with `ld bc/de/hl, imm16` (and `ld [x], imm` style loads of the same)."""

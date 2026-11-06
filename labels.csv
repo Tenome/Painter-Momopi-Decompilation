@@ -88,3 +88,12 @@ bank,addr,name,comment
 0,365f,SetObjectTarget,stores DE at $ffb6/$ffb7 (movement target)
 1,4b58,PixelXToColumn,E = (X+8)/16 - 1
 1,4b62,LookupMapTile,A = wRoomMap tile at pixel Y with column E
+0,0d0e,UnpackRoomMap,HL = packed map (2 bits per cell; 4 cells per byte) unpacked to the 256 byte wRoomMap
+0,0527,DrawMetatileMap,draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatile table; DE cell map; mask in $c7c0
+0,066b,RunVramCopyList,BC = list of VRAM copy jobs run immediately
+0,142a,TableIndexFromRound,A = (A-1)&15 or 16 for 32; then LookupWord
+0,1429,TableIndexFromRoundDec,dec a then falls into TableIndexFromRound
+0,16da,RoomMetatileTable,17 pointers to metatile definitions per room theme
+0,16fc,RoomSpriteSetTable,17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
+0,171e,RoomMapTable,17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
+0,14f9,RoomVramJobTable,17 pointers to VRAM copy job lists

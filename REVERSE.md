@@ -97,6 +97,13 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 ### Data Structures
 
+- **Room map**: 16 columns x 16 rows of 2 bit cells (0 = empty, 1/2 = path pieces; $11 seen at the start tile), stored packed in 64 bytes
+  per room; `UnpackRoomMap` expands it to `wRoomMap` ($c0a7, 256 bytes). `RoomMapTable` ($171e) has 17 pointers (rounds 1-16 repeat; 17th = bonus).
+  `PixelXToColumn` + `LookupMapTile` convert a pixel position to a cell (rows start at pixel Y $18, columns at X $10).
+- **Per-round tables** (index = (round-1)&15, 16 for round 32): `RoomMetatileTable` $16da, `RoomSpriteSetTable` $16fc (sprite tile sets in bank 2 at
+  $4700 $5000 $5900 $6200 $6b00, $900 bytes each), `RoomMapTable` $171e, `RoomVramJobTable` $14f9. Listed in `ptables.csv`.
+- **Object record** (see `src/constants.inc`): flags, animation pointer, frame, 16 bit X at +7, 16 bit Y at +$a, velocities at +$d and +$f.
+
 (none recovered yet)
 
 ### State Machine
