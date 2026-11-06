@@ -187,5 +187,14 @@ DEF hEnemyCounter2  EQU $ffd3   ; +$1e: second per-enemy counter (hit counter; b
 DEF wEnemyLoopIdx   EQU $c53e   ; slot index of the running enemy loop (15 down to 0)
 DEF wEnemyLoopStart EQU $c53f   ; incremented each frame so the update order rotates
 DEF wRoundFlags     EQU $c51f   ; bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional)
-DEF wEndingFlags    EQU $c78e   ; ending credits state: bit 0 window shown, bit 1 window slid in, bit 2 credits finished (provisional)
-DEF wEndingTimer    EQU $c78f   ; credit page timer (provisional)
+DEF wEndingObject2  EQU $c78e   ; second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional)
+DEF wEndingObject2Anim EQU $c78f ; +1 of the second ending object (set to $ff when the credits start)
+DEF wEnemyPathPtrHi EQU $c534   ; high byte of the enemy path pointer (wEnemyPathPtr is the low byte)
+DEF wSoundTmp       EQU $c30b   ; scratch byte used by SoundLoadStream and the stream commands
+DEF wBlobPhase      EQU $c519   ; counter of the paint blob; bit 1 picks one of two animations
+DEF wTextBuf        EQU $c44c   ; VramCopyStream buffer: count, rows, tiles (round intro and continue texts)
+DEF wRemoteRound    EQU $c7bf   ; round number received over the link cable (bit 7 stripped)
+DEF wEndingStep     EQU $c781   ; ending scene step timer; reloaded with $0a (provisional)
+DEF wEndingPhase    EQU $c782   ; ending scene step counter (provisional)
+DEF wEndingEvents   EQU $c7ae   ; bit 2 hero reached its place, bit 7 scene finished (provisional)
+DEF wMagicCastTimer EQU $c4d2   ; frame counter used while a card is being cast (provisional)

@@ -150,7 +150,7 @@ SerialHandler::  ; serial interrupt: stores received byte state in hSerialByte f
     bit 7, a
     jr z, .L_00_025b
     and a, $7f
-    ld [$c7bf], a
+    ld [wRemoteRound], a
     ld hl, hSerialByte
     set 4, [hl]
     jr .L_00_029f
@@ -1930,11 +1930,11 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call L_00_10a4
     ld [$c44e], a
     ld a, $03
-    ld [$c44c], a
+    ld [wTextBuf], a
     ld a, $01
     ld [$c44d], a
     ld hl, $9ca5
-    ld de, $c44c
+    ld de, wTextBuf
     call VramCopyStream
     ldh a, [hTimeSeconds]
     ld c, $00
@@ -2931,7 +2931,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld a, $ff
     ld [wContinues], a
     ld a, $02
-    ld [$c44c], a
+    ld [wTextBuf], a
     ld a, $01
     ld [$c44d], a
     ld a, $cd
@@ -2941,13 +2941,13 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     jr .L_00_1f93
 .L_00_1f82:
     ld a, $01
-    ld [$c44c], a
+    ld [wTextBuf], a
     ld [$c44d], a
     ld a, [wContinues]
     call L_00_10a4
     ld [$c44e], a
 .L_00_1f93:
-    ld de, $c44c
+    ld de, wTextBuf
     ld hl, $98a9
     call VramCopyStream
     ld a, PAL_NORMAL
@@ -3037,7 +3037,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     xor a, a
     ld [rSB], a
     ldh [hSerialByte], a
-    ld a, [$c7bf]
+    ld a, [wRemoteRound]
     ld [wRound], a
     ld [wRoundBackup], a
     dec a
@@ -3427,7 +3427,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
 .L_00_2ac4:
     ld hl, hLinkFlags
     set 0, [hl]
-    ld a, [$c7bf]
+    ld a, [wRemoteRound]
     ld [wRound], a
     ld [wRoundBackup], a
     dec a
@@ -3555,7 +3555,7 @@ Mode6_Ending::  ; castle scene after the last round
     call ClearMemory
     ld a, $80
     ld [wEndingObject], a
-    ld [wEndingFlags], a
+    ld [wEndingObject2], a
     ld hl, D_00_3143
     ld a, h
     ld [$c770], a
@@ -3599,7 +3599,7 @@ Mode6_Ending::  ; castle scene after the last round
     call WaitFrameAndSyncOam
     call EndingCastleBlink
     call EndingWalkStep
-    ld a, [$c7ae]
+    ld a, [wEndingEvents]
     bit 7, a
     jr z, .L_00_2d16
     call EndingSetup
@@ -3626,10 +3626,10 @@ Mode6_Ending::  ; castle scene after the last round
     jr z, .L_00_2d33
     jp Entry
 EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) and starts the credit pages
-    ld a, [$c7ae]
+    ld a, [wEndingEvents]
     bit 2, a
     ret z
-    ld a, [wEndingFlags]
+    ld a, [wEndingObject2]
     bit 0, a
     jr nz, .L_00_2d89
     ld a, $5a
@@ -3639,16 +3639,16 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     ld a, [rLCDC]
     or a, $60
     ld [rLCDC], a
-    ld hl, wEndingFlags
+    ld hl, wEndingObject2
     set 0, [hl]
     ld a, $ff
-    ld [wEndingTimer], a
+    ld [wEndingObject2Anim], a
     call EndingShowCreditsPage
 .L_00_2d89:
-    ld a, [wEndingFlags]
+    ld a, [wEndingObject2]
     bit 2, a
     jr nz, .L_00_2dc1
-    ld a, [wEndingFlags]
+    ld a, [wEndingObject2]
     bit 1, a
     jr nz, .L_00_2da9
     ld hl, rWX
@@ -3660,19 +3660,19 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     ld a, [hl]
     cp a, $0a
     ret nz
-    ld hl, wEndingFlags
+    ld hl, wEndingObject2
     set 1, [hl]
     ret
 .L_00_2da9:
     ld a, [wCreditsPage]
     cp a, $08
     ret z
-    ld hl, wEndingTimer
+    ld hl, wEndingObject2Anim
     dec [hl]
     ret nz
     ld a, $ff
-    ld [wEndingTimer], a
-    ld hl, wEndingFlags
+    ld [wEndingObject2Anim], a
+    ld hl, wEndingObject2
     res 1, [hl]
     set 2, [hl]
     ret
@@ -3687,7 +3687,7 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     cp a, $a5
     ret nz
     xor a, a
-    ld [wEndingFlags], a
+    ld [wEndingObject2], a
     ld hl, wCreditsPage
     inc [hl]
     call EndingShowCreditsPage
@@ -3743,7 +3743,7 @@ EndingTick::  ; one step of the ending scene: hero movement then the object anim
     jp EndingAnimateObject
 EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = $50
     call EndingHeroFrame
-    ld a, [$c7ae]
+    ld a, [wEndingEvents]
     bit 2, a
     ret nz
     ld a, [$c775]
@@ -3753,13 +3753,13 @@ EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = 
     ld [$c775], a
     ret
 .L_00_2f41:
-    ld hl, $c7ae
+    ld hl, wEndingEvents
     set 2, [hl]
     ret
 EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld a, $02
     ld [$c77f], a
-    ld a, [$c782]
+    ld a, [wEndingPhase]
     bit 0, a
     jr nz, .L_00_2f59
     xor a, a
@@ -3772,12 +3772,12 @@ EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     call SelectEndingObject
     call MoveObject
     call ClampObjectToRoom
-    ld hl, $c781
+    ld hl, wEndingStep
     dec [hl]
     ret nz
     ld a, $0a
-    ld [$c781], a
-    ld hl, $c782
+    ld [wEndingStep], a
+    ld hl, wEndingPhase
     inc [hl]
     ret
 EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_30df and D_00_3111
@@ -3790,7 +3790,7 @@ EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_
     srl a
     ld c, a
     ld hl, D_00_30df
-    ld a, [$c7ae]
+    ld a, [wEndingEvents]
     bit 2, a
     jr z, .L_00_2f91
     ld hl, D_00_3111
@@ -3835,7 +3835,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld a, $50
     ld [$c778], a
     ld a, $0a
-    ld [$c781], a
+    ld [wEndingStep], a
     ld bc, $3009
     call RunVramCopyList
     xor a, a
@@ -3884,23 +3884,23 @@ EndingCastleBlink::  ; toggles the castle flag animation from D_00_3148
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ld [wEndingTimer], a
+    ld [wEndingObject2Anim], a
     ld a, [hl]
     ld [wCreditsPage], a
-    ld hl, wEndingFlags
+    ld hl, wEndingObject2
     call SetObjPtr
     jp DrawObject
 EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
-    ld a, [$c781]
+    ld a, [wEndingStep]
     add a, $10
-    ld [$c781], a
-    ld a, [$c782]
+    ld [wEndingStep], a
+    ld a, [wEndingPhase]
     adc a, $00
-    ld [$c782], a
+    ld [wEndingPhase], a
     and a, a
     cp a, $05
     ret nz
-    ld hl, $c7ae
+    ld hl, wEndingEvents
     set 7, [hl]
     ret
     INCBIN "assets/bank_00/30c4.bin"
@@ -5450,7 +5450,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
 .L_00_3d2f:
     ld a, [wEnemyPathPtr]
     ld l, a
-    ld a, [$c534]
+    ld a, [wEnemyPathPtrHi]
     ld h, a
     ld a, [hl]
     cp a, $01
@@ -5461,7 +5461,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     ld a, l
     ld [wEnemyPathPtr], a
     ld a, h
-    ld [$c534], a
+    ld [wEnemyPathPtrHi], a
     ret
 .L_00_3d4b:
     ld hl, hEnemyDir
@@ -5474,13 +5474,13 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     ldh [hEnemyAnimState], a
     ld a, [wEnemyPathPtr]
     ld l, a
-    ld a, [$c534]
+    ld a, [wEnemyPathPtrHi]
     ld h, a
     dec hl
     ld a, l
     ld [wEnemyPathPtr], a
     ld a, h
-    ld [$c534], a
+    ld [wEnemyPathPtrHi], a
     jr .L_00_3d2f
 D_00_3d6a::
     dw D_00_3d6e
@@ -5508,7 +5508,7 @@ EnemyKind7Init::  ; sets hEnemyAnimState 5 and counter $20 with animation $3e4d 
     ld a, l
     ld [wEnemyPathPtr], a
     ld a, h
-    ld [$c534], a
+    ld [wEnemyPathPtrHi], a
     ret
 D_00_3e4d::
     INCBIN "assets/bank_00/3e4d.bin"

@@ -280,7 +280,7 @@ SoundResumeMusicChannels::  ; clears the pause flag on the music channel records
     jr SoundStartEffect
 SoundLoadStream::  ; copies the stream header into a channel record
     ld a, [de]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     inc de
 .L_01_430b:
     ld b, $0a
@@ -303,9 +303,9 @@ SoundLoadStream::  ; copies the stream header into a channel record
     ld [hl+], a
     dec b
     jr nz, .L_01_431f
-    ld a, [$c30b]
+    ld a, [wSoundTmp]
     dec a
-    ld [$c30b], a
+    ld [wSoundTmp], a
     jr nz, .L_01_430b
     ld a, $80
     ld [wSoundCmd], a
@@ -1060,7 +1060,7 @@ SoundSetFrequency::  ; frequency for the current note from the pitch tables at $
     ld h, $00
     add hl, de
     ld a, [hl]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     cp a, $80
     jr z, .L_01_4809
     cp a, $81
@@ -1099,7 +1099,7 @@ SoundPitchSlideStep::  ; adds the signed slide in record +$14 to the 16 bit pitc
     ld hl, $0014
     add hl, bc
     ld a, [hl]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     ld hl, $0010
     call SoundAddSigned16
     ld hl, $0011
@@ -1115,7 +1115,7 @@ SoundAddSigned16::  ; DE = word at record[HL] plus the signed byte in $c30b
     ld e, a
     ld a, [hl]
     ld d, a
-    ld a, [$c30b]
+    ld a, [wSoundTmp]
     and a, a
     bit 7, a
     jr nz, .L_01_484c
@@ -1318,7 +1318,7 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     set 1, [hl]
     ret
 SetPaintBlobAnimation::  ; picks animation $4927 or $4929 for the paint blob by $c519 bit 1
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4a3d
     ld hl, D_01_4927
@@ -1692,7 +1692,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     jr nz, PayMagicCost
     ldh a, [hSerialByte]
     and a, $20
-    ld [$c7bf], a
+    ld [wRemoteRound], a
     ld a, [rSC]
     res 7, a
     ld [rSC], a
@@ -1708,7 +1708,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ld a, [rSB]
     cp a, $02
     call z, SetLinkFlag5
-    ld a, [$c7bf]
+    ld a, [wRemoteRound]
     bit 5, a
     call nz, SetLinkFlag5
     call SerialStartTransfer
@@ -1787,7 +1787,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
 .L_01_4dc2:
     ld hl, wPaintObject
     call SetObjPtr
-    ld hl, $c519
+    ld hl, wBlobPhase
     inc [hl]
     call MagicPaintEndUnlessBit2
     ld a, [wPlayerX]
@@ -1805,7 +1805,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     call ClampObjectToRoom
     jp DrawObject
 SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4dfa
     ld hl, D_01_492b
@@ -1819,7 +1819,7 @@ SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492
     ld [$c500], a
     ret
 MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
-    ld hl, $c519
+    ld hl, wBlobPhase
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4e16
@@ -1882,7 +1882,7 @@ MagicEffectClear::  ; card 8 CLEAR: $50 steps
     ld [$c1f8], a
     call BeginMagicCast
 .L_01_4e86:
-    ld hl, $c519
+    ld hl, wBlobPhase
     inc [hl]
     ld a, [$c1f8]
     cp a, $50
@@ -1891,7 +1891,7 @@ MagicEffectClear::  ; card 8 CLEAR: $50 steps
     ld [$c1f8], a
     ld a, PAL_NORMAL
     ld [rBGP], a
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     ret nz
     xor a, a
@@ -2298,7 +2298,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld a, $78
     ld [wPlayerY], a
     xor a, a
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ld [$c4c2], a
     ld [wPlayerBlocked], a
     ld [$c1b6], a
@@ -2349,18 +2349,18 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld hl, wPlayerStatus
     set 2, [hl]
 .L_01_5239:
-    ld hl, $c4d2
+    ld hl, wMagicCastTimer
     inc [hl]
     ld a, $3c
     ldh [hScratch06], a
     ld a, $02
     ldh [hScratch07], a
-    ld a, [$c4d2]
+    ld a, [wMagicCastTimer]
     ldh [hScratch08], a
     ld a, $0f
     call CounterToFrame
     ldh a, [hScratch08]
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ld a, $1e
     cp a, c
     jr z, .L_01_5285
@@ -2389,7 +2389,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
 .L_01_5285:
     xor a, a
     ld [wActiveMagic], a
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ldh a, [hLinkFlags]
     bit 1, a
     jr z, .L_01_529c

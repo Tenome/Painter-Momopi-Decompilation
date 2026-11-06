@@ -19,6 +19,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c1ad | `wCameraXHi` | 6 |  |
 | $c1ae | `wCameraY` | 10 |  |
 | $c1af | `wCameraYHi` | 6 |  |
+| $c30b | `wSoundTmp` | 6 | scratch byte used by SoundLoadStream and the stream commands |
 | $c30c | `wSoundArg` | 23 | command byte passed to PlaySound |
 | $c30e | `wSoundCmd` | 6 | command being started (bit 7 set = music/effect id) |
 | $c30f | `wMusicPriority` | 3 | priority of the playing music (SoundStartMusic) |
@@ -34,6 +35,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c447 | `wActiveMagic` | 31 | card id of the magic being cast or in effect (0 = none); effects test it (3 = T.STOP freezes enemies ...) |
 | $c44a | `wMagicPoints` | 10 | 16 bit MP (MP 050 on the magic screen) |
 | $c44b | `wMagicPointsHi` | 8 | high byte of the 16 bit MP |
+| $c44c | `wTextBuf` | 5 | VramCopyStream buffer: count, rows, tiles (round intro and continue texts) |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
 | $c47e | `wEnemyCount` | 5 | enemies alive (spawning stops at 3) |
 | $c483 | `wSpawnWave` | 4 | index (0-5) of the current wave in the round's list |
@@ -46,9 +48,11 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4c8 | `wPlayerY` | 23 |  |
 | $c4cb | `wPlayerVelX` | 1 |  |
 | $c4cd | `wPlayerVelY` | 1 |  |
+| $c4d2 | `wMagicCastTimer` | 5 | frame counter used while a card is being cast (provisional) |
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
 | $c4fe | `wPaintObject` | 14 | the paint blob object record (tested by CheckPaintHitsEnemy) |
+| $c519 | `wBlobPhase` | 6 | counter of the paint blob; bit 1 picks one of two animations |
 | $c51e | `wGameFlags` | 15 | bit 0 = round cleared (PlayFrame jumps to RoundCleared), bit 6 = advance to the next mode after the clear |
 | $c51f | `wRoundFlags` | 8 | bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional) |
 | $c520 | `wPaintRemaining` | 5 | unpainted path cells left; decremented as the painter paints a cell; 0 = round cleared |
@@ -56,6 +60,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c523 | `wRoundBackup` | 7 | also set to 1 at boot; incremented together with wRound |
 | $c524 | `wRoomIndex` | 9 | selects the room tile set / name (0 = kitchen room) |
 | $c533 | `wEnemyPathPtr` | 6 | 16 bit pointer into the scripted path of kind 7 enemies |
+| $c534 | `wEnemyPathPtrHi` | 5 | high byte of the enemy path pointer (wEnemyPathPtr is the low byte) |
 | $c53a | `wMagicState` | 50 | bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process |
 | $c53b | `wMagicScreenFlags` | 8 | bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling |
 | $c53e | `wEnemyLoopIdx` | 7 | slot index of the running enemy loop (15 down to 0) |
@@ -67,9 +72,13 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c758 | `wCursorIndex` | 7 | menu choice 0-2 (MenuCursorInput) |
 | $c759 | `wCursorFlags` | 3 | bit 7 = a choice was confirmed |
 | $c76e | `wEndingObject` | 7 | object record used by the ending scene |
-| $c78e | `wEndingFlags` | 9 | ending credits state: bit 0 window shown, bit 1 window slid in, bit 2 credits finished (provisional) |
-| $c78f | `wEndingTimer` | 4 | credit page timer (provisional) |
+| $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a (provisional) |
+| $c782 | `wEndingPhase` | 4 | ending scene step counter (provisional) |
+| $c78e | `wEndingObject2` | 9 | second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional) |
+| $c78f | `wEndingObject2Anim` | 4 | +1 of the second ending object (set to $ff when the credits start) |
 | $c790 | `wCreditsPage` | 5 | index into CreditsPageTable |
+| $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished (provisional) |
+| $c7bf | `wRemoteRound` | 5 | round number received over the link cable (bit 7 stripped) |
 | $dfff | `wStackTop` | 9 | SP is reset here at the start of every mode |
 | $ff80 | `hOamDma` | 1 | HRAM copy of OamDmaRoutine |
 | $ff8b | `hJoyHeld` | 14 | held buttons: bit7 down, 6 up, 5 left, 4 right, 3 start, 2 select, 1 B, 0 A ($0f = A+B+Select+Start = soft reset) |
@@ -141,28 +150,19 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 
 | Address | References |
 |---|---|
-| $c519 | 8 |
 | $c000 | 7 |
 | $c463 | 7 |
-| $c7ae | 7 |
-| $c30b | 7 |
 | $c1b6 | 7 |
 | $c49d | 6 |
-| $c782 | 6 |
-| $c781 | 6 |
 | $c1b7 | 6 |
-| $c7bf | 5 |
 | $c7c0 | 5 |
 | $c488 | 5 |
-| $c44c | 5 |
 | $c775 | 5 |
 | $c77e | 5 |
 | $ffc5 | 5 |
 | $ffcf | 5 |
 | $ffcb | 5 |
-| $c534 | 5 |
 | $c431 | 5 |
-| $c4d2 | 5 |
 | $c47a | 4 |
 | $c47d | 4 |
 | $c75a | 4 |
@@ -181,3 +181,12 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c429 | 4 |
 | $c42b | 4 |
 | $c42c | 4 |
+| $c42e | 4 |
+| $c42f | 4 |
+| $c312 | 4 |
+| $c314 | 4 |
+| $c4ff | 4 |
+| $c500 | 4 |
+| $c4d9 | 4 |
+| $c499 | 4 |
+| $c49a | 4 |
