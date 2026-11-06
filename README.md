@@ -34,7 +34,8 @@ python tools/report.py            # write progress/jp/report.json
 | `src/` | RGBDS sources: instructions and labels; data is `INCBIN` of your own ROM (no game data in git) |
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
-| `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), report generator, ROM checker |
+| `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), static recompiler to C (`recomp.py`), report generator, ROM checker |
+| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress) |
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 

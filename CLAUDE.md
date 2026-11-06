@@ -12,3 +12,4 @@ Read `AGENTS.md` first, then `REVERSE.md`.
 - Never commit the ROM or anything extracted from it.
 - Skills: `re` (task loop), `matcher`, `decomp-code-rules`, `helper-recovery`, `native-platform-porting`, `reverse-engineer-anything`.
 - Publishing: `progress/jp/report.json` (objdiff format) is committed; `.github/workflows/report.yml` uploads it for https://bytematch.dev/.
+- Native port: `python tools/build_port.py --cc <clang|gcc>` recompiles the traced routines to C (`build/recomp/game.c`, git-ignored) and builds `build/recomp/game_headless`. A compiler: `C:/Users/Michael/.local/share/retcomm/toolchains/cmake-clang-v1/latest/bin/clang.exe`.

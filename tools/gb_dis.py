@@ -60,7 +60,7 @@ class Rom:
         self.cross = set()
         self.tables = set()  # rst-table vectors
         self.cross_bank = {}
-        self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3])) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
+        self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3]), r[4]) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
                         if r[0] != "bank"]
         self.table_len = {(int(r[0]), int(r[1], 16)): int(r[2]) for r in read_csv(os.path.join(ROOT, "tables.csv"))
                           if r[0] != "bank"}
@@ -70,6 +70,14 @@ class Rom:
         return 0 if addr < BANK else bank
 
     def trace(self):
+        for b, a, n, tbank, kind in self.ptables:        # tables of routine pointers: their targets are entry points
+            if kind != "code":
+                continue
+            for i in range(n):
+                o = off(b, a + 2 * i)
+                t = self.data[o] | self.data[o + 1] << 8
+                tb = tbank if (tbank and t >= BANK) else self.home(t, b)
+                self.seeds.append((tb, t))
         for b, a in self.seeds:
             self.targets[(b, a)] = "code"
             if a >= BANK:
@@ -195,6 +203,9 @@ class Rom:
     def classify_labels(self):
         """Split code labels into routines (global) and branch targets inside one routine (RGBDS local labels)."""
         self.local = set()
+        for v in VECTORS:
+            if (0, v) in self.insns:
+                self.targets[(0, v)] = "code"
         roots = set(self.names) | {(b, a) for b, a in self.seeds} | {(0, v) for v in VECTORS}
         roots |= {(self.home(t, b), t) for (b, _), t in self.dwords.items()} | {(self.cross_bank.get(t, 0), t) for (b, _), t in self.dwords.items() if b == 0 and t >= BANK}
         branch = {}
@@ -238,15 +249,15 @@ class Rom:
 
     def pointer_tables(self):
         """Tables listed in ptables.csv: emit as `dw label` and label what they point at as data."""
-        for b, a, n, tbank in self.ptables:
+        for b, a, n, tbank, kind in self.ptables:
             for i in range(n):
                 q = a + 2 * i
                 o = off(b, q)
                 t = self.data[o] | self.data[o + 1] << 8
                 self.dwords[(b, q)] = t
                 self.code_bytes.update({(b, q), (b, q + 1)})
-                if t >= 0x8000:
-                    continue                      # RAM address: stays a numeric `dw`
+                if t >= 0x8000 or kind == "code":
+                    continue                      # RAM address stays numeric; routine targets are labelled by the trace
                 tb = tbank if (tbank and t >= BANK) else self.home(t, b)
                 if (tb, t) not in self.code_bytes and (tb, t) not in self.targets:
                     self.targets[(tb, t)] = "data"

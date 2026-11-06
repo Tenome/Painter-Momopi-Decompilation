@@ -9,12 +9,16 @@ L_00_0000::
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
     INCBIN "orig/painter_momopie.gb", $00043, 5
+L_00_0048::
     reti
     INCBIN "orig/painter_momopie.gb", $00049, 7
+L_00_0050::
     reti
     INCBIN "orig/painter_momopie.gb", $00051, 7
+L_00_0058::
     jp SerialHandler
     INCBIN "orig/painter_momopie.gb", $0005b, 5
+L_00_0060::
     reti
     INCBIN "orig/painter_momopie.gb", $00061, 159
 Entry::  ; nop; jp Start
@@ -4500,7 +4504,7 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     sla a
     ld c, a
     ld b, $00
-    ld hl, D_00_3782
+    ld hl, EnemyBehaviorTable
     add hl, bc
     ld a, [hl+]
     ld e, a
@@ -4529,8 +4533,12 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     xor a, a
     ldh [$ffc9], a
     ret
-D_00_3782::
-    INCBIN "orig/painter_momopie.gb", $03782, 10
+EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
+    dw L_00_38fe
+    dw L_00_3af7
+    dw L_01_5899
+    dw L_01_59ff
+    dw L_01_537a
     dw L_00_3e61
     dw L_00_38fe
     dw L_00_3c91
@@ -4989,6 +4997,7 @@ L_00_3aed::
     ld [bc], a
     nop
     ld [bc], a
+L_00_3af7::
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3b02

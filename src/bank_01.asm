@@ -2525,4 +2525,227 @@ D_01_53e5::
 D_01_53ec::
     INCBIN "orig/painter_momopie.gb", $053ec, 7
 D_01_53f3::
-    INCBIN "orig/painter_momopie.gb", $053f3, 11277
+    INCBIN "orig/painter_momopie.gb", $053f3, 1190
+L_01_5899::
+    call TickObjectTimer
+    jr nz, .L_01_58a1
+    jp L_01_59b6
+.L_01_58a1:
+    ldh a, [$ffd4]
+    bit 2, a
+    jp nz, L_00_32df
+    call L_00_3481
+    call L_00_39f9
+    call L_00_3a18
+    call L_00_39b1
+    call L_01_58cf
+    call L_01_58ee
+    call L_00_32a2
+    call L_00_392e
+    call L_00_341f
+    call L_00_3693
+    call L_01_596f
+    call SelectObject2
+    jp DrawObject
+L_01_58cf::
+    ld a, [$c49e]
+    bit 7, a
+    ret nz
+    ld hl, $ffca
+    dec [hl]
+    ret nz
+    ld a, [$c49e]
+    bit 7, a
+    ret nz
+    ldh a, [$ffbc]
+    ld c, a
+    ldh a, [$ffbf]
+    ld b, a
+    call L_00_3449
+    and a, a
+    ret nz
+    jp L_01_5947
+L_01_58ee::
+    ld a, [wRoomType]
+    cp a, $03
+    jr nz, .L_01_58fc
+    ld a, [wSubState]
+    bit 0, a
+    jr nz, .L_01_5938
+.L_01_58fc:
+    ld a, [wRoomType]
+    cp a, $05
+    jr nz, .L_01_590a
+    ld a, [wSubState]
+    bit 0, a
+    jr nz, .L_01_5938
+.L_01_590a:
+    ld a, [$c49e]
+    bit 7, a
+    ret z
+    ld hl, $c4b4
+    dec [hl]
+    jr z, .L_01_5938
+    ld hl, $c4b9
+    inc [hl]
+    ld hl, $59fa
+    ld a, [$c4b9]
+    and a, $10
+    jr z, .L_01_5927
+    ld hl, $59f5
+.L_01_5927:
+    ld a, l
+    ld [$c49f], a
+    ld a, h
+    ld [$c4a0], a
+    ld hl, $c49e
+    call SetObjPtr
+    jp DrawObject
+.L_01_5938:
+    ld a, $05
+    ldh [$ffca], a
+    ld a, $a0
+    ld [$c4b4], a
+    ld hl, $c49e
+    res 7, [hl]
+    ret
+L_01_5947::
+    ld hl, $c49e
+    call Clear32Bytes
+    ld a, $04
+    ld [$c4a2], a
+    ld a, $a0
+    ld [$c4b4], a
+    ldh a, [$ffbc]
+    add a, $08
+    and a, $f0
+    ld [$c4a5], a
+    ldh a, [$ffbf]
+    and a, $f0
+    add a, $08
+    ld [$c4a8], a
+    ld a, $82
+    ld [$c49e], a
+    ret
+L_01_596f::
+    ld a, [$ffd1]
+    bit 0, a
+    jr nz, .L_01_5983
+    bit 1, a
+    jr nz, .L_01_5990
+    bit 2, a
+    jr nz, .L_01_599d
+    bit 3, a
+    jr nz, .L_01_59a5
+    ret
+.L_01_5983:
+    ld hl, hObject2
+    set 5, [hl]
+    ld de, D_01_59d9
+    ld bc, $59e0
+    jr .L_01_59ab
+.L_01_5990:
+    ld hl, hObject2
+    res 5, [hl]
+    ld de, D_01_59d9
+    ld bc, $59e0
+    jr .L_01_59ab
+.L_01_599d:
+    ld bc, $59e7
+    ld de, D_01_59ee
+    jr .L_01_59ab
+.L_01_59a5:
+    ld bc, $59cb
+    ld de, D_01_59d2
+.L_01_59ab:
+    ldh a, [$ffd0]
+    and a, $04
+    jr z, .L_01_59b3
+    push bc
+    pop de
+.L_01_59b3:
+    jp L_00_3651
+L_01_59b6::
+    ld a, $05
+    ldh [$ffc6], a
+    ld a, $20
+    ldh [$ffc9], a
+    ld a, $05
+    ldh [$ffca], a
+    ld de, D_01_59cb
+    call SetObjectAnimation
+    jp L_00_340c
+D_01_59cb::
+    INCBIN "orig/painter_momopie.gb", $059cb, 7
+D_01_59d2::
+    INCBIN "orig/painter_momopie.gb", $059d2, 7
+D_01_59d9::
+    INCBIN "orig/painter_momopie.gb", $059d9, 21
+D_01_59ee::
+    INCBIN "orig/painter_momopie.gb", $059ee, 7
+L_01_59f5::
+    ld bc, $9d9c
+    xor a, h
+    xor a, l
+L_01_59fa::
+    ld bc, $9f9e
+    xor a, [hl]
+    xor a, a
+L_01_59ff::
+    call SelectObject2
+    call TickObjectTimer
+    jr nz, .L_01_5a0a
+    jp L_01_5a65
+.L_01_5a0a:
+    ldh a, [$ffd4]
+    bit 2, a
+    jp nz, L_00_32df
+    call L_00_3599
+    call L_00_3b99
+    call L_00_3603
+    call L_00_3643
+    call L_00_392e
+    call L_00_341f
+    call L_01_5a29
+    jp DrawObject
+L_01_5a29::
+    ldh a, [$ffd1]
+    bit 0, a
+    jr nz, .L_01_5a40
+    bit 1, a
+    jr nz, .L_01_5a4e
+    bit 2, a
+    jr nz, .L_01_5a5c
+    ld de, D_01_5a76
+    ld bc, $5a7d
+    jp SetAnimationVariant
+.L_01_5a40:
+    ld hl, hObject2
+    set 5, [hl]
+    ld de, D_01_5a84
+    ld bc, $5a8b
+    jp SetAnimationVariant
+.L_01_5a4e:
+    ld hl, hObject2
+    res 5, [hl]
+    ld de, D_01_5a84
+    ld bc, $5a8b
+    jp SetAnimationVariant
+.L_01_5a5c:
+    ld de, D_01_5a92
+    ld bc, $5a99
+    jp SetAnimationVariant
+L_01_5a65::
+    ld de, D_01_5a76
+    call SetObjectAnimation
+    ld a, $05
+    ldh [$ffc6], a
+    ld a, $20
+    ldh [$ffc9], a
+    jp L_00_340c
+D_01_5a76::
+    INCBIN "orig/painter_momopie.gb", $05a76, 14
+D_01_5a84::
+    INCBIN "orig/painter_momopie.gb", $05a84, 14
+D_01_5a92::
+    INCBIN "orig/painter_momopie.gb", $05a92, 9582

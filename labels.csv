@@ -123,3 +123,4 @@ bank,addr,name,comment
 1,5301,UpdateCamera,follows the player: copies the camera to wScrollX/wScrollY
 1,5311,CameraFollowPlayerX,wCameraX = wPlayerX - $58 clamped to 0..$60
 1,536a,ResetCamera,wCameraX and wCameraY = $20; high bytes 0
+0,3782,EnemyBehaviorTable,routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
