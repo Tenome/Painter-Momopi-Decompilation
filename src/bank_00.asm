@@ -4881,7 +4881,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl]
     ldh [hEnemyFlags], a
     ret
-EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 appears in rounds 13-15 and 29-31)
+EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards standing in the corridor rooms 13-15 and 29-31)
     call TickObjectTimer
     jr nz, .L_00_3906
     jp L_00_3a75
