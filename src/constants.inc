@@ -159,3 +159,6 @@ DEF CARD_CLEAR      EQU 8
 DEF CARD_PYON       EQU 9
 DEF wProjectile     EQU $c49e   ; object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it)
 DEF wMagicScreenFlags EQU $c53b ; bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling
+DEF wEnemyCount     EQU $c47e   ; enemies alive (spawning stops at 3)
+DEF wSpawnWave      EQU $c483   ; index (0-5) of the current wave in the round's list
+DEF wSpawnIndex     EQU $c484   ; next entry within the wave (1 based)

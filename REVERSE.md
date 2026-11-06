@@ -130,6 +130,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `SND_SFX_90`, stores the id in `wActiveMagic` (formerly misnamed wRoomType) and sets `wMagicState` bits 1 and 2. Next frame `RunMagicEffect` jumps through `MagicEffectTable` ($4cd7) to the card's
   routine, which starts `BeginMagicCast` and a frame countdown in `$ffdf` (`MagicTimerTick`). Enemy routines test `wActiveMagic` (T.STOP and others) and `wMagicState` bit 0 to change their behaviour.
 
+- **Enemy spawning** (`StepEnemySpawnScript` $31f1): `RoundDataTable[wRound-1]` points to 6 wave lists; a wave list is `count` then `count` entries of 4 bytes: spawn delay (compared with
+  `hTimeSeconds`), X, Y and a kind/flavour byte (`and $f8` is stored as the kind data, bit 0 or bit 1 picks the variant from round 17 on). An enemy is created when the delay has
+  elapsed and fewer than 3 are alive (`wEnemyCount`); `wSpawnIndex` advances, then `wSpawnWave` when the list is exhausted.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

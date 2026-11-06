@@ -2749,11 +2749,11 @@ ClearRoomState::  ; zeroes wActiveMagic wMagicState and the room script variable
     xor a, a
     ld [wActiveMagic], a
     ld [wMagicState], a
-    ld [$c47e], a
+    ld [wEnemyCount], a
     ld [$c486], a
-    ld [$c483], a
+    ld [wSpawnWave], a
     ld a, $01
-    ld [$c484], a
+    ld [wSpawnIndex], a
     ret
 DrawTwoDigitNumber::  ; B = value drawn as two BCD digits at HL
     ld a, $02
@@ -3949,11 +3949,11 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     dec a
     ld hl, RoundDataTable
     call LookupWord
-    ld a, [$c483]
+    ld a, [wSpawnWave]
     cp a, $06
     jr nz, .L_00_3206
     xor a, a
-    ld [$c483], a
+    ld [wSpawnWave], a
 .L_00_3206:
     call LookupWord
     ld a, l
@@ -3963,14 +3963,14 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     ld a, [hl]
     ld [$c485], a
     ld d, a
-    ld a, [$c484]
+    ld a, [wSpawnIndex]
     dec a
     cp a, d
     jr nz, .L_00_3229
-    ld hl, $c483
+    ld hl, wSpawnWave
     inc [hl]
     ld a, $01
-    ld [$c484], a
+    ld [wSpawnIndex], a
     ld [$c486], a
 .L_00_3229:
     ld a, [wPlayerStatus]
@@ -3982,7 +3982,7 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     ld d, [hl]
     push de
     pop hl
-    ld a, [$c484]
+    ld a, [wSpawnIndex]
     sla a
     sla a
     ld c, a
@@ -3999,7 +3999,7 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     sub a, e
     cp a, d
     ret c
-    ld a, [$c47e]
+    ld a, [wEnemyCount]
     cp a, $03
     ret nc
     ld hl, $c481
@@ -4008,7 +4008,7 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     ld d, [hl]
     push de
     pop hl
-    ld a, [$c484]
+    ld a, [wSpawnIndex]
     sla a
     sla a
     sub a, $03
@@ -4034,11 +4034,11 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     and a, $01
     ldh [$ffee], a
 .L_00_328e:
-    ld hl, $c484
+    ld hl, wSpawnIndex
     inc [hl]
     ld hl, $c486
     inc [hl]
-    ld hl, $c47e
+    ld hl, wEnemyCount
     inc [hl]
     ld hl, wPlayerStatus
     res 5, [hl]
@@ -4398,7 +4398,7 @@ EnemyComputeBlockedDirs::  ; fills hEnemyBlocked from the room map cells around 
 L_00_3525::
     ld hl, hObject2
     res 7, [hl]
-    ld hl, $c47e
+    ld hl, wEnemyCount
     dec [hl]
     ret
 L_00_352f::
