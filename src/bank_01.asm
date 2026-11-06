@@ -189,13 +189,13 @@ SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces low
     add hl, bc
     ld a, [hl]
     ld b, a
-    ld a, [$c30f]
+    ld a, [wMusicPriority]
     cp a, b
     jr z, L_01_4271
     jr nc, L_01_428c
 L_01_4271::
     ld a, b
-    ld [$c30f], a
+    ld [wMusicPriority], a
     call SoundClearChannels
     ld a, $00
     ld [wSoundChannels], a
@@ -213,13 +213,13 @@ SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
     add hl, bc
     ld a, [hl]
     ld b, a
-    ld a, [$c310]
+    ld a, [wEffectPriority]
     cp a, b
     jr z, .L_01_42a0
     jr nc, L_01_428c
 .L_01_42a0:
     ld a, b
-    ld [$c310], a
+    ld [wEffectPriority], a
     call SoundClearRegisterShadow
     ld a, $00
     ld [$c3a7], a
@@ -229,9 +229,9 @@ SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
     ld hl, $c3a7
     jp SoundLoadStream
 SoundPauseMusicChannels::  ; sets the pause flag (bit 4) on the music channel records while an effect plays
-    ld a, [$c310]
+    ld a, [wEffectPriority]
     inc a
-    ld [$c310], a
+    ld [wEffectPriority], a
     ld hl, wSoundChannels
     push de
     ld de, $0020
@@ -254,9 +254,9 @@ SoundPauseMusicChannels::  ; sets the pause flag (bit 4) on the music channel re
     jr SoundStartEffect
 SoundResumeMusicChannels::  ; clears the pause flag on the music channel records
     call SoundClearRegisterShadow
-    ld a, [$c310]
+    ld a, [wEffectPriority]
     inc a
-    ld [$c310], a
+    ld [wEffectPriority], a
     ld hl, wSoundChannels
     push de
     ld de, $0020
@@ -694,7 +694,7 @@ SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word ta
     jp SoundParseStream
 SoundCmdStop::  ; command $e3: ends the stream; the channel is silenced
     ld a, $00
-    ld [$c30f], a
+    ld [wMusicPriority], a
 L_01_45f4::
     ld [bc], a
     ld hl, $0001
@@ -981,7 +981,7 @@ L_01_4775::
     ret
 SoundCmdEnd::  ; sound command $eb: discards the caller's return address and ends the stream
     ld a, $00
-    ld [$c310], a
+    ld [wEffectPriority], a
     ld a, [$c312]
     ld hl, $c314
     cp a, [hl]
@@ -1209,7 +1209,7 @@ BeginMagicCast::  ; plays SND_SFX_82 and sets wMagicState bit 1
     set 1, [hl]
     ret
 MagicTimerTick::  ; counts $ffdf down; ends the effect when it reaches 0
-    ld hl, $ffdf
+    ld hl, hMagicTimer
     dec [hl]
     ret nz
 EndMagic::  ; clears wMagicState
@@ -1222,7 +1222,7 @@ L_01_496c::
     ld a, $08
     ld [$c1f7], a
     ld a, $07
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     ld hl, wPlayerStatus
     set 4, [hl]
     ld a, $2a
@@ -1308,7 +1308,7 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     ld a, SND_SFX_8D
     call PlaySound
     ld a, $d0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     ld hl, wMagicState
     set 4, [hl]
     set 1, [hl]
@@ -1640,13 +1640,13 @@ L_01_4ca7::
     ld [wMagicPoints], a
     jr RunMagicEffect
 .L_01_4cae:
-    ld a, [$c44b]
+    ld a, [wMagicPointsHi]
     and a, a
     jr z, CancelMagic
     ld a, e
     ld [wMagicPoints], a
     xor a, a
-    ld [$c44b], a
+    ld [wMagicPointsHi], a
 RunMagicEffect::  ; jumps to the effect routine of wActiveMagic (clears wMagicState bit 2 first)
     ld a, [wMagicState]
     res 2, a
@@ -1683,7 +1683,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, L_01_4ca7
-    ld a, [$c44b]
+    ld a, [wMagicPointsHi]
     and a, a
     jr nz, L_01_4ca7
     ldh a, [hSerialByte]
@@ -1720,7 +1720,7 @@ MagicEffectSealed::  ; card 6 SEALED: $a0 frames
     bit 1, a
     jr nz, .L_01_4d52
     ld a, $a0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
 .L_01_4d52:
     jp MagicTimerTick
@@ -1729,7 +1729,7 @@ MagicEffectSUp::  ; card 1 S.UP (also id 0): runs for $f0 frames
     bit 1, a
     jr nz, .L_01_4d63
     ld a, $f0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
 .L_01_4d63:
     jp MagicTimerTick
@@ -1738,7 +1738,7 @@ MagicEffectWIn::  ; card 2 W.IN: $d0 frames; clears wPlayerBlocked
     bit 1, a
     jr nz, .L_01_4d74
     ld a, $d0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
 .L_01_4d74:
     xor a, a
@@ -1749,7 +1749,7 @@ MagicEffectTStop::  ; card 3 T.STOP: $d0 frames; removes the object at $c49e
     bit 1, a
     jr nz, .L_01_4d8e
     ld a, $d0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
     ld hl, wProjectile
     res 7, [hl]
@@ -1760,7 +1760,7 @@ MagicEffectGhost::  ; card 4 GHOST: $b0 frames
     bit 1, a
     jr nz, .L_01_4d9f
     ld a, $b0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
 .L_01_4d9f:
     jp MagicTimerTick
@@ -1769,7 +1769,7 @@ MagicEffectFriend::  ; card 5 FRIEND: $b0 frames; removes the object at $c49e
     bit 1, a
     jr nz, .L_01_4db5
     ld a, $b0
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     call BeginMagicCast
     ld hl, wProjectile
     res 7, [hl]
@@ -1844,9 +1844,9 @@ MagicEffectDom::  ; card 7 D.O.M: spawns the paint blob object and draws it
     ld [$c1b6], a
     ret
 L_01_4e47::
-    ldh a, [$ffdf]
+    ldh a, [hMagicTimer]
     dec a
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     ret nz
     xor a, a
     ld [wMagicState], a
@@ -2300,7 +2300,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld [$c1b6], a
     ld [wPlayerDir], a
     ld [wPlayerStatus], a
-    ldh [$ffdf], a
+    ldh [hMagicTimer], a
     ld hl, PlayerAnimPtrs
     ld a, [hl+]
     ld [$c4bf], a
@@ -2452,9 +2452,9 @@ CameraFollowPlayerX::  ; wCameraX = wPlayerX - $58 clamped to 0..$60
     ld a, [wPlayerX]
     sub a, $58
     ld [wCameraX], a
-    ld a, [$c1ad]
+    ld a, [wCameraXHi]
     sbc a, $00
-    ld [$c1ad], a
+    ld [wCameraXHi], a
     bit 7, a
     jr nz, .L_01_5337
     ld a, [wCameraX]
@@ -2463,19 +2463,19 @@ CameraFollowPlayerX::  ; wCameraX = wPlayerX - $58 clamped to 0..$60
     ld a, $60
     ld [wCameraX], a
     xor a, a
-    ld [$c1ad], a
+    ld [wCameraXHi], a
     jr .L_01_533e
 .L_01_5337:
     xor a, a
-    ld [$c1ad], a
+    ld [wCameraXHi], a
     ld [wCameraX], a
 .L_01_533e:
     ld a, [wPlayerY]
     sub a, $68
     ld [wCameraY], a
-    ld a, [$c1af]
+    ld a, [wCameraYHi]
     sbc a, $00
-    ld [$c1af], a
+    ld [wCameraYHi], a
     bit 7, a
     jr nz, .L_01_5362
     ld a, [wCameraY]
@@ -2484,20 +2484,20 @@ CameraFollowPlayerX::  ; wCameraX = wPlayerX - $58 clamped to 0..$60
     ld a, $70
     ld [wCameraY], a
     xor a, a
-    ld [$c1af], a
+    ld [wCameraYHi], a
     ret
 .L_01_5362:
     xor a, a
     ld [wCameraY], a
-    ld [$c1af], a
+    ld [wCameraYHi], a
     ret
 ResetCamera::  ; wCameraX and wCameraY = $20; high bytes 0
     ld a, $20
     ld [wCameraX], a
     ld [wCameraY], a
     xor a, a
-    ld [$c1ad], a
-    ld [$c1af], a
+    ld [wCameraXHi], a
+    ld [wCameraYHi], a
     ret
 EnemyKind4::  ; enemy kind 4
     call SelectObject2
@@ -2583,7 +2583,7 @@ L_01_553a::
     res 7, [hl]
     jp L_00_3525
 L_01_5549::
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_01_5559
     ld a, [$c499]
@@ -2621,7 +2621,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld b, a
     call L_00_3449
     ret nz
-    ld hl, $ffca
+    ld hl, hEnemyStep
     dec [hl]
     ret nz
     call L_01_570c
@@ -2644,7 +2644,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld a, d
     ld [$c4a0], a
     ld a, $50
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ld hl, hEnemyFlags
     set 0, [hl]
     ret
@@ -2781,7 +2781,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $30
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ldh a, [hEnemyKind]
     cp a, $0a
     jr nz, .L_01_56ca
@@ -2954,7 +2954,7 @@ L_01_5821::
     ld de, D_01_586f
     ld bc, $5876
 .L_01_584d:
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     and a, $08
     jr z, .L_01_5855
     push bc
@@ -3004,7 +3004,7 @@ L_01_58cf::
     ld a, [wProjectile]
     bit 7, a
     ret nz
-    ld hl, $ffca
+    ld hl, hEnemyStep
     dec [hl]
     ret nz
     ld a, [wProjectile]
@@ -3056,7 +3056,7 @@ L_01_58ee::
     jp DrawObject
 .L_01_5938:
     ld a, $05
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ld a, $a0
     ld [$c4b4], a
     ld hl, wProjectile
@@ -3111,7 +3111,7 @@ L_01_596f::
     ld bc, $59cb
     ld de, D_01_59d2
 .L_01_59ab:
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_01_59b3
     push bc
@@ -3124,7 +3124,7 @@ L_01_59b6::
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $05
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ld de, D_01_59cb
     call SetObjectAnimation
     jp L_00_340c

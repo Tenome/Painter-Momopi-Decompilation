@@ -925,7 +925,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ldh a, [hScratch01]
     sub a, l
     ldh [hScratch01], a
-    ld a, [$c1ad]
+    ld a, [wCameraXHi]
     ld l, a
     ldh a, [hScratch02]
     sbc a, l
@@ -935,7 +935,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ldh a, [hScratch03]
     sub a, l
     ldh [hScratch03], a
-    ld a, [$c1af]
+    ld a, [wCameraYHi]
     ld l, a
     ldh a, [hScratch04]
     sbc a, l
@@ -1922,7 +1922,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld hl, $9c66
     ld de, $c46d
     call L_00_0628
-    ld a, [$c44b]
+    ld a, [wMagicPointsHi]
     ld c, a
     ld a, [wMagicPoints]
     call ByteToBCD
@@ -1986,7 +1986,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ldh [hScratch00], a
     call DrawMagicPage
     ld bc, $0002
-    ld a, [$c44b]
+    ld a, [wMagicPointsHi]
     and a, a
     jr z, .L_00_1325
     ld e, $01
@@ -2148,7 +2148,7 @@ InitMagicPoints::  ; loads the magic points ($c44a/$c44b) from MagicPointsTable 
     ld a, $40
     ld [wMagicPoints], a
     ld a, $01
-    ld [$c44b], a
+    ld [wMagicPointsHi], a
     jr .L_00_145e
 .L_00_144a:
     ld a, [wRound]
@@ -2158,7 +2158,7 @@ InitMagicPoints::  ; loads the magic points ($c44a/$c44b) from MagicPointsTable 
     ld hl, MagicPointsTable
     add hl, bc
     ld a, [hl+]
-    ld [$c44b], a
+    ld [wMagicPointsHi], a
     ld a, [hl]
     ld [wMagicPoints], a
 .L_00_145e:
@@ -2371,7 +2371,7 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
     ld a, [wMagicPoints]
     cp a, d
     jr nc, .L_00_17e2
-    ld a, [$c44b]
+    ld a, [wMagicPointsHi]
     and a, a
     jr nz, .L_00_17e2
     ld hl, wMagicScreenFlags
@@ -3228,7 +3228,7 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
     call WaitFrameAndSyncOam
     call ReadJoypad
     call MenuCursorInput
-    ld a, [$c759]
+    ld a, [wCursorFlags]
     bit 7, a
     jr z, .L_00_257d
     ld a, [$c487]
@@ -3275,34 +3275,34 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     jr z, .L_00_25f8
     ld a, SND_SFX_CURSOR
     call PlaySound
-    ld a, [$c758]
+    ld a, [wCursorIndex]
     dec a
     bit 7, a
     jr z, .L_00_25f5
     ld a, $02
 .L_00_25f5:
-    ld [$c758], a
+    ld [wCursorIndex], a
 .L_00_25f8:
     ldh a, [hJoyNew]
     bit 4, a
     jr z, .L_00_260f
     ld a, SND_SFX_CURSOR
     call PlaySound
-    ld a, [$c758]
+    ld a, [wCursorIndex]
     inc a
     cp a, $03
     jr c, .L_00_260c
     xor a, a
 .L_00_260c:
-    ld [$c758], a
+    ld [wCursorIndex], a
 .L_00_260f:
     ldh a, [hJoyNew]
     bit 0, a
     jr z, .L_00_261a
-    ld hl, $c759
+    ld hl, wCursorFlags
     set 7, [hl]
 .L_00_261a:
-    ld a, [$c758]
+    ld a, [wCursorIndex]
     ld c, a
     ld hl, D_00_2630
     call LookupByte
@@ -3314,8 +3314,8 @@ D_00_2630::
     INCBIN "orig/painter_momopie.gb", $02630, 3
 L_00_2633::
     xor a, a
-    ld [$c758], a
-    ld [$c759], a
+    ld [wCursorIndex], a
+    ld [wCursorFlags], a
     ld a, $50
     ld [wCursorY], a
     ld a, $80
@@ -3569,11 +3569,11 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, $ff
     ld [$c7c0], a
     call DrawMetatileMap
-    ld hl, $c76e
+    ld hl, wEndingObject
     ld bc, $0041
     call ClearMemory
     ld a, $80
-    ld [$c76e], a
+    ld [wEndingObject], a
     ld [$c78e], a
     ld hl, D_00_3143
     ld a, h
@@ -3632,7 +3632,7 @@ Mode6_Ending::  ; castle scene after the last round
     call L_00_2f26
     call EndingCreditsWindow
     call ReadJoypad
-    ld a, [$c790]
+    ld a, [wCreditsPage]
     cp a, $08
     jr nz, .L_00_2d33
     ld hl, wCheatFlags
@@ -3683,7 +3683,7 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     set 1, [hl]
     ret
 .L_00_2da9:
-    ld a, [$c790]
+    ld a, [wCreditsPage]
     cp a, $08
     ret z
     ld hl, $c78f
@@ -3707,7 +3707,7 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     ret nz
     xor a, a
     ld [$c78e], a
-    ld hl, $c790
+    ld hl, wCreditsPage
     inc [hl]
     call EndingShowCreditsPage
     ret
@@ -3715,7 +3715,7 @@ EndingShowCreditsPage::  ; queues the credit page $c790 from CreditsPageTable
     call EndingScrollStep
     call L_00_2df1
     call EndingScrollStep
-    ld a, [$c790]
+    ld a, [wCreditsPage]
     ld hl, CreditsPageTable
     call LookupWord
     call QueueVramCopyList
@@ -3820,7 +3820,7 @@ L_00_2f76::
     ld [$c76f], a
     ld a, [hl]
     ld [$c770], a
-    ld hl, $c76e
+    ld hl, wEndingObject
     call SetObjPtr
     jp DrawObject
 EndingScrollStep::  ; scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
@@ -3839,7 +3839,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     call FillBackwardsFF
     call ClearOamShadowY
     call RequestOamDma
-    ld hl, $c76e
+    ld hl, wEndingObject
     ld bc, $0041
     call ClearMemory
     xor a, a
@@ -3848,7 +3848,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld bc, $30c4
     call RunVramCopyList
     ld a, $80
-    ld [$c76e], a
+    ld [wEndingObject], a
     ld a, $c8
     ld [$c775], a
     ld a, $50
@@ -3888,7 +3888,7 @@ L_00_3054::
     call L_00_307f
     jp DrawObject
 L_00_307f::
-    ld hl, $c76e
+    ld hl, wEndingObject
     jp SetObjPtr
 L_00_3085::
     ld c, $00
@@ -3905,7 +3905,7 @@ L_00_3085::
     ld a, [hl+]
     ld [$c78f], a
     ld a, [hl]
-    ld [$c790], a
+    ld [wCreditsPage], a
     ld hl, $c78e
     call SetObjPtr
     jp DrawObject
@@ -3934,7 +3934,7 @@ D_00_3148::
 D_00_31a6::
     INCBIN "orig/painter_momopie.gb", $031a6, 60
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
-    ld hl, $ffd0
+    ld hl, hEnemyTick
     inc [hl]
     inc hl
     ld a, [hl]
@@ -4565,7 +4565,7 @@ L_00_3643::
     call L_00_0b66
     jp L_00_09e0
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     and a, $08
     jr z, L_00_3651
     push bc
@@ -4873,11 +4873,11 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyCounter]
     ld [hl+], a
-    ldh a, [$ffca]
+    ldh a, [hEnemyStep]
     ld [hl+], a
     ldh a, [$ffcb]
     ld [hl+], a
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     ld [hl+], a
     ldh a, [$ffcd]
     ld [hl+], a
@@ -4885,7 +4885,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffcf]
     ld [hl+], a
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     ld [hl+], a
     ldh a, [hEnemyDir]
     ld [hl+], a
@@ -4944,11 +4944,11 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyCounter], a
     ld a, [hl+]
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ld a, [hl+]
     ldh [$ffcb], a
     ld a, [hl+]
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ld a, [hl+]
     ldh [$ffcd], a
     ld a, [hl+]
@@ -4956,7 +4956,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffcf], a
     ld a, [hl+]
-    ldh [$ffd0], a
+    ldh [hEnemyTick], a
     ld a, [hl+]
     ldh [hEnemyDir], a
     ld a, [hl+]
@@ -5097,15 +5097,15 @@ L_00_39f9::
     res 6, [hl]
     ret
 .L_00_3a04:
-    ldh a, [$ffca]
+    ldh a, [hEnemyStep]
     cp a, $0b
     jr z, .L_00_3a0e
     inc a
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ret
 .L_00_3a0e:
     xor a, a
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     ldh a, [hEnemyDir]
     or a, $60
     ldh [hEnemyDir], a
@@ -5251,17 +5251,17 @@ L_00_3b3b::
     ret z
     set 0, a
     ldh [hEnemyFlags], a
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     cp a, $80
     jr z, .L_00_3b4e
     inc a
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ret
 .L_00_3b4e:
     ld hl, hEnemyFlags
     res 0, [hl]
     xor a, a
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ret
 SetEnemyAnimation::  ; SelectEnemyAnimation then SetAnimationVariant
     call SelectEnemyAnimation
@@ -5347,7 +5347,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     ldh [$ffcb], a
     jr nc, .L_00_3c1a
     call L_00_3c7d
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     ld [hl], a
     jp L_00_3525
 .L_00_3c1a:
@@ -5367,7 +5367,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     jr z, .L_00_3c42
 .L_00_3c3a:
     call L_00_3c7d
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     ld [hl], a
     jr .L_00_3c45
 .L_00_3c42:
@@ -5384,7 +5384,7 @@ L_00_3c57::
     ld a, $20
     ldh [hEnemyCounter], a
     call L_00_3c7d
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ld a, $fe
     ldh [$ffcb], a
     ld a, $90
@@ -5393,12 +5393,12 @@ L_00_3c57::
     jp SetObjectAnimation
 L_00_3c6e::
     call L_00_3c7d
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     ld [hl], a
     ret
 L_00_3c75::
     call L_00_3c7d
-    ldh [$ffca], a
+    ldh [hEnemyStep], a
     xor a, a
     ld [hl], a
     ret
@@ -5431,11 +5431,11 @@ L_00_3cb5::
     ldh a, [hEnemyDir]
     bit 0, a
     jr z, .L_00_3ccd
-    ldh a, [$ffcc]
+    ldh a, [hEnemyAux]
     and a, a
     jp z, .L_00_3d15
     dec a
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ld de, D_00_3aca
     ld bc, $3e4d
     jp SetAnimationVariant
@@ -5489,7 +5489,7 @@ L_00_3d18::
     ld a, $05
     ldh [hEnemyAnimState], a
 .L_00_3d2f:
-    ld a, [$c533]
+    ld a, [wEnemyPathPtr]
     ld l, a
     ld a, [$c534]
     ld h, a
@@ -5500,7 +5500,7 @@ L_00_3d18::
     ldh [$ffc5], a
     inc hl
     ld a, l
-    ld [$c533], a
+    ld [wEnemyPathPtr], a
     ld a, h
     ld [$c534], a
     ret
@@ -5513,13 +5513,13 @@ L_00_3d18::
 .L_00_3d54:
     xor a, a
     ldh [hEnemyAnimState], a
-    ld a, [$c533]
+    ld a, [wEnemyPathPtr]
     ld l, a
     ld a, [$c534]
     ld h, a
     dec hl
     ld a, l
-    ld [$c533], a
+    ld [wEnemyPathPtr], a
     ld a, h
     ld [$c534], a
     jr .L_00_3d2f
@@ -5535,7 +5535,7 @@ L_00_3e20::
     ldh [hEnemyAnimState], a
     ld a, $20
     ldh [hEnemyCounter], a
-    ldh [$ffcc], a
+    ldh [hEnemyAux], a
     ld hl, hObject2
     set 6, [hl]
     ld de, D_00_3e4d
@@ -5547,7 +5547,7 @@ L_00_3e20::
     ld hl, D_00_3d6a
     call LookupWord
     ld a, l
-    ld [$c533], a
+    ld [wEnemyPathPtr], a
     ld a, h
     ld [$c534], a
     ret
@@ -5600,7 +5600,7 @@ L_00_3e90::
     jr z, .L_00_3ecb
     inc a
     ldh [hEnemyCounter], a
-    ldh a, [$ffd0]
+    ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_00_3ec5
     ld de, D_00_3f3a
@@ -5618,7 +5618,7 @@ L_00_3ed1::
     ret z
     ld a, $02
     ldh [$ffb9], a
-    ldh a, [$ffca]
+    ldh a, [hEnemyStep]
     sla a
     ld c, a
     ld b, $00
@@ -5630,7 +5630,7 @@ L_00_3ed1::
     ldh [hEnemyX], a
     ld a, [hl]
     ldh [hEnemyY], a
-    ld hl, $ffca
+    ld hl, hEnemyStep
     inc [hl]
     ld de, D_00_3f44
     jp SetObjectAnimation

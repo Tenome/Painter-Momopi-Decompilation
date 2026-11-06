@@ -164,3 +164,17 @@ DEF wSpawnWave      EQU $c483   ; index (0-5) of the current wave in the round's
 DEF wSpawnIndex     EQU $c484   ; next entry within the wave (1 based)
 DEF wContinues      EQU $c49b   ; continues left (5 in a normal game, $ff with the cheat)
 DEF wCheatFlags     EQU $c49c   ; bit 0 = title code Up+Select+A+B entered: unlimited continues
+DEF hMagicTimer     EQU $ffdf   ; frames left of the running magic effect (MagicTimerTick)
+DEF wMagicPointsHi  EQU $c44b   ; high byte of the 16 bit MP
+DEF wCursorIndex    EQU $c758   ; menu choice 0-2 (MenuCursorInput)
+DEF wCursorFlags    EQU $c759   ; bit 7 = a choice was confirmed
+DEF wCameraXHi      EQU $c1ad
+DEF wCameraYHi      EQU $c1af
+DEF hEnemyTick      EQU $ffd0   ; incremented by TickObjectTimer; bits 2 and 3 alternate animation variants
+DEF hEnemyStep      EQU $ffca   ; enemy step counter
+DEF hEnemyAux       EQU $ffcc   ; enemy auxiliary counter
+DEF wEnemyPathPtr   EQU $c533   ; 16 bit pointer into the scripted path of kind 7 enemies
+DEF wEndingObject   EQU $c76e   ; object record used by the ending scene
+DEF wCreditsPage    EQU $c790   ; index into CreditsPageTable
+DEF wMusicPriority  EQU $c30f   ; priority of the playing music (SoundStartMusic)
+DEF wEffectPriority EQU $c310   ; priority of the playing effect (SoundStartEffect)
