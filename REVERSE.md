@@ -119,7 +119,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 - **Magic screen** (found by pressing B in play with `tools/emu.py`): MOMOPIE'S MAGIC shows SCR (8 BCD score digits at `wScoreDigits`), Rn (`wRound`), MP (`wMagicPoints`,
   16 bit, initial value from `MagicPointsTable` by round: 50 in round 1), TIME (`hTimeSeconds`, counted down once per `hTimeFrames` = 60 frames) and three magic cards
-  (the first is S. UP for 10 MP; the tile set in bank 3 also contains the cards SEALED, CLEAR, T. STOP and others). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
+  (card ids and costs read from the screen: 1 S.UP 10MP, 2 W.IN 50, 3 T.STOP 40, 4 GHOST 90, 5 FRIEND 60, 6 SEALED 30, 7 D.O.M 80, 8 CLEAR 70, 9 PYON 20; a new game starts with S.UP, round 2 adds PYON, the link game starts with 1 2 3 5 6). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
 
 - **Animation and shape data** (decoded from `DrawObject` $0866 and checked against the data): the animation pointer of an object (record +1/+2) points at frames of
   `shape id, tile id x count` where `count` is the first byte of the shape; `ObjectShapeTable` ($06a4) maps the shape id to `count, (y offset, x offset) x count` with signed

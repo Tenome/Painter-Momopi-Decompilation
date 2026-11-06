@@ -97,7 +97,7 @@ bank	addr	size	name
 0	1839	38	MagicCursorLeft
 0	185f	23	MagicCursorUp
 0	1876	45	MagicCursorDown
-0	18a3	204	DrawMagicCard
+0	18a3	204	DrawMagicPage
 0	196f	4	L_00_196f
 0	1973	40	InitMagicScreenState
 0	1c57	144	Mode3_RoundIntro

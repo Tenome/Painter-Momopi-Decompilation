@@ -1984,7 +1984,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ei
     xor a, a
     ldh [hScratch00], a
-    call DrawMagicCard
+    call DrawMagicPage
     ld bc, $0002
     ld a, [$c44b]
     and a, a
@@ -2451,7 +2451,7 @@ MagicCursorUp::  ; moves the magic card cursor one row up
     ld a, [hl]
     ld e, $03
     call MultiplyByDE
-    jr DrawMagicCard
+    jr DrawMagicPage
 .L_00_1871:
     xor a, a
     ld [wMagicRow], a
@@ -2478,13 +2478,13 @@ MagicCursorDown::  ; moves the magic card cursor one row down
     ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
-DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its cost
+DrawMagicPage::  ; draws the three cards of the current row (name
     ldh a, [hScratch00]
     ld c, a
     ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
-    ld hl, D_00_19a5
+    ld hl, MagicCardTitleJobs
     call LookupWord
     push hl
     pop de
@@ -2492,7 +2492,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19b9
+    ld hl, MagicCardPictureJobs
     call LookupWord
     push hl
     pop de
@@ -2500,7 +2500,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19cd
+    ld hl, MagicCardCostJobs
     call LookupWord
     push hl
     pop de
@@ -2514,7 +2514,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
-    ld hl, D_00_19a5
+    ld hl, MagicCardTitleJobs
     call LookupWord
     push hl
     pop de
@@ -2522,7 +2522,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19b9
+    ld hl, MagicCardPictureJobs
     call LookupWord
     push hl
     pop de
@@ -2530,7 +2530,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19cd
+    ld hl, MagicCardCostJobs
     call LookupWord
     push hl
     pop de
@@ -2544,7 +2544,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
-    ld hl, D_00_19a5
+    ld hl, MagicCardTitleJobs
     call LookupWord
     push hl
     pop de
@@ -2552,7 +2552,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19b9
+    ld hl, MagicCardPictureJobs
     call LookupWord
     push hl
     pop de
@@ -2560,7 +2560,7 @@ DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its co
     call QueueVramCopyRows
     call WaitVramCopyDone
     ldh a, [hScratch02]
-    ld hl, D_00_19cd
+    ld hl, MagicCardCostJobs
     call LookupWord
     push hl
     pop de
@@ -2588,16 +2588,101 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     jp SetCursorAnimation
 RoomTypeTable::  ; per room-type data indexed by wRoomType
     INCBIN "orig/painter_momopie.gb", $0199b, 10
-D_00_19a5::
-    INCBIN "orig/painter_momopie.gb", $019a5, 20
-D_00_19b9::
-    INCBIN "orig/painter_momopie.gb", $019b9, 20
-D_00_19cd::
-    INCBIN "orig/painter_momopie.gb", $019cd, 74
+MagicCardTitleJobs::  ; 10 pointers to the card name VRAM jobs (index = card id)
+    dw D_00_1c1b
+    dw D_00_1c21
+    dw D_00_1c27
+    dw D_00_1c2d
+    dw D_00_1c33
+    dw D_00_1c3f
+    dw D_00_1c39
+    dw D_00_1c4b
+    dw D_00_1c51
+    dw D_00_1c45
+MagicCardPictureJobs::  ; 10 pointers to the card picture VRAM jobs
+    dw D_00_1b67
+    dw D_00_1b9d
+    dw D_00_1bc1
+    dw D_00_1b8b
+    dw D_00_1c09
+    dw D_00_1be5
+    dw D_00_1baf
+    dw D_00_1b79
+    dw D_00_1bf7
+    dw D_00_1bd3
+MagicCardCostJobs::  ; 10 pointers to the MP cost VRAM jobs
+    dw D_00_1c1b
+    dw D_00_19e1
+    dw D_00_19e7
+    dw D_00_19ed
+    dw D_00_19f3
+    dw D_00_19f9
+    dw D_00_19ff
+    dw D_00_1a05
+    dw D_00_1a0b
+    dw D_00_1a11
+D_00_19e1::
+    INCBIN "orig/painter_momopie.gb", $019e1, 6
+D_00_19e7::
+    INCBIN "orig/painter_momopie.gb", $019e7, 6
+D_00_19ed::
+    INCBIN "orig/painter_momopie.gb", $019ed, 6
+D_00_19f3::
+    INCBIN "orig/painter_momopie.gb", $019f3, 6
+D_00_19f9::
+    INCBIN "orig/painter_momopie.gb", $019f9, 6
+D_00_19ff::
+    INCBIN "orig/painter_momopie.gb", $019ff, 6
+D_00_1a05::
+    INCBIN "orig/painter_momopie.gb", $01a05, 6
+D_00_1a0b::
+    INCBIN "orig/painter_momopie.gb", $01a0b, 6
+D_00_1a11::
+    INCBIN "orig/painter_momopie.gb", $01a11, 6
 D_00_1a17::
     INCBIN "orig/painter_momopie.gb", $01a17, 25
 D_00_1a30::
-    INCBIN "orig/painter_momopie.gb", $01a30, 551
+    INCBIN "orig/painter_momopie.gb", $01a30, 311
+D_00_1b67::
+    INCBIN "orig/painter_momopie.gb", $01b67, 18
+D_00_1b79::
+    INCBIN "orig/painter_momopie.gb", $01b79, 18
+D_00_1b8b::
+    INCBIN "orig/painter_momopie.gb", $01b8b, 18
+D_00_1b9d::
+    INCBIN "orig/painter_momopie.gb", $01b9d, 18
+D_00_1baf::
+    INCBIN "orig/painter_momopie.gb", $01baf, 18
+D_00_1bc1::
+    INCBIN "orig/painter_momopie.gb", $01bc1, 18
+D_00_1bd3::
+    INCBIN "orig/painter_momopie.gb", $01bd3, 18
+D_00_1be5::
+    INCBIN "orig/painter_momopie.gb", $01be5, 18
+D_00_1bf7::
+    INCBIN "orig/painter_momopie.gb", $01bf7, 18
+D_00_1c09::
+    INCBIN "orig/painter_momopie.gb", $01c09, 18
+D_00_1c1b::
+    INCBIN "orig/painter_momopie.gb", $01c1b, 6
+D_00_1c21::
+    INCBIN "orig/painter_momopie.gb", $01c21, 6
+D_00_1c27::
+    INCBIN "orig/painter_momopie.gb", $01c27, 6
+D_00_1c2d::
+    INCBIN "orig/painter_momopie.gb", $01c2d, 6
+D_00_1c33::
+    INCBIN "orig/painter_momopie.gb", $01c33, 6
+D_00_1c39::
+    INCBIN "orig/painter_momopie.gb", $01c39, 6
+D_00_1c3f::
+    INCBIN "orig/painter_momopie.gb", $01c3f, 6
+D_00_1c45::
+    INCBIN "orig/painter_momopie.gb", $01c45, 6
+D_00_1c4b::
+    INCBIN "orig/painter_momopie.gb", $01c4b, 6
+D_00_1c51::
+    INCBIN "orig/painter_momopie.gb", $01c51, 6
 Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld sp, wStackTop
     call LcdOff

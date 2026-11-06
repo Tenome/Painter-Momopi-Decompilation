@@ -236,6 +236,9 @@ bank,addr,name,comment
 0,1839,MagicCursorLeft,moves the magic card cursor one column left
 0,185f,MagicCursorUp,moves the magic card cursor one row up
 0,1876,MagicCursorDown,moves the magic card cursor one row down
-0,18a3,DrawMagicCard,draws the card at the cursor (id from wMagicCards) and its cost
+0,18a3,DrawMagicPage,draws the three cards of the current row (name, picture, MP cost for each id from wMagicCards)
 1,4b79,PlayerComputeBlockedDirs,fills wPlayerBlocked from the room map cells around the player
 1,4c4e,PlayerCheckOffPath,sets wPlayerDir bit 5 (death) when the player stands on a tile grid cell that is not a path
+0,19a5,MagicCardTitleJobs,10 pointers to the card name VRAM jobs (index = card id)
+0,19b9,MagicCardPictureJobs,10 pointers to the card picture VRAM jobs
+0,19cd,MagicCardCostJobs,10 pointers to the MP cost VRAM jobs
