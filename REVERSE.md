@@ -217,7 +217,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - [x] Magic cards: ids, costs, casting and the effect table are decoded; still to do: what each effect changes in the player and enemy routines
 - [ ] Decode the animation stream format (`SetObjectAnimation` data: frame ids and durations) and the `ObjectShapeTable` records into structured `db`/`dw`
 - [ ] Classify the remaining `INCBIN` blocks in bank 0 and bank 1 (tilemaps, VRAM job streams, animation data)
-- [ ] 2 player link mode: serial protocol (`SerialSendByte`, `LinkSyncFrame`, `SerialHandler`)
+- [x] 2 player link mode: tested with two linked emulated machines (tools/link_test.py); protocol details beyond the start handshake still to document
 
 ### Web Port Fixes
 
