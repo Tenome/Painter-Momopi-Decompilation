@@ -66,7 +66,7 @@ bank,addr,name,comment
 1,5044,RoundCleared,runs when every path cell is painted ($c520 reached 0): restores palettes; plays sound $8a; clear animation
 1,5223,PlayerDeath,waits $27 frames; plays sound $8b; runs the death animation (wPlayerDir bit 5)
 2,4000,SpriteTiles,2bpp sprite tiles (characters and enemies): first $700 bytes are copied to VRAM $8000
-2,4700,SpriteTilesPart2,more sprite tiles; $900 bytes at an offset chosen from wRoomIndex are copied to $8700
+2,4700,SpriteSet0,$900 bytes of sprite tiles copied to $8700 (cook enemies and kitchen props); room indices 0-2
 2,7400,Bank2Padding,$ff padding to the end of the bank
 3,4000,TilesTitle,title logo; font; copyright text (loaded by LoadTilesBank3A)
 3,5000,TilesIcons,UI icons; round/status tiles (LoadTilesBank3B)
@@ -221,3 +221,7 @@ bank,addr,name,comment
 0,3f4c,SoundPitchTables,pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
 0,1760,SetCursorAnimation,HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
 0,1740,CursorBlinkStep,counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
+2,5000,SpriteSet1,$900 bytes of sprite tiles copied to $8700 (skull/ghost enemies); used for room indices 12-14 and 16
+2,5900,SpriteSet2,$900 bytes of sprite tiles (knight and ghost enemies); room indices 8-10
+2,6200,SpriteSet3,$900 bytes of sprite tiles (cook enemies); room indices 3-6 and 11
+2,6b00,SpriteSet4,$900 bytes of sprite tiles (blob enemies and a puff of smoke); room indices 7 and 15

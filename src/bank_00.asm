@@ -2261,23 +2261,23 @@ RoomMetatileTable::  ; 17 pointers to metatile definitions per room theme
     dw D_00_20a7
     dw D_00_20c7
 RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
-    dw SpriteTilesPart2
-    dw SpriteTilesPart2
-    dw SpriteTilesPart2
-    dw D_02_6200
-    dw D_02_6200
-    dw D_02_6200
-    dw D_02_6200
-    dw D_02_6b00
-    dw D_02_5900
-    dw D_02_5900
-    dw D_02_5900
-    dw D_02_6200
-    dw D_02_5000
-    dw D_02_5000
-    dw D_02_5000
-    dw D_02_6b00
-    dw D_02_5000
+    dw SpriteSet0
+    dw SpriteSet0
+    dw SpriteSet0
+    dw SpriteSet3
+    dw SpriteSet3
+    dw SpriteSet3
+    dw SpriteSet3
+    dw SpriteSet4
+    dw SpriteSet2
+    dw SpriteSet2
+    dw SpriteSet2
+    dw SpriteSet3
+    dw SpriteSet1
+    dw SpriteSet1
+    dw SpriteSet1
+    dw SpriteSet4
+    dw SpriteSet1
 RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
     dw D_00_20d7
     dw D_00_2117
