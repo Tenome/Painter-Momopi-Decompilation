@@ -142,3 +142,22 @@ bank,addr,name,comment
 0,2b46,InitTitleVariables,clears hLinkFlags and the variables used by the title screen
 0,14a6,ClearRoundVariables,zeroes the per-round counters ($c464-$c46c and $c488)
 0,25e0,MenuCursorInput,dpad changes the cursor ($c758 wraps 0-2) with sound $8f
+1,411a,SoundCommandHandlerTable,per sound id: routine that starts the stream (music \$4263; effect \$4292)
+1,5e72,Sound81MusicData,stream of sound id $81
+1,609b,Sound82EffectData,stream of sound id $82
+1,6294,Sound83EffectData,stream of sound id $83
+1,6492,Sound84MusicData,stream of sound id $84
+1,675d,Sound85MusicData,stream of sound id $85
+1,6bdd,Sound86MusicData,stream of sound id $86
+1,70ab,Sound87MusicData,stream of sound id $87
+1,7431,Sound88MusicData,stream of sound id $88
+1,789a,Sound89MusicData,stream of sound id $89
+1,7b55,Sound8AMusicData,stream of sound id $8a
+1,7d55,Sound8BMusicData,stream of sound id $8b
+1,5c48,Sound8DEffectData,stream of sound id $8d
+1,5c5c,Sound8EEffectData,stream of sound id $8e
+1,5c70,Sound8FEffectData,stream of sound id $8f
+1,5c80,Sound90EffectData,stream of sound id $90
+1,5c93,Sound91EffectData,stream of sound id $91
+1,5ca7,Sound92EffectData,stream of sound id $92
+1,5cba,Sound93EffectData,stream of sound id $93

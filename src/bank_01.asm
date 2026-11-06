@@ -8,25 +8,26 @@ SoundSongTable::  ; word offsets of song data (follows the frequency table at $4
     INCBIN "orig/painter_momopie.gb", $04048, 172
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     dw D_00_0027
-    dw D_01_5e72
-    dw D_01_609b
-    dw D_01_6294
-    dw D_01_6492
-    dw D_01_675d
-    dw D_01_6bdd
-    dw D_01_70ab
-    dw D_01_7431
-    dw D_01_789a
-    dw D_01_7b55
-    dw D_01_7d55
+    dw Sound81MusicData
+    dw Sound82EffectData
+    dw Sound83EffectData
+    dw Sound84MusicData
+    dw Sound85MusicData
+    dw Sound86MusicData
+    dw Sound87MusicData
+    dw Sound88MusicData
+    dw Sound89MusicData
+    dw Sound8AMusicData
+    dw Sound8BMusicData
     dw D_01_7f55
-    dw D_01_5c48
-    dw D_01_5c5c
-    dw D_01_5c70
-    dw D_01_5c80
-    dw D_01_5c93
-    dw D_01_5ca7
-    dw L_01_5cba
+    dw Sound8DEffectData
+    dw Sound8EEffectData
+    dw Sound8FEffectData
+    dw Sound90EffectData
+    dw Sound91EffectData
+    dw Sound92EffectData
+SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (music \$4263; effect \$4292)
+    dw Sound93EffectData
     dw L_01_4263
     dw L_01_4292
     dw L_01_4292
@@ -2793,42 +2794,42 @@ D_01_5a84::
     INCBIN "orig/painter_momopie.gb", $05a84, 14
 D_01_5a92::
     INCBIN "orig/painter_momopie.gb", $05a92, 438
-D_01_5c48::
+Sound8DEffectData::  ; stream of sound id $8d
     INCBIN "orig/painter_momopie.gb", $05c48, 20
-D_01_5c5c::
+Sound8EEffectData::  ; stream of sound id $8e
     INCBIN "orig/painter_momopie.gb", $05c5c, 20
-D_01_5c70::
+Sound8FEffectData::  ; stream of sound id $8f
     INCBIN "orig/painter_momopie.gb", $05c70, 16
-D_01_5c80::
+Sound90EffectData::  ; stream of sound id $90
     INCBIN "orig/painter_momopie.gb", $05c80, 19
-D_01_5c93::
+Sound91EffectData::  ; stream of sound id $91
     INCBIN "orig/painter_momopie.gb", $05c93, 20
-D_01_5ca7::
+Sound92EffectData::  ; stream of sound id $92
     INCBIN "orig/painter_momopie.gb", $05ca7, 19
-L_01_5cba::
+Sound93EffectData::  ; stream of sound id $93
     ld bc, $0380
     INCBIN "orig/painter_momopie.gb", $05cbd, 437
-D_01_5e72::
+Sound81MusicData::  ; stream of sound id $81
     INCBIN "orig/painter_momopie.gb", $05e72, 553
-D_01_609b::
+Sound82EffectData::  ; stream of sound id $82
     INCBIN "orig/painter_momopie.gb", $0609b, 505
-D_01_6294::
+Sound83EffectData::  ; stream of sound id $83
     INCBIN "orig/painter_momopie.gb", $06294, 510
-D_01_6492::
+Sound84MusicData::  ; stream of sound id $84
     INCBIN "orig/painter_momopie.gb", $06492, 715
-D_01_675d::
+Sound85MusicData::  ; stream of sound id $85
     INCBIN "orig/painter_momopie.gb", $0675d, 1152
-D_01_6bdd::
+Sound86MusicData::  ; stream of sound id $86
     INCBIN "orig/painter_momopie.gb", $06bdd, 1230
-D_01_70ab::
+Sound87MusicData::  ; stream of sound id $87
     INCBIN "orig/painter_momopie.gb", $070ab, 902
-D_01_7431::
+Sound88MusicData::  ; stream of sound id $88
     INCBIN "orig/painter_momopie.gb", $07431, 1129
-D_01_789a::
+Sound89MusicData::  ; stream of sound id $89
     INCBIN "orig/painter_momopie.gb", $0789a, 699
-D_01_7b55::
+Sound8AMusicData::  ; stream of sound id $8a
     INCBIN "orig/painter_momopie.gb", $07b55, 512
-D_01_7d55::
+Sound8BMusicData::  ; stream of sound id $8b
     INCBIN "orig/painter_momopie.gb", $07d55, 512
 D_01_7f55::
     INCBIN "orig/painter_momopie.gb", $07f55, 171
