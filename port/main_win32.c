@@ -1,7 +1,7 @@
 /* Windows front end for the recompiled game: window, keyboard, audio (waveOut), frame pacing by the audio clock.
  * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit,
  * P = pause, M = mute, F2 = next palette (green/grey/sepia), hold Tab = fast forward.
- *   game_win [ROM]     (default: painter_momopie.gb next to the program, then orig/painter_momopie.gb) */
+ *   game_win [ROM]     (no argument: the game data built into the program; a ROM file argument is for testing mods) */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
@@ -9,6 +9,8 @@
 #include "gb_rt.h"
 
 extern void gb_game_main(void);
+extern const unsigned char gb_rom_image[];
+extern const size_t gb_rom_image_size;
 
 static HWND hwnd;
 static uint32_t pixels[160 * 144];
@@ -133,12 +135,11 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     FILE *f = 0;
     if (argc > 1) { WideCharToMultiByte(CP_ACP, 0, argv[1], -1, path, MAX_PATH, 0, 0); f = fopen(path, "rb"); }
-    if (!f) f = fopen("painter_momopie.gb", "rb");
-    if (!f) f = fopen("orig/painter_momopie.gb", "rb");
-    if (!f) { MessageBoxA(0, "ROM not found. Usage: game_win ROM.gb", "Painter Momopie", MB_ICONERROR); return 1; }
-    size_t n = fread(rom, 1, sizeof rom, f);
-    fclose(f);
-    gb_load_rom(rom, n);
+    if (f) {                                        /* optional ROM file argument (to try a modded ROM); otherwise the built-in data is used */
+        size_t n = fread(rom, 1, sizeof rom, f);
+        fclose(f);
+        gb_load_rom(rom, n);
+    } else gb_load_rom(gb_rom_image, gb_rom_image_size);
 
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = proc; wc.hInstance = inst; wc.lpszClassName = "gbrecomp"; wc.hCursor = LoadCursor(0, IDC_ARROW);

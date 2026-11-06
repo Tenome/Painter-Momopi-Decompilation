@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""Recompile the ROM to C and build the headless runner (and on Windows the window player): python tools/build_port.py [--cc PATH_TO_CLANG_OR_GCC] [--sdl]
+"""Build the native port: python tools/build_port.py [--cc COMPILER] [--rgbds DIR] [--sdl]
 
---sdl also builds the SDL2 player (needs sdl2-config; Linux/macOS).
+1. builds the ROM from src/ and assets/ with RGBDS (tools/build.py --mod) if build/painter_momopie.gb is missing or --rebuild is given;
+2. recompiles that ROM's routines to C (tools/recomp.py), writing build/recomp/game.c and the data image build/recomp/rom_image.c;
+3. compiles the headless runner and, on Windows, the window player; --sdl also builds the SDL2 player (needs sdl2-config).
 
-Needs a C compiler (clang or gcc). Output: build/recomp/game_headless(.exe).
+The original ROM is not needed here: only src/, assets/ and the compiler. The resulting programs contain the game data and need no ROM file.
+Output: build/recomp/game_win.exe (window), build/recomp/game_headless(.exe) (tests), build/recomp/game_sdl (with --sdl).
 """
 import os, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-cc = os.environ.get("CC", "")
-if "--cc" in sys.argv:
-    cc = sys.argv[sys.argv.index("--cc") + 1]
+PY = sys.executable
+
+
+def arg(name, default=""):
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+cc = arg("--cc", os.environ.get("CC", ""))
 if not cc:
     for cand in ("clang", "gcc", "cc"):
         if subprocess.run(["where" if os.name == "nt" else "which", cand], capture_output=True).returncode == 0:
@@ -18,26 +26,40 @@ if not cc:
             break
 if not cc:
     sys.exit("no C compiler found (set CC or pass --cc)")
-subprocess.run([sys.executable, os.path.join(ROOT, "tools", "recomp.py")], check=True)
-out = os.path.join(ROOT, "build", "recomp", "game_headless" + (".exe" if os.name == "nt" else ""))
-cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port"), os.path.join(ROOT, "port", "gb_rt.c"), os.path.join(ROOT, "port", "apu.c"), os.path.join(ROOT, "port", "main_headless.c"),
-       os.path.join(ROOT, "build", "recomp", "game.c"), "-o", out]
-print(" ".join(cmd))
-subprocess.run(cmd, check=True)
-print("built", out)
-if "--sdl" in sys.argv:
-    sdl = os.path.join(ROOT, "build", "recomp", "game_sdl" + (".exe" if os.name == "nt" else ""))
-    flags = subprocess.run(["sdl2-config", "--cflags", "--libs"], capture_output=True, text=True).stdout.split()
-    cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port")] + flags + [os.path.join(ROOT, "port", "gb_rt.c"), os.path.join(ROOT, "port", "apu.c"),
-           os.path.join(ROOT, "port", "main_sdl.c"), os.path.join(ROOT, "build", "recomp", "game.c"), "-o", sdl] + flags + ["-lm"]
+
+rom = os.path.join(ROOT, "build", "painter_momopie.gb")
+if "--rebuild" in sys.argv or not os.path.exists(rom):
+    cmd = [PY, os.path.join(ROOT, "tools", "build.py"), "--mod"]
+    if arg("--rgbds"):
+        cmd += ["--rgbds", arg("--rgbds")]
+    subprocess.run(cmd, check=True, cwd=ROOT)
+
+os.makedirs(os.path.join(ROOT, "build", "recomp"), exist_ok=True)
+subprocess.run([PY, os.path.join(ROOT, "tools", "recomp.py"), "--rom", rom], check=True, cwd=ROOT)
+
+data = open(rom, "rb").read()
+with open(os.path.join(ROOT, "build", "recomp", "rom_image.c"), "w", newline="\n") as f:
+    f.write("/* Generated from the built ROM by tools/build_port.py. Do not commit. */\n#include <stddef.h>\n")
+    f.write("const unsigned char gb_rom_image[] = {\n")
+    for i in range(0, len(data), 24):
+        f.write(",".join(str(b) for b in data[i:i + 24]) + ",\n")
+    f.write(f"}};\nconst size_t gb_rom_image_size = {len(data)};\n")
+
+P = lambda *a: os.path.join(ROOT, *a)
+common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "apu.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
+exe = ".exe" if os.name == "nt" else ""
+
+
+def compile_(main, out, extra=()):
+    cmd = [cc, "-O2", "-w", "-I", P("port")] + [P("port", main)] + common + ["-o", out] + list(extra)
     print(" ".join(cmd))
     subprocess.run(cmd, check=True)
-    print("built", sdl)
+    print("built", out)
+
+
+compile_("main_headless.c", P("build", "recomp", "game_headless" + exe))
 if os.name == "nt":
-    win = os.path.join(ROOT, "build", "recomp", "game_win.exe")
-    cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port"), os.path.join(ROOT, "port", "gb_rt.c"), os.path.join(ROOT, "port", "apu.c"),
-           os.path.join(ROOT, "port", "main_win32.c"), os.path.join(ROOT, "build", "recomp", "game.c"), "-o", win,
-           "-mwindows", "-luser32", "-lgdi32", "-lwinmm", "-lshell32"]
-    print(" ".join(cmd))
-    subprocess.run(cmd, check=True)
-    print("built", win)
+    compile_("main_win32.c", P("build", "recomp", "game_win.exe"), ["-mwindows", "-luser32", "-lgdi32", "-lwinmm", "-lshell32"])
+if "--sdl" in sys.argv:
+    flags = subprocess.run(["sdl2-config", "--cflags", "--libs"], capture_output=True, text=True).stdout.split()
+    compile_("main_sdl.c", P("build", "recomp", "game_sdl" + exe), flags + ["-lm"])

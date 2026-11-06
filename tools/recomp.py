@@ -64,6 +64,8 @@ class Recomp:
             nxt = roots[i + 1][1] if i + 1 < len(roots) and roots[i + 1][0] == b else (BANK if b == 0 else 2 * BANK)
             self.funcs[(b, a)] = nxt - a      # extent runs to the next routine; bytes that are not instructions are skipped
         self.errors = []
+        ov = os.path.join(ROOT, "port", "overrides.txt")
+        self.overrides = {ln.strip() for ln in open(ov)} if os.path.exists(ov) else set()
 
     def fname(self, b, a):
         return f"F_{b}_{a:04X}"
@@ -205,7 +207,7 @@ class Recomp:
         elif op == 0xF8: out.append(f"SET_HL(sp_plus({n8 - 256 if n8 > 127 else n8}));")
         elif op == 0xF9: out.append("r.sp = HL();")
         elif op == 0xF3: out.append("ime = 0;")
-        elif op == 0xFB: out.append("ime = 1; gb_service();")
+        elif op == 0xFB: out.append("ime = 1;")
         elif op & 0xCF == 0xC1:
             i = (op >> 4) & 3
             out.append(f"SET_{['BC', 'DE', 'HL'][i]}(pop16());" if i < 3 else "{ uint16_t v_ = pop16(); A = v_ >> 8; F = v_ & 0xF0; }")
@@ -218,6 +220,10 @@ class Recomp:
 
     def function(self, b, a, sz):
         rom = self.rom
+        nm = rom.names.get((b, a))
+        if nm in self.overrides:                 # hardware dependent routine: replaced by native code (port/gb_native.c)
+            return (f"void *gb_native_{nm}(void);\n"
+                    f"void *{self.fname(b, a)}(void) {{ gb_native_{nm}(); r.sp += 2; return 0; }}")
         L = [f"void *{self.fname(b, a)}(void) {{"]
         pc = a
         end = a + sz
@@ -241,7 +247,6 @@ class Recomp:
             if pc in branch_targets:
                 L.append(f"L_{b}_{pc:04X}:;")
             lines, cy, length = self.insn(b, pc, b, a, sz)
-            L.append(f"    CYC({cy});")
             for ln in lines:
                 L.append("    " + ln)
             last_kind = kind

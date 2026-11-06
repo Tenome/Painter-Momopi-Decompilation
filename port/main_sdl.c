@@ -5,6 +5,8 @@
 #include "gb_rt.h"
 
 extern void gb_game_main(void);
+extern const unsigned char gb_rom_image[];
+extern const size_t gb_rom_image_size;
 
 static SDL_Window *win;
 static SDL_Renderer *ren;
@@ -46,12 +48,11 @@ static void audio(const int16_t *st, int n) {
 int main(int argc, char **argv) {
     static uint8_t rom[1 << 20];
     FILE *f = argc > 1 ? fopen(argv[1], "rb") : 0;
-    if (!f) f = fopen("painter_momopie.gb", "rb");
-    if (!f) f = fopen("orig/painter_momopie.gb", "rb");
-    if (!f) { fprintf(stderr, "ROM not found. Usage: %s ROM.gb\n", argv[0]); return 1; }
-    size_t n = fread(rom, 1, sizeof rom, f);
-    fclose(f);
-    gb_load_rom(rom, n);
+    if (f) {                                        /* optional ROM file (to try a modded ROM); otherwise the built-in data is used */
+        size_t n = fread(rom, 1, sizeof rom, f);
+        fclose(f);
+        gb_load_rom(rom, n);
+    } else gb_load_rom(gb_rom_image, gb_rom_image_size);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) { fprintf(stderr, "SDL: %s\n", SDL_GetError()); return 1; }
     win = SDL_CreateWindow("Painter Momopie", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 576, SDL_WINDOW_RESIZABLE);
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_PRESENTVSYNC);

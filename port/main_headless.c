@@ -3,6 +3,8 @@
 #include "gb_rt.h"
 
 extern void gb_game_main(void);
+extern const unsigned char gb_rom_image[];
+extern const size_t gb_rom_image_size;
 
 #define MAXP 32
 static struct { unsigned from, hold; uint8_t bit; } press[MAXP];
@@ -58,12 +60,14 @@ static uint8_t button(const char *s) {
 
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s ROM FRAMES [--press F:BTN:HOLD] [--shot F] [--outdir D]\n", argv[0]); return 1; }
-    FILE *f = fopen(argv[1], "rb");
-    if (!f) { perror("rom"); return 1; }
     static uint8_t rom[1 << 20];
-    size_t n = fread(rom, 1, sizeof rom, f);
-    fclose(f);
-    gb_load_rom(rom, n);
+    if (strcmp(argv[1], "-")) {                       /* a ROM file (for testing mods); "-" uses the data built into the program */
+        FILE *f = fopen(argv[1], "rb");
+        if (!f) { perror("rom"); return 1; }
+        size_t n = fread(rom, 1, sizeof rom, f);
+        fclose(f);
+        gb_load_rom(rom, n);
+    } else gb_load_rom(gb_rom_image, gb_rom_image_size);
     limit = (unsigned)atoi(argv[2]);
     for (int i = 3; i < argc; i++) {
         if (!strcmp(argv[i], "--press") && i + 1 < argc && npress < MAXP) {

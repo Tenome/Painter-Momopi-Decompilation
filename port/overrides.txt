@@ -1,0 +1,9 @@
+WaitVBlankFlag
+DelayFrames
+WaitFrameAndSyncOam
+LcdOff
+ReadJoypad
+SerialStartTransfer
+WaitSerialByte
+SerialSendByte
+WaitVramCopyDone

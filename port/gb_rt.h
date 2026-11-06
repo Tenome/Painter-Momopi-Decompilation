@@ -16,7 +16,8 @@ typedef void *(*fn_t)(void);       /* a routine returns the routine to continue 
 
 uint8_t rd(uint16_t a);
 void wr(uint16_t a, uint8_t v);
-void gb_service(void);             /* run due interrupts and advance the clock-driven hardware */
+void gb_service(void);             /* no-op (kept for old generated code) */
+void gb_host_vblank(void);         /* one frame: render, mix sound, present, then run the game's VBlankHandler */
 fn_t gb_dispatch(uint16_t addr);   /* indirect jump: find the routine at an address in the current bank */
 void gb_fatal(const char *why, unsigned v);
 void gb_dma_routine(void);
@@ -35,7 +36,7 @@ void gb_dma_routine(void);
 #define SET_BC(v) do { uint16_t t_ = (v); r.b = t_ >> 8; r.c = t_; } while (0)
 #define SET_DE(v) do { uint16_t t_ = (v); r.d = t_ >> 8; r.e = t_; } while (0)
 #define SET_HL(v) do { uint16_t t_ = (v); r.h = t_ >> 8; r.l = t_; } while (0)
-#define CYC(n) (cycles += (n))
+#define CYC(n) ((void)0)           /* no cycle counting: the game is driven one frame at a time */
 #define ZF() (r.f & 0x80)
 #define CF() (r.f & 0x10)
 
@@ -47,7 +48,9 @@ static inline void gb_run(fn_t f) { while (f) { if (gb_trace) gb_trace_fn(f); f 
  * the stack end above where we left it: that ret already returned for us too, so this routine returns as well. */
 #define CALL(fn) do { uint16_t sp0_ = r.sp; r.sp -= 2; gb_run((fn_t)(fn)); if (r.sp > sp0_) return 0; } while (0)
 /* Called on every backward branch: this is where waiting loops let interrupts and the PPU run. */
-#define BACKEDGE() gb_service()
+extern unsigned gb_spin;
+/* A backward branch counts as spinning; a loop that waits for something only the VBlank handler can change gets a frame after 60000 turns. */
+#define BACKEDGE() do { if (++gb_spin > 60000) gb_host_vblank(); } while (0)
 
 static inline void push16(uint16_t v) { r.sp -= 2; wr(r.sp + 1, v >> 8); wr(r.sp, v & 255); }
 static inline uint16_t pop16(void) { uint16_t v = rd(r.sp) | rd(r.sp + 1) << 8; r.sp += 2; return v; }
