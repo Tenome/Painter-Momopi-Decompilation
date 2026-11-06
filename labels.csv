@@ -359,3 +359,8 @@ bank,addr,name,comment
 1,5183,SetPlayerStatusBit0,sets wPlayerStatus bit 0 and clears $c4cf
 1,553a,ProjectileRemoveIfHit,removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
 1,566a,EnemyFlagBit3IfDead,sets hEnemyFlags bit 3 when hEnemyDir bit 5 is set
+1,5858,SetObjectFlipFlag,sets hObject2 bit 5 (horizontal flip; name provisional)
+1,58cf,EnemyShootIfReady,counts hEnemyStep down; when it hits 0 and no projectile is live and the enemy is on screen calls SpawnEnemyProjectile
+1,4e59,EndMagicPaint,clears the paint object active bit then ends the magic state bits (name provisional)
+1,4a31,SetPaintBlobAnimation,picks animation $4927 or $4929 for the paint blob by $c519 bit 1
+1,5817,EnemyKind9Move,sets hEnemyAnimState 6 then moves and clamps (name provisional)

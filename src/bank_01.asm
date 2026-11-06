@@ -1317,7 +1317,7 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     set 4, [hl]
     set 1, [hl]
     ret
-L_01_4a31::
+SetPaintBlobAnimation::  ; picks animation $4927 or $4929 for the paint blob by $c519 bit 1
     ld a, [$c519]
     and a, $02
     jr z, .L_01_4a3d
@@ -1833,7 +1833,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     call ClampObjectToRoom
     call DrawObject
     call StoreTrailSegment
-    call L_01_4a31
+    call SetPaintBlobAnimation
     ld hl, $c449
     dec [hl]
     jr z, .L_01_4e3a
@@ -1854,12 +1854,12 @@ L_01_4e47::
     ret nz
     xor a, a
     ld [wMagicState], a
-    jr L_01_4e59
+    jr EndMagicPaint
 L_01_4e53::
     ld a, [wPaintObject]
     bit 2, a
     ret nz
-L_01_4e59::
+EndMagicPaint::  ; clears the paint object active bit then ends the magic state bits (name provisional)
     ld hl, wPaintObject
     res 7, [hl]
     ld a, [wActiveMagic]
@@ -2932,7 +2932,7 @@ EnemyKind9::  ; enemy kind 9
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
-L_01_5817::
+EnemyKind9Move::  ; sets hEnemyAnimState 6 then moves and clamps (name provisional)
     ld a, $06
     ldh [hEnemyAnimState], a
     call L_00_3603
@@ -2946,7 +2946,7 @@ SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     bit 3, a
     jr nz, .L_01_5847
     bit 0, a
-    call nz, L_01_5858
+    call nz, SetObjectFlipFlag
     ld de, D_01_587d
     ld bc, $5884
     jp .L_01_584d
@@ -2965,7 +2965,7 @@ SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     pop de
 .L_01_5855:
     jp SetObjectAnimation
-L_01_5858::
+SetObjectFlipFlag::  ; sets hObject2 bit 5 (horizontal flip; name provisional)
     ld hl, hObject2
     set 5, [hl]
     ret
@@ -2995,7 +2995,7 @@ EnemyKind2::  ; enemy kind 2
     call L_00_39f9
     call EnemyChooseDirection
     call L_00_39b1
-    call L_01_58cf
+    call EnemyShootIfReady
     call L_01_58ee
     call ProjectileFrame
     call L_00_392e
@@ -3004,7 +3004,7 @@ EnemyKind2::  ; enemy kind 2
     call SelectKind2Animation
     call SelectObject2
     jp DrawObject
-L_01_58cf::
+EnemyShootIfReady::  ; counts hEnemyStep down; when it hits 0 and no projectile is live and the enemy is on screen calls SpawnEnemyProjectile
     ld a, [wProjectile]
     bit 7, a
     ret nz
