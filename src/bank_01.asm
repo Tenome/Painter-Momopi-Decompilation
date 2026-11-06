@@ -2309,7 +2309,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     bit 0, a
     jr z, .L_01_5207
     ld a, $01
-    ld [$c43e], a
+    ld [wMagicCards], a
     ld a, $02
     ld [$c43f], a
     ld a, $03
@@ -2321,7 +2321,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ret
 .L_01_5207:
     ld a, $01
-    ld [$c43e], a
+    ld [wMagicCards], a
     ld a, [wRound]
     cp a, $02
     ret c

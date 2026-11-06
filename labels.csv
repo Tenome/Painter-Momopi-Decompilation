@@ -185,7 +185,7 @@ bank,addr,name,comment
 0,1438,InitMagicPoints,loads the magic points ($c44a/$c44b) from MagicPointsTable by round ($0140 in a link game)
 0,13e6,StartRoundMusic,plays the song for the current round (id from a table indexed by wRound/4) and starts the frame countdown
 0,2b0a,PickRandomRound,title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
-0,1973,InitCursorMenu,clears the menu variables and creates the cursor object at wCursorObject
+0,1973,InitMagicScreenState,clears the cursor and card variables and creates the cursor object at wCursorObject
 0,1ce7,ClearRoomState,zeroes wRoomType wSubState and the room script variables
 1,467b,SoundCommandTable,18 word handlers for stream commands $e0-$f1 (index = byte and $1f)
 1,469f,SoundCmdCall,commands $e0 and $e1: pushes the return address on the record's small stack ($a) and jumps to the address that follows
@@ -231,3 +231,9 @@ bank,addr,name,comment
 1,5513,EnemyKind10,enemy kind 10 (rounds 14 and 30)
 0,121c,ShowMagicScreen,B button in play: MOMOPIE'S MAGIC screen (score, round, MP, time, three magic cards) until closed
 0,100b,AddScore,adds to the BCD score digits at wScoreDigits
+0,1770,MagicScreenInput,D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B closes or casts; uses $c53b flags
+0,180f,MagicCursorRight,moves the magic card cursor one column right (wraps to the next row)
+0,1839,MagicCursorLeft,moves the magic card cursor one column left
+0,185f,MagicCursorUp,moves the magic card cursor one row up
+0,1876,MagicCursorDown,moves the magic card cursor one row down
+0,18a3,DrawMagicCard,draws the card at the cursor (id from wMagicCards) and its cost

@@ -142,3 +142,6 @@ DEF wCursorX        EQU $c754
 DEF wCursorY        EQU $c755   ; title screen: $64 = 1 PLAYER, $74 = 2 PLAYER
 DEF wMagicPoints    EQU $c44a   ; 16 bit MP (MP 050 on the magic screen)
 DEF wScoreDigits    EQU $c464   ; 8 BCD digits of the score (SCR on the magic screen)
+DEF wMagicCol       EQU $c43c   ; magic screen cursor column (0-2)
+DEF wMagicRow       EQU $c43d   ; magic screen cursor row (0-2)
+DEF wMagicCards     EQU $c43e   ; 9 bytes: card id per slot of the 3x3 inventory (0 = empty); round 1 starts with S. UP in slot 0

@@ -1754,7 +1754,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld [wPaintRemaining], a
     call RequestOamDma
     call ClearOamShadowY
-    call InitCursorMenu
+    call InitMagicScreenState
     call InitMagicPoints
     call ResetCamera
     ld a, [$c51f]
@@ -1918,7 +1918,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld a, b
     or a, c
     jr nz, .L_00_1265
-    call InitCursorMenu
+    call InitMagicScreenState
     ld hl, $9c66
     ld de, $c46d
     call L_00_0628
@@ -1984,7 +1984,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ei
     xor a, a
     ldh [hScratch00], a
-    call L_00_18a3
+    call DrawMagicCard
     ld bc, $0002
     ld a, [$c44b]
     and a, a
@@ -2065,7 +2065,7 @@ L_00_132c::
     call ReadJoypad
     ld hl, $c769
     inc [hl]
-    call L_00_1770
+    call MagicScreenInput
     call CursorBlinkStep
     ldh a, [hJoyNew]
     bit 1, a
@@ -2322,7 +2322,7 @@ L_00_1769::
     ld hl, $c53b
     res 2, [hl]
     jr L_00_175d
-L_00_1770::
+MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B closes or casts; uses $c53b flags
     ld a, [$c53b]
     bit 1, a
     jr nz, .L_00_17a9
@@ -2335,15 +2335,15 @@ L_00_1770::
     call PlaySound
     ldh a, [hJoyNew]
     bit 4, a
-    call nz, L_00_180f
+    call nz, MagicCursorRight
     bit 5, a
-    call nz, L_00_1839
+    call nz, MagicCursorLeft
     bit 6, a
-    call nz, L_00_185f
+    call nz, MagicCursorUp
     bit 7, a
-    call nz, L_00_1876
+    call nz, MagicCursorDown
 .L_00_179c:
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     ld c, a
     ld hl, D_00_2630
     call LookupByte
@@ -2353,15 +2353,15 @@ L_00_1770::
     call SetObjPtr
     jp DrawObjectBytePos
 .L_00_17b2:
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
     ldh a, [hScratch00]
     ld d, a
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     add a, d
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     ld c, a
     ld b, $00
@@ -2380,15 +2380,15 @@ L_00_1770::
 .L_00_17e2:
     ld a, SND_SFX_90
     call PlaySound
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
     ldh a, [hScratch00]
     ld d, a
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     add a, d
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     ld [wRoomType], a
     ld a, [$c53b]
@@ -2397,91 +2397,91 @@ L_00_1770::
     ld hl, hJoyNew
     res 7, [hl]
     jr .L_00_179c
-L_00_180f::
-    ld a, [$c43c]
+MagicCursorRight::  ; moves the magic card cursor one column right (wraps to the next row)
+    ld a, [wMagicCol]
     cp a, $02
     jr z, .L_00_1834
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
     ldh a, [hScratch00]
     ld e, a
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     inc a
     add a, e
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     or a, a
     ret z
-    ld hl, $c43c
+    ld hl, wMagicCol
     inc [hl]
     ret
 .L_00_1834:
     xor a, a
-    ld [$c43c], a
+    ld [wMagicCol], a
     ret
-L_00_1839::
-    ld a, [$c43c]
+MagicCursorLeft::  ; moves the magic card cursor one column left
+    ld a, [wMagicCol]
     or a, a
     jr z, .L_00_1844
-    ld hl, $c43c
+    ld hl, wMagicCol
     dec [hl]
     ret
 .L_00_1844:
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
     ldh a, [hScratch00]
     add a, $02
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     or a, a
     ret z
     ld a, $02
-    ld [$c43c], a
+    ld [wMagicCol], a
     ret
-L_00_185f::
-    ld a, [$c43d]
+MagicCursorUp::  ; moves the magic card cursor one row up
+    ld a, [wMagicRow]
     or a, a
     jr z, .L_00_1871
-    ld hl, $c43d
+    ld hl, wMagicRow
     dec [hl]
     ld a, [hl]
     ld e, $03
     call MultiplyByDE
-    jr L_00_18a3
+    jr DrawMagicCard
 .L_00_1871:
     xor a, a
-    ld [$c43d], a
+    ld [wMagicRow], a
     ret
-L_00_1876::
-    ld a, [$c43d]
+MagicCursorDown::  ; moves the magic card cursor one row down
+    ld a, [wMagicRow]
     cp a, $02
     jp z, L_00_196f
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     inc a
     ld e, $03
     call MultiplyByDE
     ldh a, [hScratch00]
     ld d, a
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     add a, d
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     or a, a
     ret z
-    ld hl, $c43d
+    ld hl, wMagicRow
     inc [hl]
-    ld a, [$c43d]
+    ld a, [wMagicRow]
     ld e, $03
     call MultiplyByDE
-L_00_18a3::
+DrawMagicCard::  ; draws the card at the cursor (id from wMagicCards) and its cost
     ldh a, [hScratch00]
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
     ld hl, D_00_19a5
@@ -2511,7 +2511,7 @@ L_00_18a3::
     inc a
     ldh [hScratch00], a
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
     ld hl, D_00_19a5
@@ -2541,7 +2541,7 @@ L_00_18a3::
     inc a
     ldh [hScratch00], a
     ld c, a
-    ld hl, $c43e
+    ld hl, wMagicCards
     call LookupByte
     ldh [hScratch02], a
     ld hl, D_00_19a5
@@ -2568,12 +2568,12 @@ L_00_18a3::
     call QueueVramCopyRows
     jp WaitVramCopyDone
 L_00_196f::
-    ld [$c43d], a
+    ld [wMagicRow], a
     ret
-InitCursorMenu::  ; clears the menu variables and creates the cursor object at wCursorObject
+InitMagicScreenState::  ; clears the cursor and card variables and creates the cursor object at wCursorObject
     xor a, a
-    ld [$c43c], a
-    ld [$c43d], a
+    ld [wMagicCol], a
+    ld [wMagicRow], a
     ld [$c47d], a
     ld [$c53b], a
     ld hl, wCursorObject
@@ -2854,7 +2854,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
-    ld [$c43c], a
+    ld [wMagicCol], a
     call RequestOamDma
     call ClearOamShadowY
     ld a, [$c49c]
@@ -2917,7 +2917,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ldh a, [hJoyNew]
     bit 0, a
     jr z, .L_00_1fc2
-    ld a, [$c43c]
+    ld a, [wMagicCol]
     and a, a
     jr z, .L_00_2029
     xor a, a
@@ -2925,7 +2925,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld a, $01
     ld [wRound], a
     ld [wRoundBackup], a
-    ld hl, $c43e
+    ld hl, wMagicCards
     ld bc, $0008
     call ClearMemory
     ldh a, [hLinkFlags]
@@ -2984,13 +2984,13 @@ L_00_2065::
     ld a, $3c
     ld [wCursorX], a
     xor a, a
-    ld [$c43c], a
+    ld [wMagicCol], a
     ret
 .L_00_2078:
     ld a, $74
     ld [wCursorX], a
     ld a, $01
-    ld [$c43c], a
+    ld [wMagicCol], a
     ret
 D_00_2083::
     INCBIN "orig/painter_momopie.gb", $02083, 36
@@ -3163,7 +3163,7 @@ L_00_2574::
 .L_00_25a8:
     ld a, [hl]
     ldh [hScratch00], a
-    ld hl, $c43e
+    ld hl, wMagicCards
 .L_00_25ae:
     ld a, [hl]
     and a, a
@@ -3427,7 +3427,7 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     xor a, a
     ldh [hLinkFlags], a
     ld [$c49c], a
-    ld [$c43e], a
+    ld [wMagicCards], a
     ld [$c43f], a
     ld [$c440], a
     ld [$c441], a
