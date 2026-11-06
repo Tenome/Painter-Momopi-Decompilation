@@ -219,7 +219,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - [ ] Name the rest of the play logic: `PlayFrame` sub-steps in bank 1, `L_01_4a9d`/`L_01_4e06` (paint blob), special room types (`wActiveMagic` values 1-9: bonus, boss, ...)
 - [x] Magic cards: ids, costs, casting and the effect table are decoded; still to do: what each effect changes in the player and enemy routines
 - [ ] Decode the animation stream format (`SetObjectAnimation` data: frame ids and durations) and the `ObjectShapeTable` records into structured `db`/`dw`
-- [ ] Classify the remaining `INCBIN` blocks in bank 0 and bank 1 (tilemaps, VRAM job streams, animation data)
+- [x] Data is extracted into `assets/` (no ROM needed to build); tile sets are PNG sheets; room maps, enemy spawn waves and the balance tables have text forms (`typed.csv`, `docs/MODDING.md`)
+- [ ] More editable forms: sound streams (header and note format), text/VRAM job streams, animation and shape data, the remaining bank 0/1 `.bin` regions (see the `assets/bank_NN` file names)
+- [ ] Remove the last raw `.bin` data from the source tree by converting each region to `db`/`dw` records or a typed text form, then drop `assets/bank_*` for regions that have a complete typed form
 - [x] 2 player link mode: tested with two linked emulated machines (tools/link_test.py); protocol details beyond the start handshake still to document
 
 ### Web Port Fixes
