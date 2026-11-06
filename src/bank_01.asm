@@ -2250,7 +2250,7 @@ D_01_518d::
     INCBIN "orig/painter_momopie.gb", $0518d, 16
 D_01_519d::
     INCBIN "orig/painter_momopie.gb", $0519d, 16
-L_01_51ad::
+InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and animation start values
     ld hl, wPlayer
     call Clear32Bytes
     ld a, $10
@@ -2409,60 +2409,60 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
 .L_01_52fc:
     ld a, $05
     jp GameModeDispatch
-L_01_5301::
-    call L_01_5311
-    ld a, [$c1ac]
+UpdateCamera::  ; follows the player: copies the camera to wScrollX/wScrollY
+    call CameraFollowPlayerX
+    ld a, [wCameraX]
     ld [wScrollX], a
-    ld a, [$c1ae]
+    ld a, [wCameraY]
     ld [wScrollY], a
     ret
-L_01_5311::
+CameraFollowPlayerX::  ; wCameraX = wPlayerX - $58 clamped to 0..$60
     ld a, [wPlayerX]
     sub a, $58
-    ld [$c1ac], a
+    ld [wCameraX], a
     ld a, [$c1ad]
     sbc a, $00
     ld [$c1ad], a
     bit 7, a
     jr nz, .L_01_5337
-    ld a, [$c1ac]
+    ld a, [wCameraX]
     cp a, $60
     jr c, .L_01_533e
     ld a, $60
-    ld [$c1ac], a
+    ld [wCameraX], a
     xor a, a
     ld [$c1ad], a
     jr .L_01_533e
 .L_01_5337:
     xor a, a
     ld [$c1ad], a
-    ld [$c1ac], a
+    ld [wCameraX], a
 .L_01_533e:
     ld a, [wPlayerY]
     sub a, $68
-    ld [$c1ae], a
+    ld [wCameraY], a
     ld a, [$c1af]
     sbc a, $00
     ld [$c1af], a
     bit 7, a
     jr nz, .L_01_5362
-    ld a, [$c1ae]
+    ld a, [wCameraY]
     cp a, $70
     ret c
     ld a, $70
-    ld [$c1ae], a
+    ld [wCameraY], a
     xor a, a
     ld [$c1af], a
     ret
 .L_01_5362:
     xor a, a
-    ld [$c1ae], a
+    ld [wCameraY], a
     ld [$c1af], a
     ret
-L_01_536a::
+ResetCamera::  ; wCameraX and wCameraY = $20; high bytes 0
     ld a, $20
-    ld [$c1ac], a
-    ld [$c1ae], a
+    ld [wCameraX], a
+    ld [wCameraY], a
     xor a, a
     ld [$c1ad], a
     ld [$c1af], a

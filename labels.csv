@@ -117,3 +117,9 @@ bank,addr,name,comment
 0,3897,LoadEnemySlot,copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
 0,382a,ClearEnemySlot,zero fills hObject2
 0,37af,EnemySlotTable,16 word addresses of the enemy slots: $c542 + $20 * i
+0,080c,DrawObjectBytePos,variant of DrawObject for records with 8 bit positions (+6/+7)
+0,0866,DrawObjectParts,shared part of DrawObject: applies camera, flip and builds the OAM entries from the shape table
+1,51ad,InitPlayer,clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and animation start values
+1,5301,UpdateCamera,follows the player: copies the camera to wScrollX/wScrollY
+1,5311,CameraFollowPlayerX,wCameraX = wPlayerX - $58 clamped to 0..$60
+1,536a,ResetCamera,wCameraX and wCameraY = $20; high bytes 0

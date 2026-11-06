@@ -45,9 +45,9 @@ bank	addr	size	name
 0	07e7	18	ClearOamShadowY
 0	07f9	13	ClearOamShadow
 0	0806	6	RequestOamDma
-0	080c	52	L_00_080c
+0	080c	52	DrawObjectBytePos
 0	0840	38	DrawObject
-0	0866	324	L_00_0866
+0	0866	324	DrawObjectParts
 0	09aa	1	L_00_09aa
 0	09ab	38	L_00_09ab
 0	09d1	15	L_00_09d1
@@ -301,11 +301,11 @@ bank	addr	size	name
 1	50fa	21	L_01_50fa
 1	510f	105	PlayerSetDirection
 1	5183	10	L_01_5183
-1	51ad	118	L_01_51ad
+1	51ad	118	InitPlayer
 1	5223	222	PlayerDeath
-1	5301	16	L_01_5301
-1	5311	89	L_01_5311
-1	536a	16	L_01_536a
+1	5301	16	UpdateCamera
+1	5311	89	CameraFollowPlayerX
+1	536a	16	ResetCamera
 1	537a	26	L_01_537a
 1	5394	48	L_01_5394
 1	53c4	33	L_01_53c4

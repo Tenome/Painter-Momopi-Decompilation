@@ -848,7 +848,7 @@ RequestOamDma::  ; sets the OAM DMA bit in hVBlankTasks
     ld hl, hVBlankTasks
     set 1, [hl]
     ret
-L_00_080c::
+DrawObjectBytePos::  ; variant of DrawObject for records with 8 bit positions (+6/+7)
     ldh a, [hObjPtrHi]
     ld h, a
     ld b, a
@@ -880,7 +880,7 @@ L_00_080c::
     ldh [$ff99], a
     ld a, $00
     ldh [$ff9a], a
-    jr L_00_0866
+    jr DrawObjectParts
 DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its animation data
     ldh a, [hObjPtrHi]
     ld h, a
@@ -907,7 +907,7 @@ DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its ani
     ldh [$ff99], a
     ld a, [hl]
     ldh [$ff9a], a
-L_00_0866::
+DrawObjectParts::  ; shared part of DrawObject: applies camera
     push bc
     pop hl
     ld a, [hl]
@@ -915,7 +915,7 @@ L_00_0866::
     ldh [$ff96], a
     and a, $02
     jr z, .L_00_0895
-    ld a, [$c1ac]
+    ld a, [wCameraX]
     ld l, a
     ldh a, [$ff97]
     sub a, l
@@ -925,7 +925,7 @@ L_00_0866::
     ldh a, [$ff98]
     sbc a, l
     ldh [$ff98], a
-    ld a, [$c1ae]
+    ld a, [wCameraY]
     ld l, a
     ldh a, [$ff99]
     sub a, l
@@ -1685,7 +1685,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call ClearOamShadowY
     call L_00_1973
     call L_00_1438
-    call L_01_536a
+    call ResetCamera
     ld a, [$c51f]
     bit 2, a
     jr nz, .L_00_1138
@@ -1698,7 +1698,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     jr nz, .L_00_1147
     set 7, a
     ld [wGameFlags], a
-    call L_01_51ad
+    call InitPlayer
 .L_00_1147:
     call L_00_36fa
     ld hl, $c49e
@@ -1740,7 +1740,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call ReadJoypad
     call PlayFrame
     call L_00_121c
-    call L_01_5301
+    call UpdateCamera
     call L_00_31f1
     call UpdateAllEnemies
     call L_00_11ec
@@ -2280,7 +2280,7 @@ L_00_1770::
 .L_00_17a9:
     ld hl, $c74e
     call SetObjPtr
-    jp L_00_080c
+    jp DrawObjectBytePos
 .L_00_17b2:
     ld a, [$c43d]
     ld e, $03
@@ -2811,7 +2811,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     call L_00_2065
     ld hl, $c74e
     call SetObjPtr
-    call L_00_080c
+    call DrawObjectBytePos
     ld hl, $c43b
     dec [hl]
     jp z, Entry
@@ -3125,7 +3125,7 @@ L_00_25e0::
     ld [$c754], a
     ld hl, $c74e
     call SetObjPtr
-    jp L_00_080c
+    jp DrawObjectBytePos
 D_00_2630::
     INCBIN "orig/painter_momopie.gb", $02630, 3
 L_00_2633::
@@ -3303,7 +3303,7 @@ L_00_2b23::
 .L_00_2b2b:
     ld hl, $c74e
     call SetObjPtr
-    jp L_00_080c
+    jp DrawObjectBytePos
 .L_00_2b34:
     ld a, [$c755]
     cp a, $64
@@ -3624,8 +3624,8 @@ L_00_2fb9::
     ld bc, $0041
     call ClearMemory
     xor a, a
-    ld [$c1ac], a
-    ld [$c1ae], a
+    ld [wCameraX], a
+    ld [wCameraY], a
     ld bc, $30c4
     call RunVramCopyList
     ld a, $80
@@ -4046,12 +4046,12 @@ L_00_341f::
     ret
 L_00_3449::
     push hl
-    ld a, [$c1ac]
+    ld a, [wCameraX]
     ld l, a
     ld a, c
     sub a, l
     ldh [$ff96], a
-    ld a, [$c1ae]
+    ld a, [wCameraY]
     ld l, a
     ld a, b
     sub a, l

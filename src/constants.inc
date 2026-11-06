@@ -60,3 +60,5 @@ DEF wPaintRemaining EQU $c520   ; unpainted path cells left; decremented as the 
 DEF hEnemySlotLo    EQU $ffd7   ; address of the slot hObject2 was loaded from
 DEF hEnemySlotHi    EQU $ffd8
 DEF wEnemySlots     EQU $c542   ; 16 enemy records of $20 bytes (to $c741)
+DEF wCameraX        EQU $c1ac   ; 16 bit camera position set by UpdateCamera
+DEF wCameraY        EQU $c1ae
