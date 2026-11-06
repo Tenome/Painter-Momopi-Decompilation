@@ -1991,9 +1991,9 @@ L_00_132c::
     bit 2, a
     jr z, .L_00_13a9
     bit 7, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
     bit 3, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
 .L_00_13a9:
     call ReadJoypad
     ld hl, $c769
@@ -4784,7 +4784,7 @@ L_00_392e::
     call IsOnTileGrid
     ret nz
     ld a, b
-    jp L_01_5006
+    jp PaintCell
 L_00_394d::
     ld a, [wPlayerDir]
     bit 5, a

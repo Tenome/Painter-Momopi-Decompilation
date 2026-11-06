@@ -109,7 +109,7 @@ L_01_41de::
     ld [$c407], a
     ld a, $77
     ld [$c315], a
-L_01_41fd::
+SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13 NR23 NR33
     ld a, $00
     ld [rNR30], a
     ld [rNR51], a
@@ -636,7 +636,7 @@ L_01_45c3::
     ld a, $80
     ld [rNR44], a
     ret
-L_01_45d1::
+SoundRunCommand::  ; command byte $e0-$ff: index = byte and $1f into the word table at $467b; calls it through SoundJumpHL
     and a, $1f
     cp a, $03
     jr z, L_01_45ef
@@ -654,8 +654,8 @@ L_01_45d1::
     ld a, [de]
     ld h, a
     pop de
-    call L_01_467a
-    jp L_01_461f
+    call SoundJumpHL
+    jp SoundParseStream
 L_01_45ef::
     ld a, $00
     ld [$c30f], a
@@ -687,11 +687,11 @@ SoundReadNextNote::  ; reads the next note byte from the channel's song pointer 
     ld e, a
     ld a, [hl]
     ld d, a
-L_01_461f::
+SoundParseStream::  ; reads bytes of the channel's song stream; notes below $e0; commands go to SoundRunCommand
     ld a, [de]
     inc de
     cp a, $e0
-    jr nc, L_01_45d1
+    jr nc, SoundRunCommand
     bit 7, a
     jr z, .L_01_4666
     cp a, $80
@@ -755,7 +755,7 @@ L_01_461f::
     add hl, bc
     ld [hl], a
     ret
-L_01_467a::
+SoundJumpHL::  ; jp hl trampoline for the sound command table
     jp hl
     dw L_01_469f
     dw L_01_469f
@@ -768,7 +768,7 @@ L_01_467a::
     dw L_01_470e
     INCBIN "orig/painter_momopie.gb", $0468d, 2
     dw L_01_4728
-    dw L_01_4776
+    dw SoundCmdEnd
     dw L_01_478e
     dw L_01_4793
     dw L_01_4798
@@ -935,10 +935,10 @@ L_01_474d::
     pop bc
     ld a, $80
     ld [rNR30], a
-    call L_01_41fd
+    call SoundInit
 L_01_4775::
     ret
-L_01_4776::
+SoundCmdEnd::  ; sound command $eb: discards the caller's return address and ends the stream
     ld a, $00
     ld [$c310], a
     ld a, [$c312]
@@ -1507,9 +1507,9 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     bit 2, a
     jr z, .L_01_4bf6
     bit 7, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
     bit 3, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
 .L_01_4bf6:
     ld a, [wPlayerDir]
     bit 5, a
@@ -1593,7 +1593,7 @@ PlayerAction::  ; handles the A button (paint action)
     ld a, [$c44a]
     sub a, c
     ld e, a
-    jr z, L_01_4cf3
+    jr z, LinkSyncFrame
 L_01_4ca7::
     jr c, .L_01_4cae
     ld [$c44a], a
@@ -1647,7 +1647,7 @@ L_01_4ceb::
     ld [wRoomType], a
     ld [wSubState], a
     ret
-L_01_4cf3::
+LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, L_01_4ca7
@@ -2058,7 +2058,7 @@ L_01_4feb::
     call IsOnTileGrid
     ret nz
     ld a, b
-L_01_5006::
+PaintCell::  ; sets the painted bit ($10) of the wRoomMap cell under the player and queues the tile update
     call PixelXToColumn
     ld a, c
     call LookupMapTile
@@ -2117,9 +2117,9 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     call WaitVBlankFlag
     ldh a, [hSerialByte]
     bit 7, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
     bit 3, a
-    jp nz, L_01_50b1
+    jp nz, GotoLinkLose
     ld hl, $ff96
     dec [hl]
     jr nz, .L_01_5073
@@ -2134,7 +2134,7 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
 .L_01_509b:
     ldh a, [hLinkFlags]
     bit 0, a
-    jr z, L_01_50b6
+    jr z, NextRound
     ld c, $08
     call SerialSendByte
     ldh a, [hSerialByte]
@@ -2143,10 +2143,10 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     ldh a, [hSerialByte]
     set 6, a
     ldh [hSerialByte], a
-L_01_50b1::
+GotoLinkLose::  ; jumps to game mode 7
     ld a, $07
     jp GameModeDispatch
-L_01_50b6::
+NextRound::  ; wRound and room index advance by one (round $21 ends the game); clears the player status
     ld a, [wRound]
     cp a, $21
     jr z, .L_01_50f5

@@ -124,3 +124,12 @@ bank,addr,name,comment
 1,5311,CameraFollowPlayerX,wCameraX = wPlayerX - $58 clamped to 0..$60
 1,536a,ResetCamera,wCameraX and wCameraY = $20; high bytes 0
 0,3782,EnemyBehaviorTable,routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
+1,50b6,NextRound,wRound and room index advance by one (round $21 ends the game); clears the player status
+1,50b1,GotoLinkLose,jumps to game mode 7
+1,41fd,SoundInit,initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13 NR23 NR33
+1,5006,PaintCell,sets the painted bit ($10) of the wRoomMap cell under the player and queues the tile update
+1,4cf3,LinkSyncFrame,per-frame link cable exchange for the 2 player game (rSC rSB)
+1,461f,SoundParseStream,reads bytes of the channel's song stream; notes below $e0; commands go to SoundRunCommand
+1,45d1,SoundRunCommand,command byte $e0-$ff: index = byte and $1f into the word table at $467b; calls it through SoundJumpHL
+1,467a,SoundJumpHL,jp hl trampoline for the sound command table
+1,4776,SoundCmdEnd,sound command $eb: discards the caller's return address and ends the stream

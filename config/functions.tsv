@@ -202,7 +202,7 @@ bank	addr	size	name
 1	418c	33	SoundDequeue
 1	41ad	49	SoundStartCommand
 1	41de	31	L_01_41de
-1	41fd	63	L_01_41fd
+1	41fd	63	SoundInit
 1	423c	39	L_01_423c
 1	4263	14	L_01_4263
 1	4271	27	L_01_4271
@@ -221,12 +221,12 @@ bank	addr	size	name
 1	4561	17	L_01_4561
 1	4572	81	SoundWriteChannel4
 1	45c3	14	L_01_45c3
-1	45d1	30	L_01_45d1
+1	45d1	30	SoundRunCommand
 1	45ef	5	L_01_45ef
 1	45f4	31	L_01_45f4
 1	4613	12	SoundReadNextNote
-1	461f	91	L_01_461f
-1	467a	1	L_01_467a
+1	461f	91	SoundParseStream
+1	467a	1	SoundJumpHL
 1	469f	32	L_01_469f
 1	46bf	24	L_01_46bf
 1	46d7	22	L_01_46d7
@@ -241,7 +241,7 @@ bank	addr	size	name
 1	4728	37	L_01_4728
 1	474d	40	L_01_474d
 1	4775	1	L_01_4775
-1	4776	24	L_01_4776
+1	4776	24	SoundCmdEnd
 1	478e	5	L_01_478e
 1	4793	5	L_01_4793
 1	4798	5	L_01_4798
@@ -277,7 +277,7 @@ bank	addr	size	name
 1	4cbc	27	L_01_4cbc
 1	4cd7	20	L_01_4cd7
 1	4ceb	8	L_01_4ceb
-1	4cf3	75	L_01_4cf3
+1	4cf3	75	LinkSyncFrame
 1	4d3e	6	L_01_4d3e
 1	4d44	17	L_01_4d44
 1	4d55	17	L_01_4d55
@@ -300,10 +300,10 @@ bank	addr	size	name
 1	4f91	69	HoldDirectionUntilAligned
 1	4fd6	21	CheckPlayerTileCollision
 1	4feb	27	L_01_4feb
-1	5006	62	L_01_5006
+1	5006	62	PaintCell
 1	5044	109	RoundCleared
-1	50b1	5	L_01_50b1
-1	50b6	68	L_01_50b6
+1	50b1	5	GotoLinkLose
+1	50b6	68	NextRound
 1	50fa	21	L_01_50fa
 1	510f	105	PlayerSetDirection
 1	5183	10	L_01_5183
