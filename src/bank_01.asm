@@ -280,7 +280,7 @@ SoundResumeMusicChannels::  ; clears the pause flag on the music channel records
     jr SoundStartEffect
 SoundLoadStream::  ; copies the stream header into a channel record
     ld a, [de]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     inc de
 .L_01_430b:
     ld b, $0a
@@ -303,9 +303,9 @@ SoundLoadStream::  ; copies the stream header into a channel record
     ld [hl+], a
     dec b
     jr nz, .L_01_431f
-    ld a, [$c30b]
+    ld a, [wSoundTmp]
     dec a
-    ld [$c30b], a
+    ld [wSoundTmp], a
     jr nz, .L_01_430b
     ld a, $80
     ld [wSoundCmd], a
@@ -1060,7 +1060,7 @@ SoundSetFrequency::  ; frequency for the current note from the pitch tables at $
     ld h, $00
     add hl, de
     ld a, [hl]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     cp a, $80
     jr z, .L_01_4809
     cp a, $81
@@ -1099,7 +1099,7 @@ SoundPitchSlideStep::  ; adds the signed slide in record +$14 to the 16 bit pitc
     ld hl, $0014
     add hl, bc
     ld a, [hl]
-    ld [$c30b], a
+    ld [wSoundTmp], a
     ld hl, $0010
     call SoundAddSigned16
     ld hl, $0011
@@ -1115,7 +1115,7 @@ SoundAddSigned16::  ; DE = word at record[HL] plus the signed byte in $c30b
     ld e, a
     ld a, [hl]
     ld d, a
-    ld a, [$c30b]
+    ld a, [wSoundTmp]
     and a, a
     bit 7, a
     jr nz, .L_01_484c
@@ -1242,7 +1242,7 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     ld [wPaintObject], a
     call InitTrailSegments
     jp BeginMagicCast
-L_01_49a0::
+ForEachEnemySlotInit::  ; loops the 16 entries of EnemySlotTable (name provisional)
     ld a, $0f
     ldh [hScratch00], a
 .L_01_49a4:
@@ -1318,7 +1318,7 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     set 1, [hl]
     ret
 SetPaintBlobAnimation::  ; picks animation $4927 or $4929 for the paint blob by $c519 bit 1
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4a3d
     ld hl, D_01_4927
@@ -1692,7 +1692,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     jr nz, PayMagicCost
     ldh a, [hSerialByte]
     and a, $20
-    ld [$c7bf], a
+    ld [wRemoteRound], a
     ld a, [rSC]
     res 7, a
     ld [rSC], a
@@ -1708,7 +1708,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ld a, [rSB]
     cp a, $02
     call z, SetLinkFlag5
-    ld a, [$c7bf]
+    ld a, [wRemoteRound]
     bit 5, a
     call nz, SetLinkFlag5
     call SerialStartTransfer
@@ -1787,9 +1787,9 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
 .L_01_4dc2:
     ld hl, wPaintObject
     call SetObjPtr
-    ld hl, $c519
+    ld hl, wBlobPhase
     inc [hl]
-    call L_01_4e53
+    call MagicPaintEndUnlessBit2
     ld a, [wPlayerX]
     ld c, a
     ld a, [wPlayerY]
@@ -1805,7 +1805,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     call ClampObjectToRoom
     jp DrawObject
 SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4dfa
     ld hl, D_01_492b
@@ -1819,12 +1819,12 @@ SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492
     ld [$c500], a
     ret
 MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
-    ld hl, $c519
+    ld hl, wBlobPhase
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4e16
     call SpawnBombBlob
-    call L_01_49a0
+    call ForEachEnemySlotInit
 .L_01_4e16:
     call LoadTrailSegment
     ld hl, wPaintObject
@@ -1855,7 +1855,7 @@ L_01_4e47::
     xor a, a
     ld [wMagicState], a
     jr EndMagicPaint
-L_01_4e53::
+MagicPaintEndUnlessBit2::  ; ends the magic paint unless wPaintObject bit 2 is set (name provisional)
     ld a, [wPaintObject]
     bit 2, a
     ret nz
@@ -1882,7 +1882,7 @@ MagicEffectClear::  ; card 8 CLEAR: $50 steps
     ld [$c1f8], a
     call BeginMagicCast
 .L_01_4e86:
-    ld hl, $c519
+    ld hl, wBlobPhase
     inc [hl]
     ld a, [$c1f8]
     cp a, $50
@@ -1891,7 +1891,7 @@ MagicEffectClear::  ; card 8 CLEAR: $50 steps
     ld [$c1f8], a
     ld a, PAL_NORMAL
     ld [rBGP], a
-    ld a, [$c519]
+    ld a, [wBlobPhase]
     and a, $02
     ret nz
     xor a, a
@@ -2298,7 +2298,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld a, $78
     ld [wPlayerY], a
     xor a, a
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ld [$c4c2], a
     ld [wPlayerBlocked], a
     ld [$c1b6], a
@@ -2349,18 +2349,18 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld hl, wPlayerStatus
     set 2, [hl]
 .L_01_5239:
-    ld hl, $c4d2
+    ld hl, wMagicCastTimer
     inc [hl]
     ld a, $3c
     ldh [hScratch06], a
     ld a, $02
     ldh [hScratch07], a
-    ld a, [$c4d2]
+    ld a, [wMagicCastTimer]
     ldh [hScratch08], a
     ld a, $0f
     call CounterToFrame
     ldh a, [hScratch08]
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ld a, $1e
     cp a, c
     jr z, .L_01_5285
@@ -2389,7 +2389,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
 .L_01_5285:
     xor a, a
     ld [wActiveMagic], a
-    ld [$c4d2], a
+    ld [wMagicCastTimer], a
     ldh a, [hLinkFlags]
     bit 1, a
     jr z, .L_01_529c
@@ -2426,10 +2426,10 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld [wPlayerStatus], a
     ld [$c47b], a
     ld [$c1a8], a
-    ld a, [$c51f]
+    ld a, [wRoundFlags]
     set 0, a
     and a, $f9
-    ld [$c51f], a
+    ld [wRoundFlags], a
     ld a, $03
     ld [wLives], a
     ld a, $50
@@ -2571,11 +2571,11 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     bit 2, a
     jp nz, EnemyDefeated
     call L_00_39b1
-    call L_01_5636
+    call EnemyKind10Move
     call UpdateProjectile
-    call L_01_55bc
+    call ProjectileCheckPlayerHit
     call ProjectileRemoveIfHit
-    call L_01_5549
+    call ProjectileSelectFrame
     call SelectObject2
     jp DrawObject
 ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
@@ -2586,7 +2586,7 @@ ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags
     ld hl, wProjectile
     res 7, [hl]
     jp RemoveEnemy
-L_01_5549::
+ProjectileSelectFrame::  ; picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2 (name provisional)
     ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_01_5559
@@ -2604,9 +2604,9 @@ L_01_5549::
     inc hl
 .L_01_5563:
     ld a, [hl+]
-    ldh [$ffb6], a
+    ldh [hEnemyAnimLo], a
     ld a, [hl]
-    ldh [$ffb7], a
+    ldh [hEnemyAnimHi], a
     ret
 UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed when the shooter is hit
     ldh a, [hEnemyFlags]
@@ -2652,7 +2652,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyFlags
     set 0, [hl]
     ret
-L_01_55bc::
+ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9 (name provisional)
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
@@ -2682,7 +2682,7 @@ L_01_55bc::
     xor a, a
     ld [$c4af], a
 .L_01_55fb:
-    call L_01_5618
+    call EnemyKind10Animate
     ld hl, wProjectile
     call SetObjPtr
     call MoveObject
@@ -2694,14 +2694,14 @@ L_01_55bc::
     ld hl, hEnemyFlags
     set 1, [hl]
     ret
-L_01_5618::
+EnemyKind10Animate::  ; toggles between two animations D_01_57ec and D_01_57ee every 4 ticks (kind $0a only; name provisional)
     ldh a, [hEnemyKind]
     cp a, $0a
     ret nz
-    ld hl, $ffd3
+    ld hl, hEnemyCounter2
     inc [hl]
     ld hl, D_01_57ec
-    ldh a, [$ffd3]
+    ldh a, [hEnemyCounter2]
     and a, $04
     jr z, .L_01_562d
     ld hl, D_01_57ee
@@ -2711,7 +2711,7 @@ L_01_5618::
     ld a, h
     ld [$c4a0], a
     ret
-L_01_5636::
+EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 indexed by hEnemyDir (name provisional)
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
@@ -2832,7 +2832,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld [$c499], a
     ld a, h
     ld [$c49a], a
-    jp L_01_5549
+    jp ProjectileSelectFrame
 L_01_570c::
     ld a, [wPlayerY]
     ld e, a
@@ -3154,7 +3154,7 @@ EnemyKind3::  ; enemy kind 3
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyAimAtPlayer
-    call L_00_3b99
+    call EnemyFlagOnPaintedTile
     call L_00_3603
     call MoveAndClampObject
     call L_00_392e
