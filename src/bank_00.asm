@@ -78,7 +78,7 @@ GameModeDispatch::  ; rst $00 jump table indexed by A: 8 game modes (see REVERSE
 LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then table-driven tiles to $8700
     ld a, $02
     ld [$3fff], a
-    ld hl, $4000
+    ld hl, SpriteTiles
     ld de, vTiles0
     ld bc, $0700
     call CopyMemory
@@ -92,18 +92,18 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     ld [$3fff], a
     ret
 LoadTilesBank3A::  ; bank 3 $4000 0x1000 bytes to $8000 via LoadTilesBank3
-    ld hl, $4000
+    ld hl, TilesTitle
     jr L_00_01f4
 LoadTilesBank3B::  ; bank 3 $5000 0x1000 bytes to $8000
-    ld hl, $5000
+    ld hl, TilesIcons
     jr L_00_01f4
 LoadTilesBank3D::  ; bank 3 $6e10 0x1000 bytes to $8000
-    ld hl, $6e10
+    ld hl, TilesFont2
 L_00_01f4::
     ld bc, $1000
     jr LoadTilesBank3
 LoadTilesBank3C::  ; bank 3 $6000 0xe10 bytes to $8000
-    ld hl, $6000
+    ld hl, TilesEnding
     ld bc, $0e10
 LoadTilesBank3::  ; copy BC bytes from bank 3 HL to VRAM $8000
     ld a, $03
@@ -1890,9 +1890,9 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld [wScrollY], a
     ld hl, hVBlankTasks
     res 4, [hl]
-    ld bc, $1a94
+    ld bc, D_00_1a94
     call RunVramCopyList
-    ld bc, $1a57
+    ld bc, D_00_1a57
     call RunVramCopyList
     ld bc, $0010
     ld hl, $9cd0
@@ -2626,6 +2626,10 @@ D_00_1a17::
     INCBIN "assets/bank_00/1a17.bin"
 D_00_1a30::
     INCBIN "assets/bank_00/1a30.bin"
+D_00_1a57::
+    INCBIN "assets/bank_00/1a57.bin"
+D_00_1a94::
+    INCBIN "assets/bank_00/1a94.bin"
 D_00_1b67::
     INCBIN "assets/bank_00/1b67.bin"
 D_00_1b79::
@@ -2678,7 +2682,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld [$c7c2], a
     call LoadTilesBank3A
     call ClearOamShadow
-    ld bc, $1d90
+    ld bc, D_00_1d90
     call RunVramCopyList
     ld a, [wRound]
     ld b, a
@@ -2797,6 +2801,8 @@ D_00_1d7e::
     INCBIN "assets/bank_00/1d7e.bin"
 D_00_1d87::
     INCBIN "assets/bank_00/1d87.bin"
+D_00_1d90::
+    INCBIN "assets/bank_00/1d90.bin"
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld sp, wStackTop
     call LcdOff
@@ -2810,11 +2816,11 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ldh a, [hSerialByte]
     bit 6, a
     jr nz, .L_00_1de6
-    ld bc, $1e2e
+    ld bc, D_00_1e2e
     call RunVramCopyList
     jr .L_00_1dec
 .L_00_1de6:
-    ld bc, $1e57
+    ld bc, D_00_1e57
     call RunVramCopyList
 .L_00_1dec:
     xor a, a
@@ -2847,7 +2853,10 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
 .L_00_1e29:
     ld a, $04
     jp GameModeDispatch
+D_00_1e2e::
     INCBIN "assets/bank_00/1e2e.bin"
+D_00_1e57::
+    INCBIN "assets/bank_00/1e57.bin"
 Mode4_GameOver::  ; GAME OVER screen
     ld sp, wStackTop
     call LcdOff
@@ -2909,7 +2918,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     call Clear32Bytes
     call LoadTilesBank3A
     call ClearOamShadow
-    ld bc, $2085
+    ld bc, D_00_2085
     call RunVramCopyList
     ld hl, D_00_2083
     call SetCursorAnimation
@@ -3062,6 +3071,8 @@ ContinueCursorInput::  ; A or B moves the YES/NO cursor (wCursorX $3c or $74) in
     ret
 D_00_2083::
     INCBIN "assets/bank_00/2083.bin"
+D_00_2085::
+    INCBIN "assets/bank_00/2085.bin"
 D_00_20a7::
     INCBIN "assets/bank_00/20a7.bin"
 D_00_20b7::
@@ -3121,12 +3132,12 @@ Mode2_Init::  ; bonus select setup after LcdOff
     call LookupWord
     push hl
     pop de
-    ld bc, $270f
+    ld bc, D_00_270f
     ld hl, vBGMap0
     ld a, $ff
     ld [$c7c0], a
     call L_00_051d
-    ld bc, $29b1
+    ld bc, D_00_29b1
     call RunVramCopyList
     ld a, [wPlayerBlocked]
     and a, a
@@ -3167,7 +3178,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld [rLCDC], a
     ei
     ld a, [wPlayerBlocked]
-    ld hl, $253b
+    ld hl, BonusModeJumpTable
     call LookupWord
     jp hl
 BonusModeJumpTable::  ; 3 entry points chosen by wPlayerBlocked: intro wait then Mode2_Init; BonusSelectLoop; BonusResultWait
@@ -3315,6 +3326,7 @@ BonusSelectJobTable::  ; 3 pointers to VRAM job lists
     dw D_00_28a3
     dw D_00_28fd
     dw D_00_2957
+D_00_270f::
     INCBIN "assets/bank_00/270f.bin"
 D_00_28a3::
     INCBIN "assets/bank_00/28a3.bin"
@@ -3322,6 +3334,8 @@ D_00_28fd::
     INCBIN "assets/bank_00/28fd.bin"
 D_00_2957::
     INCBIN "assets/bank_00/2957.bin"
+D_00_29b1::
+    INCBIN "assets/bank_00/29b1.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
     ld sp, wStackTop
     call LcdOff
@@ -3545,7 +3559,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, $0a
     ldh [hScratch00], a
     ld hl, $98c0
-    ld bc, $3156
+    ld bc, D_00_3156
     ld de, D_00_31a6
     ld a, $ff
     ld [$c7c0], a
@@ -3702,13 +3716,14 @@ EndingShowCreditsPage::  ; queues the credit page $c790 from CreditsPageTable
     call QueueVramCopyList
     jp WaitVramCopyDone
 L_00_2df1::
-    ld bc, $2dff
+    ld bc, D_00_2dff
     call QueueVramCopyList
 .L_00_2df7:
     ld a, [wVramCopyFlags]
     bit 0, a
     jr nz, .L_00_2df7
     ret
+D_00_2dff::
     INCBIN "assets/bank_00/2dff.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
     dw D_00_2e21
@@ -3826,7 +3841,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     xor a, a
     ld [wCameraX], a
     ld [wCameraY], a
-    ld bc, $30c4
+    ld bc, D_00_30c4
     call RunVramCopyList
     ld a, $80
     ld [wEndingObject], a
@@ -3836,7 +3851,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [$c778], a
     ld a, $0a
     ld [wEndingStep], a
-    ld bc, $3009
+    ld bc, D_00_3009
     call RunVramCopyList
     xor a, a
     ld [rIF], a
@@ -3846,6 +3861,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [rLCDC], a
     ei
     ret
+D_00_3009::
     INCBIN "assets/bank_00/3009.bin"
 EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [$c778]
@@ -3903,6 +3919,7 @@ EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
     ld hl, wEndingEvents
     set 7, [hl]
     ret
+D_00_30c4::
     INCBIN "assets/bank_00/30c4.bin"
 D_00_30df::
     INCBIN "assets/bank_00/30df.bin"
@@ -3916,6 +3933,8 @@ D_00_3148::
     INCBIN "assets/bank_00/3148.bin"
 AnimFrames0_314c::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/314c_AnimFrames0_314c.bin"
+D_00_3156::
+    INCBIN "assets/bank_00/3156.bin"
 D_00_31a6::
     INCBIN "assets/bank_00/31a6.bin"
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
@@ -4986,11 +5005,11 @@ L_00_3956::
     jp .L_00_3975
 .L_00_3963:
     ld de, D_00_3acf
-    ld bc, $3ad4
+    ld bc, D_00_3ad4
     jp SetAnimationVariant
 .L_00_396c:
     ld de, D_00_3ad9
-    ld bc, $3ade
+    ld bc, D_00_3ade
     jp SetAnimationVariant
 .L_00_3975:
     ldh a, [hEnemyDir]
@@ -5001,23 +5020,23 @@ L_00_3956::
     bit 2, a
     jr nz, .L_00_39a8
     ld de, D_00_3aa6
-    ld bc, $3aab
+    ld bc, D_00_3aab
     jp SetAnimationVariant
 .L_00_398c:
     ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3ab0
-    ld bc, $3ab5
+    ld bc, D_00_3ab5
     jp SetAnimationVariant
 .L_00_399a:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3ab0
-    ld bc, $3ab5
+    ld bc, D_00_3ab5
     jp SetAnimationVariant
 .L_00_39a8:
     ld de, D_00_3aba
-    ld bc, $3abf
+    ld bc, D_00_3abf
     jp SetAnimationVariant
 L_00_39b1::
     ld a, [wActiveMagic]
@@ -5161,18 +5180,28 @@ D_00_3aa2::
     INCBIN "assets/bank_00/3aa2.bin"
 D_00_3aa6::
     INCBIN "assets/bank_00/3aa6.bin"
+D_00_3aab::
+    INCBIN "assets/bank_00/3aab.bin"
 D_00_3ab0::
     INCBIN "assets/bank_00/3ab0.bin"
+D_00_3ab5::
+    INCBIN "assets/bank_00/3ab5.bin"
 D_00_3aba::
     INCBIN "assets/bank_00/3aba.bin"
+D_00_3abf::
+    INCBIN "assets/bank_00/3abf.bin"
 D_00_3ac4::
     INCBIN "assets/bank_00/3ac4.bin"
 D_00_3aca::
     INCBIN "assets/bank_00/3aca.bin"
 D_00_3acf::
     INCBIN "assets/bank_00/3acf.bin"
+D_00_3ad4::
+    INCBIN "assets/bank_00/3ad4.bin"
 D_00_3ad9::
     INCBIN "assets/bank_00/3ad9.bin"
+D_00_3ade::
+    INCBIN "assets/bank_00/3ade.bin"
 D_00_3ae3::
     INCBIN "assets/bank_00/3ae3.bin"
 D_00_3aed::
@@ -5237,23 +5266,23 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     bit 2, a
     jr nz, .L_00_3b90
     ld de, D_00_3bbe
-    ld bc, $3bc3
+    ld bc, D_00_3bc3
     jp SetAnimationVariant
 .L_00_3b74:
     ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3bc8
-    ld bc, $3bcd
+    ld bc, D_00_3bcd
     jp SetAnimationVariant
 .L_00_3b82:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3bc8
-    ld bc, $3bcd
+    ld bc, D_00_3bcd
     jp SetAnimationVariant
 .L_00_3b90:
     ld de, D_00_3bd2
-    ld bc, $3bd7
+    ld bc, D_00_3bd7
     jp SetAnimationVariant
 EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
     call EnemyTileUnder
@@ -5277,10 +5306,16 @@ EnemyInitAnim3bbe::  ; hEnemyAnimState 5 and counter $20; animation at $3bbe; sn
     jp EnemySnapToGrid
 D_00_3bbe::
     INCBIN "assets/bank_00/3bbe.bin"
+D_00_3bc3::
+    INCBIN "assets/bank_00/3bc3.bin"
 D_00_3bc8::
     INCBIN "assets/bank_00/3bc8.bin"
+D_00_3bcd::
+    INCBIN "assets/bank_00/3bcd.bin"
 D_00_3bd2::
     INCBIN "assets/bank_00/3bd2.bin"
+D_00_3bd7::
+    INCBIN "assets/bank_00/3bd7.bin"
 EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call TickObjectTimer
     jr nz, .L_00_3be4
@@ -5340,7 +5375,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     jp DrawObject
 L_00_3c4e::
     ld de, AnimFrames0_3c87
-    ld bc, $3c8c
+    ld bc, D_00_3c8c
     jp SetAnimationVariant
 L_00_3c57::
     ld a, $20
@@ -5371,6 +5406,8 @@ EnemyMapTile::  ; A = room map tile at the enemy position (X to column
     jp LookupMapTile
 AnimFrames0_3c87::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/3c87_AnimFrames0_3c87.bin"
+D_00_3c8c::
+    INCBIN "assets/bank_00/3c8c.bin"
 EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
     call TickObjectTimer
@@ -5396,7 +5433,7 @@ EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provis
     dec a
     ldh [hEnemyAux], a
     ld de, D_00_3aca
-    ld bc, $3e4d
+    ld bc, D_00_3e4d
     jp SetAnimationVariant
 .L_00_3ccd:
     ldh a, [hObject2]
@@ -5416,21 +5453,21 @@ EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provis
     ld hl, hObject2
     res 6, [hl]
     ld de, D_00_3e4d
-    ld bc, $3e52
+    ld bc, D_00_3e52
     jp SetAnimationVariant
 .L_00_3cf5:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3e57
-    ld bc, $3e5c
+    ld bc, D_00_3e5c
     jp SetAnimationVariant
 .L_00_3d03:
     ld de, D_00_3e4d
-    ld bc, $3e52
+    ld bc, D_00_3e52
     jp SetAnimationVariant
 .L_00_3d0c:
     ld de, D_00_3e57
-    ld bc, $3e5c
+    ld bc, D_00_3e5c
     jp SetAnimationVariant
 .L_00_3d15:
     jp RemoveEnemy
@@ -5512,8 +5549,12 @@ EnemyKind7Init::  ; sets hEnemyAnimState 5 and counter $20 with animation $3e4d 
     ret
 D_00_3e4d::
     INCBIN "assets/bank_00/3e4d.bin"
+D_00_3e52::
+    INCBIN "assets/bank_00/3e52.bin"
 D_00_3e57::
     INCBIN "assets/bank_00/3e57.bin"
+D_00_3e5c::
+    INCBIN "assets/bank_00/3e5c.bin"
 EnemyKind5::  ; enemy kind 5
     call SelectObject2
     call TickObjectTimer
@@ -5546,7 +5587,7 @@ EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then 
     inc a
     ldh [hEnemyCounter], a
     ld de, D_00_3f3a
-    ld bc, $3f3f
+    ld bc, D_00_3f3f
     jp SetAnimationVariant
 .L_00_3ea8:
     xor a, a
@@ -5623,6 +5664,8 @@ EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy 
     ret
 D_00_3f3a::
     INCBIN "assets/bank_00/3f3a.bin"
+D_00_3f3f::
+    INCBIN "assets/bank_00/3f3f.bin"
 D_00_3f44::
     INCBIN "assets/bank_00/3f44.bin"
 SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
@@ -5640,3 +5683,5 @@ D_00_3f9e::
     INCBIN "assets/bank_00/3f9e.bin"
 D_00_3faf::
     INCBIN "assets/bank_00/3faf.bin"
+D_00_3fb8::
+    INCBIN "assets/bank_00/3fb8.bin"
