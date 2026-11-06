@@ -250,7 +250,7 @@ class Rom:
                     else:
                         break
                     q += 2
-                if len(chain) >= 4:
+                if len(chain) >= 4 and len({t for _, t in chain}) >= 3:
                     snap = (dict(self.insns), set(self.code_bytes), dict(self.targets), dict(self.dwords), set(self.cross))
                     ok = True
                     for q, t in chain:

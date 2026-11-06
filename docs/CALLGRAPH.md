@@ -2,7 +2,7 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-77 named routines of 677 found.
+96 named routines of 677 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
@@ -52,34 +52,53 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0aaf | `LookupWord` | 16 | 9 |  |
 | 0:0bf8 | `MultiplyByDE` | 8 | 10 |  |
 | 0:0d0e | `UnpackRoomMap` | 7 | 1 |  |
+| 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
 | 0:10b5 | `Mode1_Play` | 89 | 0 | `ClearOamShadow`, `DrawMetatileMap`, `FillBackwardsFF`, `L_00_1111`, `LcdOff`, `LoadGfxBank2`, `RunVramCopyList`, `TableIndexFromRound` ... |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
 | 0:142a | `TableIndexFromRound` | 9 | 2 |  |
-| 0:1c57 | `Mode3_RoundIntro` | 54 | 0 | `ClearOamShadow`, `FillBackwardsFF`, `L_00_1cfd`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RunVramCopyList` |
+| 0:1c57 | `Mode3_RoundIntro` | 54 | 0 | `ClearOamShadow`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RunVramCopyList` |
+| 0:1cfd | `DrawTwoDigitNumber` | 38 | 3 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
 | 0:1dc0 | `Mode7_LinkLose` | 38 | 0 | `ClearOamShadow`, `FillBackwardsFF`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `RunVramCopyList` |
 | 0:1ea4 | `Mode4_GameOver` | 74 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `L_00_0628`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma` |
 | 0:1f1c | `Mode5_Continue` | 102 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `L_00_1760`, `LcdOff`, `LoadTilesBank3A`, `RequestOamDma` ... |
 | 0:2497 | `Mode2_BonusSelect` | 32 | 0 | `L_00_2633`, `LcdOff`, `LoadTilesBank3C`, `PlaySound` |
+| 0:24b7 | `Mode2_Init` | 50 | 3 | `L_00_051d`, `L_00_0628`, `LcdOff`, `LookupWord`, `RunVramCopyList` |
 | 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `L_00_2b46`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
+| 0:2a27 | `TitleLoop` | 24 | 2 | `GameModeDispatch`, `L_00_2ac4`, `ReadJoypad`, `WaitFrameAndSyncOam` |
 | 0:2c70 | `Mode6_Ending` | 166 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `FillBackwardsFF`, `L_00_3054`, `L_00_3085`, `LcdOff` ... |
+| 0:31e2 | `TickObjectTimer` | 9 | 5 |  |
+| 0:3649 | `SetAnimationVariant` | 8 | 17 |  |
 | 0:3654 | `SelectObject2` | 11 | 12 |  |
-| 0:365f | `SetObjectTarget` | 7 | 9 |  |
+| 0:365f | `SetObjectAnimation` | 7 | 9 |  |
+| 0:3713 | `UpdateAllEnemies` | 9 | 1 |  |
+| 0:371c | `UpdateEnemyLoop` | 30 | 0 | `LoadEnemySlot`, `SelectEnemySlot`, `StoreEnemySlot`, `UpdateEnemy` |
+| 0:3746 | `UpdateEnemy` | 24 | 1 |  |
+| 0:379e | `SelectEnemySlot` | 17 | 3 |  |
+| 0:382a | `ClearEnemySlot` | 6 | 1 | `Clear32Bytes` |
+| 0:3830 | `StoreEnemySlot` | 103 | 2 |  |
+| 0:3897 | `LoadEnemySlot` | 103 | 1 |  |
 | 1:4157 | `SoundUpdate` | 9 | 1 | `SoundDequeue` |
 | 1:418c | `SoundDequeue` | 22 | 1 |  |
 | 1:41ad | `SoundStartCommand` | 40 | 1 |  |
 | 1:435e | `SoundAssignChannels` | 8 | 1 |  |
-| 1:43a3 | `SoundUpdateChannel` | 50 | 1 | `L_01_4613` |
+| 1:43a3 | `SoundUpdateChannel` | 50 | 1 | `SoundReadNextNote` |
+| 1:4404 | `SoundWriteChannel1` | 27 | 0 |  |
+| 1:4484 | `SoundWriteChannel2` | 27 | 0 |  |
+| 1:4504 | `SoundWriteChannel3` | 27 | 0 |  |
+| 1:4572 | `SoundWriteChannel4` | 17 | 0 |  |
+| 1:4613 | `SoundReadNextNote` | 12 | 1 |  |
+| 1:47a6 | `SoundApplyPitchSlide` | 37 | 1 | `L_01_47cb`, `L_01_4820` |
 | 1:485b | `PlaySound_Bank1` | 32 | 1 |  |
 | 1:4b1f | `SelectPlayerAnimation` | 20 | 1 |  |
 | 1:4b58 | `PixelXToColumn` | 10 | 11 |  |
 | 1:4b62 | `LookupMapTile` | 13 | 14 | `LookupByte` |
 | 1:4b6f | `IsOnTileGrid` | 10 | 8 |  |
-| 1:4bde | `PlayFrame` | 24 | 1 | `L_01_50b1`, `PlayerCaught` |
+| 1:4bde | `PlayFrame` | 24 | 1 | `L_01_50b1`, `RoundCleared` |
 | 1:4c6f | `PlayerAction` | 56 | 1 | `LookupByte` |
 | 1:4f21 | `ClampPlayerPosition` | 12 | 1 |  |
 | 1:4f51 | `LoadPlayerXY` | 9 | 1 |  |
 | 1:4f91 | `HoldDirectionUntilAligned` | 41 | 1 | `IsOnTileGrid` |
 | 1:4fd6 | `CheckPlayerTileCollision` | 13 | 1 |  |
-| 1:5044 | `PlayerCaught` | 43 | 2 | `DrawObject`, `PlaySound`, `SetObjPtr` |
+| 1:5044 | `RoundCleared` | 43 | 2 | `DrawObject`, `PlaySound`, `SetObjPtr` |
 | 1:510f | `PlayerSetDirection` | 68 | 1 | `L_01_5183`, `LookupByte` |
-| 1:5223 | `PlayerRoundCleared` | 22 | 1 | `DelayFrames`, `PlaySound` |
+| 1:5223 | `PlayerDeath` | 22 | 1 | `DelayFrames`, `PlaySound` |

@@ -1555,43 +1555,7 @@ L_00_0d1f::
     jr nz, L_00_0d15
     ret
 D_00_0d3d::
-    INCBIN "orig/painter_momopie.gb", $00d3d, 599
-    dw L_00_0fa0
-    dw L_00_0fa0
-    dw L_00_0fa0
-    dw L_00_0fa0
-    dw L_00_0fa0
-    dw L_00_0fa0
-L_00_0fa0::
-    rlca
-    nop
-    ld h, c
-    ld e, d
-    inc b
-    nop
-    ret c
-    jr z, L_00_0fb5
-    dec c
-    ld d, h
-    ld hl, sp + 16
-    ld a, [bc]
-    ldh a, [c]
-    ret z
-    inc d
-    nop
-    or a, d
-    ld e, b
-    rla
-L_00_0fb5::
-    dec c
-    ret z
-    ld hl, sp + 40
-    nop
-    adc a, b
-    sbc a, d
-    ld sp, $0fc9
-    ret
-    INCBIN "orig/painter_momopie.gb", $00fc0, 75
+    INCBIN "orig/painter_momopie.gb", $00d3d, 718
 L_00_100b::
     ld bc, $0000
     ld hl, $c464

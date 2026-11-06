@@ -139,8 +139,6 @@ bank	addr	size	name
 0	0d0e	7	UnpackRoomMap
 0	0d15	10	L_00_0d15
 0	0d1f	30	L_00_0d1f
-0	0fa0	21	L_00_0fa0
-0	0fb5	11	L_00_0fb5
 0	100b	28	L_00_100b
 0	1027	93	L_00_1027
 0	1084	30	DrawDecimalDigits
@@ -442,7 +440,6 @@ bank	addr	size	name
 0	3ecb	6	L_00_3ecb
 0	3ed1	40	L_00_3ed1
 0	3ef9	65	L_00_3ef9
-1	4142	21	L_01_4142
 1	4157	9	SoundUpdate
 1	4160	16	L_01_4160
 1	4170	8	L_01_4170

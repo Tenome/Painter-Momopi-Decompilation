@@ -9,34 +9,9 @@ SoundSongTable::  ; word offsets of song data (follows the frequency table at $4
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     INCBIN "orig/painter_momopie.gb", $040f4, 38
 D_01_411a::
-    INCBIN "orig/painter_momopie.gb", $0411a, 2
-    dw L_01_4263
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-L_01_4142::
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
+    INCBIN "orig/painter_momopie.gb", $0411a, 39
+D_01_4141::
+    INCBIN "orig/painter_momopie.gb", $04141, 22
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -174,7 +149,7 @@ L_01_423c::
     ld [$c432], a
     ret
 L_01_4263::
-    ld hl, $4141
+    ld hl, D_01_4141
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -198,7 +173,7 @@ L_01_428c::
     ld [wSoundCmd], a
     ret
 L_01_4292::
-    ld hl, $4141
+    ld hl, D_01_4141
     add hl, bc
     ld a, [hl]
     ld b, a
