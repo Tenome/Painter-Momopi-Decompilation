@@ -198,3 +198,20 @@ DEF wEndingStep     EQU $c781   ; ending scene step timer; reloaded with $0a (pr
 DEF wEndingPhase    EQU $c782   ; ending scene step counter (provisional)
 DEF wEndingEvents   EQU $c7ae   ; bit 2 hero reached its place, bit 7 scene finished (provisional)
 DEF wMagicCastTimer EQU $c4d2   ; frame counter used while a card is being cast (provisional)
+DEF wCheatTimer     EQU $c49d   ; counts down from $a0 after wCheatFlags bit 5 is set (provisional)
+DEF wScoreTemp      EQU $c47a   ; scratch byte of AddScore
+DEF wExtraLifeIdx   EQU $c488   ; index (0-4) of the next score threshold for an extra life (CheckExtraLife)
+DEF wBonusChoice    EQU $c75a   ; chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional)
+DEF wTrailIdx       EQU $c1b6   ; index of the trail segment (7 bytes each) copied by LoadTrailSegment
+DEF wProjectileAnimLo EQU $c49f ; wProjectile +1: animation pointer
+DEF wProjectileAnimHi EQU $c4a0
+DEF wPaintAnimLo    EQU $c4ff   ; wPaintObject +1: animation pointer
+DEF wPaintAnimHi    EQU $c500
+; sound channel records (wSoundChannels = record 0), $20 bytes each
+DEF wSoundChan1     EQU $c347
+DEF wSoundChan2     EQU $c367
+DEF wSoundChan3     EQU $c387
+DEF wSoundChan4     EQU $c3a7   ; SoundStartEffect loads its stream here (records 5-7 provisional)
+DEF wSoundChan5     EQU $c3c7
+DEF wSoundChan6     EQU $c3e7
+DEF wSoundChan7     EQU $c407

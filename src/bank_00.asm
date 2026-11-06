@@ -1626,17 +1626,17 @@ AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld hl, wScoreDigits
     ld a, e
     add a, [hl]
-    ld [$c47a], a
+    ld [wScoreTemp], a
     call ByteToBCD
     ldh a, [hScratch03]
     and a, a
     jr z, .L_00_1027
     inc d
-    ld a, [$c47a]
+    ld a, [wScoreTemp]
     sub a, $64
-    ld [$c47a], a
+    ld [wScoreTemp], a
 .L_00_1027:
-    ld a, [$c47a]
+    ld a, [wScoreTemp]
     ld [hl], a
     inc hl
     ld a, $00
@@ -1825,11 +1825,11 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
 .L_00_11c6:
     ld a, [$c46a]
     ld d, a
-    ld a, [$c488]
+    ld a, [wExtraLifeIdx]
     cp a, $05
     jr nz, .L_00_11d5
     xor a, a
-    ld [$c488], a
+    ld [wExtraLifeIdx], a
 .L_00_11d5:
     ld c, a
     ld hl, D_00_11e7
@@ -1838,7 +1838,7 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ret nz
     ld hl, wLives
     inc [hl]
-    ld hl, $c488
+    ld hl, wExtraLifeIdx
     inc [hl]
     ret
 D_00_11e7::
@@ -2152,7 +2152,7 @@ MagicPointsTable::  ; 16 bit MP per round (round 1 = 50)
     INCBIN "assets/bank_00/1462_MagicPointsTable.bin"
 ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     xor a, a
-    ld [$c488], a
+    ld [wExtraLifeIdx], a
     ld [wScoreDigits], a
     ld [$c465], a
     ld [$c466], a
@@ -3137,14 +3137,14 @@ Mode2_Init::  ; bonus select setup after LcdOff
 .L_00_24e9:
     cp a, $02
     jr nz, .L_00_250f
-    ld a, [$c75a]
+    ld a, [wBonusChoice]
     ld hl, D_00_269b
     call LookupWord
     push hl
     pop de
     ld hl, $9886
     call VramCopyStream
-    ld a, [$c75a]
+    ld a, [wBonusChoice]
     ld hl, D_00_2651
     call LookupWord
     push hl
@@ -3243,10 +3243,10 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
 .L_00_25bc:
     ldh a, [hScratch00]
     ld [hl], a
-    ld [$c75a], a
+    ld [wBonusChoice], a
     jp Mode2_Init
 .L_00_25c5:
-    ld [$c75a], a
+    ld [wBonusChoice], a
     jp Mode2_Init
 D_00_25cb::
     INCBIN "assets/bank_00/25cb.bin"
@@ -3368,9 +3368,9 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld a, [wCheatFlags]
     bit 5, a
     jr z, .L_00_2a61
-    ld hl, $c49d
+    ld hl, wCheatTimer
     dec [hl]
-    ld a, [$c49d]
+    ld a, [wCheatTimer]
     and a, a
     jr nz, .L_00_2ad8
     ld hl, wCheatFlags
@@ -3406,7 +3406,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     jr .L_00_2aa5
 .L_00_2a9b:
     ld a, $a0
-    ld [$c49d], a
+    ld [wCheatTimer], a
     ld hl, wCheatFlags
     set 5, [hl]
 .L_00_2aa5:
@@ -3606,7 +3606,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, $10
     ld [wCheatFlags], a
     ld a, $05
-    ld [$c49d], a
+    ld [wCheatTimer], a
 .L_00_2d33:
     call WaitFrameAndSyncOam
     call EndingScrollStep
@@ -3619,9 +3619,9 @@ Mode6_Ending::  ; castle scene after the last round
     ld hl, wCheatFlags
     dec [hl]
     jr nz, .L_00_2d33
-    ld a, [$c49d]
+    ld a, [wCheatTimer]
     dec a
-    ld [$c49d], a
+    ld [wCheatTimer], a
     bit 7, a
     jr z, .L_00_2d33
     jp Entry
@@ -4123,9 +4123,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     bit 4, a
     jr z, .L_00_3361
     ld a, l
-    ld [$c49f], a
+    ld [wProjectileAnimLo], a
     ld a, h
-    ld [$c4a0], a
+    ld [wProjectileAnimHi], a
     ld hl, wProjectile
     call SetObjPtr
     call DrawObject
