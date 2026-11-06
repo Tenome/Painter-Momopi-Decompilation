@@ -564,36 +564,36 @@ SetObjPtr::  ; hObjPtr = HL
     ret
 L_00_051d::
     ld a, $09
-    ld [$ff97], a
+    ld [hScratch01], a
     ld a, $0a
-    ld [$ff96], a
+    ld [hScratch00], a
 DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatile table; DE cell map; mask in $c7c0
     ld a, l
-    ldh [$ff9c], a
-    ldh [$ff9e], a
+    ldh [hScratch06], a
+    ldh [hScratch08], a
     ld a, h
-    ldh [$ff9d], a
-    ldh [$ff9f], a
+    ldh [hScratch07], a
+    ldh [hScratch09], a
     ld a, c
-    ldh [$ffa0], a
+    ldh [hScratch0A], a
     ld a, b
-    ldh [$ffa1], a
+    ldh [hScratch0B], a
     ld a, e
-    ldh [$ffa2], a
+    ldh [hScratch0C], a
     ld a, d
-    ldh [$ffa3], a
-    ldh a, [$ff96]
-    ldh [$ffa6], a
+    ldh [hScratch0D], a
+    ldh a, [hScratch00]
+    ldh [hScratch10], a
     xor a, a
-    ldh [$ff99], a
-    ldh [$ff9a], a
-    ldh [$ff9b], a
+    ldh [hScratch03], a
+    ldh [hScratch04], a
+    ldh [hScratch05], a
 .L_00_0548:
-    ldh a, [$ffa2]
+    ldh a, [hScratch0C]
     ld l, a
-    ldh a, [$ffa3]
+    ldh a, [hScratch0D]
     ld h, a
-    ldh a, [$ff9a]
+    ldh a, [hScratch04]
     ld e, a
     ld d, $00
     add hl, de
@@ -604,20 +604,20 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
     sla a
     rl b
     ld c, a
-    ldh a, [$ffa0]
+    ldh a, [hScratch0A]
     ld l, a
-    ldh a, [$ffa1]
+    ldh a, [hScratch0B]
     ld h, a
     add hl, bc
     ld a, l
-    ldh [$ffa4], a
+    ldh [hScratch0E], a
     ld a, h
-    ldh [$ffa5], a
-    ldh a, [$ff9b]
+    ldh [hScratch0F], a
+    ldh a, [hScratch05]
     ld c, a
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     ld b, a
-    ld de, $ff9c
+    ld de, hScratch06
     ld a, [de]
     ld l, a
     inc de
@@ -625,7 +625,7 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
     ld h, a
     add hl, bc
     push hl
-    ld hl, $ffa4
+    ld hl, hScratch0E
     ld a, [hl]
     ld e, a
     inc hl
@@ -655,44 +655,44 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
     pop bc
     jr .L_00_0588
 .L_00_05a3:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     dec a
     jr z, .L_00_05c0
-    ldh [$ff96], a
-    ld hl, $ff9a
+    ldh [hScratch00], a
+    ld hl, hScratch04
     inc [hl]
-    ldh a, [$ff9b]
+    ldh a, [hScratch05]
     inc a
     inc a
     jr z, .L_00_05b9
-    ldh [$ff9b], a
+    ldh [hScratch05], a
     jp .L_00_0548
 .L_00_05b9:
-    ld hl, $ff99
+    ld hl, hScratch03
     inc [hl]
     jp .L_00_0548
 .L_00_05c0:
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     dec a
     ret z
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld de, $0040
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld l, a
-    ldh a, [$ff9f]
+    ldh a, [hScratch09]
     ld h, a
     add hl, de
     ld a, l
-    ldh [$ff9c], a
-    ldh [$ff9e], a
+    ldh [hScratch06], a
+    ldh [hScratch08], a
     ld a, h
-    ldh [$ff9d], a
-    ldh [$ff9f], a
+    ldh [hScratch07], a
+    ldh [hScratch09], a
     xor a, a
-    ldh [$ff9b], a
-    ldh a, [$ffa6]
-    ldh [$ff96], a
-    ld hl, $ff9a
+    ldh [hScratch05], a
+    ldh a, [hScratch10]
+    ldh [hScratch00], a
+    ld hl, hScratch04
     inc [hl]
     jp .L_00_0548
 QueueVramCopyRows::  ; queue run-length VRAM copy for the next VBlank
@@ -731,19 +731,19 @@ VramCopyRows::  ; run-length copy of rows to VRAM (from VBlank)
     ld e, a
 L_00_0628::
     ld a, [de]
-    ldh [$ffa8], a
+    ldh [hScratch12], a
     inc de
     ld a, [de]
     ld c, a
     inc de
 .L_00_062f:
-    ldh a, [$ffa8]
+    ldh a, [hScratch12]
     res 7, a
     ld b, a
 .L_00_0634:
     ld a, [de]
     ld [hl+], a
-    ldh a, [$ffa8]
+    ldh a, [hScratch12]
     bit 7, a
     jr nz, .L_00_063d
     inc de
@@ -758,7 +758,7 @@ L_00_0628::
     jr nc, .L_00_064a
     inc h
 .L_00_064a:
-    ldh a, [$ffa8]
+    ldh a, [hScratch12]
     res 7, a
     ld b, a
     ld a, l
@@ -782,13 +782,13 @@ VramCopyList::  ; runs a list of VramCopyRows jobs (from VBlank)
     ld b, a
 RunVramCopyList::  ; BC = list of VRAM copy jobs run immediately
     ld a, [bc]
-    ldh [$ffab], a
+    ldh [hScratch15], a
     inc bc
 .L_00_066f:
     ld a, b
-    ldh [$ffaa], a
+    ldh [hScratch14], a
     ld a, c
-    ldh [$ffa9], a
+    ldh [hScratch13], a
     ld a, [bc]
     ld l, a
     inc bc
@@ -801,13 +801,13 @@ RunVramCopyList::  ; BC = list of VRAM copy jobs run immediately
     ld a, [bc]
     ld d, a
     call L_00_0628
-    ldh a, [$ffab]
+    ldh a, [hScratch15]
     dec a
     jr z, .L_00_0696
-    ldh [$ffab], a
-    ldh a, [$ffa9]
+    ldh [hScratch15], a
+    ldh a, [hScratch13]
     ld c, a
-    ldh a, [$ffaa]
+    ldh a, [hScratch14]
     ld b, a
     inc bc
     inc bc
@@ -872,9 +872,9 @@ DrawObjectBytePos::  ; variant of DrawObject for records with 8 bit positions (+
     ld e, $06
     add hl, de
     ld a, [hl]
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld a, $00
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -883,9 +883,9 @@ DrawObjectBytePos::  ; variant of DrawObject for records with 8 bit positions (+
     ld e, $07
     add hl, de
     ld a, [hl]
-    ldh [$ff99], a
+    ldh [hScratch03], a
     ld a, $00
-    ldh [$ff9a], a
+    ldh [hScratch04], a
     jr DrawObjectParts
 DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its animation data
     ldh a, [hObjPtrHi]
@@ -901,66 +901,66 @@ DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its ani
     ld e, $07
     add hl, de
     ld a, [hl+]
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld a, [hl]
-    ldh [$ff98], a
+    ldh [hScratch02], a
     push bc
     pop hl
     ld d, $00
     ld e, $0a
     add hl, de
     ld a, [hl+]
-    ldh [$ff99], a
+    ldh [hScratch03], a
     ld a, [hl]
-    ldh [$ff9a], a
+    ldh [hScratch04], a
 DrawObjectParts::  ; shared part of DrawObject: applies camera
     push bc
     pop hl
     ld a, [hl]
     and a, $fb
-    ldh [$ff96], a
+    ldh [hScratch00], a
     and a, $02
     jr z, .L_00_0895
     ld a, [wCameraX]
     ld l, a
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     sub a, l
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld a, [$c1ad]
     ld l, a
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     sbc a, l
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ld a, [wCameraY]
     ld l, a
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     sub a, l
-    ldh [$ff99], a
+    ldh [hScratch03], a
     ld a, [$c1af]
     ld l, a
-    ldh a, [$ff9a]
+    ldh a, [hScratch04]
     sbc a, l
-    ldh [$ff9a], a
+    ldh [hScratch04], a
 .L_00_0895:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     bit 5, a
     jr z, .L_00_08a7
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     sub a, $08
-    ldh [$ff97], a
-    ldh a, [$ff98]
+    ldh [hScratch01], a
+    ldh a, [hScratch02]
     sbc a, $00
-    ldh [$ff98], a
+    ldh [hScratch02], a
 .L_00_08a7:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     bit 6, a
     jr z, .L_00_08b9
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     sub a, $08
-    ldh [$ff99], a
-    ldh a, [$ff9a]
+    ldh [hScratch03], a
+    ldh a, [hScratch04]
     sbc a, $00
-    ldh [$ff9a], a
+    ldh [hScratch04], a
 .L_00_08b9:
     push bc
     pop hl
@@ -968,9 +968,9 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld e, $01
     add hl, de
     ld a, [hl+]
-    ldh [$ff9b], a
+    ldh [hScratch05], a
     ld a, [hl]
-    ldh [$ff9c], a
+    ldh [hScratch06], a
     or a, $9b
     jr nz, .L_00_08cb
     ret
@@ -981,10 +981,10 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld e, $05
     add hl, de
     ld a, [hl]
-    ldh [$ffa4], a
-    ldh a, [$ff9c]
+    ldh [hScratch0E], a
+    ldh a, [hScratch06]
     ld h, a
-    ldh a, [$ff9b]
+    ldh a, [hScratch05]
     ld l, a
     ld a, [hl]
     sla a
@@ -993,39 +993,39 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld hl, ObjectShapeTable
     add hl, de
     ld a, [hl+]
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ld a, [hl]
-    ldh [$ff9e], a
-    ldh a, [$ff9e]
+    ldh [hScratch08], a
+    ldh a, [hScratch08]
     ld h, a
-    ldh a, [$ff9d]
+    ldh a, [hScratch07]
     ld l, a
     ld a, [hl]
-    ldh [$ff9f], a
-    ldh [$ffa5], a
+    ldh [hScratch09], a
+    ldh [hScratch0F], a
 .L_00_08f6:
-    ldh a, [$ffa4]
-    ld hl, $ff9f
+    ldh a, [hScratch0E]
+    ld hl, hScratch09
     cp a, [hl]
     jr c, .L_00_0901
     xor a, a
-    ldh [$ffa4], a
+    ldh [hScratch0E], a
 .L_00_0901:
-    ld hl, $ffa4
+    ld hl, hScratch0E
     inc [hl]
     sla a
     ld c, a
     inc c
     ld b, $00
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     sla a
     sla a
     sla a
     push af
     ld e, $00
-    ldh a, [$ff9d]
+    ldh a, [hScratch07]
     ld l, a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld h, a
     add hl, bc
     pop af
@@ -1038,22 +1038,22 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     jr z, .L_00_0929
     dec e
 .L_00_0929:
-    ld hl, $ff97
+    ld hl, hScratch01
     add a, [hl]
-    ldh [$ffa0], a
+    ldh [hScratch0A], a
     ld a, e
-    ld hl, $ff98
+    ld hl, hScratch02
     adc a, [hl]
     jr nz, .L_00_098a
     inc c
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     sla a
     sla a
     push af
     ld de, $0000
-    ldh a, [$ff9d]
+    ldh a, [hScratch07]
     ld l, a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld h, a
     add hl, bc
     pop af
@@ -1066,26 +1066,26 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     jr z, .L_00_0953
     dec e
 .L_00_0953:
-    ld hl, $ff99
+    ld hl, hScratch03
     add a, [hl]
-    ldh [$ffa1], a
+    ldh [hScratch0B], a
     ld a, e
-    ld hl, $ff9a
+    ld hl, hScratch04
     adc a, [hl]
     jr nz, .L_00_098a
-    ldh a, [$ff9b]
+    ldh a, [hScratch05]
     ld l, a
-    ldh a, [$ff9c]
+    ldh a, [hScratch06]
     ld h, a
     ld d, $00
-    ldh a, [$ffa4]
+    ldh a, [hScratch0E]
     ld e, a
     add hl, de
     ld a, [hl]
-    ldh [$ffa2], a
-    ldh a, [$ff96]
+    ldh [hScratch0C], a
+    ldh a, [hScratch00]
     or a, $04
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld e, a
     and a, $08
     sla a
@@ -1096,10 +1096,10 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld a, e
     and a, $70
     or a, b
-    ldh [$ffa3], a
+    ldh [hScratch0D], a
     call L_00_09ab
 .L_00_098a:
-    ld hl, $ffa5
+    ld hl, hScratch0F
     dec [hl]
     jp nz, .L_00_08f6
     ldh a, [hObjPtrLo]
@@ -1108,16 +1108,16 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ldh a, [hObjPtrHi]
     ld h, a
     ld b, a
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld [hl], a
-    ld hl, $ffa4
+    ld hl, hScratch0E
     dec [hl]
     ld e, $05
     ld d, $00
     push bc
     pop hl
     add hl, de
-    ldh a, [$ffa4]
+    ldh a, [hScratch0E]
     ld [hl], a
 L_00_09aa::
     ret
@@ -1132,15 +1132,15 @@ L_00_09ab::
     sla a
     ld c, a
     ld b, $00
-    ldh a, [$ffa1]
+    ldh a, [hScratch0B]
     ld hl, $c000
     add hl, bc
     ld [hl+], a
-    ldh a, [$ffa0]
+    ldh a, [hScratch0A]
     ld [hl+], a
-    ldh a, [$ffa2]
+    ldh a, [hScratch0C]
     ld [hl+], a
-    ldh a, [$ffa3]
+    ldh a, [hScratch0D]
     ld [hl], a
     ldh a, [hOamCount]
     inc a
@@ -1149,31 +1149,31 @@ L_00_09ab::
 L_00_09d1::
     ld e, $06
     ld a, e
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld e, $08
     ld a, e
-    ldh [$ff97], a
+    ldh [hScratch01], a
     call L_00_0a13
     jr L_00_0a13
 L_00_09e0::
     ld e, $06
     ld a, e
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld e, $0c
     ld a, e
-    ldh [$ff97], a
+    ldh [hScratch01], a
     call L_00_09ed
 L_00_09ed::
     and a, a
     call L_00_0a13
     call L_00_0a13
     ld c, $00
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     bit 7, a
     jr z, .L_00_09fd
     dec c
 .L_00_09fd:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld e, a
     ld d, $00
     ldh a, [hObjPtrHi]
@@ -1186,11 +1186,11 @@ L_00_09ed::
     ld a, c
     adc a, [hl]
     ld [hl], a
-    ld hl, $ff96
+    ld hl, hScratch00
     inc [hl]
     ret
 L_00_0a13::
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     ld e, a
     ld d, $00
     ldh a, [hObjPtrHi]
@@ -1202,8 +1202,8 @@ L_00_0a13::
     pop af
     ld a, [hl]
     ld b, a
-    ldh [$ff98], a
-    ldh a, [$ff96]
+    ldh [hScratch02], a
+    ldh a, [hScratch00]
     ld e, a
     ld d, $00
     ldh a, [hObjPtrHi]
@@ -1216,9 +1216,9 @@ L_00_0a13::
     ld a, b
     adc a, [hl]
     ld [hl], a
-    ld hl, $ff96
+    ld hl, hScratch00
     inc [hl]
-    ld hl, $ff97
+    ld hl, hScratch01
     inc [hl]
     ret
 L_00_0a3f::
@@ -1244,42 +1244,42 @@ L_00_0a5d::
     call WaitSerialByte
     jp WaitVBlankFlag
 ByteToBCD::  ; converts a byte in A (and C flag) to decimal digits using daa
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, c
-    ldh [$ff97], a
+    ldh [hScratch01], a
     xor a, a
-    ldh [$ff98], a
-    ldh [$ff99], a
-    ldh a, [$ff97]
+    ldh [hScratch02], a
+    ldh [hScratch03], a
+    ldh a, [hScratch01]
     and a, a
     jr z, .L_00_0a86
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     add a, $38
-    ldh [$ff96], a
-    ldh a, [$ff99]
+    ldh [hScratch00], a
+    ldh a, [hScratch03]
     add a, $02
-    ldh [$ff99], a
+    ldh [hScratch03], a
 .L_00_0a86:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     cp a, $0a
     jr c, .L_00_0a9f
     sub a, $0a
-    ldh [$ff96], a
-    ldh a, [$ff98]
+    ldh [hScratch00], a
+    ldh a, [hScratch02]
     add a, $10
     daa
-    ldh [$ff98], a
-    ldh a, [$ff99]
+    ldh [hScratch02], a
+    ldh a, [hScratch03]
     adc a, $00
-    ldh [$ff99], a
+    ldh [hScratch03], a
     jr .L_00_0a86
 .L_00_0a9f:
     push de
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld d, a
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     add a, d
-    ldh [$ff98], a
+    ldh [hScratch02], a
     pop de
     ret
 LookupByte::  ; A = byte at HL + C (table lookup)
@@ -1305,25 +1305,25 @@ LookupWord::  ; HL = word at HL + A*2 (also copied to DE and BC)
 L_00_0abf::
     ldh a, [$ffb9]
     sla a
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ld e, $04
     ld d, $00
-    ldh a, [$ffa5]
+    ldh a, [hScratch0F]
     ld h, a
-    ldh a, [$ffa4]
+    ldh a, [hScratch0E]
     ld l, a
     add hl, de
     ld a, [hl]
     sla a
-    ldh [$ff99], a
+    ldh [hScratch03], a
     ldh a, [hEnemyXHi]
     and a, a
     jr nz, .L_00_0b03
     ld e, $08
     ld d, $00
-    ldh a, [$ffa5]
+    ldh a, [hScratch0F]
     ld h, a
-    ldh a, [$ffa4]
+    ldh a, [hScratch0E]
     ld l, a
     add hl, de
     ld a, [hl]
@@ -1333,9 +1333,9 @@ L_00_0abf::
     ld d, $00
     call L_00_0b0a
     jr nc, .L_00_0b03
-    ld hl, $ff98
+    ld hl, hScratch02
     inc [hl]
-    ld hl, $ff99
+    ld hl, hScratch03
     inc [hl]
     ld e, $0a
     ld d, $00
@@ -1357,24 +1357,24 @@ L_00_0b0a::
     add hl, de
     ld a, [hl]
     push af
-    ldh a, [$ffa5]
+    ldh a, [hScratch0F]
     ld h, a
-    ldh a, [$ffa4]
+    ldh a, [hScratch0E]
     ld l, a
     add hl, de
     pop af
     sub a, [hl]
-    ldh [$ff9a], a
+    ldh [hScratch04], a
     jp nc, .L_00_0b27
-    ld hl, $ff9a
+    ld hl, hScratch04
     xor a, a
     sub a, [hl]
     ld [hl], a
 .L_00_0b27:
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld e, a
     ld d, $00
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     ld c, a
     ld b, $00
     ld hl, $0a3f
@@ -1383,9 +1383,9 @@ L_00_0b0a::
     ld hl, $0a3f
     add hl, bc
     add a, [hl]
-    ldh [$ff9c], a
-    ldh a, [$ff9a]
-    ld hl, $ff9c
+    ldh [hScratch06], a
+    ldh a, [hScratch04]
+    ld hl, hScratch06
     cp a, [hl]
     ret
 L_00_0b44::
@@ -1445,10 +1445,10 @@ L_00_0b66::
     ld b, $00
     ld c, $0e
     add hl, bc
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld [hl], a
     inc hl
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     ld [hl], a
     pop af
     pop de
@@ -1460,10 +1460,10 @@ L_00_0b66::
     ld b, $00
     ld c, $0c
     add hl, bc
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld [hl], a
     inc hl
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     ld [hl], a
     ret
 D_00_0bb6::
@@ -1493,34 +1493,34 @@ MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     jp z, .L_00_0c23
     ld a, $00
     sub a, l
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, $00
     sbc a, h
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ret
 .L_00_0c23:
     ld a, h
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld a, l
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ret
 L_00_0c2a::
     dec a
-    ldh [$ff9b], a
-    ld hl, $ff9c
-    ldh a, [$ff9e]
+    ldh [hScratch05], a
+    ld hl, hScratch06
+    ldh a, [hScratch08]
     and a, [hl]
 .L_00_0c33:
     srl a
-    ld hl, $ff9d
+    ld hl, hScratch07
     dec [hl]
     jr nz, .L_00_0c33
     ld b, a
-    ldh a, [$ff9b]
+    ldh a, [hScratch05]
     cp a, b
     jr nc, .L_00_0c45
     ld a, $00
-    ldh [$ff9e], a
+    ldh [hScratch08], a
 .L_00_0c45:
     sla b
     ld c, b
@@ -1537,12 +1537,12 @@ UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked 
     ld [$c1b5], a
     pop hl
     ld a, [hl]
-    ldh [$ff98], a
+    ldh [hScratch02], a
 .L_00_0d1f:
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     rlc a
     rlc a
-    ldh [$ff98], a
+    ldh [hScratch02], a
     and a, $03
     ld [de], a
     inc de
@@ -1569,7 +1569,7 @@ L_00_100b::
     add a, [hl]
     ld [$c47a], a
     call ByteToBCD
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     and a, a
     jr z, .L_00_1027
     inc d
@@ -1623,7 +1623,7 @@ DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     ld c, $00
     call ByteToBCD
     pop bc
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld d, a
     swap a
     and a, $0f
@@ -1659,9 +1659,9 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call TableIndexFromRoundDec
     call UnpackRoomMap
     ld a, $10
-    ld [$ff97], a
+    ld [hScratch01], a
     ld a, $10
-    ld [$ff96], a
+    ld [hScratch00], a
     ld a, [wRoomIndex]
     ld hl, RoomMetatileTable
     call TableIndexFromRound
@@ -1807,11 +1807,11 @@ L_00_11ec::
     set 5, a
     ld [wGameFlags], a
     ld a, $04
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ld a, $a0
-    ldh [$ff9e], a
+    ldh [hScratch08], a
     ld a, $98
-    ldh [$ffa0], a
+    ldh [hScratch0A], a
     call L_00_37f5
     jp SerialStartTransfer
 L_00_121c::
@@ -1861,16 +1861,16 @@ L_00_121c::
     ld c, a
     ld a, [$c44a]
     call ByteToBCD
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     and a, $0f
     call L_00_10a4
     ld [$c450], a
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     swap a
     and a, $0f
     call L_00_10a4
     ld [$c44f], a
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     call L_00_10a4
     ld [$c44e], a
     ld a, $03
@@ -1883,16 +1883,16 @@ L_00_121c::
     ldh a, [hCountdownHi]
     ld c, $00
     call ByteToBCD
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     and a, $0f
     call L_00_10a4
     ld [$ffe8], a
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     swap a
     and a, $0f
     call L_00_10a4
     ld [$ffe7], a
-    ldh a, [$ff99]
+    ldh a, [hScratch03]
     call L_00_10a4
     ld [$ffe6], a
     ld a, $03
@@ -1918,7 +1918,7 @@ L_00_121c::
     ld [rLCDC], a
     ei
     xor a, a
-    ldh [$ff96], a
+    ldh [hScratch00], a
     call L_00_18a3
     ld bc, $0002
     ld a, [$c44b]
@@ -1930,30 +1930,30 @@ L_00_121c::
     ld e, $00
 .L_00_1327:
     ld a, [$c44a]
-    ldh [$ff96], a
+    ldh [hScratch00], a
 L_00_132c::
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     sub a, $64
     ld d, a
     jr c, .L_00_1338
-    ldh [$ff96], a
+    ldh [hScratch00], a
     jp L_00_1409
 .L_00_1338:
     ld a, e
     and a, a
     jr z, .L_00_1344
     ld a, d
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld e, $00
     jp L_00_1409
 .L_00_1344:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     and a, a
     jr z, .L_00_1371
     cp a, $0a
     jr z, .L_00_1364
     sub a, $14
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, [$c463]
     ld c, a
     ld b, $00
@@ -2291,7 +2291,7 @@ L_00_1770::
     ld a, [$c43d]
     ld e, $03
     call MultiplyByDE
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld d, a
     ld a, [$c43c]
     add a, d
@@ -2318,7 +2318,7 @@ L_00_1770::
     ld a, [$c43d]
     ld e, $03
     call MultiplyByDE
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld d, a
     ld a, [$c43c]
     add a, d
@@ -2339,7 +2339,7 @@ L_00_180f::
     ld a, [$c43d]
     ld e, $03
     call MultiplyByDE
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld e, a
     ld a, [$c43c]
     inc a
@@ -2367,7 +2367,7 @@ L_00_1839::
     ld a, [$c43d]
     ld e, $03
     call MultiplyByDE
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     add a, $02
     ld c, a
     ld hl, $c43e
@@ -2399,7 +2399,7 @@ L_00_1876::
     inc a
     ld e, $03
     call MultiplyByDE
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld d, a
     ld a, [$c43c]
     add a, d
@@ -2414,11 +2414,11 @@ L_00_1876::
     ld e, $03
     call MultiplyByDE
 L_00_18a3::
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld c, a
     ld hl, $c43e
     call LookupByte
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ld hl, D_00_19a5
     call LookupWord
     push hl
@@ -2426,7 +2426,7 @@ L_00_18a3::
     ld hl, $9d02
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19b9
     call LookupWord
     push hl
@@ -2434,7 +2434,7 @@ L_00_18a3::
     ld hl, $9d42
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19cd
     call LookupWord
     push hl
@@ -2442,13 +2442,13 @@ L_00_18a3::
     ld hl, $9de2
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     inc a
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld c, a
     ld hl, $c43e
     call LookupByte
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ld hl, D_00_19a5
     call LookupWord
     push hl
@@ -2456,7 +2456,7 @@ L_00_18a3::
     ld hl, $9d08
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19b9
     call LookupWord
     push hl
@@ -2464,7 +2464,7 @@ L_00_18a3::
     ld hl, $9d48
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19cd
     call LookupWord
     push hl
@@ -2472,13 +2472,13 @@ L_00_18a3::
     ld hl, $9de8
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     inc a
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld c, a
     ld hl, $c43e
     call LookupByte
-    ldh [$ff98], a
+    ldh [hScratch02], a
     ld hl, D_00_19a5
     call LookupWord
     push hl
@@ -2486,7 +2486,7 @@ L_00_18a3::
     ld hl, $9d0e
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19b9
     call LookupWord
     push hl
@@ -2494,7 +2494,7 @@ L_00_18a3::
     ld hl, $9d4e
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     ld hl, D_00_19cd
     call LookupWord
     push hl
@@ -2586,11 +2586,11 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld [rLCDC], a
     ei
     ld a, $97
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_00_1cd6:
     call WaitVBlankFlag
     call ReadJoypad
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_1cd6
     ld a, $01
@@ -2607,21 +2607,21 @@ L_00_1ce7::
     ret
 DrawTwoDigitNumber::  ; B = value drawn as two BCD digits at HL
     ld a, $02
-    ldh [$ffa0], a
+    ldh [hScratch0A], a
     ld a, $01
-    ldh [$ffa1], a
+    ldh [hScratch0B], a
     ld a, b
     call ByteToBCD
-    ldh [$ff96], a
+    ldh [hScratch00], a
     and a, $f0
     swap a
     call L_00_1d23
-    ldh [$ffa2], a
-    ldh a, [$ff96]
+    ldh [hScratch0C], a
+    ldh a, [hScratch00]
     and a, $0f
     call L_00_1d23
-    ldh [$ffa3], a
-    ld de, $ffa0
+    ldh [hScratch0D], a
+    ld de, hScratch0A
     jp L_00_0628
 L_00_1d23::
     push hl
@@ -2671,11 +2671,11 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld [rLCDC], a
     ei
     ld a, $ff
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_00_1e12:
     call WaitVBlankFlag
     call ReadJoypad
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_1e12
     ld a, [$c49b]
@@ -2715,18 +2715,18 @@ Mode4_GameOver::  ; GAME OVER screen
     ld hl, wGameFlags
     res 2, [hl]
     ld a, $ff
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, $02
-    ldh [$ff97], a
+    ldh [hScratch01], a
 .L_00_1eee:
     call WaitVBlankFlag
     call ReadJoypad
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_1eee
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     dec a
-    ldh [$ff97], a
+    ldh [hScratch01], a
     bit 7, a
     jr z, .L_00_1eee
     ldh a, [hLinkFlags]
@@ -3017,11 +3017,11 @@ L_00_253b::
     ld e, b
     dec h
     ld a, $d0
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_00_2545:
     call WaitVBlankFlag
     call ReadJoypad
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_2545
     ld hl, $c43b
@@ -3032,11 +3032,11 @@ L_00_2558::
     ld e, $00
     call L_00_100b
     ld a, $e0
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_00_2563:
     call WaitVBlankFlag
     call ReadJoypad
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_2563
     ld a, $03
@@ -3069,20 +3069,20 @@ L_00_2574::
     inc hl
 .L_00_25a8:
     ld a, [hl]
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld hl, $c43e
 .L_00_25ae:
     ld a, [hl]
     and a, a
     jr z, .L_00_25bc
     ld c, a
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     cp a, c
     jp z, .L_00_25c5
     inc hl
     jr .L_00_25ae
 .L_00_25bc:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld [hl], a
     ld [$c75a], a
     jp Mode2_Init
@@ -3373,9 +3373,9 @@ Mode6_Ending::  ; castle scene after the last round
     call ClearOamShadowY
     call RequestOamDma
     ld a, $06
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ld a, $0a
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld hl, $98c0
     ld bc, $3156
     ld de, D_00_31a6
@@ -3803,12 +3803,12 @@ L_00_31f1::
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ld a, [hl+]
-    ldh [$ff9e], a
+    ldh [hScratch08], a
     ld a, [hl]
     and a, $f8
-    ldh [$ffa0], a
+    ldh [hScratch0A], a
     ld a, [wRound]
     cp a, $11
     jr c, .L_00_3289
@@ -3850,9 +3850,9 @@ L_00_32a2::
     ret z
     ld hl, $c49e
     ld a, l
-    ldh [$ffa4], a
+    ldh [hScratch0E], a
     ld a, h
-    ldh [$ffa5], a
+    ldh [hScratch0F], a
     ld hl, wPlayer
     ld a, l
     ldh [hObjPtrLo], a
@@ -3876,25 +3876,25 @@ L_00_32df::
     inc [hl]
 .L_00_32f3:
     ld a, $0c
-    ldh [$ff9c], a
+    ldh [hScratch06], a
     ld a, $02
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ldh a, [$ffd3]
-    ldh [$ff9e], a
+    ldh [hScratch08], a
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_330b
     ld a, [$c4bc]
-    ldh [$ff9e], a
+    ldh [hScratch08], a
 .L_00_330b:
     ld a, $03
     call L_00_0c2a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ldh [$ffd3], a
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_3320
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld [$c4bc], a
 .L_00_3320:
     ld a, $06
@@ -4040,9 +4040,9 @@ L_00_341f::
 .L_00_3432:
     ld hl, wPlayer
     ld a, l
-    ldh [$ffa4], a
+    ldh [hScratch0E], a
     ld a, h
-    ldh [$ffa5], a
+    ldh [hScratch0F], a
     call SelectObject2
     call L_00_0abf
     and a, a
@@ -4056,23 +4056,23 @@ L_00_3449::
     ld l, a
     ld a, c
     sub a, l
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, [wCameraY]
     ld l, a
     ld a, b
     sub a, l
-    ldh [$ff97], a
+    ldh [hScratch01], a
     pop hl
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     cp a, $a8
     jr nc, .L_00_3475
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     cp a, $08
     jr c, .L_00_3475
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     cp a, $a8
     jr nc, .L_00_3475
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     cp a, $10
     jr c, .L_00_3475
     xor a, a
@@ -4405,9 +4405,9 @@ L_00_3693::
     ret z
     ld hl, $c4fe
     ld a, l
-    ldh [$ffa4], a
+    ldh [hScratch0E], a
     ld a, h
-    ldh [$ffa5], a
+    ldh [hScratch0F], a
     call SelectObject2
     call L_00_0abf
     and a, a
@@ -4580,17 +4580,17 @@ EnemySlotTable::  ; 16 word addresses of the enemy slots: $c542 + $20 * i
     INCBIN "orig/painter_momopie.gb", $037cf, 38
 L_00_37f5::
     ld a, $0f
-    ldh [$ff9c], a
+    ldh [hScratch06], a
 .L_00_37f9:
-    ldh a, [$ff9c]
+    ldh a, [hScratch06]
     ld hl, EnemySlotTable
     call SelectEnemySlot
     ld a, [hl]
     bit 7, a
     jr z, .L_00_3810
-    ldh a, [$ff9c]
+    ldh a, [hScratch06]
     dec a
-    ldh [$ff9c], a
+    ldh [hScratch06], a
     bit 7, a
     jr z, .L_00_37f9
     ret
@@ -4598,11 +4598,11 @@ L_00_37f5::
     call ClearEnemySlot
     ld a, $82
     ldh [hObject2], a
-    ldh a, [$ff9d]
+    ldh a, [hScratch07]
     ldh [hEnemyKind], a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ldh [hEnemyX], a
-    ldh a, [$ffa0]
+    ldh a, [hScratch0A]
     ldh [hEnemyY], a
     ldh a, [$ffee]
     ldh [$ffcf], a

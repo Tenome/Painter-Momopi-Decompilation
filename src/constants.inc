@@ -91,3 +91,26 @@ DEF hEnemyYHi       EQU $ffc0
 DEF hEnemyDir       EQU $ffd1   ; low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags
 DEF hEnemyKind      EQU $ffd2   ; index into EnemyBehaviorTable
 DEF hEnemyFlags     EQU $ffd4   ; bit 1/2 = frozen / hit by the player
+; ---- scratch bytes used as arguments and temporaries by the drawing, lookup and movement routines ----
+DEF hScratch00      EQU $ff96
+DEF hScratch01      EQU $ff97
+DEF hScratch02      EQU $ff98
+DEF hScratch03      EQU $ff99
+DEF hScratch04      EQU $ff9a
+DEF hScratch05      EQU $ff9b
+DEF hScratch06      EQU $ff9c
+DEF hScratch07      EQU $ff9d
+DEF hScratch08      EQU $ff9e
+DEF hScratch09      EQU $ff9f
+DEF hScratch0A      EQU $ffa0
+DEF hScratch0B      EQU $ffa1
+DEF hScratch0C      EQU $ffa2
+DEF hScratch0D      EQU $ffa3
+DEF hScratch0E      EQU $ffa4
+DEF hScratch0F      EQU $ffa5
+DEF hScratch10      EQU $ffa6
+DEF hScratch11      EQU $ffa7
+DEF hScratch12      EQU $ffa8
+DEF hScratch13      EQU $ffa9
+DEF hScratch14      EQU $ffaa
+DEF hScratch15      EQU $ffab

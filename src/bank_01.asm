@@ -1244,9 +1244,9 @@ L_01_496c::
     jp L_01_4957
 L_01_49a0::
     ld a, $0f
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_01_49a4:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld hl, EnemySlotTable
     sla a
     ld c, a
@@ -1275,7 +1275,7 @@ L_01_49a0::
     xor a, a
     ld [hl], a
 .L_01_49cc:
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     ld a, [hl]
     bit 7, a
@@ -1928,7 +1928,7 @@ L_01_4e77::
     and a, $0f
     or a, $10
     ld [hl], a
-    ldh [$ff98], a
+    ldh [hScratch02], a
     push bc
     call L_01_4edd
     call L_01_4f07
@@ -1939,42 +1939,42 @@ L_01_4e77::
     jr .L_01_4ebc
 L_01_4edd::
     xor a, a
-    ldh [$ff96], a
+    ldh [hScratch00], a
     ld a, $98
-    ldh [$ff97], a
+    ldh [hScratch01], a
 .L_01_4ee4:
     ld a, c
     sub a, $10
     jr c, .L_01_4ef8
     ld c, a
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     add a, $40
-    ldh [$ff96], a
-    ldh a, [$ff97]
+    ldh [hScratch00], a
+    ldh a, [hScratch01]
     adc a, $00
-    ldh [$ff97], a
+    ldh [hScratch01], a
     jr .L_01_4ee4
 .L_01_4ef8:
     sla c
     ld e, c
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     add a, e
-    ldh [$ff96], a
-    ldh a, [$ff97]
+    ldh [hScratch00], a
+    ldh a, [hScratch01]
     adc a, $00
-    ldh [$ff97], a
+    ldh [hScratch01], a
     ret
 L_01_4f07::
     ld de, D_01_4921
-    ldh a, [$ff98]
+    ldh a, [hScratch02]
     and a, $0f
     cp a, $01
     jr z, .L_01_4f15
     ld de, D_01_491b
 .L_01_4f15:
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     ld l, a
-    ldh a, [$ff97]
+    ldh a, [hScratch01]
     ld h, a
     call QueueVramCopyRows
     jp WaitVramCopyDone
@@ -2016,14 +2016,14 @@ L_01_4f5a::
     ld hl, $c4d9
     inc [hl]
     ld a, $0c
-    ldh [$ff9c], a
+    ldh [hScratch06], a
     ld a, $02
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ld a, [$c4d9]
-    ldh [$ff9e], a
+    ldh [hScratch08], a
     ld a, $04
     call L_00_0c2a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld [$c4d9], a
     ld a, [$c4e3]
     ld e, a
@@ -2107,10 +2107,10 @@ PaintCell::  ; sets the painted bit ($10) of the wRoomMap cell under the player 
     call PixelXToColumn
     ld a, c
     call LookupMapTile
-    ldh [$ff96], a
+    ldh [hScratch00], a
     and a, $10
     ret nz
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     and a, $0f
     or a, $10
     ld [hl], a
@@ -2126,7 +2126,7 @@ PaintCell::  ; sets the painted bit ($10) of the wRoomMap cell under the player 
     ldh a, [hTilemapAddrHi]
     ld h, a
     ld de, D_01_4921
-    ldh a, [$ff96]
+    ldh a, [hScratch00]
     and a, $0f
     cp a, $01
     jr z, .L_01_5039
@@ -2157,7 +2157,7 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     ret
 .L_01_506f:
     ld a, $97
-    ldh [$ff96], a
+    ldh [hScratch00], a
 .L_01_5073:
     call WaitVBlankFlag
     ldh a, [hSerialByte]
@@ -2165,7 +2165,7 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     jp nz, GotoLinkLose
     bit 3, a
     jp nz, GotoLinkLose
-    ld hl, $ff96
+    ld hl, hScratch00
     dec [hl]
     jr nz, .L_01_5073
     call FadeOut
@@ -2361,14 +2361,14 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld hl, $c4d2
     inc [hl]
     ld a, $3c
-    ldh [$ff9c], a
+    ldh [hScratch06], a
     ld a, $02
-    ldh [$ff9d], a
+    ldh [hScratch07], a
     ld a, [$c4d2]
-    ldh [$ff9e], a
+    ldh [hScratch08], a
     ld a, $0f
     call L_00_0c2a
-    ldh a, [$ff9e]
+    ldh a, [hScratch08]
     ld [$c4d2], a
     ld a, $1e
     cp a, c
