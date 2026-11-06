@@ -19,7 +19,8 @@ known routines. Verified: the recompiled game reaches the same screens as `tools
 Esc quits; arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select) and `port/apu.c` is a small APU (two pulse channels with
 sweep, wave, noise). `python tools/build_port.py` builds `build/recomp/game_win.exe` on Windows; run it with the path of your ROM.
 Verified on this machine: title screen, Enter starts a game, the kitchen room plays with the painter, enemy and music.
-Next: an SDL2 front end for Linux, save-less options (scaling filters, key mapping file), the HAL clean-up below.
+`port/main_sdl.c` is the same player on SDL2 for Linux and macOS (`python tools/build_port.py --sdl`; written but not run yet on this Windows machine).
+Next: save-less options (scaling filters, key mapping file), the HAL clean-up below.
 
 ## Plan
 

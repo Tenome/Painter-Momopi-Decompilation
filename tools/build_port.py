@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Recompile the ROM to C and build the headless runner: python tools/build_port.py [--cc PATH_TO_CLANG_OR_GCC]
+"""Recompile the ROM to C and build the headless runner (and on Windows the window player): python tools/build_port.py [--cc PATH_TO_CLANG_OR_GCC] [--sdl]
+
+--sdl also builds the SDL2 player (needs sdl2-config; Linux/macOS).
 
 Needs a C compiler (clang or gcc). Output: build/recomp/game_headless(.exe).
 """
@@ -23,6 +25,14 @@ cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port"), os.path.join(ROOT, "po
 print(" ".join(cmd))
 subprocess.run(cmd, check=True)
 print("built", out)
+if "--sdl" in sys.argv:
+    sdl = os.path.join(ROOT, "build", "recomp", "game_sdl" + (".exe" if os.name == "nt" else ""))
+    flags = subprocess.run(["sdl2-config", "--cflags", "--libs"], capture_output=True, text=True).stdout.split()
+    cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port")] + flags + [os.path.join(ROOT, "port", "gb_rt.c"), os.path.join(ROOT, "port", "apu.c"),
+           os.path.join(ROOT, "port", "main_sdl.c"), os.path.join(ROOT, "build", "recomp", "game.c"), "-o", sdl] + flags + ["-lm"]
+    print(" ".join(cmd))
+    subprocess.run(cmd, check=True)
+    print("built", sdl)
 if os.name == "nt":
     win = os.path.join(ROOT, "build", "recomp", "game_win.exe")
     cmd = [cc, "-O2", "-w", "-I", os.path.join(ROOT, "port"), os.path.join(ROOT, "port", "gb_rt.c"), os.path.join(ROOT, "port", "apu.c"),
