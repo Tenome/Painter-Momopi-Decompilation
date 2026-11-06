@@ -206,3 +206,16 @@ bank,addr,name,comment
 1,479d,SoundCmdSetMasterVolume,command $ef: NR50 = next byte (also saved at $c315)
 1,4718,SoundCmdSetField6,command $f0: record +6 = next byte
 1,471d,SoundCmdSetPitch,command $f1: record +$e = next byte (pitch)
+1,41de,SoundClearChannels,clears the first byte of all 8 channel records and sets NR50 default ($77)
+1,423c,SoundClearRegisterShadow,zeroes the register shadow bytes at $c427-$c431
+1,4263,SoundStartMusic,starts a music stream (priority at $4141 + id; replaces lower priority music)
+1,4292,SoundStartEffect,starts an effect stream (priority compare with $c310)
+1,42bb,SoundPauseMusicChannels,sets the pause flag (bit 4) on the music channel records while an effect plays
+1,42df,SoundResumeMusicChannels,clears the pause flag on the music channel records
+1,4306,SoundLoadStream,copies the stream header into a channel record
+1,4473,SoundSilenceChannel1,writes NR13=$ff NR14=$87 to retrigger channel 1 at the end of a note
+1,44f3,SoundSilenceChannel2,writes NR23=$ff NR24=$87 to retrigger channel 2
+1,4561,SoundSilenceChannel3,writes NR33=$ff NR34=$07 to channel 3
+1,45c3,SoundSilenceChannel4,writes NR43=$ff NR44=$80 to channel 4
+1,47cb,SoundSetFrequency,frequency for the current note from the pitch tables at $3f4c (SoundPitchTables)
+0,3f4c,SoundPitchTables,pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)

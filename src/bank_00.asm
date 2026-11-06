@@ -5485,7 +5485,7 @@ D_00_3f3a::
     INCBIN "orig/painter_momopie.gb", $03f3a, 10
 D_00_3f44::
     INCBIN "orig/painter_momopie.gb", $03f44, 8
-D_00_3f4c::
+SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
     dw $cecd
     dw D_00_3f56
     dw D_00_3f95

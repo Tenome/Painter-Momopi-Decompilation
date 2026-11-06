@@ -28,25 +28,25 @@ SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     dw Sound92EffectData
 SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (music \$4263; effect \$4292)
     dw Sound93EffectData
-    dw L_01_4263
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4263
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
-    dw L_01_4292
+    dw SoundStartMusic
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartMusic
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartEffect
+    dw SoundStartEffect
 L_01_4142::
     ld bc, $0101
     ld bc, $0101
@@ -140,7 +140,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld de, D_01_4332
     ld b, $00
     jp L_01_4271
-L_01_41de::
+SoundClearChannels::  ; clears the first byte of all 8 channel records and sets NR50 default ($77)
     ld a, $00
     ld [wSoundChannels], a
     ld [$c347], a
@@ -176,7 +176,7 @@ SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13
     ld [rNR24], a
     ld [rNR34], a
     ld [rNR44], a
-L_01_423c::
+SoundClearRegisterShadow::  ; zeroes the register shadow bytes at $c427-$c431
     ld a, $00
     ld [$c427], a
     ld [$c428], a
@@ -191,7 +191,7 @@ L_01_423c::
     ld [$c431], a
     ld [$c432], a
     ret
-L_01_4263::
+SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces lower priority music)
     ld hl, $4141
     add hl, bc
     ld a, [hl]
@@ -203,19 +203,19 @@ L_01_4263::
 L_01_4271::
     ld a, b
     ld [$c30f], a
-    call L_01_41de
+    call SoundClearChannels
     ld a, $00
     ld [wSoundChannels], a
     ld [$c347], a
     ld [$c367], a
     ld [$c387], a
     ld hl, wSoundChannels
-    jp L_01_4306
+    jp SoundLoadStream
 L_01_428c::
     ld a, $80
     ld [wSoundCmd], a
     ret
-L_01_4292::
+SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
     ld hl, $4141
     add hl, bc
     ld a, [hl]
@@ -227,15 +227,15 @@ L_01_4292::
 .L_01_42a0:
     ld a, b
     ld [$c310], a
-    call L_01_423c
+    call SoundClearRegisterShadow
     ld a, $00
     ld [$c3a7], a
     ld [$c3c7], a
     ld [$c3e7], a
     ld [$c407], a
     ld hl, $c3a7
-    jp L_01_4306
-L_01_42bb::
+    jp SoundLoadStream
+SoundPauseMusicChannels::  ; sets the pause flag (bit 4) on the music channel records while an effect plays
     ld a, [$c310]
     inc a
     ld [$c310], a
@@ -258,9 +258,9 @@ L_01_42bb::
     or a, $10
     ld [hl], a
     pop de
-    jr L_01_4292
-L_01_42df::
-    call L_01_423c
+    jr SoundStartEffect
+SoundResumeMusicChannels::  ; clears the pause flag on the music channel records
+    call SoundClearRegisterShadow
     ld a, [$c310]
     inc a
     ld [$c310], a
@@ -283,8 +283,8 @@ L_01_42df::
     and a, $ef
     ld [hl], a
     pop de
-    jr L_01_4292
-L_01_4306::
+    jr SoundStartEffect
+SoundLoadStream::  ; copies the stream header into a channel record
     ld a, [de]
     ld [$c30b], a
     inc de
@@ -449,7 +449,7 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
     add hl, bc
     ld a, [hl+]
     or a, [hl]
-    jr z, L_01_4473
+    jr z, SoundSilenceChannel1
     dec hl
     push hl
     ld hl, $0002
@@ -492,7 +492,7 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
     ld a, [wSoundArg]
     ld [rNR14], a
     ret
-L_01_4473::
+SoundSilenceChannel1::  ; writes NR13=$ff NR14=$87 to retrigger channel 1 at the end of a note
     ld a, $ff
     ld [rNR13], a
     ld [$c428], a
@@ -519,7 +519,7 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     add hl, bc
     ld a, [hl+]
     or a, [hl]
-    jr z, L_01_44f3
+    jr z, SoundSilenceChannel2
     dec hl
     push hl
     ld hl, $0002
@@ -562,7 +562,7 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     ld a, [wSoundArg]
     ld [rNR24], a
     ret
-L_01_44f3::
+SoundSilenceChannel2::  ; writes NR23=$ff NR24=$87 to retrigger channel 2
     ld a, $ff
     ld [rNR23], a
     ld [$c42b], a
@@ -575,7 +575,7 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     add hl, bc
     ld a, [hl+]
     or a, [hl]
-    jr z, L_01_4561
+    jr z, SoundSilenceChannel3
     ld hl, $0007
     add hl, bc
     ld a, [$c42d]
@@ -620,7 +620,7 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     ld a, [wSoundArg]
     ld [rNR34], a
     ret
-L_01_4561::
+SoundSilenceChannel3::  ; writes NR33=$ff NR34=$07 to channel 3
     ld a, $ff
     ld [rNR33], a
     ld [$c42e], a
@@ -642,7 +642,7 @@ SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     add hl, bc
     ld a, [hl]
     and a, a
-    jr z, L_01_45c3
+    jr z, SoundSilenceChannel4
     push hl
     ld hl, $0002
     add hl, bc
@@ -672,7 +672,7 @@ SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     ld a, [wSoundArg]
     ld [rNR44], a
     ret
-L_01_45c3::
+SoundSilenceChannel4::  ; writes NR43=$ff NR44=$80 to channel 4
     ld a, $ff
     ld [rNR43], a
     ld [$c431], a
@@ -708,16 +708,16 @@ L_01_45f4::
     add hl, bc
     ld a, [hl]
     cp a, $03
-    call z, L_01_45c3
+    call z, SoundSilenceChannel4
     ld a, [hl]
     cp a, $02
-    call z, L_01_4561
+    call z, SoundSilenceChannel3
     ld a, [hl]
     cp a, $01
-    call z, L_01_44f3
+    call z, SoundSilenceChannel2
     ld a, [hl]
     cp a, $00
-    call z, L_01_4473
+    call z, SoundSilenceChannel1
     pop hl
     ret
 SoundReadNextNote::  ; reads the next note byte from the channel's song pointer (+3/+4); bytes >= $e0 are commands
@@ -1043,16 +1043,16 @@ SoundApplyPitchSlide::  ; copies the pitch word at +$e into +$12 (frequency) for
     add hl, bc
     ld a, [hl]
     and a, a
-    call nz, L_01_47cb
+    call nz, SoundSetFrequency
     ret
-L_01_47cb::
+SoundSetFrequency::  ; frequency for the current note from the pitch tables at $3f4c (SoundPitchTables)
     ld hl, $0006
     add hl, bc
     ld a, [hl]
     sla a
     ld e, a
     ld d, $00
-    ld hl, D_00_3f4c
+    ld hl, SoundPitchTables
     add hl, de
     ld a, [hl+]
     ld e, a
@@ -1083,19 +1083,19 @@ L_01_47cb::
     ld hl, $000d
     add hl, bc
     ld [hl], a
-    jr L_01_47cb
+    jr SoundSetFrequency
 .L_01_4809:
     ld a, $00
     ld hl, $000d
     add hl, bc
     ld [hl], a
-    jr L_01_47cb
+    jr SoundSetFrequency
 .L_01_4812:
     ld hl, $000d
     add hl, bc
     dec [hl]
     dec [hl]
-    jr L_01_47cb
+    jr SoundSetFrequency
 .L_01_481a:
     ld hl, $000d
     add hl, bc
