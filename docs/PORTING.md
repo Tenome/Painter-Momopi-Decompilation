@@ -24,6 +24,19 @@ Return addresses are modelled on the GB stack only as reserved slots: a routine 
 `port/main_sdl.c` is the same player on SDL2 for Linux and macOS (`python tools/build_port.py --sdl`; written but not run yet on this Windows machine).
 Next: save-less options (scaling filters, key mapping file), the HAL clean-up below.
 
+## Is a native exe with no emulation possible?
+
+Yes, in stages. Today's `game_win.exe` already runs the game's own code natively (no CPU interpreter), but it still reimplements the Game Boy hardware
+around it (memory map, picture unit, sound chip) and reads the ROM file for its data. The staged path to a port without that layer:
+
+1. **Data without the ROM** (done): `assets/` holds the extracted data; `tools/build.py` rebuilds the ROM from `src/` and `assets/`. A packaged exe can embed or load these files instead of a ROM.
+2. **Native renderer**: replace the software picture unit by drawing straight from the game's object records (`DrawObject` already turns each object into OAM entries from the shape and animation data),
+   the room map (`wRoomMap`, `DrawMetatileMap`) and the VRAM job streams, at any resolution. Needs: all VRAM writers identified (VRAM copy queues and `DrawObject` are known).
+3. **Native audio**: replace the APU emulation by a player for the sound stream format (documented in `REVERSE.md`: notes, lengths, 18 commands, 4 channels) with a software synth.
+4. **Native logic**: lift the generated C into readable hand-written C routine by routine (the pseudocode in `docs/PSEUDOCODE.md` and the names in `labels.csv` are the specification), verifying each against the recompiled routine
+   with the frame comparison tools. At the end the exe is a normal game with its own renderer, mixer, input and save files.
+5. **Linux**: the same code with the SDL2 front end (`port/main_sdl.c`).
+
 ## Plan
 
 1. **Byte-matching source first.** Finish naming and structuring the RGBDS source so the hardware use is understood
