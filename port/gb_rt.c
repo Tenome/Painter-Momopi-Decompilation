@@ -187,3 +187,13 @@ void gb_host_vblank(void) {
 }
 
 void gb_service(void) {}
+
+/* FNV-1a hash of the work RAM, high RAM, video RAM and OAM: used to compare two builds frame by frame (main_headless --hashes). */
+uint32_t gb_state_hash(void) {
+    uint32_t h = 2166136261u;
+    for (unsigned i = 0; i < 0x1000; i++) h = (h ^ wram[i]) * 16777619u;     /* $d000 and up is only the stack (residue below SP differs between equal routines) */
+    for (unsigned i = 0; i < sizeof hram; i++) h = (h ^ hram[i]) * 16777619u;
+    for (unsigned i = 0; i < sizeof vram; i++) h = (h ^ vram[i]) * 16777619u;
+    for (unsigned i = 0; i < sizeof oam; i++) h = (h ^ oam[i]) * 16777619u;
+    return h;
+}
