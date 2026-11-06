@@ -121,6 +121,11 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   16 bit, initial value from `MagicPointsTable` by round: 50 in round 1), TIME (`hTimeSeconds`, counted down once per `hTimeFrames` = 60 frames) and three magic cards
   (the first is S. UP for 10 MP; the tile set in bank 3 also contains the cards SEALED, CLEAR, T. STOP and others). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
 
+- **Animation and shape data** (decoded from `DrawObject` $0866 and checked against the data): the animation pointer of an object (record +1/+2) points at frames of
+  `shape id, tile id x count` where `count` is the first byte of the shape; `ObjectShapeTable` ($06a4) maps the shape id to `count, (y offset, x offset) x count` with signed
+  pixel offsets (for example shape 1 = four parts at (-8,-8) (0,-8) (-8,0) (0,0), a 16x16 sprite, with tile ids such as $bc $bd $cc $cd). Record flags bit 5 and 6 mirror the offsets.
+  `SetAnimationVariant` picks between the two pointers of each animation pair depending on bit 3 of `$ffd0`.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,
