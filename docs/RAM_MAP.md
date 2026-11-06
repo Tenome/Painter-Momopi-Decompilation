@@ -19,6 +19,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c1ad | `wCameraXHi` | 6 |  |
 | $c1ae | `wCameraY` | 10 |  |
 | $c1af | `wCameraYHi` | 6 |  |
+| $c1b6 | `wTrailIdx` | 5 | index of the trail segment (7 bytes each) copied by LoadTrailSegment |
 | $c30b | `wSoundTmp` | 6 | scratch byte used by SoundLoadStream and the stream commands |
 | $c30c | `wSoundArg` | 23 | command byte passed to PlaySound |
 | $c30e | `wSoundCmd` | 6 | command being started (bit 7 set = music/effect id) |
@@ -37,12 +38,17 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c44b | `wMagicPointsHi` | 8 | high byte of the 16 bit MP |
 | $c44c | `wTextBuf` | 5 | VramCopyStream buffer: count, rows, tiles (round intro and continue texts) |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
+| $c47a | `wScoreTemp` | 4 | scratch byte of AddScore |
 | $c47e | `wEnemyCount` | 5 | enemies alive (spawning stops at 3) |
 | $c483 | `wSpawnWave` | 4 | index (0-5) of the current wave in the round's list |
 | $c484 | `wSpawnIndex` | 6 | next entry within the wave (1 based) |
+| $c488 | `wExtraLifeIdx` | 4 | index (0-4) of the next score threshold for an extra life (CheckExtraLife) |
 | $c49b | `wContinues` | 7 | continues left (5 in a normal game, $ff with the cheat) |
 | $c49c | `wCheatFlags` | 15 | bit 0 = title code Up+Select+A+B entered: unlimited continues |
+| $c49d | `wCheatTimer` | 6 | counts down from $a0 after wCheatFlags bit 5 is set (provisional) |
 | $c49e | `wProjectile` | 31 | object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it) |
+| $c49f | `wProjectileAnimLo` | 4 | wProjectile +1: animation pointer |
+| $c4a0 | `wProjectileAnimHi` | 4 |  |
 | $c4be | `wPlayer` | 14 | the player's object record |
 | $c4c5 | `wPlayerX` | 27 |  |
 | $c4c8 | `wPlayerY` | 23 |  |
@@ -52,6 +58,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
 | $c4fe | `wPaintObject` | 14 | the paint blob object record (tested by CheckPaintHitsEnemy) |
+| $c4ff | `wPaintAnimLo` | 4 | wPaintObject +1: animation pointer |
+| $c500 | `wPaintAnimHi` | 4 |  |
 | $c519 | `wBlobPhase` | 6 | counter of the paint blob; bit 1 picks one of two animations |
 | $c51e | `wGameFlags` | 15 | bit 0 = round cleared (PlayFrame jumps to RoundCleared), bit 6 = advance to the next mode after the clear |
 | $c51f | `wRoundFlags` | 8 | bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional) |
@@ -71,6 +79,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c755 | `wCursorY` | 10 | title screen: $64 = 1 PLAYER, $74 = 2 PLAYER |
 | $c758 | `wCursorIndex` | 7 | menu choice 0-2 (MenuCursorInput) |
 | $c759 | `wCursorFlags` | 3 | bit 7 = a choice was confirmed |
+| $c75a | `wBonusChoice` | 4 | chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional) |
 | $c76e | `wEndingObject` | 7 | object record used by the ending scene |
 | $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a (provisional) |
 | $c782 | `wEndingPhase` | 4 | ending scene step counter (provisional) |
@@ -152,25 +161,18 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 |---|---|
 | $c000 | 7 |
 | $c463 | 7 |
-| $c1b6 | 7 |
-| $c49d | 6 |
 | $c1b7 | 6 |
 | $c7c0 | 5 |
-| $c488 | 5 |
 | $c775 | 5 |
 | $c77e | 5 |
 | $ffc5 | 5 |
 | $ffcf | 5 |
 | $ffcb | 5 |
 | $c431 | 5 |
-| $c47a | 4 |
 | $c47d | 4 |
-| $c75a | 4 |
 | $c798 | 4 |
 | $c780 | 4 |
 | $c481 | 4 |
-| $c49f | 4 |
-| $c4a0 | 4 |
 | $ffc2 | 4 |
 | $ffc4 | 4 |
 | $c489 | 4 |
@@ -185,8 +187,15 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c42f | 4 |
 | $c312 | 4 |
 | $c314 | 4 |
-| $c4ff | 4 |
-| $c500 | 4 |
 | $c4d9 | 4 |
 | $c499 | 4 |
 | $c49a | 4 |
+| $c4a5 | 4 |
+| $c46d | 3 |
+| $c467 | 3 |
+| $c46a | 3 |
+| $c46c | 3 |
+| $c44e | 3 |
+| $c44d | 3 |
+| $c453 | 3 |
+| $c486 | 3 |

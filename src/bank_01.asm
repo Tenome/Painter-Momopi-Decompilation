@@ -1233,9 +1233,9 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     ld [$c50f], a
     ld hl, D_01_4929
     ld a, l
-    ld [$c4ff], a
+    ld [wPaintAnimLo], a
     ld a, h
-    ld [$c500], a
+    ld [wPaintAnimHi], a
     ld a, $08
     ld [$c449], a
     ld a, $82
@@ -1286,9 +1286,9 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     call Clear32Bytes
     ld hl, D_01_492b
     ld a, l
-    ld [$c4ff], a
+    ld [wPaintAnimLo], a
     ld a, h
-    ld [$c500], a
+    ld [wPaintAnimHi], a
     ld a, $20
     ld [$c50f], a
     ld a, [$c4ce]
@@ -1327,12 +1327,12 @@ SetPaintBlobAnimation::  ; picks animation $4927 or $4929 for the paint blob by 
     ld hl, D_01_4929
 .L_01_4a40:
     ld a, l
-    ld [$c4ff], a
+    ld [wPaintAnimLo], a
     ld a, h
-    ld [$c500], a
+    ld [wPaintAnimHi], a
     ret
 LoadTrailSegment::  ; copies the 7 byte trail segment $c1b6 of $c1b7.. into the paint blob object
-    ld a, [$c1b6]
+    ld a, [wTrailIdx]
     ld e, $07
     call MultiplyByDE
     ld c, a
@@ -1355,7 +1355,7 @@ LoadTrailSegment::  ; copies the 7 byte trail segment $c1b6 of $c1b7.. into the 
     ld [$c50e], a
     ret
 StoreTrailSegment::  ; copies the paint blob object back into trail segment $c1b6
-    ld a, [$c1b6]
+    ld a, [wTrailIdx]
     ld e, $07
     call MultiplyByDE
     ld c, a
@@ -1814,9 +1814,9 @@ SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492
     ld hl, D_01_492d
 .L_01_4dfd:
     ld a, l
-    ld [$c4ff], a
+    ld [wPaintAnimLo], a
     ld a, h
-    ld [$c500], a
+    ld [wPaintAnimHi], a
     ret
 MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld hl, wBlobPhase
@@ -1837,7 +1837,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld hl, $c449
     dec [hl]
     jr z, .L_01_4e3a
-    ld hl, $c1b6
+    ld hl, wTrailIdx
     inc [hl]
     jr .L_01_4e16
 .L_01_4e3a:
@@ -1845,7 +1845,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld a, $08
     ld [$c449], a
     xor a, a
-    ld [$c1b6], a
+    ld [wTrailIdx], a
     ret
 L_01_4e47::
     ldh a, [hMagicTimer]
@@ -2301,7 +2301,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld [wMagicCastTimer], a
     ld [$c4c2], a
     ld [wPlayerBlocked], a
-    ld [$c1b6], a
+    ld [wTrailIdx], a
     ld [wPlayerDir], a
     ld [wPlayerStatus], a
     ldh [hMagicTimer], a
@@ -2644,9 +2644,9 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld de, D_01_57c9
 .L_01_55aa:
     ld a, e
-    ld [$c49f], a
+    ld [wProjectileAnimLo], a
     ld a, d
-    ld [$c4a0], a
+    ld [wProjectileAnimHi], a
     ld a, $50
     ldh [hEnemyStep], a
     ld hl, hEnemyFlags
@@ -2707,9 +2707,9 @@ EnemyKind10Animate::  ; toggles between two animations D_01_57ec and D_01_57ee e
     ld hl, D_01_57ee
 .L_01_562d:
     ld a, l
-    ld [$c49f], a
+    ld [wProjectileAnimLo], a
     ld a, h
-    ld [$c4a0], a
+    ld [wProjectileAnimHi], a
     ret
 EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 indexed by hEnemyDir (name provisional)
     ldh a, [hEnemyDir]
@@ -3052,9 +3052,9 @@ L_01_58ee::
     ld hl, D_01_59f5
 .L_01_5927:
     ld a, l
-    ld [$c49f], a
+    ld [wProjectileAnimLo], a
     ld a, h
-    ld [$c4a0], a
+    ld [wProjectileAnimHi], a
     ld hl, wProjectile
     call SetObjPtr
     jp DrawObject
