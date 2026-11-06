@@ -267,3 +267,9 @@ bank,addr,name,comment
 1,4edd,MapCellToVramAddr,hScratch00/01 = background map address of the cell at pixel position B C
 1,4f07,QueueCellTileRows,queues the 2x2 tile update of a cell (painted tiles D_01_4921 or normal D_01_491b)
 1,5677,ProjectileHitTest,compares projectile and player boxes (hScratch00-03): A = 1 on a hit
+0,2fb9,EndingSetup,mode 6 setup: clears OAM and the ending variables at $c76e and loads the castle scene jobs
+0,2fa5,EndingScrollStep,scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
+0,2d5d,EndingCreditsWindow,when the scene is done: turns the window on (rWY/rWX) and starts the credit pages
+0,2dd9,EndingShowCreditsPage,queues the credit page $c790 from CreditsPageTable
+0,2574,BonusSelectLoop,per-frame loop of the three-door choice: cursor input, ball bounce, result
+0,2558,BonusResultWait,waits $e0 frames after the door result then goes to mode 3

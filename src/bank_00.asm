@@ -3205,7 +3205,7 @@ L_00_253b::
     ld hl, wPlayerBlocked
     inc [hl]
     jp Mode2_Init
-L_00_2558::
+BonusResultWait::  ; waits $e0 frames after the door result then goes to mode 3
     ld d, $01
     ld e, $00
     call AddScore
@@ -3219,7 +3219,7 @@ L_00_2558::
     jr nz, .L_00_2563
     ld a, $03
     jp GameModeDispatch
-L_00_2574::
+BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
     ld a, $10
     call DelayFrames
     ld hl, wPlayerBlocked
@@ -3621,16 +3621,16 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, [$c7ae]
     bit 7, a
     jr z, .L_00_2d16
-    call L_00_2fb9
+    call EndingSetup
     ld a, $10
     ld [wCheatFlags], a
     ld a, $05
     ld [$c49d], a
 .L_00_2d33:
     call WaitFrameAndSyncOam
-    call L_00_2fa5
+    call EndingScrollStep
     call L_00_2f26
-    call L_00_2d5d
+    call EndingCreditsWindow
     call ReadJoypad
     ld a, [$c790]
     cp a, $08
@@ -3644,7 +3644,7 @@ Mode6_Ending::  ; castle scene after the last round
     bit 7, a
     jr z, .L_00_2d33
     jp Entry
-L_00_2d5d::
+EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) and starts the credit pages
     ld a, [$c7ae]
     bit 2, a
     ret z
@@ -3662,7 +3662,7 @@ L_00_2d5d::
     set 0, [hl]
     ld a, $ff
     ld [$c78f], a
-    call L_00_2dd9
+    call EndingShowCreditsPage
 .L_00_2d89:
     ld a, [$c78e]
     bit 2, a
@@ -3709,12 +3709,12 @@ L_00_2d5d::
     ld [$c78e], a
     ld hl, $c790
     inc [hl]
-    call L_00_2dd9
+    call EndingShowCreditsPage
     ret
-L_00_2dd9::
-    call L_00_2fa5
+EndingShowCreditsPage::  ; queues the credit page $c790 from CreditsPageTable
+    call EndingScrollStep
     call L_00_2df1
-    call L_00_2fa5
+    call EndingScrollStep
     ld a, [$c790]
     ld hl, CreditsPageTable
     call LookupWord
@@ -3823,7 +3823,7 @@ L_00_2f76::
     ld hl, $c76e
     call SetObjPtr
     jp DrawObject
-L_00_2fa5::
+EndingScrollStep::  ; scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
     ld a, [$c798]
     sub a, $5a
     ld [$c798], a
@@ -3832,7 +3832,7 @@ L_00_2fa5::
     ld [$c799], a
     ld [wScrollX], a
     ret
-L_00_2fb9::
+EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and loads the castle scene jobs
     call LcdOff
     di
     ld hl, vBGMapLast
