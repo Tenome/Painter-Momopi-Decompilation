@@ -3170,11 +3170,11 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld hl, $253b
     call LookupWord
     jp hl
-L_00_253b::
-    dw L_00_2541
+BonusModeJumpTable::  ; 3 entry points chosen by wPlayerBlocked: intro wait then Mode2_Init; BonusSelectLoop; BonusResultWait
+    dw BonusIntroWait
     dw BonusSelectLoop
     dw BonusResultWait
-L_00_2541::
+BonusIntroWait::  ; waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init (name provisional)
     ld a, $d0
     ldh [hScratch00], a
 .L_00_2545:
@@ -5044,13 +5044,13 @@ L_00_39b1::
     ldh a, [hEnemyFlags]
     bit 7, a
     jr z, .L_00_39e4
-    ld hl, $3aed
+    ld hl, D_00_3aed
     jr .L_00_39ec
 .L_00_39e4:
     ldh a, [$ffcf]
     and a, a
     jr z, .L_00_39ec
-    ld hl, $3aed
+    ld hl, D_00_3aed
 .L_00_39ec:
     add hl, bc
     ld a, [hl+]
@@ -5175,20 +5175,13 @@ D_00_3ad9::
     INCBIN "assets/bank_00/3ad9.bin"
 D_00_3ae3::
     INCBIN "assets/bank_00/3ae3.bin"
-L_00_3aed::
-    ld [bc], a
-    nop
-    cp a, $00
-    nop
-    cp a, $00
-    ld [bc], a
-    nop
-    ld [bc], a
+D_00_3aed::
+    INCBIN "assets/bank_00/3aed.bin"
 EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3b02
-    jp L_00_3bad
+    jp EnemyInitAnim3bbe
 .L_00_3b02:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5197,7 +5190,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call L_00_39f9
     call EnemyEdgeBlockedDirs
     call EnemyChooseDirection
-    call L_00_3b99
+    call EnemyFlagOnPaintedTile
     ldh a, [hEnemyFlags]
     bit 1, a
     jr z, .L_00_3b26
@@ -5262,7 +5255,7 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     ld de, D_00_3bd2
     ld bc, $3bd7
     jp SetAnimationVariant
-L_00_3b99::
+EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
     call EnemyTileUnder
     and a, $0f
     or a, a
@@ -5274,7 +5267,7 @@ L_00_3b99::
     ld hl, hEnemyFlags
     res 1, [hl]
     ret
-L_00_3bad::
+EnemyInitAnim3bbe::  ; hEnemyAnimState 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
     ld a, $05
     ldh [hEnemyAnimState], a
     ld a, $20

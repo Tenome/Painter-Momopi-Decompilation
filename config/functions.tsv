@@ -106,8 +106,8 @@ bank	addr	size	name
 0	2065	30	ContinueCursorInput
 0	2497	32	Mode2_BonusSelect
 0	24b7	132	Mode2_Init
-0	253b	6	L_00_253b
-0	2541	23	L_00_2541
+0	253b	6	BonusModeJumpTable
+0	2541	23	BonusIntroWait
 0	2558	28	BonusResultWait
 0	2574	87	BonusSelectLoop
 0	25e0	80	MenuCursorInput
@@ -175,13 +175,12 @@ bank	addr	size	name
 0	39f9	31	L_00_39f9
 0	3a18	93	EnemyChooseDirection
 0	3a75	45	L_00_3a75
-0	3aed	10	L_00_3aed
 0	3af7	68	EnemyKind1
 0	3b3b	28	L_00_3b3b
 0	3b57	6	SetEnemyAnimation
 0	3b5d	60	SelectEnemyAnimation
-0	3b99	20	L_00_3b99
-0	3bad	17	L_00_3bad
+0	3b99	20	EnemyFlagOnPaintedTile
+0	3bad	17	EnemyInitAnim3bbe
 0	3bdc	114	EnemyKind11
 0	3c4e	9	L_00_3c4e
 0	3c57	23	L_00_3c57

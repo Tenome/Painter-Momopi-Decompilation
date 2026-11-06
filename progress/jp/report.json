@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "15116",
-  "matched_code": "15116",
+  "total_code": "15106",
+  "matched_code": "15106",
   "matched_code_percent": 100.0,
-  "total_data": "50420",
-  "matched_data": "50420",
+  "total_data": "50430",
+  "matched_data": "50430",
   "matched_data_percent": 100.0,
-  "total_functions": 340,
-  "matched_functions": 340,
+  "total_functions": 339,
+  "matched_functions": 339,
   "matched_functions_percent": 100.0,
-  "complete_code": "15116",
+  "complete_code": "15106",
   "complete_code_percent": 100.0,
-  "complete_data": "50420",
+  "complete_data": "50430",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9551",
-    "matched_code": "9551",
+    "total_code": "9541",
+    "matched_code": "9541",
     "matched_code_percent": 100.0,
-    "total_data": "6833",
-    "matched_data": "6833",
+    "total_data": "6843",
+    "matched_data": "6843",
     "matched_data_percent": 100.0,
-    "total_functions": 198,
-    "matched_functions": 198,
+    "total_functions": 197,
+    "matched_functions": 197,
     "matched_functions_percent": 100.0,
-    "complete_code": "9551",
+    "complete_code": "9541",
     "complete_code_percent": 100.0,
-    "complete_data": "6833",
+    "complete_data": "6843",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9551",
+     "size": "9541",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "6833",
+     "size": "6843",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -908,7 +908,7 @@
      }
     },
     {
-     "name": "L_00_253b",
+     "name": "BonusModeJumpTable",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -916,7 +916,7 @@
      }
     },
     {
-     "name": "L_00_2541",
+     "name": "BonusIntroWait",
      "size": "23",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1460,14 +1460,6 @@
      }
     },
     {
-     "name": "L_00_3aed",
-     "size": "10",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "15085"
-     }
-    },
-    {
      "name": "EnemyKind1",
      "size": "68",
      "fuzzy_match_percent": 100.0,
@@ -1500,7 +1492,7 @@
      }
     },
     {
-     "name": "L_00_3b99",
+     "name": "EnemyFlagOnPaintedTile",
      "size": "20",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1508,7 +1500,7 @@
      }
     },
     {
-     "name": "L_00_3bad",
+     "name": "EnemyInitAnim3bbe",
      "size": "17",
      "fuzzy_match_percent": 100.0,
      "metadata": {

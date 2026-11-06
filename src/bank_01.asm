@@ -3154,7 +3154,7 @@ EnemyKind3::  ; enemy kind 3
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyAimAtPlayer
-    call L_00_3b99
+    call EnemyFlagOnPaintedTile
     call L_00_3603
     call MoveAndClampObject
     call L_00_392e

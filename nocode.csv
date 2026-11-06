@@ -12,3 +12,4 @@ bank,addr,comment
 0,0a3f,data before SerialSendByte
 0,33fd,data table before EnemySnapToGrid
 1,4927,animation data (pointer loaded as $4927)
+0,3aed,data before EnemyKind1

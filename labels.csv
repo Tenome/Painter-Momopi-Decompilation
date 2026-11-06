@@ -364,3 +364,7 @@ bank,addr,name,comment
 1,4e59,EndMagicPaint,clears the paint object active bit then ends the magic state bits (name provisional)
 1,4a31,SetPaintBlobAnimation,picks animation $4927 or $4929 for the paint blob by $c519 bit 1
 1,5817,EnemyKind9Move,sets hEnemyAnimState 6 then moves and clamps (name provisional)
+0,253b,BonusModeJumpTable,3 entry points chosen by wPlayerBlocked: intro wait then Mode2_Init; BonusSelectLoop; BonusResultWait
+0,2541,BonusIntroWait,waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init (name provisional)
+0,3b99,EnemyFlagOnPaintedTile,sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
+0,3bad,EnemyInitAnim3bbe,hEnemyAnimState 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
