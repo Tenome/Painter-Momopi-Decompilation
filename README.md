@@ -1,6 +1,6 @@
 # Painter Momopie: matching decompilation
 
-A work-in-progress **matching decompilation** of *Painter Momopie* (Game Boy, Japan, 1996): RGBDS assembly source that builds
+A work-in-progress **matching decompilation** of *Painter Momopie* (Game Boy, Japan; Sigma Enterprises, 1990): RGBDS assembly source that builds
 the original 64 KiB ROM byte for byte, to be lifted step by step into named, structured, readable source. The long-term goal is a
 native Windows and Linux port.
 
@@ -34,7 +34,7 @@ python tools/report.py            # write progress/jp/report.json
 | `src/` | RGBDS sources: `bank_NN.asm` is generated from your ROM (git-ignored); hand-written topic files are committed |
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
-| `tools/` | SM83 table and encoder, tracing disassembler, report generator, ROM checker |
+| `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), report generator, ROM checker |
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 

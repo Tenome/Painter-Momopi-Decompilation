@@ -26,3 +26,9 @@ DEF wVramDstHi      EQU $c0a5
 DEF wVramDstLo      EQU $c0a6
 DEF wScrollX        EQU $c1aa   ; copied to SCX in VBlank
 DEF wScrollY        EQU $c1ab   ; copied to SCY in VBlank
+DEF wSoundArg       EQU $c30c   ; command byte passed to PlaySound
+DEF wSoundBusy      EQU $c311   ; 1 while the queue is being modified
+DEF wSoundCmd       EQU $c30e   ; command being started (bit 7 set = music/effect id)
+DEF wSoundQueueLen  EQU $c316
+DEF wSoundQueue     EQU $c317
+DEF wSoundChannels  EQU $c327   ; 8 records x $20 bytes

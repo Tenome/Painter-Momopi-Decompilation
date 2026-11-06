@@ -2,7 +2,7 @@
 
 Put your own copy of the ROM here as `orig/painter_momopie.gb`. It is not distributed with this repository.
 
-*Painter Momopie* (Game Boy, Japan, 1996; Imagineer-published game; header title `PAINTERMOMOPIE`, MBC1, 64 KiB, 4 banks).
+*Painter Momopie* (Game Boy, Japan; title screen reads "(c)1990 Sigma Enterprises, Inc / LICENSED BY NINTENDO"; header title `PAINTERMOMOPIE`, MBC1, 64 KiB, 4 banks).
 
 | Check | Value |
 |---|---|

@@ -60,7 +60,25 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   (`OamDmaRoutine` copied to HRAM $ff80 by `CopyOamDmaRoutine`), bit2 `VramCopyRows`; then writes SCX/SCY from `wScrollX/Y`,
   calls the bank 1 per-frame routine at $4157, bumps `hFrameCounter` and sets `hVBlankFlag`. Main code waits with
   `WaitVBlankFlag`/`DelayFrames`. `hJoyHeld` = $0f (all four dpad bits) is the soft-reset combo that jumps back to `Entry`.
-- Game modes: `GameModeDispatch` ($01ad) = `rst $00` with 8 entries (modes 0-7; mode 0 is entered at boot). `tables.csv` pins the table length.
+- Game modes (`GameModeDispatch` $01ad, `rst $00`, 8 entries; `tables.csv` pins the length). Confirmed by running the ROM in `tools/emu.py`
+  and rendering each mode (jump to $01ad with A = mode):
+
+  | Mode | Handler | Screen |
+  |---|---|---|
+  | 0 | `Mode0_Title` | title: "Painter Momopie" logo, 1 PLAYER / 2 PLAYER, (c)1990 Sigma Enterprises, LICENSED BY NINTENDO; boot-time serial handshake |
+  | 1 | `Mode1_Play` | gameplay: a painter walks around a room (kitchen room) with a tiled floor |
+  | 2 | `Mode2_BonusSelect` | "SELECT JUST ONE!" with three choices A, B, C |
+  | 3 | `Mode3_RoundIntro` | "ROUND 01 / KITCHEN ROOM / lives x 03 / READY !!" |
+  | 4 | `Mode4_GameOver` | GAME OVER |
+  | 5 | `Mode5_Continue` | CONTINUE ? countdown, YES / NO |
+  | 6 | `Mode6_Ending` | castle scene (after the last round) |
+  | 7 | `Mode7_LinkLose` | "SORRY YOU LOSE / TRY AGAIN !" (2 player link game, loser) |
+
+  Flow seen in the emulator: Start on the title goes to mode 3 then mode 1. Bank 1 code switches modes with `ld a,N; jp GameModeDispatch`
+  (7 on a link-cable event, 2 after a round is cleared).
+- Bank 1: $4000-$4156 sound tables, $4157-$487a sound engine (`SoundUpdate`, `PlaySound` queue at `wSoundQueue`, 8 channel records of $20 bytes at
+  `wSoundChannels`), the rest is game logic (per-frame object updates for the play mode). Bank 0 `PlaySound` (A = sound id, $80+ for music/effects).
+- Emulator: `tools/emu.py` is a small non-cycle-exact interpreter (DMG, MBC1, serial with no partner returns $FF) with an end-of-frame renderer.
 - Graphics loading: bank 2 `$4000` 0x700 bytes and bank 3 `$4000/$5000/$6000/$6e10` blocks are copied to VRAM $8000 (2bpp tiles).
 - Serial: `SerialHandler` ($0221) and `WaitSerialByte` ($0356): the game has a link-cable mode (`hSerialByte`).
 
@@ -109,12 +127,12 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 - [x] `src/hardware.inc` register names used in the generated source (`DEF` constants, 1:1 verified by the round trip)
 - [x] VBlank handler, serial handler, joypad, OAM DMA, fade, VRAM copy queues named (labels.csv); main loop = the 8 game modes still to name
-- [ ] Decode the `rst $00` jump tables: name each state/handler
+- [x] Name the 8 game-mode handlers (done, see Key Findings)
 - [ ] Map the HRAM variables ($FF80-$FFFE) and the WRAM variables referenced from bank 1 ($C3xx/$C5xx) into `src/constants.inc`
 - [ ] Classify banks 1-3 data: tile data (2bpp), tilemaps, palettes, text, music/sfx; add `D_` labels and structured `db`/`dw` records
 - [ ] Find the bank-switch helper and every `ld [$3fff],a` site; mark which bank each cross-bank call enters (extend `seeds.csv`)
 - [ ] Find unreferenced code (pointer tables, `jp hl` dispatchers) so the 14 % code figure rises
-- [ ] Run the ROM in an emulator with a trace/debugger to confirm findings (Ph6)
+- [x] Headless interpreter `tools/emu.py` with screenshots (Ph5.5); next: trace per-mode RAM use
 
 ### Web Port Fixes
 

@@ -2,13 +2,13 @@ bank,addr,name,comment
 0,0040,VBlankVector,jp to VBlankHandler
 0,0100,Entry,nop; jp Start
 0,0150,Start,sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters mode 0
-0,01ad,GameModeDispatch,rst $00 jump table indexed by A: 9 game modes
+0,01ad,GameModeDispatch,rst $00 jump table indexed by A: 8 game modes (see REVERSE.md)
 0,02c0,VBlankHandler,runs OAM DMA; queued VRAM copies; scroll; bank 1 per-frame update $4157; frame counters
 0,0356,WaitSerialByte,enables serial interrupt only and waits for hSerialByte
 0,036f,WaitFrameAndSyncOam,waits one frame; requests OAM DMA
 0,0385,WaitVBlankFlag,spins (bumping hRngCounter) until the VBlank handler sets hVBlankFlag
 0,0397,DelayFrames,waits A frames
-0,03ad,RequestBank1Command,stores A in $c30c and jumps to bank 1 routine $485b
+0,03ad,PlaySound,stores A in wSoundArg and queues it with the bank 1 routine $485b
 0,03b3,FadeOut,steps BGP/OBP0/OBP1 e4-94-50-40-00
 0,0448,ReadJoypad,hJoyHeld = buttons+dpad; hJoyNew = newly pressed
 0,0484,CopyOamDmaRoutine,copies 10 bytes to $ff80
@@ -38,3 +38,17 @@ bank,addr,name,comment
 0,0210,SerialStartTransfer,link port: clears internal clock bit; sets transfer start
 0,0221,SerialHandler,serial interrupt: stores received byte state in hSerialByte flags
 0,1462,TimerValueTable,16-bit values indexed by $c522 loaded into $c44a/$c44b
+0,29ea,Mode0_Title,title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
+0,10b5,Mode1_Play,gameplay in a room (paint the floor); loads tiles of bank 2
+0,2497,Mode2_BonusSelect,SELECT JUST ONE! choose A/B/C
+0,1c57,Mode3_RoundIntro,ROUND nn / room name / lives / READY !!
+0,1ea4,Mode4_GameOver,GAME OVER screen
+0,1f1c,Mode5_Continue,CONTINUE? countdown with YES/NO
+0,2c70,Mode6_Ending,castle scene after the last round
+0,1dc0,Mode7_LinkLose,SORRY YOU LOSE / TRY AGAIN (2 player loser)
+1,4157,SoundUpdate,per-frame sound engine called from VBlankHandler
+1,485b,PlaySound_Bank1,appends wSoundArg to the sound command queue
+1,418c,SoundDequeue,pops the next command from the queue into wSoundCmd
+1,41ad,SoundStartCommand,commands >= $80 index word tables at $40f4 and $411a
+1,435e,SoundAssignChannels,
+1,43a3,SoundUpdateChannel,one of 8 channel records of $20 bytes at wSoundChannels
