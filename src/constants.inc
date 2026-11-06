@@ -126,3 +126,8 @@ DEF PAL_WHITE       EQU $00   ; every shade maps to colour 0 (lightest): the las
 DEF IE_VBLANK       EQU $01
 DEF IE_VBLANK_SERIAL EQU $09
 DEF wStackTop       EQU $dfff ; SP is reset here at the start of every mode
+DEF vTiles0         EQU $8000   ; VRAM: tile data start (LoadGfx* destinations)
+DEF vTiles1         EQU $8700   ; second block of sprite tiles
+DEF vBGMap0         EQU $9800   ; background map 0
+DEF vBGMapLast      EQU $9bff   ; last byte of background map 0 (FillBackwardsFF starts here)
+DEF hOamDma         EQU $ff80   ; HRAM copy of OamDmaRoutine

@@ -36,11 +36,11 @@ Start::  ; sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters m
     ld hl, $c000
     ld bc, $1fef
     call ClearMemory
-    ld hl, $ff80
+    ld hl, hOamDma
     ld bc, $007e
     call ClearMemory
     call CopyOamDmaRoutine
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     call ClearOamShadow
     ld a, PAL_NORMAL
@@ -79,14 +79,14 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     ld a, $02
     ld [$3fff], a
     ld hl, $4000
-    ld de, $8000
+    ld de, vTiles0
     ld bc, $0700
     call CopyMemory
     ld hl, RoomSpriteSetTable
     ld a, [wRoomIndex]
 L_00_01d5::
     call TableIndexFromRound
-    ld de, $8700
+    ld de, vTiles1
     ld bc, $0900
     call CopyMemory
     ld a, $01
@@ -109,7 +109,7 @@ LoadTilesBank3C::  ; bank 3 $6000 0xe10 bytes to $8000
 LoadTilesBank3::  ; copy BC bytes from bank 3 HL to VRAM $8000
     ld a, $03
     ld [$3fff], a
-    ld de, $8000
+    ld de, vTiles0
     call CopyMemory
     ld a, $01
     ld [$3fff], a
@@ -475,7 +475,7 @@ PixelToTilemapAddr::  ; hSpriteY/X pixel to BG map address $9800+
     srl a
     ld de, $0000
     ld e, a
-    ld hl, $9800
+    ld hl, vBGMap0
     ld b, $20
 .L_00_04af:
     add hl, de
@@ -1716,7 +1716,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld sp, wStackTop
     call LcdOff
     di
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     call LoadGfxBank2
     call ClearOamShadow
@@ -1731,7 +1731,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld a, [wRoomIndex]
     ld hl, RoomMetatileTable
     call TableIndexFromRound
-    ld hl, $9800
+    ld hl, vBGMap0
     ld de, wRoomMap
     ld a, $0f
     ld [$c7c0], a
@@ -2605,7 +2605,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     di
     ld a, $ff
     call PlaySound
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     xor a, a
     ld [$c7c2], a
@@ -2785,7 +2785,7 @@ Mode4_GameOver::  ; GAME OVER screen
     ld sp, wStackTop
     call LcdOff
     di
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     call LoadTilesBank3A
     call ClearOamShadow
@@ -2836,7 +2836,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld sp, wStackTop
     call LcdOff
     di
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     ld hl, $c74e
     call Clear32Bytes
@@ -3055,7 +3055,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     push hl
     pop de
     ld bc, $270f
-    ld hl, $9800
+    ld hl, vBGMap0
     ld a, $ff
     ld [$c7c0], a
     call L_00_051d
@@ -3264,7 +3264,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call LoadTilesBank3A
     ld a, SND_MUSIC_TITLE
     call PlaySound
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     ld bc, $2b86
     call RunVramCopyList
@@ -3469,7 +3469,7 @@ Mode6_Ending::  ; castle scene after the last round
     call LcdOff
     di
     call LoadTilesBank3D
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     ld hl, $9fff
     call FillBackwardsFF
@@ -3751,7 +3751,7 @@ L_00_2fa5::
 L_00_2fb9::
     call LcdOff
     di
-    ld hl, $9bff
+    ld hl, vBGMapLast
     call FillBackwardsFF
     call ClearOamShadowY
     call RequestOamDma
