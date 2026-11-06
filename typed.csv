@@ -108,3 +108,6 @@ bank,addr,type,name,count
 1,5a7d,anim,anim_01_5a7d,7
 1,5a8b,anim,anim_01_5a8b,7
 1,5a99,anim,anim_01_5a99,7
+0,20a7,metatiles,metatiles_theme_a,16
+0,20b7,metatiles,metatiles_theme_b,16
+0,20c7,metatiles,metatiles_theme_c,16
