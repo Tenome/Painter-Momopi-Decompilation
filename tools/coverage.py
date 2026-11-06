@@ -69,6 +69,36 @@ def round_session(rnd, frames=900):
 
 for rnd in (5, 8, 9, 13, 14, 16):
     round_session(rnd)
+
+
+def link_session(seed, frames=1800):
+    random.seed(seed)
+    A, B = emu.GB(raw), emu.GB(raw)
+    A.partner, B.partner = B, A
+    A.coverage = B.coverage = cov
+    ja = jb = 0
+    for fr in range(frames):
+        if fr < 300:
+            ja = jb = 0
+        elif fr < 306:
+            ja = jb = 0x40
+        elif fr < 326:
+            ja = jb = 0
+        elif fr < 334:
+            ja, jb = 0x80, 0
+        elif fr % 25 == 0:
+            ja = random.choice((0, 1, 2, 4, 8, 0x10, 0x20))
+            jb = random.choice((0, 1, 2, 4, 8, 0x10, 0x20))
+        A.joy, B.joy = ja, jb
+        try:
+            A.run_frame()
+            B.run_frame()
+        except RuntimeError:
+            break
+
+
+for seed in (1, 2):
+    link_session(seed)
 for m in range(8):
     session(100 + m, {400: m}, 1500)
 known = set(rom.insns)
