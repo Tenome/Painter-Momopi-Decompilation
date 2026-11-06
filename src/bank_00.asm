@@ -2066,7 +2066,7 @@ L_00_132c::
     ld hl, $c769
     inc [hl]
     call L_00_1770
-    call L_00_1740
+    call CursorBlinkStep
     ldh a, [hJoyNew]
     bit 1, a
     jr z, .L_00_1396
@@ -2296,7 +2296,7 @@ RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 1
     dw D_00_2417
     dw D_00_2297
     dw D_00_2457
-L_00_1740::
+CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
     ld a, [$c53b]
     bit 2, a
     ret z
@@ -2309,10 +2309,10 @@ L_00_1740::
     and a, $04
     jr nz, L_00_175d
     ld hl, D_00_1a17
-    jr L_00_1760
+    jr SetCursorAnimation
 L_00_175d::
     ld hl, D_00_1a30
-L_00_1760::
+SetCursorAnimation::  ; HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
     ld a, l
     ld [$c74f], a
     ld a, h
@@ -2585,7 +2585,7 @@ InitCursorMenu::  ; clears the menu variables and creates the cursor object at w
     ld a, $68
     ld [wCursorY], a
     ld hl, D_00_1a30
-    jp L_00_1760
+    jp SetCursorAnimation
 RoomTypeTable::  ; per room-type data indexed by wRoomType
     INCBIN "orig/painter_momopie.gb", $0199b, 10
 D_00_19a5::
@@ -2844,7 +2844,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld bc, $2085
     call RunVramCopyList
     ld hl, D_00_2083
-    call L_00_1760
+    call SetCursorAnimation
     ld a, $3c
     ld [wCursorX], a
     ld a, $50
@@ -3236,7 +3236,7 @@ L_00_2633::
     ld a, $80
     ld [wCursorObject], a
     ld hl, D_00_2704
-    jp L_00_1760
+    jp SetCursorAnimation
 D_00_264a::
     INCBIN "orig/painter_momopie.gb", $0264a, 7
 D_00_2651::
@@ -3446,7 +3446,7 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     ld a, $80
     ld [wCursorObject], a
     ld hl, $2b84
-    jp L_00_1760
+    jp SetCursorAnimation
 L_00_2b84::
     rlca
     or a, [hl]

@@ -219,3 +219,5 @@ bank,addr,name,comment
 1,45c3,SoundSilenceChannel4,writes NR43=$ff NR44=$80 to channel 4
 1,47cb,SoundSetFrequency,frequency for the current note from the pitch tables at $3f4c (SoundPitchTables)
 0,3f4c,SoundPitchTables,pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
+0,1760,SetCursorAnimation,HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
+0,1740,CursorBlinkStep,counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30

@@ -88,9 +88,9 @@ bank	addr	size	name
 0	142a	14	TableIndexFromRound
 0	1438	42	InitRoundTimer
 0	14a6	62	ClearRoundVariables
-0	1740	29	L_00_1740
+0	1740	29	CursorBlinkStep
 0	175d	3	L_00_175d
-0	1760	9	L_00_1760
+0	1760	9	SetCursorAnimation
 0	1769	7	L_00_1769
 0	1770	159	L_00_1770
 0	180f	42	L_00_180f
