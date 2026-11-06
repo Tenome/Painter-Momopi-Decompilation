@@ -47,7 +47,7 @@ python tools/build_port.py --cc path\to\clang.exe    # recompiles your ROM to C 
 build\recomp\game_win.exe orig\painter_momopie.gb
 ```
 
-Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit. The generated C is derived from the game and is not committed.
+Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit, P = pause, M = mute, F2 = palette, Tab = fast forward. The generated C is derived from the game and is not committed.
 
 ## Progress report and CI
 

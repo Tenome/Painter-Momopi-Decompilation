@@ -1,5 +1,6 @@
 /* Windows front end for the recompiled game: window, keyboard, audio (waveOut), frame pacing by the audio clock.
- * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit.
+ * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit,
+ * P = pause, M = mute, F2 = next palette (green/grey/sepia), hold Tab = fast forward.
  *   game_win [ROM]     (default: painter_momopie.gb next to the program, then orig/painter_momopie.gb) */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -11,7 +12,13 @@ extern void gb_game_main(void);
 
 static HWND hwnd;
 static uint32_t pixels[160 * 144];
-static const uint32_t shades[4] = {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820};   /* DMG green palette (BGRA) */
+static const uint32_t palettes[3][4] = {
+    {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* DMG green */
+    {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000},   /* grey */
+    {0x00F8E8C8, 0x00D8A860, 0x00985820, 0x00301810},   /* sepia */
+};
+static int pal_index;
+static int paused, muted, fast;
 static int fullscreen;
 static WINDOWPLACEMENT saved_pos;
 #define NBUF 4
@@ -25,6 +32,9 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
     case WM_DESTROY: quit = 1; PostQuitMessage(0); return 0;
     case WM_KEYDOWN:
         if (w == VK_ESCAPE) { quit = 1; DestroyWindow(h); }
+        if (w == 'P') paused = !paused;
+        if (w == 'M') muted = !muted;
+        if (w == VK_F2) pal_index = (pal_index + 1) % 3;
         if (w == VK_F11) {
             DWORD st = GetWindowLong(h, GWL_STYLE);
             if (!fullscreen) {
@@ -83,12 +93,22 @@ static void frame(unsigned f) {
         DispatchMessage(&msg);
     }
     if (quit) { if (wave) waveOutReset(wave); ExitProcess(0); }
-    for (int i = 0; i < 160 * 144; i++) pixels[i] = shades[gb_framebuf[i] & 3];
-    present();
+    for (;;) {
+        for (int i = 0; i < 160 * 144; i++) pixels[i] = palettes[pal_index][gb_framebuf[i] & 3];
+        present();
+        if (!paused) break;
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessage(&msg); }
+        if (quit) { if (wave) waveOutReset(wave); ExitProcess(0); }
+        Sleep(30);
+    }
+    fast = (GetAsyncKeyState(VK_TAB) & 0x8000) && GetForegroundWindow() == hwnd;
     gb_joy = keys();
 }
 
 static void audio(const int16_t *st, int n) {
+    if (fast) return;                                  /* fast forward: no audio, no pacing */
+    static int16_t silence[735 * 2];
+    if (muted) st = silence;
     for (;;) {
         for (int i = 0; i < NBUF; i++) {
             if (!(hdr[i].dwFlags & WHDR_INQUEUE)) {
