@@ -136,6 +136,8 @@ class Rom:
         cands = set()
         for (b, pc), (n, kind, tgt) in self.insns.items():
             if kind in self.TERM and (b, pc + n) not in self.code_bytes:
+                if kind == "jpu" and tgt in (0x0AAA, 0x0AAF):     # tail call of a lookup: a table follows
+                    continue
                 cands.add((b, pc + n))
         for (b, a) in self.dwords:
             if (b, a + 2) not in self.code_bytes:
@@ -167,9 +169,27 @@ class Rom:
                 continue
             if (tb, t) in self.code_bytes:
                 continue
+            if self.used_as_data_pointer(b, pc + n):
+                continue
             if self.plausible(tb, t) and self.try_run(tb, t):
                 found += 1
         return found
+
+    def used_as_data_pointer(self, b, pc):
+        """After `ld rr, imm16`: a table lookup or an indexed read means the immediate points at data."""
+        for _ in range(5):
+            if (b, pc) not in self.insns:
+                return False
+            n, kind, tgt = self.insns[(b, pc)]
+            op = self.data[off(b, pc)]
+            if kind in ("call", "jpu", "jp") and tgt in (0x0AAA, 0x0AAF, 0x0627, 0x0505, 0x04F1):
+                return True
+            if op in (0x09, 0x19, 0x29, 0x7E, 0x2A, 0x46, 0x4E, 0x56, 0x5E, 0x66, 0x6E, 0x1A):
+                return True
+            if kind in ("jpu", "retu", "jru", "jpind"):
+                return False
+            pc += n
+        return False
 
     def pointer_tables(self):
         """Tables listed in ptables.csv: emit as `dw label` and label what they point at as data."""

@@ -8,47 +8,28 @@ SoundSongTable::  ; word offsets of song data (follows the frequency table at $4
     INCBIN "orig/painter_momopie.gb", $04048, 172
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     INCBIN "orig/painter_momopie.gb", $040f4, 38
-L_01_411a::
-    cp a, d
-    ld e, h
-    ld h, e
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    ld h, e
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
-    sub a, d
-    ld b, d
+D_01_411a::
+    INCBIN "orig/painter_momopie.gb", $0411a, 2
+    dw L_01_4263
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4263
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+    dw L_01_4292
+L_01_4142::
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -125,7 +106,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld e, a
     ld a, [hl]
     ld d, a
-    ld hl, $411a
+    ld hl, D_01_411a
     add hl, bc
     add hl, bc
     ld a, [hl+]

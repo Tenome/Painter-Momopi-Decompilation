@@ -1672,19 +1672,10 @@ L_00_10a2::
     and a, $0f
 L_00_10a4::
     ld c, a
-    ld hl, $10ab
+    ld hl, D_00_10ab
     jp LookupByte
-L_00_10ab::
-    xor a, e
-    xor a, h
-    xor a, l
-    xor a, [hl]
-    xor a, a
-    cp a, e
-    cp a, h
-    cp a, l
-    cp a, [hl]
-    cp a, a
+D_00_10ab::
+    INCBIN "orig/painter_momopie.gb", $010ab, 10
 Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld sp, $dfff
     call LcdOff
