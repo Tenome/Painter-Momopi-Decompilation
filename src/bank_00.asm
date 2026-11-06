@@ -1695,7 +1695,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     jr nz, .L_00_1138
     set 2, a
     ld [$c51f], a
-    call L_00_14a6
+    call ClearRoundVariables
 .L_00_1138:
     ld a, [wGameFlags]
     bit 7, a
@@ -2100,7 +2100,7 @@ L_00_1438::
     ret
 TimerValueTable::  ; 16-bit values indexed by $c522 loaded into $c44a/$c44b
     INCBIN "orig/painter_momopie.gb", $01462, 68
-L_00_14a6::
+ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     xor a, a
     ld [$c488], a
     ld [$c464], a
@@ -3047,7 +3047,7 @@ L_00_2574::
 .L_00_257d:
     call WaitFrameAndSyncOam
     call ReadJoypad
-    call L_00_25e0
+    call MenuCursorInput
     ld a, [$c759]
     bit 7, a
     jr z, .L_00_257d
@@ -3089,7 +3089,7 @@ L_00_2574::
     jp Mode2_Init
 D_00_25cb::
     INCBIN "orig/painter_momopie.gb", $025cb, 21
-L_00_25e0::
+MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
     bit 5, a
     jr z, .L_00_25f8
@@ -3166,7 +3166,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call RequestOamDma
     ld hl, $c74e
     call Clear32Bytes
-    call L_00_2b46
+    call InitTitleVariables
     ld a, $ee
     ld [rSB], a
     call SerialStartTransfer
@@ -3319,7 +3319,7 @@ L_00_2b23::
 .L_00_2b41:
     ld [$c755], a
     jr .L_00_2b2b
-L_00_2b46::
+InitTitleVariables::  ; clears hLinkFlags and the variables used by the title screen
     xor a, a
     ldh [hLinkFlags], a
     ld [$c49c], a
@@ -4534,15 +4534,15 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     ldh [$ffc9], a
     ret
 EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
-    dw L_00_38fe
-    dw L_00_3af7
-    dw L_01_5899
-    dw L_01_59ff
-    dw L_01_537a
-    dw L_00_3e61
-    dw L_00_38fe
+    dw EnemyBehavior0
+    dw EnemyBehavior1
+    dw EnemyBehavior2
+    dw EnemyBehavior3
+    dw EnemyBehavior4
+    dw EnemyBehavior5
+    dw EnemyBehavior0
     dw L_00_3c91
-    dw L_00_38fe
+    dw EnemyBehavior0
     INCBIN "orig/painter_momopie.gb", $03794, 10
 SelectEnemySlot::  ; HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
     sla a
@@ -4748,7 +4748,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl]
     ldh [$ffd4], a
     ret
-L_00_38fe::
+EnemyBehavior0::  ; routine 0 of EnemyBehaviorTable
     call TickObjectTimer
     jr nz, .L_00_3906
     jp L_00_3a75
@@ -4997,7 +4997,7 @@ L_00_3aed::
     ld [bc], a
     nop
     ld [bc], a
-L_00_3af7::
+EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then moves on the tile grid
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3b02
@@ -5245,7 +5245,7 @@ L_00_3e57::
     call nc, L_00_01d5
     add a, $c7
     sub a, $d7
-L_00_3e61::
+EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3e6c

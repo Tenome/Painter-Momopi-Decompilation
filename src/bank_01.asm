@@ -2467,7 +2467,7 @@ ResetCamera::  ; wCameraX and wCameraY = $20; high bytes 0
     ld [$c1ad], a
     ld [$c1af], a
     ret
-L_01_537a::
+EnemyBehavior4::  ; routine 4 of EnemyBehaviorTable
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5385
@@ -2526,7 +2526,7 @@ D_01_53ec::
     INCBIN "orig/painter_momopie.gb", $053ec, 7
 D_01_53f3::
     INCBIN "orig/painter_momopie.gb", $053f3, 1190
-L_01_5899::
+EnemyBehavior2::  ; routine 2 of EnemyBehaviorTable
     call TickObjectTimer
     jr nz, .L_01_58a1
     jp L_01_59b6
@@ -2691,7 +2691,7 @@ L_01_59fa::
     ld bc, $9f9e
     xor a, [hl]
     xor a, a
-L_01_59ff::
+EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_01_5a0a

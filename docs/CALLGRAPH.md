@@ -2,7 +2,7 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-112 named routines of 327 found.
+121 named routines of 327 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
@@ -56,9 +56,10 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0bf8 | `MultiplyByDE` | 50 | 9 |  |
 | 0:0d0e | `UnpackRoomMap` | 47 | 1 |  |
 | 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
-| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `DrawMetatileMap`, `FillBackwardsFF`, `InitPlayer`, `L_00_11b4`, `L_00_11ec` ... |
+| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF`, `InitPlayer`, `L_00_11b4` ... |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
 | 0:142a | `TableIndexFromRound` | 14 | 2 | `LookupWord` |
+| 0:14a6 | `ClearRoundVariables` | 62 | 1 |  |
 | 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_00_1ce7`, `L_01_492f` ... |
 | 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
 | 0:1dc0 | `Mode7_LinkLose` | 110 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `ReadJoypad` ... |
@@ -66,8 +67,10 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:1f1c | `Mode5_Continue` | 329 | 0 | `Clear32Bytes`, `ClearMemory`, `ClearOamShadow`, `ClearOamShadowY`, `DrawObjectBytePos`, `Entry`, `FillBackwardsFF`, `GameModeDispatch` ... |
 | 0:2497 | `Mode2_BonusSelect` | 32 | 0 | `L_00_2633`, `LcdOff`, `LoadTilesBank3C`, `PlaySound` |
 | 0:24b7 | `Mode2_Init` | 132 | 2 | `ClearOamShadow`, `L_00_051d`, `L_00_0628`, `LcdOff`, `LookupWord`, `RequestOamDma`, `RunVramCopyList` |
-| 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `L_00_2b46`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
+| 0:25e0 | `MenuCursorInput` | 80 | 1 | `DrawObjectBytePos`, `LookupByte`, `PlaySound`, `SetObjPtr` |
+| 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `InitTitleVariables`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
 | 0:2a27 | `TitleLoop` | 227 | 0 | `GameModeDispatch`, `L_00_2b0a`, `L_00_2b23`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `WaitFrameAndSyncOam` |
+| 0:2b46 | `InitTitleVariables` | 62 | 1 | `L_00_1760` |
 | 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `Entry`, `FillBackwardsFF`, `L_00_2d5d`, `L_00_2f26` ... |
 | 0:31e2 | `TickObjectTimer` | 9 | 7 |  |
 | 0:3649 | `SetAnimationVariant` | 8 | 6 |  |
@@ -80,6 +83,9 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:382a | `ClearEnemySlot` | 6 | 1 | `Clear32Bytes` |
 | 0:3830 | `StoreEnemySlot` | 103 | 2 |  |
 | 0:3897 | `LoadEnemySlot` | 103 | 1 |  |
+| 0:38fe | `EnemyBehavior0` | 48 | 0 | `DrawObject`, `L_00_32df`, `L_00_341f`, `L_00_3481`, `L_00_352f`, `L_00_3693`, `L_00_392e`, `L_00_3956` ... |
+| 0:3af7 | `EnemyBehavior1` | 68 | 0 | `DrawObject`, `L_00_32df`, `L_00_341f`, `L_00_3481`, `L_00_352f`, `L_00_3693`, `L_00_36c9`, `L_00_392e` ... |
+| 0:3e61 | `EnemyBehavior5` | 47 | 0 | `DrawObject`, `L_00_32df`, `L_00_341f`, `L_00_3693`, `L_00_3e90`, `L_00_3ed1`, `L_00_3ef9`, `SelectObject2` ... |
 | 1:4157 | `SoundUpdate` | 53 | 1 | `SoundAssignChannels`, `SoundDequeue`, `SoundStartCommand`, `SoundUpdateChannel` |
 | 1:418c | `SoundDequeue` | 33 | 1 |  |
 | 1:41ad | `SoundStartCommand` | 49 | 1 | `L_01_4271` |
@@ -118,3 +124,6 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:5301 | `UpdateCamera` | 16 | 1 | `CameraFollowPlayerX` |
 | 1:5311 | `CameraFollowPlayerX` | 89 | 1 |  |
 | 1:536a | `ResetCamera` | 16 | 1 |  |
+| 1:537a | `EnemyBehavior4` | 26 | 0 | `DrawObject`, `L_00_341f`, `L_00_3599`, `L_00_39b1`, `L_01_5394`, `L_01_53c4`, `SelectObject2`, `TickObjectTimer` |
+| 1:5899 | `EnemyBehavior2` | 54 | 0 | `DrawObject`, `L_00_32a2`, `L_00_32df`, `L_00_341f`, `L_00_3481`, `L_00_3693`, `L_00_392e`, `L_00_39b1` ... |
+| 1:59ff | `EnemyBehavior3` | 42 | 0 | `DrawObject`, `L_00_32df`, `L_00_341f`, `L_00_3599`, `L_00_3603`, `L_00_3643`, `L_00_392e`, `L_00_3b99` ... |
