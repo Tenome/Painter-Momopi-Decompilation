@@ -11,6 +11,7 @@ Types:
   shapes the sprite shape data (offsets of the 8x8 parts of each shape), see tools/shape_fmt.py
   anim   animation frames (shape id + tile ids) in the first COUNT bytes of the region; needs the shape table
   metatiles  COUNT bytes of room cell definitions: one line per map cell value (0-3) with the 4 tile ids of its 2x2 block
+  textpage  a VRAM text page (copy list plus one row string blocks), see tools/text_fmt.py
   song   a sound data region: header and token stream, see tools/song_fmt.py (notes, lengths, commands; the size must stay the same)
   rounddata  the enemy spawn waves of a round: 6 pointers then the wave lists. Text: `wave N` then one line per spawn `kind x y delay`
          (`kind` indexes the enemy kinds, `delay` is compared with the seconds counter). The number of spawns in each wave must stay the same.
@@ -19,6 +20,7 @@ import csv, glob, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import song_fmt
 import shape_fmt
+import text_fmt
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -119,6 +121,8 @@ def metatiles_to_bin(text, old, c, n):
 
 
 def to_txt(t, c, data, start=0):
+    if t == "textpage":
+        return text_fmt.to_txt(data, start)
     if t == "metatiles":
         return metatiles_to_txt(data, c)
     if t == "anim":
@@ -137,6 +141,8 @@ def to_txt(t, c, data, start=0):
 
 
 def to_bin(t, c, n, text, old, start=0):
+    if t == "textpage":
+        return text_fmt.to_bin(text, old, start)
     if t == "metatiles":
         return metatiles_to_bin(text, old, c, n)
     if t == "anim":

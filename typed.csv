@@ -111,3 +111,12 @@ bank,addr,type,name,count
 0,20a7,metatiles,metatiles_theme_a,16
 0,20b7,metatiles,metatiles_theme_b,16
 0,20c7,metatiles,metatiles_theme_c,16
+0,2e21,textpage,credits_2e21,0
+0,2e2d,textpage,credits_2e2d,0
+0,2e4c,textpage,credits_2e4c,0
+0,2e6c,textpage,credits_2e6c,0
+0,2e88,textpage,credits_2e88,0
+0,2ea7,textpage,credits_2ea7,0
+0,2ec6,textpage,credits_2ec6,0
+0,2ee5,textpage,credits_2ee5,0
+0,2eff,textpage,credits_last_page_2eff,0
