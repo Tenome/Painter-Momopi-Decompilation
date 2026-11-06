@@ -1207,7 +1207,7 @@ L_01_4937::
     set 6, [hl]
     ret
 L_01_4957::
-    ld a, $82
+    ld a, SND_SFX_82
     call PlaySound
     ld hl, wSubState
     set 1, [hl]
@@ -1309,7 +1309,7 @@ L_01_49d6::
     ld [$c509], a
     ld a, $01
     ld [$c502], a
-    ld a, $8d
+    ld a, SND_SFX_8D
     call PlaySound
     ld a, $d0
     ldh [$ffdf], a
@@ -2145,7 +2145,7 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
-    ld a, $8a
+    ld a, SND_MUSIC_ROUND_CLEAR
     call PlaySound
     ld hl, wPlayer
     call SetObjPtr
@@ -2353,7 +2353,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     jr nz, .L_01_5239
     ld a, $27
     call DelayFrames
-    ld a, $8b
+    ld a, SND_MUSIC_DEATH
     call PlaySound
     ld hl, wPlayerStatus
     set 2, [hl]
@@ -2524,7 +2524,7 @@ EnemyBehavior4::  ; routine 4 of EnemyBehaviorTable
     call L_01_5394
     jp DrawObject
 L_01_5394::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_53a8
     bit 1, a
@@ -2563,7 +2563,7 @@ L_01_53c4::
     ld de, D_01_53e5
     call SetObjectAnimation
     ld a, $91
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 D_01_53e5::
     INCBIN "orig/painter_momopie.gb", $053e5, 7
@@ -2576,7 +2576,7 @@ EnemyBehavior2::  ; routine 2 of EnemyBehaviorTable
     jr nz, .L_01_58a1
     jp L_01_59b6
 .L_01_58a1:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     call L_00_3481
@@ -2602,9 +2602,9 @@ L_01_58cf::
     ld a, [$c49e]
     bit 7, a
     ret nz
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld c, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld b, a
     call L_00_3449
     and a, a
@@ -2661,11 +2661,11 @@ L_01_5947::
     ld [$c4a2], a
     ld a, $a0
     ld [$c4b4], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     add a, $08
     and a, $f0
     ld [$c4a5], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     and a, $f0
     add a, $08
     ld [$c4a8], a
@@ -2673,7 +2673,7 @@ L_01_5947::
     ld [$c49e], a
     ret
 L_01_596f::
-    ld a, [$ffd1]
+    ld a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_5983
     bit 1, a
@@ -2742,7 +2742,7 @@ EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
     jr nz, .L_01_5a0a
     jp L_01_5a65
 .L_01_5a0a:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     call L_00_3599
@@ -2754,7 +2754,7 @@ EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
     call L_01_5a29
     jp DrawObject
 L_01_5a29::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_5a40
     bit 1, a

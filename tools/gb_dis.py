@@ -52,7 +52,8 @@ class Rom:
                     m = re.match(r"\s*DEF\s+(\w+)\s+EQU\s+\$([0-9a-fA-F]+)", ln)
                     if m:
                         self.consts[m[1]] = int(m[2], 16)
-        self.by_value = {v: k for k, v in self.consts.items()}
+        self.by_value = {v: k for k, v in self.consts.items() if v > 0xFF}
+        self.by_value8 = {v: k for k, v in self.consts.items() if k.startswith('SND_')}
         self.kind = {}       # (bank, addr) -> 'code' start map filled by trace
         self.insns = {}      # (bank, addr) -> (len, tpl_kind, target)
         self.code_bytes = set()
@@ -521,6 +522,10 @@ class Rom:
                 q += 1
             out.append(f'    INCBIN "orig/painter_momopie.gb", ${base + pc - start:05x}, {q - pc}')
             pc = q
+        for i in range(len(out) - 1):
+            m = re.fullmatch(r"    ld a, \$([0-9a-f]{2})", out[i])
+            if m and out[i + 1] == "    call PlaySound" and int(m[1], 16) in self.by_value8:
+                out[i] = "    ld a, " + self.by_value8[int(m[1], 16)]
         return "\n".join(out) + "\n"
 
     def functions(self):
@@ -541,7 +546,7 @@ class Rom:
 def unname(rom, s):
     if not rom.consts:
         return s
-    return re.sub(r"[A-Za-z_]\w*", lambda m: f"${rom.consts[m[0]]:04x}" if m[0] in rom.consts else m[0], s)
+    return re.sub(r"[A-Za-z_]\w*", lambda m: (f"${rom.consts[m[0]]:04x}" if rom.consts[m[0]] > 0xFF else f"${rom.consts[m[0]]:02x}") if m[0] in rom.consts else m[0], s)
 
 
 def assemble(rom, sources):

@@ -1316,7 +1316,7 @@ L_00_0abf::
     ld a, [hl]
     sla a
     ldh [$ff99], a
-    ldh a, [$ffbd]
+    ldh a, [hEnemyXHi]
     and a, a
     jr nz, .L_00_0b03
     ld e, $08
@@ -2266,7 +2266,7 @@ L_00_1770::
     jr z, .L_00_179c
     bit 0, a
     jr nz, .L_00_17b2
-    ld a, $8f
+    ld a, SND_SFX_CURSOR
     call PlaySound
     ldh a, [hJoyNew]
     bit 4, a
@@ -2313,7 +2313,7 @@ L_00_1770::
     res 2, [hl]
     ret
 .L_00_17e2:
-    ld a, $90
+    ld a, SND_SFX_90
     call PlaySound
     ld a, [$c43d]
     ld e, $03
@@ -2695,7 +2695,7 @@ Mode4_GameOver::  ; GAME OVER screen
     call FillBackwardsFF
     call LoadTilesBank3A
     call ClearOamShadow
-    ld a, $84
+    ld a, SND_MUSIC_GAME_OVER
     call PlaySound
     ld hl, $9905
     ld de, D_00_1f10
@@ -2943,7 +2943,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     inc [hl]
     xor a, a
     ld [$c43b], a
-    ld a, $89
+    ld a, SND_MUSIC_BONUS_SELECT
     call PlaySound
     call LcdOff
     di
@@ -3095,7 +3095,7 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
     bit 5, a
     jr z, .L_00_25f8
-    ld a, $8f
+    ld a, SND_SFX_CURSOR
     call PlaySound
     ld a, [$c758]
     dec a
@@ -3108,7 +3108,7 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
     bit 4, a
     jr z, .L_00_260f
-    ld a, $8f
+    ld a, SND_SFX_CURSOR
     call PlaySound
     ld a, [$c758]
     inc a
@@ -3159,7 +3159,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call LcdOff
     di
     call LoadTilesBank3A
-    ld a, $81
+    ld a, SND_MUSIC_TITLE
     call PlaySound
     ld hl, $9bff
     call FillBackwardsFF
@@ -3421,7 +3421,7 @@ Mode6_Ending::  ; castle scene after the last round
     ei
     call L_00_3085
     call L_00_3054
-    ld a, $85
+    ld a, SND_MUSIC_ENDING
     call PlaySound
     ld a, $46
     call DelayFrames
@@ -3728,7 +3728,7 @@ TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     bit 7, a
     ret
 L_00_31eb::
-    ld hl, $ffd4
+    ld hl, hEnemyFlags
     set 2, [hl]
     ret
 L_00_31f1::
@@ -3865,7 +3865,7 @@ L_00_32a2::
     set 5, [hl]
     ret
 L_00_32df::
-    ld a, $8e
+    ld a, SND_SFX_8E
     call PlaySound
     ld hl, $ffd3
     inc [hl]
@@ -3987,9 +3987,9 @@ L_00_32df::
     ld hl, wPlayerStatus
     res 3, [hl]
     res 4, [hl]
-    ld hl, $ffd4
+    ld hl, hEnemyFlags
     res 2, [hl]
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     ld c, a
     ld hl, $33fd
     call LookupByte
@@ -4018,17 +4018,17 @@ L_00_33fd::
 L_00_340c::
     ld a, $04
     ldh [$ffb9], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     push af
     and a, $f0
-    ldh [$ffbc], a
+    ldh [hEnemyX], a
     pop af
     and a, $0f
     or a, $90
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 L_00_341f::
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3432
     ld a, [wRoomType]
@@ -4081,15 +4081,15 @@ L_00_3449::
     ld a, $01
     ret
 L_00_3478::
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld b, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld c, a
     jp IsOnTileGrid
 L_00_3481::
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld b, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld c, a
     xor a, a
     ldh [$ffc7], a
@@ -4189,7 +4189,7 @@ L_00_3525::
     dec [hl]
     ret
 L_00_352f::
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     cp a, $08
     ret z
     ld a, [wRoomType]
@@ -4199,14 +4199,14 @@ L_00_352f::
     bit 0, a
     ret nz
 .L_00_3541:
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 5, a
     ret z
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     res 5, [hl]
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     call PixelXToColumn
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     and a, $f0
     add a, $08
     call LookupMapTile
@@ -4215,9 +4215,9 @@ L_00_352f::
     ret nz
     bit 4, a
     ret z
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld c, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld b, a
     call L_00_3449
     and a, a
@@ -4226,11 +4226,11 @@ L_00_352f::
     and a, $0f
     or a, $80
     ld [hl], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     add a, $08
     and a, $f0
     ldh [hSpriteX], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     and a, $f0
     add a, $08
     sub a, $08
@@ -4247,16 +4247,16 @@ L_00_352f::
     inc [hl]
     ret
 L_00_3599::
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld b, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld c, a
     call IsOnTileGrid
     ret nz
-    ldh a, [$ffbd]
+    ldh a, [hEnemyXHi]
     cp a, $01
     jr z, .L_00_35ba
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld c, a
     ld a, [wPlayerX]
     ld e, a
@@ -4277,7 +4277,7 @@ L_00_3599::
     ld b, l
     jr .L_00_35e1
 .L_00_35c6:
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld b, a
     ld a, [wPlayerY]
     ld d, a
@@ -4301,23 +4301,23 @@ L_00_3599::
     swap a
     and a, $0f
     and a, b
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $f0
     or a, b
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 .L_00_35f0:
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     set 6, [hl]
     jp L_00_3a18
 L_00_35f8::
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld [$c525], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld [$c526], a
     ret
 L_00_3603::
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3620
     cp a, $03
@@ -4334,11 +4334,11 @@ L_00_3603::
     ldh a, [$ffc7]
     and a, $0f
     ld d, a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $0f
     and a, d
     jp nz, L_00_3666
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $0f
     srl a
     ld c, a
@@ -4373,7 +4373,7 @@ SetObjectAnimation::  ; stores DE as the animation pointer (record +1/+2) of hOb
     ldh [$ffb7], a
     ret
 L_00_3666::
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     set 6, [hl]
     xor a, a
     ldh [$ffc6], a
@@ -4381,16 +4381,16 @@ L_00_3666::
     ldh [$ffc4], a
     ret
 L_00_3673::
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     call PixelXToColumn
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     and a, $f0
     add a, $08
     jp LookupMapTile
 L_00_3681::
-    ld hl, $ffbc
+    ld hl, hEnemyX
     ld c, [hl]
-    ld hl, $ffbf
+    ld hl, hEnemyY
     ld b, [hl]
     ret
 L_00_368a::
@@ -4431,27 +4431,27 @@ L_00_36c6::
 L_00_36c9::
     xor a, a
     ldh [$ffc7], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     cp a, $21
     jr nc, .L_00_36d6
     ld a, $02
     ldh [$ffc7], a
 .L_00_36d6:
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     cp a, $f0
     jr c, .L_00_36e2
     ldh a, [$ffc7]
     or a, $01
     ldh [$ffc7], a
 .L_00_36e2:
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     cp a, $29
     jr nc, .L_00_36ee
     ldh a, [$ffc7]
     or a, $04
     ldh [$ffc7], a
 .L_00_36ee:
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     cp a, $f8
     ret c
     ldh a, [$ffc7]
@@ -4499,10 +4499,10 @@ UpdateEnemyLoop::  ; for each slot index: load the slot into HRAM; run UpdateEne
     jr z, UpdateEnemyLoop
     ret
 UpdateEnemy::  ; one enemy step on the record held in hObject2
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 4, a
     jr nz, .L_00_375e
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     sla a
     ld c, a
     ld b, $00
@@ -4530,7 +4530,7 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     ldh [$ffc9], a
     bit 7, a
     ret z
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     res 4, [hl]
     xor a, a
     ldh [$ffc9], a
@@ -4599,11 +4599,11 @@ L_00_37f5::
     ld a, $82
     ldh [hObject2], a
     ldh a, [$ff9d]
-    ldh [$ffd2], a
+    ldh [hEnemyKind], a
     ldh a, [$ff9e]
-    ldh [$ffbc], a
+    ldh [hEnemyX], a
     ldh a, [$ffa0]
-    ldh [$ffbf], a
+    ldh [hEnemyY], a
     ldh a, [$ffee]
     ldh [$ffcf], a
     jp StoreEnemySlot
@@ -4629,15 +4629,15 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffbb]
     ld [hl+], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld [hl+], a
-    ldh a, [$ffbd]
+    ldh a, [hEnemyXHi]
     ld [hl+], a
     ldh a, [$ffbe]
     ld [hl+], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld [hl+], a
-    ldh a, [$ffc0]
+    ldh a, [hEnemyYHi]
     ld [hl+], a
     ldh a, [$ffc1]
     ld [hl+], a
@@ -4671,13 +4671,13 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffd0]
     ld [hl+], a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     ld [hl+], a
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     ld [hl+], a
     ldh a, [$ffd3]
     ld [hl+], a
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     ld [hl], a
     ret
 LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
@@ -4700,15 +4700,15 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffbb], a
     ld a, [hl+]
-    ldh [$ffbc], a
+    ldh [hEnemyX], a
     ld a, [hl+]
-    ldh [$ffbd], a
+    ldh [hEnemyXHi], a
     ld a, [hl+]
     ldh [$ffbe], a
     ld a, [hl+]
-    ldh [$ffbf], a
+    ldh [hEnemyY], a
     ld a, [hl+]
-    ldh [$ffc0], a
+    ldh [hEnemyYHi], a
     ld a, [hl+]
     ldh [$ffc1], a
     ld a, [hl+]
@@ -4742,20 +4742,20 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffd0], a
     ld a, [hl+]
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ld a, [hl+]
-    ldh [$ffd2], a
+    ldh [hEnemyKind], a
     ld a, [hl+]
     ldh [$ffd3], a
     ld a, [hl]
-    ldh [$ffd4], a
+    ldh [hEnemyFlags], a
     ret
 EnemyBehavior0::  ; routine 0 of EnemyBehaviorTable
     call TickObjectTimer
     jr nz, .L_00_3906
     jp L_00_3a75
 .L_00_3906:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     call L_00_3481
@@ -4776,12 +4776,12 @@ L_00_392e::
     ld a, [wSubState]
     bit 0, a
     ret z
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 1, a
     ret nz
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld b, a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld c, a
     call IsOnTileGrid
     ret nz
@@ -4793,7 +4793,7 @@ L_00_394d::
     ret z
     jp L_00_3525
 L_00_3956::
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     cp a, $06
     jr z, .L_00_3963
     cp a, $08
@@ -4808,7 +4808,7 @@ L_00_3956::
     ld bc, $3ade
     jp SetAnimationVariant
 .L_00_3975:
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_00_398c
     bit 1, a
@@ -4845,7 +4845,7 @@ L_00_39b1::
     ldh a, [$ffc7]
     and a, $0f
     ld d, a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $0f
     ld e, a
     and a, d
@@ -4856,7 +4856,7 @@ L_00_39b1::
     ld c, a
     ld b, $00
     ld hl, D_00_3ae3
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 7, a
     jr z, .L_00_39e4
     ld hl, $3aed
@@ -4877,7 +4877,7 @@ L_00_39b1::
 L_00_39f9::
     call L_00_3478
     jr z, .L_00_3a04
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     res 6, [hl]
     ret
 .L_00_3a04:
@@ -4890,19 +4890,19 @@ L_00_39f9::
 .L_00_3a0e:
     xor a, a
     ldh [$ffca], a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     or a, $60
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 L_00_3a18::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 6, a
     ret z
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     res 6, [hl]
     ldh a, [$ffc7]
     ld e, a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $0f
     srl a
     ld c, a
@@ -4936,27 +4936,27 @@ L_00_3a18::
     jr z, .L_00_3a5f
     jp .L_00_3a37
 .L_00_3a5f:
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $f0
     or a, c
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 .L_00_3a67:
     ldh a, [$ffc7]
     cpl
     and a, $0f
     ld b, a
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $f0
     or a, b
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 L_00_3a75::
     ld a, $20
     ldh [$ffc9], a
     ld a, $04
     ldh [$ffb9], a
-    ldh a, [$ffd2]
+    ldh a, [hEnemyKind]
     cp a, $06
     jr z, .L_00_3a90
     cp a, $08
@@ -5005,7 +5005,7 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
     jr nz, .L_00_3b02
     jp L_00_3bad
 .L_00_3b02:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     call L_00_3481
@@ -5013,7 +5013,7 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
     call L_00_36c9
     call L_00_3a18
     call L_00_3b99
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 1, a
     jr z, .L_00_3b26
     ld hl, $ffc9
@@ -5030,11 +5030,11 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
     call L_00_3b57
     jp DrawObject
 L_00_3b3b::
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 0, a
     ret z
     set 0, a
-    ldh [$ffd4], a
+    ldh [hEnemyFlags], a
     ldh a, [$ffcc]
     cp a, $80
     jr z, .L_00_3b4e
@@ -5042,7 +5042,7 @@ L_00_3b3b::
     ldh [$ffcc], a
     ret
 .L_00_3b4e:
-    ld hl, $ffd4
+    ld hl, hEnemyFlags
     res 0, [hl]
     xor a, a
     ldh [$ffcc], a
@@ -5051,7 +5051,7 @@ L_00_3b57::
     call L_00_3b5d
     jp SetAnimationVariant
 L_00_3b5d::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_00_3b74
     bit 1, a
@@ -5082,11 +5082,11 @@ L_00_3b99::
     and a, $0f
     or a, a
     jr nz, .L_00_3ba7
-    ld hl, $ffd4
+    ld hl, hEnemyFlags
     set 1, [hl]
     ret
 .L_00_3ba7:
-    ld hl, $ffd4
+    ld hl, hEnemyFlags
     res 1, [hl]
     ret
 L_00_3bad::
@@ -5112,7 +5112,7 @@ L_00_3c91::
     jr nz, .L_00_3c9c
     jp L_00_3e20
 .L_00_3c9c:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     call L_00_3d18
@@ -5122,7 +5122,7 @@ L_00_3c91::
     call L_00_3cb5
     jp DrawObject
 L_00_3cb5::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     jr z, .L_00_3ccd
     ldh a, [$ffcc]
@@ -5170,7 +5170,7 @@ L_00_3cb5::
 .L_00_3d15:
     jp L_00_3525
 L_00_3d18::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     ret nz
     ld a, [wRoomType]
@@ -5199,7 +5199,7 @@ L_00_3d18::
     ld [$c534], a
     ret
 .L_00_3d4b:
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     set 0, [hl]
     xor a, a
     ldh [$ffc6], a
@@ -5230,7 +5230,7 @@ L_00_3e20::
     ld de, D_00_3e4d
     call SetObjectAnimation
     call L_00_340c
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     and a, $0f
     srl a
     ld hl, D_00_3d6a
@@ -5253,7 +5253,7 @@ EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
     jr nz, .L_00_3e6c
     jp L_00_3ef9
 .L_00_3e6c:
-    ldh a, [$ffd4]
+    ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, L_00_32df
     ld a, [wRoomType]
@@ -5270,7 +5270,7 @@ EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
     call L_00_3ed1
     jp DrawObject
 L_00_3e90::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 1, a
     jr nz, .L_00_3eb0
     ldh a, [$ffc9]
@@ -5284,7 +5284,7 @@ L_00_3e90::
 .L_00_3ea8:
     xor a, a
     ldh [$ffc9], a
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     set 1, [hl]
 .L_00_3eb0:
     ldh a, [$ffc9]
@@ -5301,11 +5301,11 @@ L_00_3e90::
     ld de, D_00_3aca
     jp L_00_3651
 .L_00_3ecb:
-    ld hl, $ffd1
+    ld hl, hEnemyDir
     set 0, [hl]
     ret
 L_00_3ed1::
-    ldh a, [$ffd1]
+    ldh a, [hEnemyDir]
     bit 0, a
     ret z
     ld a, $02
@@ -5319,9 +5319,9 @@ L_00_3ed1::
     ld a, [hl+]
     or a, a
     jp z, L_00_3525
-    ldh [$ffbc], a
+    ldh [hEnemyX], a
     ld a, [hl]
-    ldh [$ffbf], a
+    ldh [hEnemyY], a
     ld hl, $ffca
     inc [hl]
     ld de, D_00_3f44
@@ -5329,22 +5329,22 @@ L_00_3ed1::
 L_00_3ef9::
     ld a, $20
     ldh [$ffc9], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     ld [$c48b], a
     ld [$c48f], a
     ld [$c491], a
     sub a, $10
     ld [$c489], a
-    ldh a, [$ffbc]
+    ldh a, [hEnemyX]
     add a, $10
     ld [$c48d], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     ld [$c48a], a
     ld [$c48e], a
     ld [$c492], a
     sub a, $10
     ld [$c48c], a
-    ldh a, [$ffbf]
+    ldh a, [hEnemyY]
     add a, $10
     ld [$c490], a
     xor a, a
@@ -5352,7 +5352,7 @@ L_00_3ef9::
     ld de, D_00_3f3a
     call SetObjectAnimation
     ld a, $90
-    ldh [$ffd1], a
+    ldh [hEnemyDir], a
     ret
 D_00_3f3a::
     INCBIN "orig/painter_momopie.gb", $03f3a, 10

@@ -62,3 +62,32 @@ DEF hEnemySlotHi    EQU $ffd8
 DEF wEnemySlots     EQU $c542   ; 16 enemy records of $20 bytes (to $c741)
 DEF wCameraX        EQU $c1ac   ; 16 bit camera position set by UpdateCamera
 DEF wCameraY        EQU $c1ae
+
+; Sound ids for PlaySound (music/effect type from SoundCommandHandlerTable; names for ids seen at their call sites)
+DEF SND_MUSIC_TITLE EQU $81
+DEF SND_SFX_82 EQU $82
+DEF SND_SFX_83 EQU $83
+DEF SND_MUSIC_GAME_OVER EQU $84
+DEF SND_MUSIC_ENDING EQU $85
+DEF SND_MUSIC_86 EQU $86
+DEF SND_MUSIC_87 EQU $87
+DEF SND_MUSIC_88 EQU $88
+DEF SND_MUSIC_BONUS_SELECT EQU $89
+DEF SND_MUSIC_ROUND_CLEAR EQU $8a
+DEF SND_MUSIC_DEATH EQU $8b
+DEF SND_UNUSED_8C EQU $8c
+DEF SND_SFX_8D EQU $8d
+DEF SND_SFX_8E EQU $8e
+DEF SND_SFX_CURSOR EQU $8f
+DEF SND_SFX_90 EQU $90
+DEF SND_SFX_91 EQU $91
+DEF SND_SFX_92 EQU $92
+DEF SND_SFX_93 EQU $93
+; ---- fields of the enemy record held in HRAM (hObject2 = $ffb5; record offset = address - $ffb5) ----
+DEF hEnemyX         EQU $ffbc   ; +7: pixel X (16 bit with $ffbd)
+DEF hEnemyXHi       EQU $ffbd
+DEF hEnemyY         EQU $ffbf   ; +$a: pixel Y (16 bit with $ffc0)
+DEF hEnemyYHi       EQU $ffc0
+DEF hEnemyDir       EQU $ffd1   ; low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags
+DEF hEnemyKind      EQU $ffd2   ; index into EnemyBehaviorTable
+DEF hEnemyFlags     EQU $ffd4   ; bit 1/2 = frozen / hit by the player
