@@ -42,12 +42,18 @@ void gb_reset_state(void) {
 
 void gb_trace_fn(fn_t f) {
     for (int i = 0; i < gb_nentries; i++)
-        if (gb_entries[i].fn == f) { fprintf(stderr, "[f%u] %u:%04X\n", gb_frames, gb_entries[i].bank, gb_entries[i].addr); return; }
+        if (gb_entries[i].fn == f) {
+            if (gb_trace == 4) { if (gb_entries[i].addr == 0x45D1 && gb_entries[i].bank == 1) fprintf(stderr, "%02x %04x %04x\n", r.a, BC(), DE()); return; }
+            fprintf(stderr, "[f%u] %u:%04X\n", gb_frames, gb_entries[i].bank, gb_entries[i].addr);
+            return;
+        }
 }
 
 fn_t gb_dispatch(uint16_t addr) {
     for (int i = 0; i < gb_nentries; i++)
         if (gb_entries[i].addr == addr && (addr < 0x4000 || gb_entries[i].bank == bank)) return gb_entries[i].fn;
+    fprintf(stderr, "regs: A=%02x BC=%04x DE=%04x HL=%04x SP=%04x\n", r.a, BC(), DE(), HL(), r.sp);
+    if (BC() >= 0xC000 && BC() < 0xDFE0) { fprintf(stderr, "record @%04x:", BC()); for (int i = 0; i < 0x20; i++) fprintf(stderr, " %02x", rd(BC() + i)); fprintf(stderr, "\n"); }
     gb_fatal("indirect jump to unknown routine", addr);
     return 0;
 }
