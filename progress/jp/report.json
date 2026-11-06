@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "14283",
-  "matched_code": "14283",
+  "total_code": "14239",
+  "matched_code": "14239",
   "matched_code_percent": 100.0,
-  "total_data": "51253",
-  "matched_data": "51253",
+  "total_data": "51297",
+  "matched_data": "51297",
   "matched_data_percent": 100.0,
-  "total_functions": 327,
-  "matched_functions": 327,
+  "total_functions": 324,
+  "matched_functions": 324,
   "matched_functions_percent": 100.0,
-  "complete_code": "14283",
+  "complete_code": "14239",
   "complete_code_percent": 100.0,
-  "complete_data": "51253",
+  "complete_data": "51297",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -52,7 +52,7 @@
    ],
    "functions": [
     {
-     "name": "L_00_0000",
+     "name": "RstVector00",
      "size": "3",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -68,7 +68,7 @@
      }
     },
     {
-     "name": "L_00_0048",
+     "name": "StatVector",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -76,7 +76,7 @@
      }
     },
     {
-     "name": "L_00_0050",
+     "name": "TimerVector",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -84,7 +84,7 @@
      }
     },
     {
-     "name": "L_00_0058",
+     "name": "SerialVector",
      "size": "3",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -92,7 +92,7 @@
      }
     },
     {
-     "name": "L_00_0060",
+     "name": "JoypadVector",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -708,7 +708,7 @@
      }
     },
     {
-     "name": "L_00_13e6",
+     "name": "StartRoundMusic",
      "size": "26",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -748,7 +748,7 @@
      }
     },
     {
-     "name": "L_00_1438",
+     "name": "InitRoundTimer",
      "size": "42",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -852,7 +852,7 @@
      }
     },
     {
-     "name": "L_00_1973",
+     "name": "InitCursorMenu",
      "size": "40",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -868,7 +868,7 @@
      }
     },
     {
-     "name": "L_00_1ce7",
+     "name": "ClearRoomState",
      "size": "22",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -996,7 +996,7 @@
      }
     },
     {
-     "name": "L_00_2b0a",
+     "name": "PickRandomRound",
      "size": "25",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1625,18 +1625,18 @@
    "name": "main/bank_01",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "4870",
-    "matched_code": "4870",
+    "total_code": "4826",
+    "matched_code": "4826",
     "matched_code_percent": 100.0,
-    "total_data": "11514",
-    "matched_data": "11514",
+    "total_data": "11558",
+    "matched_data": "11558",
     "matched_data_percent": 100.0,
-    "total_functions": 131,
-    "matched_functions": 131,
+    "total_functions": 128,
+    "matched_functions": 128,
     "matched_functions_percent": 100.0,
-    "complete_code": "4870",
+    "complete_code": "4826",
     "complete_code_percent": 100.0,
-    "complete_data": "11514",
+    "complete_data": "11558",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -1644,24 +1644,16 @@
    "sections": [
     {
      "name": ".text",
-     "size": "4870",
+     "size": "4826",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "11514",
+     "size": "11558",
      "fuzzy_match_percent": 100.0
     }
    ],
    "functions": [
-    {
-     "name": "L_01_4142",
-     "size": "21",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "16706"
-     }
-    },
     {
      "name": "SoundUpdate",
      "size": "53",
@@ -1687,7 +1679,7 @@
      }
     },
     {
-     "name": "L_01_41de",
+     "name": "SoundClearChannels",
      "size": "31",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1703,7 +1695,7 @@
      }
     },
     {
-     "name": "L_01_423c",
+     "name": "SoundClearRegisterShadow",
      "size": "39",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1711,7 +1703,7 @@
      }
     },
     {
-     "name": "L_01_4263",
+     "name": "SoundStartMusic",
      "size": "14",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1735,7 +1727,7 @@
      }
     },
     {
-     "name": "L_01_4292",
+     "name": "SoundStartEffect",
      "size": "41",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1743,7 +1735,7 @@
      }
     },
     {
-     "name": "L_01_42bb",
+     "name": "SoundPauseMusicChannels",
      "size": "36",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1751,7 +1743,7 @@
      }
     },
     {
-     "name": "L_01_42df",
+     "name": "SoundResumeMusicChannels",
      "size": "39",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1759,7 +1751,7 @@
      }
     },
     {
-     "name": "L_01_4306",
+     "name": "SoundLoadStream",
      "size": "44",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1791,7 +1783,7 @@
      }
     },
     {
-     "name": "L_01_4473",
+     "name": "SoundSilenceChannel1",
      "size": "17",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1807,7 +1799,7 @@
      }
     },
     {
-     "name": "L_01_44f3",
+     "name": "SoundSilenceChannel2",
      "size": "17",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1823,7 +1815,7 @@
      }
     },
     {
-     "name": "L_01_4561",
+     "name": "SoundSilenceChannel3",
      "size": "17",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1839,7 +1831,7 @@
      }
     },
     {
-     "name": "L_01_45c3",
+     "name": "SoundSilenceChannel4",
      "size": "14",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1855,7 +1847,7 @@
      }
     },
     {
-     "name": "L_01_45ef",
+     "name": "SoundCmdStop",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1895,7 +1887,7 @@
      }
     },
     {
-     "name": "L_01_469f",
+     "name": "SoundCmdCall",
      "size": "32",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1903,7 +1895,7 @@
      }
     },
     {
-     "name": "L_01_46bf",
+     "name": "SoundCmdReturn",
      "size": "24",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1911,7 +1903,7 @@
      }
     },
     {
-     "name": "L_01_46d7",
+     "name": "SoundCmdRepeat",
      "size": "22",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1919,7 +1911,7 @@
      }
     },
     {
-     "name": "L_01_46ed",
+     "name": "SoundCmdJump",
      "size": "13",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1935,7 +1927,7 @@
      }
     },
     {
-     "name": "L_01_46fd",
+     "name": "SoundCmdSetEnvelope",
      "size": "3",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1943,7 +1935,7 @@
      }
     },
     {
-     "name": "L_01_4700",
+     "name": "SoundSetField",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1951,7 +1943,7 @@
      }
     },
     {
-     "name": "L_01_4705",
+     "name": "SoundCmdAddTranspose",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1959,7 +1951,7 @@
      }
     },
     {
-     "name": "L_01_470e",
+     "name": "SoundCmdSetDuty",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1967,7 +1959,15 @@
      }
     },
     {
-     "name": "L_01_4718",
+     "name": "SoundCmdSetPan",
+     "size": "5",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "18195"
+     }
+    },
+    {
+     "name": "SoundCmdSetField6",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1975,7 +1975,7 @@
      }
     },
     {
-     "name": "L_01_471d",
+     "name": "SoundCmdSetPitch",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1991,7 +1991,7 @@
      }
     },
     {
-     "name": "L_01_4728",
+     "name": "SoundCmdSetWave",
      "size": "37",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1999,7 +1999,7 @@
      }
     },
     {
-     "name": "L_01_474d",
+     "name": "SoundLoadWave",
      "size": "40",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2023,7 +2023,7 @@
      }
     },
     {
-     "name": "L_01_478e",
+     "name": "SoundCmdMuteOn",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2031,7 +2031,7 @@
      }
     },
     {
-     "name": "L_01_4793",
+     "name": "SoundCmdMuteOff",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2039,7 +2039,7 @@
      }
     },
     {
-     "name": "L_01_4798",
+     "name": "SoundCmdClearFlag0",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2047,7 +2047,7 @@
      }
     },
     {
-     "name": "L_01_479d",
+     "name": "SoundCmdSetMasterVolume",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2063,7 +2063,7 @@
      }
     },
     {
-     "name": "L_01_47cb",
+     "name": "SoundSetFrequency",
      "size": "85",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2095,11 +2095,11 @@
      }
     },
     {
-     "name": "L_01_4929",
-     "size": "6",
+     "name": "L_01_4927",
+     "size": "8",
      "fuzzy_match_percent": 100.0,
      "metadata": {
-      "virtual_address": "18729"
+      "virtual_address": "18727"
      }
     },
     {
@@ -2284,14 +2284,6 @@
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "19644"
-     }
-    },
-    {
-     "name": "L_01_4cd7",
-     "size": "20",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "19671"
      }
     },
     {
@@ -2652,22 +2644,6 @@
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "22966"
-     }
-    },
-    {
-     "name": "L_01_59f5",
-     "size": "5",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "23029"
-     }
-    },
-    {
-     "name": "L_01_59fa",
-     "size": "5",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "23034"
      }
     },
     {

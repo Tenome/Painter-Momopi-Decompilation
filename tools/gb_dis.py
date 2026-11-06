@@ -107,6 +107,8 @@ class Rom:
 
     def plausible(self, b, start):
         """Does unclassified data at (b,start) look like a routine that ends in ret/jp/jr?"""
+        if (b, start) in self.nocode:
+            return False
         pc, o, n_ins, nops = start, off(b, start), 0, 0
         while n_ins < 60:
             if o + 3 > len(self.data) or (b, pc) in self.code_bytes and (b, pc) not in self.insns:

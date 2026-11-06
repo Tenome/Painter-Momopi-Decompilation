@@ -2,7 +2,7 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-162 named routines of 328 found.
+174 named routines of 324 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
@@ -111,13 +111,24 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:4157 | `SoundUpdate` | 53 | 1 | `SoundAssignChannels`, `SoundDequeue`, `SoundStartCommand`, `SoundUpdateChannel` |
 | 1:418c | `SoundDequeue` | 33 | 1 |  |
 | 1:41ad | `SoundStartCommand` | 49 | 1 | `L_01_4271` |
+| 1:41de | `SoundClearChannels` | 31 | 1 |  |
 | 1:41fd | `SoundInit` | 63 | 1 |  |
+| 1:423c | `SoundClearRegisterShadow` | 39 | 2 |  |
+| 1:4263 | `SoundStartMusic` | 14 | 0 |  |
+| 1:4292 | `SoundStartEffect` | 41 | 0 | `SoundClearRegisterShadow`, `SoundLoadStream` |
+| 1:42bb | `SoundPauseMusicChannels` | 36 | 0 |  |
+| 1:42df | `SoundResumeMusicChannels` | 39 | 0 | `SoundClearRegisterShadow` |
+| 1:4306 | `SoundLoadStream` | 44 | 2 |  |
 | 1:435e | `SoundAssignChannels` | 69 | 1 |  |
 | 1:43a3 | `SoundUpdateChannel` | 97 | 1 | `SoundApplyPitchSlide`, `SoundReadNextNote` |
 | 1:4404 | `SoundWriteChannel1` | 111 | 0 |  |
+| 1:4473 | `SoundSilenceChannel1` | 17 | 1 |  |
 | 1:4484 | `SoundWriteChannel2` | 111 | 0 |  |
+| 1:44f3 | `SoundSilenceChannel2` | 17 | 1 |  |
 | 1:4504 | `SoundWriteChannel3` | 93 | 0 |  |
+| 1:4561 | `SoundSilenceChannel3` | 17 | 1 |  |
 | 1:4572 | `SoundWriteChannel4` | 81 | 0 |  |
+| 1:45c3 | `SoundSilenceChannel4` | 14 | 1 |  |
 | 1:45d1 | `SoundRunCommand` | 30 | 0 | `SoundJumpHL`, `SoundParseStream` |
 | 1:45ef | `SoundCmdStop` | 5 | 0 |  |
 | 1:4613 | `SoundReadNextNote` | 12 | 1 |  |
@@ -141,7 +152,8 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:4793 | `SoundCmdMuteOff` | 5 | 0 |  |
 | 1:4798 | `SoundCmdClearFlag0` | 5 | 0 |  |
 | 1:479d | `SoundCmdSetMasterVolume` | 9 | 0 |  |
-| 1:47a6 | `SoundApplyPitchSlide` | 37 | 1 | `L_01_47cb`, `L_01_4820` |
+| 1:47a6 | `SoundApplyPitchSlide` | 37 | 1 | `L_01_4820`, `SoundSetFrequency` |
+| 1:47cb | `SoundSetFrequency` | 85 | 1 |  |
 | 1:485b | `PlaySound_Bank1` | 32 | 1 |  |
 | 1:4b1f | `SelectPlayerAnimation` | 20 | 1 |  |
 | 1:4b58 | `PixelXToColumn` | 10 | 8 |  |

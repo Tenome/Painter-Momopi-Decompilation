@@ -1170,9 +1170,9 @@ D_01_491b::
     INCBIN "orig/painter_momopie.gb", $0491b, 6
 D_01_4921::
     INCBIN "orig/painter_momopie.gb", $04921, 6
-D_01_4927::
-    INCBIN "orig/painter_momopie.gb", $04927, 2
-L_01_4929::
+L_01_4927::
+    rlca
+    ld c, h
     rlca
     ld c, l
     rlca
@@ -1317,7 +1317,7 @@ L_01_4a31::
     ld a, [$c519]
     and a, $02
     jr z, .L_01_4a3d
-    ld hl, D_01_4927
+    ld hl, $4927
     jr .L_01_4a40
 .L_01_4a3d:
     ld hl, $4929
@@ -2619,11 +2619,11 @@ L_01_58ee::
     jr z, .L_01_5938
     ld hl, $c4b9
     inc [hl]
-    ld hl, $59fa
+    ld hl, D_01_59fa
     ld a, [$c4b9]
     and a, $10
     jr z, .L_01_5927
-    ld hl, $59f5
+    ld hl, D_01_59f5
 .L_01_5927:
     ld a, l
     ld [$c49f], a
@@ -2714,14 +2714,10 @@ D_01_59d9::
     INCBIN "orig/painter_momopie.gb", $059d9, 21
 D_01_59ee::
     INCBIN "orig/painter_momopie.gb", $059ee, 7
-L_01_59f5::
-    ld bc, $9d9c
-    xor a, h
-    xor a, l
-L_01_59fa::
-    ld bc, $9f9e
-    xor a, [hl]
-    xor a, a
+D_01_59f5::
+    INCBIN "orig/painter_momopie.gb", $059f5, 5
+D_01_59fa::
+    INCBIN "orig/painter_momopie.gb", $059fa, 5
 EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
     call SelectObject2
     call TickObjectTimer
