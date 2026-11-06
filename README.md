@@ -9,7 +9,8 @@ This repository contains no game files. You need your own copy of the ROM.
 | | |
 |---|---|
 | ROM | 65,536 bytes, MBC1, 4 banks of 16 KiB (SHA-1 in `orig/README.md`) |
-| Code found so far | 410 routines, about 9.4 KB traced as code (14 % of the ROM); the rest is `db` until classified |
+| Code found so far | 327 routines (121 named), about 14.5 KB traced as code (22 % of the ROM); every instruction the game executed in play tests is covered; the rest is data (`INCBIN` of your ROM) |
+| Native build | a static recompilation to C plays the game on Windows with video, input and sound (`port/`, `tools/recomp.py`) |
 | Byte identity | the generated sources reproduce all 65,536 bytes (proved by `tools/gb_dis.py --check`) |
 | Assembler | RGBDS (rgbasm, rgblink) |
 
