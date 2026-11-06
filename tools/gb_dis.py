@@ -651,6 +651,8 @@ def main():
             os.makedirs(os.path.dirname(full), exist_ok=True)
             open(full, "wb").write(blob)
         print(len(rom.assets), "asset files written to assets/ (git-ignored; extracted from your ROM)")
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(ROOT, "tools", "gfx.py"), "png"], check=True, cwd=ROOT)
         os.makedirs(os.path.join(ROOT, "config"), exist_ok=True)
         with open(os.path.join(ROOT, "config", "functions.tsv"), "w", newline="\n") as f:
             f.write("bank\taddr\tsize\tname\n")

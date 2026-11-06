@@ -1,0 +1,12 @@
+# bank,addr,name -- tile data regions (2bpp, 16 bytes per tile) exposed as PNG sheets: assets/gfx/<bank>_<addr>_<name>.png
+bank,addr,name
+2,4000,SpriteTiles
+2,4700,SpriteSet0
+2,5000,SpriteSet1
+2,5900,SpriteSet2
+2,6200,SpriteSet3
+2,6b00,SpriteSet4
+3,4000,TilesTitle
+3,5000,TilesIcons
+3,6000,TilesEnding
+3,6e10,TilesFont2
