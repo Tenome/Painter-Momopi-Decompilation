@@ -105,6 +105,16 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   ($c520, 80 at the start of round 1); when it reaches 0 `RoundCleared` runs (sound $8a), and `wGameFlags` bit 0 makes `PlayFrame` finish the clear
   sequence. `PlayerDeath` (sound $8b) runs when `wPlayerDir` bit 5 is set by `L_01_4c4e`.
 
+### Text and VRAM jobs
+
+- **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,
+  `$b7`/`$b8` = other punctuation. `tools/dump_text.py` lists the strings in your ROM.
+- **VRAM copy data** (`VramCopyRows` $0618): a job is `DE` = source stream, `HL` = destination; the stream is repeated `count, rows, tile...` records where
+  `count` bit 7 means "repeat the single tile" instead of reading `count` tiles, `rows` = number of rows (the destination advances by $20 per row), terminated by
+  the caller's job count. `VramCopyList` ($0663) runs a list of such jobs `{dstLo?, dstHi?, srcLo, srcHi}`.
+  Examples in bank 0: room names KITCHEN / BED(ROOM) / ROUYA / TAKARA / ROUKA / KING at $1d5d-$1d8a, `READY !!` $1db0, `GAME OVER` $1f12, `CONTINUE ?` $2094,
+  title strings $2c54-$2c70, staff credits (PLANNER, DESIGNER, PROGRAMMER, PRESENTED...) $2e38-$2f1x for the ending.
+
 ### Data Structures
 
 - **Room map**: 16 columns x 16 rows of 2 bit cells (0 = empty, 1/2 = path pieces; $11 seen at the start tile), stored packed in 64 bytes
