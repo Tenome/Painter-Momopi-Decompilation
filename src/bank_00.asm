@@ -28,7 +28,7 @@ Entry::  ; nop; jp Start
     jp Start
     INCBIN "orig/painter_momopie.gb", $00104, 76
 Start::  ; sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters mode 0
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld a, $01
@@ -43,7 +43,7 @@ Start::  ; sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters m
     ld hl, $9bff
     call FillBackwardsFF
     call ClearOamShadow
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -57,9 +57,9 @@ Start::  ; sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters m
     ld [wLives], a
     xor a, a
     ld [rIF], a
-    ld a, $01
+    ld a, IE_VBLANK
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ld a, $ff
@@ -300,7 +300,7 @@ WaitSerialByte::  ; enables serial interrupt only and waits for hSerialByte
     jr z, .L_00_0361
     xor a, a
     ld [rIF], a
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
     ret
 WaitFrameAndSyncOam::  ; waits one frame; requests OAM DMA
@@ -355,13 +355,13 @@ PlaySound::  ; stores A in wSoundArg and queues it with the bank 1 routine $485b
 FadeOut::  ; steps BGP/OBP0/OBP1 e4-94-50-40-00
     ld b, $05
 .L_00_03b5:
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     ld a, $02
     call DelayFrames
-    ld a, $94
+    ld a, PAL_FADE_1
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -371,13 +371,13 @@ FadeOut::  ; steps BGP/OBP0/OBP1 e4-94-50-40-00
     jr nz, .L_00_03b5
     ld b, $05
 .L_00_03da:
-    ld a, $94
+    ld a, PAL_FADE_1
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     ld a, $02
     call DelayFrames
-    ld a, $50
+    ld a, PAL_FADE_2
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -387,13 +387,13 @@ FadeOut::  ; steps BGP/OBP0/OBP1 e4-94-50-40-00
     jr nz, .L_00_03da
     ld b, $05
 .L_00_03ff:
-    ld a, $50
+    ld a, PAL_FADE_2
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     ld a, $02
     call DelayFrames
-    ld a, $40
+    ld a, PAL_FADE_3
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -403,13 +403,13 @@ FadeOut::  ; steps BGP/OBP0/OBP1 e4-94-50-40-00
     jr nz, .L_00_03ff
     ld b, $05
 .L_00_0424:
-    ld a, $40
+    ld a, PAL_FADE_3
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     ld a, $02
     call DelayFrames
-    ld a, $00
+    ld a, PAL_WHITE
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -1713,7 +1713,7 @@ L_00_10a4::
 D_00_10ab::
     INCBIN "orig/painter_momopie.gb", $010ab, 10
 Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld hl, $9bff
@@ -1781,9 +1781,9 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld [wScrollY], a
     xor a, a
     ld [rIF], a
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     call L_00_13e6
@@ -1972,13 +1972,13 @@ L_00_121c::
     ld b, a
     ld hl, $9c71
     call DrawTwoDigitNumber
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     call ClearOamShadowY
     call RequestOamDma
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
     ld a, $9b
     ld [rLCDC], a
@@ -2076,16 +2076,16 @@ L_00_132c::
     call LcdOff
     di
     call LoadGfxBank2
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     call ClearOamShadow
     call RequestOamDma
     call ClearOamShadowY
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
 L_00_13e6::
@@ -2600,7 +2600,7 @@ D_00_1a17::
 D_00_1a30::
     INCBIN "orig/painter_momopie.gb", $01a30, 551
 Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld a, $ff
@@ -2640,15 +2640,15 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     xor a, a
     ld [rIF], a
-    ld a, $01
+    ld a, IE_VBLANK
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ld a, $97
@@ -2731,7 +2731,7 @@ D_00_1d7e::
 D_00_1d87::
     INCBIN "orig/painter_momopie.gb", $01d87, 57
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld hl, $9fff
@@ -2755,11 +2755,11 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld [wScrollY], a
     call RequestOamDma
     call ClearOamShadowY
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
     ld a, $9b
     ld [rLCDC], a
@@ -2782,7 +2782,7 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     jp GameModeDispatch
     INCBIN "orig/painter_momopie.gb", $01e2e, 118
 Mode4_GameOver::  ; GAME OVER screen
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld hl, $9bff
@@ -2799,9 +2799,9 @@ Mode4_GameOver::  ; GAME OVER screen
     ld [wScrollY], a
     call RequestOamDma
     call ClearOamShadowY
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ld hl, $c51f
@@ -2833,7 +2833,7 @@ Mode4_GameOver::  ; GAME OVER screen
 D_00_1f10::
     INCBIN "orig/painter_momopie.gb", $01f10, 12
 Mode5_Continue::  ; CONTINUE? countdown with YES/NO
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     ld hl, $9bff
@@ -2883,7 +2883,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld de, $c44c
     ld hl, $98a9
     call L_00_0628
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -2892,9 +2892,9 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     call SerialStartTransfer
     xor a, a
     ld [rIF], a
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ld a, $f0
@@ -3032,7 +3032,7 @@ D_00_2417::
 D_00_2457::
     INCBIN "orig/painter_momopie.gb", $02457, 64
 Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
-    ld sp, $dfff
+    ld sp, wStackTop
     ld hl, $c487
     inc [hl]
     xor a, a
@@ -3042,7 +3042,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     call LcdOff
     di
     call LoadTilesBank3C
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     call L_00_2633
@@ -3090,13 +3090,13 @@ Mode2_Init::  ; bonus select setup after LcdOff
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
-    ld a, $01
+    ld a, IE_VBLANK
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ld a, [$c43b]
@@ -3258,7 +3258,7 @@ D_00_28fd::
 D_00_2957::
     INCBIN "orig/painter_momopie.gb", $02957, 147
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     call LoadTilesBank3A
@@ -3277,9 +3277,9 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call SerialStartTransfer
     xor a, a
     ld [rIF], a
-    ld a, $09
+    ld a, IE_VBLANK_SERIAL
     ldh [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
 TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start sends the round over the link port
@@ -3465,7 +3465,7 @@ L_00_2b84::
     jp L_00_0498
     INCBIN "orig/painter_momopie.gb", $02b96, 218
 Mode6_Ending::  ; castle scene after the last round
-    ld sp, $dfff
+    ld sp, wStackTop
     call LcdOff
     di
     call LoadTilesBank3D
@@ -3511,15 +3511,15 @@ Mode6_Ending::  ; castle scene after the last round
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
     xor a, a
     ld [rIF], a
-    ld a, $01
+    ld a, IE_VBLANK
     ld [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     call L_00_3085
@@ -3775,9 +3775,9 @@ L_00_2fb9::
     call RunVramCopyList
     xor a, a
     ld [rIF], a
-    ld a, $01
+    ld a, IE_VBLANK
     ld [rIE], a
-    ld a, $93
+    ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
     ret

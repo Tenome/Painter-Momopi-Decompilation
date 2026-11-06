@@ -53,7 +53,7 @@ class Rom:
                     if m:
                         self.consts[m[1]] = int(m[2], 16)
         self.by_value = {v: k for k, v in self.consts.items() if v > 0xFF}
-        self.by_value8 = {v: k for k, v in self.consts.items() if k.startswith('SND_')}
+        self.by_value8 = {(pre, v): k for k, v in self.consts.items() for pre in ('SND_', 'LCDC_', 'PAL_', 'IE_') if k.startswith(pre)}
         self.kind = {}       # (bank, addr) -> 'code' start map filled by trace
         self.insns = {}      # (bank, addr) -> (len, tpl_kind, target)
         self.code_bytes = set()
@@ -522,10 +522,19 @@ class Rom:
                 q += 1
             out.append(f'    INCBIN "orig/painter_momopie.gb", ${base + pc - start:05x}, {q - pc}')
             pc = q
+        # name immediate values by what the next instruction does with them (constants.inc prefix: SND_ LCDC_ PAL_ IE_)
+        ctx = [(r"    call PlaySound", "SND_"), (r"    ldh? \[rLCDC\], a", "LCDC_"), (r"    ldh? \[(rBGP|rOBP0|rOBP1)\], a", "PAL_"),
+               (r"    ldh? \[rIE\], a", "IE_")]
         for i in range(len(out) - 1):
             m = re.fullmatch(r"    ld a, \$([0-9a-f]{2})", out[i])
-            if m and out[i + 1] == "    call PlaySound" and int(m[1], 16) in self.by_value8:
-                out[i] = "    ld a, " + self.by_value8[int(m[1], 16)]
+            if not m:
+                continue
+            for rx, prefix in ctx:
+                if re.fullmatch(rx, out[i + 1]):
+                    name = self.by_value8.get((prefix, int(m[1], 16)))
+                    if name:
+                        out[i] = "    ld a, " + name
+                    break
         return "\n".join(out) + "\n"
 
     def functions(self):

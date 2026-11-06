@@ -1898,7 +1898,7 @@ L_01_4e77::
     jr z, .L_01_4ea5
     inc a
     ld [$c1f8], a
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld a, [$c519]
     and a, $02
@@ -1907,7 +1907,7 @@ L_01_4e77::
     ld [rBGP], a
     ret
 .L_01_4ea5:
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a
@@ -2141,7 +2141,7 @@ RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restor
     ld a, [wPlayerStatus]
     bit 2, a
     jr nz, .L_01_506f
-    ld a, $e4
+    ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
     ld [rOBP1], a

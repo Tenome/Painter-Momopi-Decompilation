@@ -114,3 +114,15 @@ DEF hScratch12      EQU $ffa8
 DEF hScratch13      EQU $ffa9
 DEF hScratch14      EQU $ffaa
 DEF hScratch15      EQU $ffab
+
+; Immediate values named by their use (the disassembler substitutes them in `ld a, n` before the register write)
+DEF LCDC_ON_BG_OBJ  EQU $93   ; LCD on, BG tile data $8000, BG and sprites on
+DEF LCDC_ON_BG      EQU $91   ; LCD on, BG on, sprites off
+DEF PAL_NORMAL      EQU $e4   ; BGP/OBP: shades 0 1 2 3 in order
+DEF PAL_FADE_1      EQU $94
+DEF PAL_FADE_2      EQU $50
+DEF PAL_FADE_3      EQU $40
+DEF PAL_WHITE       EQU $00   ; every shade maps to colour 0 (lightest): the last step of FadeOut
+DEF IE_VBLANK       EQU $01
+DEF IE_VBLANK_SERIAL EQU $09
+DEF wStackTop       EQU $dfff ; SP is reset here at the start of every mode
