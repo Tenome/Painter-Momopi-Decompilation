@@ -133,3 +133,7 @@ DEF vBGMapLast      EQU $9bff   ; last byte of background map 0 (FillBackwardsFF
 DEF hOamDma         EQU $ff80   ; HRAM copy of OamDmaRoutine
 DEF hOtherObjLo     EQU $ffa4   ; pointer to the second object for ObjectsOverlap (set by callers)
 DEF hOtherObjHi     EQU $ffa5
+DEF hEnemyBlocked   EQU $ffc7   ; bit mask of directions the enemy cannot walk (set from the room map and the screen edges)
+DEF hEnemyCounter   EQU $ffc9   ; frame counter used by the enemy behaviour routines
+DEF hEnemyAnimState EQU $ffc6
+DEF wPaintObject    EQU $c4fe   ; the paint blob object record (tested by CheckPaintHitsEnemy)

@@ -169,3 +169,11 @@ bank,addr,name,comment
 0,0b0a,CompareObjectCoordinate,compares a coordinate (offset in DE) of the two objects; carry = within the box size
 0,341f,CheckEnemyTouchesPlayer,if the enemy in hObject2 overlaps wPlayer then wPlayerDir bit 5 is set (PlayFrame then runs PlayerDeath)
 0,3693,CheckPaintHitsEnemy,tests the object at $c4fe (paint blob) against hObject2; on a hit sets wPlayerStatus bit 3 and hEnemyFlags bit 2
+0,3478,EnemyOnTileGrid,Z when the enemy is aligned to the 16 pixel grid
+0,3481,EnemyComputeBlockedDirs,fills hEnemyBlocked from the room map cells around the enemy
+0,36c9,EnemyEdgeBlockedDirs,adds the screen edge limits (X $20-$f0; Y $28-$f8) to hEnemyBlocked
+0,3a18,EnemyChooseDirection,when hEnemyDir bit 6 is set: picks a new direction among the unblocked ones (random from hRngCounter)
+0,3b57,SetEnemyAnimation,SelectEnemyAnimation then SetAnimationVariant
+0,3b5d,SelectEnemyAnimation,chooses the animation pointers from hEnemyDir (and flips the sprite)
+0,32df,EnemyDefeated,plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFlags bit 2): score and removal
+0,3666,EnemyRequestTurn,sets hEnemyDir bit 6 and clears the movement variables

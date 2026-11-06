@@ -84,7 +84,6 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     call CopyMemory
     ld hl, RoomSpriteSetTable
     ld a, [wRoomIndex]
-L_00_01d5::
     call TableIndexFromRound
     ld de, vTiles1
     ld bc, $0900
@@ -3993,7 +3992,7 @@ L_00_32a2::
     ld hl, wPlayerDir
     set 5, [hl]
     ret
-L_00_32df::
+EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFlags bit 2): score and removal
     ld a, SND_SFX_8E
     call PlaySound
     ld hl, $ffd3
@@ -4209,19 +4208,19 @@ L_00_3449::
 .L_00_3475:
     ld a, $01
     ret
-L_00_3478::
+EnemyOnTileGrid::  ; Z when the enemy is aligned to the 16 pixel grid
     ldh a, [hEnemyX]
     ld b, a
     ldh a, [hEnemyY]
     ld c, a
     jp IsOnTileGrid
-L_00_3481::
+EnemyComputeBlockedDirs::  ; fills hEnemyBlocked from the room map cells around the enemy
     ldh a, [hEnemyX]
     ld b, a
     ldh a, [hEnemyY]
     ld c, a
     xor a, a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ld a, b
     add a, $08
     and a, $f0
@@ -4240,7 +4239,7 @@ L_00_3481::
     or a, $00
     jr nz, .L_00_34ae
     ld a, $04
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_34ae:
     ld a, b
     add a, $08
@@ -4260,9 +4259,9 @@ L_00_3481::
     and a, $0f
     or a, $00
     jr nz, .L_00_34d5
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $08
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_34d5:
     ld a, b
     add a, $08
@@ -4282,9 +4281,9 @@ L_00_3481::
     and a, $0f
     or a, $00
     jr nz, .L_00_34fc
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $02
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_34fc:
     ld a, b
     add a, $08
@@ -4307,9 +4306,9 @@ L_00_3481::
     and a, $0f
     or a, $00
     ret nz
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $01
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ret
 L_00_3525::
     ld hl, hObject2
@@ -4400,7 +4399,7 @@ L_00_3599::
     sub a, e
     ld l, $02
 .L_00_35be:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     and a, l
     jr nz, .L_00_35f0
     ld b, l
@@ -4421,12 +4420,12 @@ L_00_3599::
     sub a, d
     ld h, $04
 .L_00_35db:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     and a, h
     jr nz, .L_00_35f0
     ld b, h
 .L_00_35e1:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     swap a
     and a, $0f
     and a, b
@@ -4438,7 +4437,7 @@ L_00_3599::
 .L_00_35f0:
     ld hl, hEnemyDir
     set 6, [hl]
-    jp L_00_3a18
+    jp EnemyChooseDirection
 L_00_35f8::
     ldh a, [hEnemyX]
     ld [$c525], a
@@ -4456,17 +4455,17 @@ L_00_3603::
     jr nz, .L_00_3620
     ld a, [wSubState]
     bit 0, a
-    jp nz, L_00_3666
+    jp nz, EnemyRequestTurn
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
 .L_00_3620:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     and a, $0f
     ld d, a
     ldh a, [hEnemyDir]
     and a, $0f
     and a, d
-    jp nz, L_00_3666
+    jp nz, EnemyRequestTurn
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
@@ -4501,11 +4500,11 @@ SetObjectAnimation::  ; stores DE as the animation pointer (record +1/+2) of hOb
     ld a, d
     ldh [$ffb7], a
     ret
-L_00_3666::
+EnemyRequestTurn::  ; sets hEnemyDir bit 6 and clears the movement variables
     ld hl, hEnemyDir
     set 6, [hl]
     xor a, a
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ldh [$ffc2], a
     ldh [$ffc4], a
     ret
@@ -4529,10 +4528,10 @@ L_00_368a::
     ld h, a
     ret
 CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2; on a hit sets wPlayerStatus bit 3 and hEnemyFlags bit 2
-    ld a, [$c4fe]
+    ld a, [wPaintObject]
     bit 7, a
     ret z
-    ld hl, $c4fe
+    ld hl, wPaintObject
     ld a, l
     ldh [hOtherObjLo], a
     ld a, h
@@ -4541,7 +4540,7 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     call ObjectsOverlap
     and a, a
     ret z
-    ld hl, $c4fe
+    ld hl, wPaintObject
     res 7, [hl]
     call L_00_31eb
     xor a, a
@@ -4557,35 +4556,35 @@ L_00_36c6::
     inc c
     ld c, d
     ld c, e
-L_00_36c9::
+EnemyEdgeBlockedDirs::  ; adds the screen edge limits (X $20-$f0; Y $28-$f8) to hEnemyBlocked
     xor a, a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ldh a, [hEnemyX]
     cp a, $21
     jr nc, .L_00_36d6
     ld a, $02
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_36d6:
     ldh a, [hEnemyX]
     cp a, $f0
     jr c, .L_00_36e2
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $01
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_36e2:
     ldh a, [hEnemyY]
     cp a, $29
     jr nc, .L_00_36ee
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $04
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_00_36ee:
     ldh a, [hEnemyY]
     cp a, $f8
     ret c
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     or a, $08
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ret
 L_00_36fa::
     ld a, $0f
@@ -4654,15 +4653,15 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     ld a, $ff
     ldh [hObjPtrHi], a
     call DrawObject
-    ldh a, [$ffc9]
+    ldh a, [hEnemyCounter]
     sub a, $01
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     bit 7, a
     ret z
     ld hl, hEnemyDir
     res 4, [hl]
     xor a, a
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ret
 EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); UpdateEnemy jumps through it
     dw EnemyBehavior0
@@ -4778,13 +4777,13 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffc5]
     ld [hl+], a
-    ldh a, [$ffc6]
+    ldh a, [hEnemyAnimState]
     ld [hl+], a
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     ld [hl+], a
     ldh a, [$ffc8]
     ld [hl+], a
-    ldh a, [$ffc9]
+    ldh a, [hEnemyCounter]
     ld [hl+], a
     ldh a, [$ffca]
     ld [hl+], a
@@ -4849,13 +4848,13 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffc5], a
     ld a, [hl+]
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, [hl+]
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ld a, [hl+]
     ldh [$ffc8], a
     ld a, [hl+]
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld a, [hl+]
     ldh [$ffca], a
     ld a, [hl+]
@@ -4886,10 +4885,10 @@ EnemyBehavior0::  ; routine 0 of EnemyBehaviorTable
 .L_00_3906:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
-    call L_00_3481
+    jp nz, EnemyDefeated
+    call EnemyComputeBlockedDirs
     call L_00_39f9
-    call L_00_3a18
+    call EnemyChooseDirection
     call L_00_39b1
     call L_00_352f
     call L_00_392e
@@ -4969,16 +4968,16 @@ L_00_39b1::
     jr nz, .L_00_39c0
     ld a, [wSubState]
     bit 0, a
-    jp nz, L_00_3666
+    jp nz, EnemyRequestTurn
 .L_00_39c0:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     and a, $0f
     ld d, a
     ldh a, [hEnemyDir]
     and a, $0f
     ld e, a
     and a, d
-    jp nz, L_00_3666
+    jp nz, EnemyRequestTurn
     ld a, e
     srl a
     sla a
@@ -5004,7 +5003,7 @@ L_00_39b1::
     call SelectObject2
     jp L_00_09e0
 L_00_39f9::
-    call L_00_3478
+    call EnemyOnTileGrid
     jr z, .L_00_3a04
     ld hl, hEnemyDir
     res 6, [hl]
@@ -5023,13 +5022,13 @@ L_00_39f9::
     or a, $60
     ldh [hEnemyDir], a
     ret
-L_00_3a18::
+EnemyChooseDirection::  ; when hEnemyDir bit 6 is set: picks a new direction among the unblocked ones (random from hRngCounter)
     ldh a, [hEnemyDir]
     bit 6, a
     ret z
     ld hl, hEnemyDir
     res 6, [hl]
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     ld e, a
     ldh a, [hEnemyDir]
     and a, $0f
@@ -5045,7 +5044,7 @@ L_00_3a18::
     ldh a, [hRngCounter]
     and a, $0f
     ld b, a
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     cpl
     and a, $0f
     and a, b
@@ -5071,7 +5070,7 @@ L_00_3a18::
     ldh [hEnemyDir], a
     ret
 .L_00_3a67:
-    ldh a, [$ffc7]
+    ldh a, [hEnemyBlocked]
     cpl
     and a, $0f
     ld b, a
@@ -5082,7 +5081,7 @@ L_00_3a18::
     ret
 L_00_3a75::
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld a, $04
     ldh [$ffb9], a
     ldh a, [hEnemyKind]
@@ -5136,16 +5135,16 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
 .L_00_3b02:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
-    call L_00_3481
+    jp nz, EnemyDefeated
+    call EnemyComputeBlockedDirs
     call L_00_39f9
-    call L_00_36c9
-    call L_00_3a18
+    call EnemyEdgeBlockedDirs
+    call EnemyChooseDirection
     call L_00_3b99
     ldh a, [hEnemyFlags]
     bit 1, a
     jr z, .L_00_3b26
-    ld hl, $ffc9
+    ld hl, hEnemyCounter
     inc [hl]
     ld a, [hl]
     and a, $08
@@ -5156,7 +5155,7 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
-    call L_00_3b57
+    call SetEnemyAnimation
     jp DrawObject
 L_00_3b3b::
     ldh a, [hEnemyFlags]
@@ -5176,10 +5175,10 @@ L_00_3b3b::
     xor a, a
     ldh [$ffcc], a
     ret
-L_00_3b57::
-    call L_00_3b5d
+SetEnemyAnimation::  ; SelectEnemyAnimation then SetAnimationVariant
+    call SelectEnemyAnimation
     jp SetAnimationVariant
-L_00_3b5d::
+SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and flips the sprite)
     ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_00_3b74
@@ -5203,7 +5202,7 @@ L_00_3b5d::
     ld bc, $3bcd
     jp SetAnimationVariant
 .L_00_3b90:
-    ld de, $3bd2
+    ld de, D_00_3bd2
     ld bc, $3bd7
     jp SetAnimationVariant
 L_00_3b99::
@@ -5220,9 +5219,9 @@ L_00_3b99::
     ret
 L_00_3bad::
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld de, D_00_3bbe
     call SetObjectAnimation
     jp L_00_340c
@@ -5230,11 +5229,8 @@ D_00_3bbe::
     INCBIN "orig/painter_momopie.gb", $03bbe, 10
 D_00_3bc8::
     INCBIN "orig/painter_momopie.gb", $03bc8, 10
-L_00_3bd2::
-    ld bc, $c9c8
-    ret c
-    reti
-    INCBIN "orig/painter_momopie.gb", $03bd7, 186
+D_00_3bd2::
+    INCBIN "orig/painter_momopie.gb", $03bd2, 191
 L_00_3c91::
     call SelectObject2
     call TickObjectTimer
@@ -5243,7 +5239,7 @@ L_00_3c91::
 .L_00_3c9c:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
+    jp nz, EnemyDefeated
     call L_00_3d18
     call L_00_3643
     call CheckEnemyTouchesPlayer
@@ -5267,7 +5263,7 @@ L_00_3cb5::
     set 5, a
     set 6, a
     ldh [hObject2], a
-    ldh a, [$ffc9]
+    ldh a, [hEnemyCounter]
     cp a, $00
     jr z, .L_00_3ce7
     cp a, $08
@@ -5285,7 +5281,7 @@ L_00_3cb5::
 .L_00_3cf5:
     ld hl, hObject2
     res 5, [hl]
-    ld de, $3e57
+    ld de, D_00_3e57
     ld bc, $3e5c
     jp SetAnimationVariant
 .L_00_3d03:
@@ -5293,7 +5289,7 @@ L_00_3cb5::
     ld bc, $3e52
     jp SetAnimationVariant
 .L_00_3d0c:
-    ld de, $3e57
+    ld de, D_00_3e57
     ld bc, $3e5c
     jp SetAnimationVariant
 .L_00_3d15:
@@ -5310,7 +5306,7 @@ L_00_3d18::
     jr nz, .L_00_3d54
 .L_00_3d2b:
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
 .L_00_3d2f:
     ld a, [$c533]
     ld l, a
@@ -5319,7 +5315,7 @@ L_00_3d18::
     ld a, [hl]
     cp a, $01
     jp z, .L_00_3d4b
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ldh [$ffc5], a
     inc hl
     ld a, l
@@ -5331,11 +5327,11 @@ L_00_3d18::
     ld hl, hEnemyDir
     set 0, [hl]
     xor a, a
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ret
 .L_00_3d54:
     xor a, a
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, [$c533]
     ld l, a
     ld a, [$c534]
@@ -5355,9 +5351,9 @@ D_00_3dc7::
     INCBIN "orig/painter_momopie.gb", $03dc7, 89
 L_00_3e20::
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ldh [$ffcc], a
     ld hl, hObject2
     set 6, [hl]
@@ -5376,11 +5372,8 @@ L_00_3e20::
     ret
 D_00_3e4d::
     INCBIN "orig/painter_momopie.gb", $03e4d, 10
-L_00_3e57::
-    ld bc, $c5c4
-    call nc, L_00_01d5
-    add a, $c7
-    sub a, $d7
+D_00_3e57::
+    INCBIN "orig/painter_momopie.gb", $03e57, 10
 EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
     call SelectObject2
     call TickObjectTimer
@@ -5389,7 +5382,7 @@ EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
 .L_00_3e6c:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
+    jp nz, EnemyDefeated
     ld a, [wRoomType]
     cp a, $06
     jr nz, .L_00_3e81
@@ -5407,25 +5400,25 @@ L_00_3e90::
     ldh a, [hEnemyDir]
     bit 1, a
     jr nz, .L_00_3eb0
-    ldh a, [$ffc9]
+    ldh a, [hEnemyCounter]
     cp a, $a0
     jr z, .L_00_3ea8
     inc a
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld de, D_00_3f3a
     ld bc, $3f3f
     jp SetAnimationVariant
 .L_00_3ea8:
     xor a, a
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld hl, hEnemyDir
     set 1, [hl]
 .L_00_3eb0:
-    ldh a, [$ffc9]
+    ldh a, [hEnemyCounter]
     cp a, $50
     jr z, .L_00_3ecb
     inc a
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ldh a, [$ffd0]
     and a, $04
     jr z, .L_00_3ec5
@@ -5462,7 +5455,7 @@ L_00_3ed1::
     jp SetObjectAnimation
 L_00_3ef9::
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ldh a, [hEnemyX]
     ld [$c48b], a
     ld [$c48f], a

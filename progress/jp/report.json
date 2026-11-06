@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "13825",
-  "matched_code": "13825",
+  "total_code": "14283",
+  "matched_code": "14283",
   "matched_code_percent": 100.0,
-  "total_data": "51711",
-  "matched_data": "51711",
+  "total_data": "51253",
+  "matched_data": "51253",
   "matched_data_percent": 100.0,
-  "total_functions": 310,
-  "matched_functions": 310,
+  "total_functions": 327,
+  "matched_functions": 327,
   "matched_functions_percent": 100.0,
-  "complete_code": "13825",
+  "complete_code": "14283",
   "complete_code_percent": 100.0,
-  "complete_data": "51711",
+  "complete_data": "51253",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9419",
-    "matched_code": "9419",
+    "total_code": "9413",
+    "matched_code": "9413",
     "matched_code_percent": 100.0,
-    "total_data": "6965",
-    "matched_data": "6965",
+    "total_data": "6971",
+    "matched_data": "6971",
     "matched_data_percent": 100.0,
-    "total_functions": 193,
-    "matched_functions": 193,
+    "total_functions": 196,
+    "matched_functions": 196,
     "matched_functions_percent": 100.0,
-    "complete_code": "9419",
+    "complete_code": "9413",
     "complete_code_percent": 100.0,
-    "complete_data": "6965",
+    "complete_data": "6971",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9419",
+     "size": "9413",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "6965",
+     "size": "6971",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -57,6 +57,46 @@
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "0"
+     }
+    },
+    {
+     "name": "VBlankVector",
+     "size": "3",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "64"
+     }
+    },
+    {
+     "name": "L_00_0048",
+     "size": "1",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "72"
+     }
+    },
+    {
+     "name": "L_00_0050",
+     "size": "1",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "80"
+     }
+    },
+    {
+     "name": "L_00_0058",
+     "size": "3",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "88"
+     }
+    },
+    {
+     "name": "L_00_0060",
+     "size": "1",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "96"
      }
     },
     {
@@ -85,18 +125,10 @@
     },
     {
      "name": "LoadGfxBank2",
-     "size": "23",
+     "size": "41",
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "446"
-     }
-    },
-    {
-     "name": "L_00_01d5",
-     "size": "18",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "469"
      }
     },
     {
@@ -420,7 +452,7 @@
      }
     },
     {
-     "name": "L_00_080c",
+     "name": "DrawObjectBytePos",
      "size": "52",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -436,7 +468,7 @@
      }
     },
     {
-     "name": "L_00_0866",
+     "name": "DrawObjectParts",
      "size": "324",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -540,7 +572,7 @@
      }
     },
     {
-     "name": "L_00_0abf",
+     "name": "ObjectsOverlap",
      "size": "75",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -548,7 +580,7 @@
      }
     },
     {
-     "name": "L_00_0b0a",
+     "name": "CompareObjectCoordinate",
      "size": "58",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -724,7 +756,7 @@
      }
     },
     {
-     "name": "L_00_14a6",
+     "name": "ClearRoundVariables",
      "size": "62",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -932,7 +964,7 @@
      }
     },
     {
-     "name": "L_00_25e0",
+     "name": "MenuCursorInput",
      "size": "80",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -980,7 +1012,7 @@
      }
     },
     {
-     "name": "L_00_2b46",
+     "name": "InitTitleVariables",
      "size": "62",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1140,7 +1172,7 @@
      }
     },
     {
-     "name": "L_00_32df",
+     "name": "EnemyDefeated",
      "size": "286",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1164,7 +1196,7 @@
      }
     },
     {
-     "name": "L_00_341f",
+     "name": "CheckEnemyTouchesPlayer",
      "size": "42",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1180,7 +1212,7 @@
      }
     },
     {
-     "name": "L_00_3478",
+     "name": "EnemyOnTileGrid",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1188,7 +1220,7 @@
      }
     },
     {
-     "name": "L_00_3481",
+     "name": "EnemyComputeBlockedDirs",
      "size": "164",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1276,7 +1308,7 @@
      }
     },
     {
-     "name": "L_00_3666",
+     "name": "EnemyRequestTurn",
      "size": "13",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1308,7 +1340,7 @@
      }
     },
     {
-     "name": "L_00_3693",
+     "name": "CheckPaintHitsEnemy",
      "size": "41",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1324,7 +1356,7 @@
      }
     },
     {
-     "name": "L_00_36c9",
+     "name": "EnemyEdgeBlockedDirs",
      "size": "49",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1404,7 +1436,7 @@
      }
     },
     {
-     "name": "L_00_38fe",
+     "name": "EnemyBehavior0",
      "size": "48",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1452,7 +1484,7 @@
      }
     },
     {
-     "name": "L_00_3a18",
+     "name": "EnemyChooseDirection",
      "size": "93",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1469,10 +1501,18 @@
     },
     {
      "name": "L_00_3aed",
-     "size": "78",
+     "size": "10",
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "15085"
+     }
+    },
+    {
+     "name": "EnemyBehavior1",
+     "size": "68",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "15095"
      }
     },
     {
@@ -1484,7 +1524,7 @@
      }
     },
     {
-     "name": "L_00_3b57",
+     "name": "SetEnemyAnimation",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1492,7 +1532,7 @@
      }
     },
     {
-     "name": "L_00_3b5d",
+     "name": "SelectEnemyAnimation",
      "size": "60",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1513,14 +1553,6 @@
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "15277"
-     }
-    },
-    {
-     "name": "L_00_3bd2",
-     "size": "5",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "15314"
      }
     },
     {
@@ -1556,15 +1588,7 @@
      }
     },
     {
-     "name": "L_00_3e57",
-     "size": "10",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "15959"
-     }
-    },
-    {
-     "name": "L_00_3e61",
+     "name": "EnemyBehavior5",
      "size": "47",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1601,18 +1625,18 @@
    "name": "main/bank_01",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "4406",
-    "matched_code": "4406",
+    "total_code": "4870",
+    "matched_code": "4870",
     "matched_code_percent": 100.0,
-    "total_data": "11978",
-    "matched_data": "11978",
+    "total_data": "11514",
+    "matched_data": "11514",
     "matched_data_percent": 100.0,
-    "total_functions": 117,
-    "matched_functions": 117,
+    "total_functions": 131,
+    "matched_functions": 131,
     "matched_functions_percent": 100.0,
-    "complete_code": "4406",
+    "complete_code": "4870",
     "complete_code_percent": 100.0,
-    "complete_data": "11978",
+    "complete_data": "11514",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -1620,16 +1644,24 @@
    "sections": [
     {
      "name": ".text",
-     "size": "4406",
+     "size": "4870",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "11978",
+     "size": "11514",
      "fuzzy_match_percent": 100.0
     }
    ],
    "functions": [
+    {
+     "name": "L_01_4142",
+     "size": "21",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "16706"
+     }
+    },
     {
      "name": "SoundUpdate",
      "size": "53",
@@ -1663,7 +1695,7 @@
      }
     },
     {
-     "name": "L_01_41fd",
+     "name": "SoundInit",
      "size": "63",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1815,7 +1847,7 @@
      }
     },
     {
-     "name": "L_01_45d1",
+     "name": "SoundRunCommand",
      "size": "30",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1847,7 +1879,7 @@
      }
     },
     {
-     "name": "L_01_461f",
+     "name": "SoundParseStream",
      "size": "91",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1855,7 +1887,7 @@
      }
     },
     {
-     "name": "L_01_467a",
+     "name": "SoundJumpHL",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1943,6 +1975,14 @@
      }
     },
     {
+     "name": "L_01_471d",
+     "size": "5",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "18205"
+     }
+    },
+    {
      "name": "L_01_4722",
      "size": "6",
      "fuzzy_match_percent": 100.0,
@@ -1975,7 +2015,7 @@
      }
     },
     {
-     "name": "L_01_4776",
+     "name": "SoundCmdEnd",
      "size": "24",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2263,7 +2303,7 @@
      }
     },
     {
-     "name": "L_01_4cf3",
+     "name": "LinkSyncFrame",
      "size": "75",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2447,7 +2487,7 @@
      }
     },
     {
-     "name": "L_01_5006",
+     "name": "PaintCell",
      "size": "62",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2463,7 +2503,7 @@
      }
     },
     {
-     "name": "L_01_50b1",
+     "name": "GotoLinkLose",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2471,7 +2511,7 @@
      }
     },
     {
-     "name": "L_01_50b6",
+     "name": "NextRound",
      "size": "68",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2503,7 +2543,7 @@
      }
     },
     {
-     "name": "L_01_51ad",
+     "name": "InitPlayer",
      "size": "118",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2519,7 +2559,7 @@
      }
     },
     {
-     "name": "L_01_5301",
+     "name": "UpdateCamera",
      "size": "16",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2527,7 +2567,7 @@
      }
     },
     {
-     "name": "L_01_5311",
+     "name": "CameraFollowPlayerX",
      "size": "89",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2535,7 +2575,7 @@
      }
     },
     {
-     "name": "L_01_536a",
+     "name": "ResetCamera",
      "size": "16",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2543,7 +2583,7 @@
      }
     },
     {
-     "name": "L_01_537a",
+     "name": "EnemyBehavior4",
      "size": "26",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2564,6 +2604,102 @@
      "fuzzy_match_percent": 100.0,
      "metadata": {
       "virtual_address": "21444"
+     }
+    },
+    {
+     "name": "EnemyBehavior2",
+     "size": "54",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22681"
+     }
+    },
+    {
+     "name": "L_01_58cf",
+     "size": "31",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22735"
+     }
+    },
+    {
+     "name": "L_01_58ee",
+     "size": "89",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22766"
+     }
+    },
+    {
+     "name": "L_01_5947",
+     "size": "40",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22855"
+     }
+    },
+    {
+     "name": "L_01_596f",
+     "size": "71",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22895"
+     }
+    },
+    {
+     "name": "L_01_59b6",
+     "size": "21",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "22966"
+     }
+    },
+    {
+     "name": "L_01_59f5",
+     "size": "5",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23029"
+     }
+    },
+    {
+     "name": "L_01_59fa",
+     "size": "5",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23034"
+     }
+    },
+    {
+     "name": "EnemyBehavior3",
+     "size": "42",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23039"
+     }
+    },
+    {
+     "name": "L_01_5a29",
+     "size": "60",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23081"
+     }
+    },
+    {
+     "name": "L_01_5a65",
+     "size": "17",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23141"
+     }
+    },
+    {
+     "name": "Sound93EffectData",
+     "size": "3",
+     "fuzzy_match_percent": 100.0,
+     "metadata": {
+      "virtual_address": "23738"
      }
     }
    ]

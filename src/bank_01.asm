@@ -1221,7 +1221,7 @@ L_01_4967::
     ld [wSubState], a
     ret
 L_01_496c::
-    ld hl, $c4fe
+    ld hl, wPaintObject
     call Clear32Bytes
     ld a, $08
     ld [$c1f7], a
@@ -1239,7 +1239,7 @@ L_01_496c::
     ld a, $08
     ld [$c449], a
     ld a, $82
-    ld [$c4fe], a
+    ld [wPaintObject], a
     call L_01_4a9d
     jp L_01_4957
 L_01_49a0::
@@ -1282,7 +1282,7 @@ L_01_49a0::
     ret nz
     jr .L_01_49a4
 L_01_49d6::
-    ld hl, $c4fe
+    ld hl, wPaintObject
     call Clear32Bytes
     ld hl, $492b
     ld a, l
@@ -1294,7 +1294,7 @@ L_01_49d6::
     ld a, [$c4ce]
     ld [$c50e], a
     ld a, $86
-    ld [$c4fe], a
+    ld [wPaintObject], a
     ld a, [$c4c4]
     ld [$c504], a
     ld a, [wPlayerX]
@@ -1505,7 +1505,7 @@ L_01_4b79::
     jr nz, .L_01_4b98
     ld a, $04
     ld [$c43b], a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_01_4b98:
     ld a, c
     add a, $10
@@ -1516,7 +1516,7 @@ L_01_4b79::
     ld a, [$c43b]
     or a, $08
     ld [$c43b], a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_01_4bae:
     ld a, e
     sub a, $01
@@ -1529,7 +1529,7 @@ L_01_4b79::
     ld a, [$c43b]
     or a, $02
     ld [$c43b], a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
 .L_01_4bc6:
     ld a, e
     add a, $02
@@ -1542,7 +1542,7 @@ L_01_4b79::
     ld a, [$c43b]
     or a, $01
     ld [$c43b], a
-    ldh [$ffc7], a
+    ldh [hEnemyBlocked], a
     ret
 PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the player
     ld a, [wGameFlags]
@@ -1794,7 +1794,7 @@ L_01_4db8::
     jr nz, .L_01_4dc2
     call L_01_49d6
 .L_01_4dc2:
-    ld hl, $c4fe
+    ld hl, wPaintObject
     call SetObjPtr
     ld hl, $c519
     inc [hl]
@@ -1806,7 +1806,7 @@ L_01_4db8::
     call L_00_3449
     and a, a
     jr z, .L_01_4de2
-    ld hl, $c4fe
+    ld hl, wPaintObject
     res 7, [hl]
 .L_01_4de2:
     call L_01_4dee
@@ -1836,7 +1836,7 @@ L_01_4e06::
     call L_01_49a0
 .L_01_4e16:
     call L_01_4a49
-    ld hl, $c4fe
+    ld hl, wPaintObject
     call SetObjPtr
     call L_00_0b66
     call L_00_09e0
@@ -1865,11 +1865,11 @@ L_01_4e47::
     ld [wSubState], a
     jr L_01_4e59
 L_01_4e53::
-    ld a, [$c4fe]
+    ld a, [wPaintObject]
     bit 2, a
     ret nz
 L_01_4e59::
-    ld hl, $c4fe
+    ld hl, wPaintObject
     res 7, [hl]
     ld a, [wRoomType]
     cp a, $09
@@ -2548,7 +2548,7 @@ L_01_5394::
     jp L_00_3651
 L_01_53c4::
     ld a, $08
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, $01
     ldh [$ffcf], a
     ldh a, [hLinkFlags]
@@ -2559,7 +2559,7 @@ L_01_53c4::
 .L_01_53d6:
     ld a, $80
 .L_01_53d8:
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld de, D_01_53e5
     call SetObjectAnimation
     ld a, $91
@@ -2578,10 +2578,10 @@ EnemyBehavior2::  ; routine 2 of EnemyBehaviorTable
 .L_01_58a1:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
-    call L_00_3481
+    jp nz, EnemyDefeated
+    call EnemyComputeBlockedDirs
     call L_00_39f9
-    call L_00_3a18
+    call EnemyChooseDirection
     call L_00_39b1
     call L_01_58cf
     call L_01_58ee
@@ -2712,9 +2712,9 @@ L_01_596f::
     jp L_00_3651
 L_01_59b6::
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     ld a, $05
     ldh [$ffca], a
     ld de, D_01_59cb
@@ -2744,7 +2744,7 @@ EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
 .L_01_5a0a:
     ldh a, [hEnemyFlags]
     bit 2, a
-    jp nz, L_00_32df
+    jp nz, EnemyDefeated
     call L_00_3599
     call L_00_3b99
     call L_00_3603
@@ -2784,9 +2784,9 @@ L_01_5a65::
     ld de, D_01_5a76
     call SetObjectAnimation
     ld a, $05
-    ldh [$ffc6], a
+    ldh [hEnemyAnimState], a
     ld a, $20
-    ldh [$ffc9], a
+    ldh [hEnemyCounter], a
     jp L_00_340c
 D_01_5a76::
     INCBIN "orig/painter_momopie.gb", $05a76, 14

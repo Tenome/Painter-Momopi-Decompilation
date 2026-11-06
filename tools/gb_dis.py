@@ -192,7 +192,7 @@ class Rom:
                 return False
             n, kind, tgt = self.insns[(b, pc)]
             op = self.data[off(b, pc)]
-            if kind in ("call", "jpu", "jp") and tgt in (0x0AAA, 0x0AAF, 0x0627, 0x0505, 0x04F1):
+            if kind in ("call", "jpu", "jp") and tgt in (0x0AAA, 0x0AAF, 0x0627, 0x0505, 0x04F1, 0x3649, 0x3651, 0x365F):
                 return True
             if op in (0x09, 0x19, 0x29, 0x7E, 0x2A, 0x46, 0x4E, 0x56, 0x5E, 0x66, 0x6E, 0x1A):
                 return True
