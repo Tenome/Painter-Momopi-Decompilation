@@ -149,6 +149,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `$80-$df` = note: index into `SoundFrequencyTable` ($4048, words) plus the transpose in record +5 (`$80` itself = rest, no transpose); if the channel flag bit 5 is set one extra byte
   (duty/length NRx1) follows the note; then a byte below `$80` is the note length (record +$b); a byte of `$80` or more means "keep the previous length". `$00-$7f` alone = a new length.
 
+- **Sound stream extents** (read addresses logged while each id plays in `tools/emu.py`): effects are short and clean: `$8d` $5c48-$5c5b, `$8e` $5c5c-$5c6f, `$8f` $5c70-$5c7f, `$90` $5c80-$5c92, `$91` $5c93-$5ca6,
+  `$92` $5ca7-$5cb9, `$93` $5cba-$5cc9. The title song `$81` reads only $5e72-$5ef2 (header of 3 channels at $5e73, streams at $5e91, $5eae, $5ec4); the other music ids could not be separated because the round
+  music keeps playing during the test.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

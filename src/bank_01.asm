@@ -3213,8 +3213,12 @@ Sound92EffectData::  ; stream of sound id $92
 Sound93EffectData::  ; stream of sound id $93
     ld bc, $0380
     INCBIN "assets/bank_01/5cbd.bin"
+UnusedSoundData0::  ; bytes after the last effect stream ($93 ends at $5cc9); never read in play tests
+    INCBIN "assets/bank_01/5cca_UnusedSoundData0.bin"
 Sound81MusicData::  ; stream of sound id $81
     INCBIN "assets/bank_01/5e72_Sound81MusicData.bin"
+UnusedSoundData1::  ; bytes after the title song ($81 reads $5e72-$5ef2 only); never read in play tests
+    INCBIN "assets/bank_01/5ef3_UnusedSoundData1.bin"
 Sound82EffectData::  ; stream of sound id $82
     INCBIN "assets/bank_01/609b_Sound82EffectData.bin"
 Sound83EffectData::  ; stream of sound id $83
