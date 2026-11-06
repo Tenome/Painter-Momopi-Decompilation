@@ -61,6 +61,7 @@ class Rom:
         self.cross = set()
         self.tables = set()  # rst-table vectors
         self.cross_bank = {}
+        self.nocode = {(int(r[0]), int(r[1], 16)) for r in read_csv(os.path.join(ROOT, "nocode.csv")) if r[0] != "bank"}
         self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3]), r[4]) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
                         if r[0] != "bank"]
         self.table_len = {(int(r[0]), int(r[1], 16)): int(r[2]) for r in read_csv(os.path.join(ROOT, "tables.csv"))
@@ -152,11 +153,12 @@ class Rom:
         for (b, a) in self.dwords:
             if (b, a + 2) not in self.code_bytes:
                 cands.add((b, a + 2))
+        data_ptrs = self.nocode
         found = 0
         for b, a in sorted(cands):
             if not ((a < BANK) if b == 0 else (BANK <= a < 2 * BANK)):
                 continue
-            if b >= 2:
+            if b >= 2 or (b, a) in data_ptrs:
                 continue
             if self.plausible(b, a) and self.try_run(b, a):
                 found += 1

@@ -1,0 +1,8 @@
+# bank,addr,comment -- addresses the code finder must not treat as routines (animation data and tables that look like code)
+bank,addr,comment
+1,4929,animation data loaded with ld hl
+1,492b,animation data
+1,4cd7,pointer table used by the room type dispatch
+1,59f5,animation data
+1,59fa,animation data
+1,4142,priority table before SoundUpdate

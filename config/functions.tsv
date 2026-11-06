@@ -195,7 +195,6 @@ bank	addr	size	name
 0	3e90	65	L_00_3e90
 0	3ed1	40	L_00_3ed1
 0	3ef9	65	L_00_3ef9
-1	4142	21	L_01_4142
 1	4157	53	SoundUpdate
 1	418c	33	SoundDequeue
 1	41ad	49	SoundStartCommand
@@ -275,7 +274,6 @@ bank	addr	size	name
 1	4c6f	56	PlayerAction
 1	4ca7	21	L_01_4ca7
 1	4cbc	27	L_01_4cbc
-1	4cd7	20	L_01_4cd7
 1	4ceb	8	L_01_4ceb
 1	4cf3	75	LinkSyncFrame
 1	4d3e	6	L_01_4d3e

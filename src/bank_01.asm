@@ -47,14 +47,7 @@ SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (musi
     dw SoundStartEffect
     dw SoundStartEffect
     dw SoundStartEffect
-L_01_4142::
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
+    INCBIN "orig/painter_momopie.gb", $04142, 21
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -1670,26 +1663,16 @@ L_01_4cbc::
     push de
     pop hl
     jp hl
-L_01_4cd7::
-    ld d, l
-    ld c, l
-    ld d, l
-    ld c, l
-    ld h, [hl]
-    ld c, l
-    ld a, e
-    ld c, l
-    sub a, c
-    ld c, l
-    and a, d
-    ld c, l
-    ld b, h
-    ld c, l
-    ld b, $4e
-    ld [hl], a
-    ld c, [hl]
-    cp a, b
-    ld c, l
+    dw L_01_4d55
+    dw L_01_4d55
+    dw L_01_4d66
+    dw L_01_4d7b
+    dw L_01_4d91
+    dw L_01_4da2
+    dw L_01_4d44
+    dw L_01_4e06
+    dw L_01_4e77
+    dw L_01_4db8
 L_01_4ceb::
     xor a, a
     ld [wRoomType], a
