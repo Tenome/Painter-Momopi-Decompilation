@@ -208,6 +208,13 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 ---
 
+## Confidence of the names
+
+Names of the main systems (modes, sound engine, magic, enemy slots, room maps, VRAM jobs) were confirmed with the emulator. Names of small helpers (ending scene steps,
+object movement, enemy helper routines, trail segments) come from reading the code and spot checks; treat them as provisional until each routine is rewritten and tested in C.
+The sound data after the first three channel streams of a song region does not parse as plain stream tokens (a stray `$fb` appears at `$5ef3` in the title song region),
+so the music is not yet available in an editable text form.
+
 ## Next Tasks
 
 ### RE Investigation
