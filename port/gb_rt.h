@@ -92,6 +92,7 @@ static inline uint16_t sp_plus(int8_t d) { uint16_t sp = r.sp; r.f = (((sp & 15)
 extern uint8_t gb_joy;             /* pressed buttons, bit layout of emu.py BTN */
 extern uint8_t gb_framebuf[160 * 144];   /* shade 0-3 per pixel, rendered at the start of VBlank */
 extern void (*gb_frame_hook)(unsigned frame);
+extern void (*gb_audio_hook)(const int16_t *stereo, int frames);
 void gb_load_rom(const uint8_t *data, size_t size);
 void gb_reset_state(void);
 extern unsigned gb_frames;

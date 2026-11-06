@@ -1,4 +1,5 @@
 #include "gb_rt.h"
+#include "apu.h"
 
 Regs r;
 int ime;
@@ -6,6 +7,7 @@ uint64_t cycles;
 uint8_t gb_joy;
 uint8_t gb_framebuf[160 * 144];
 void (*gb_frame_hook)(unsigned frame);
+void (*gb_audio_hook)(const int16_t *stereo, int frames);
 unsigned gb_frames;
 int gb_trace;
 
@@ -34,6 +36,7 @@ void gb_reset_state(void) {
     r.a = 0x01; r.f = 0xB0; r.c = 0x13; r.e = 0xD8; r.h = 0x01; r.l = 0x4D; r.sp = 0xFFFE;
     memset(io, 0, sizeof io);
     io[0x40] = 0x91; io[0x47] = 0xFC; io[0] = 0xCF;
+    apu_reset();
     ime = 0; ie = 0; cycles = 0; bank = 1; next_vblank = 144 * 456; gb_frames = 0; serial_done = 0;
 }
 
@@ -75,6 +78,7 @@ uint8_t rd(uint16_t a) {
         }
         if (x == 0x04) return (uint8_t)(cycles >> 8);
         if (x == 0x0F) return io[0x0F] | 0xE0;
+        if (x >= 0x10 && x < 0x40) return apu_read(a, io[x]);
         return io[x];
     }
     if (a < 0xFFFF) return hram[a - 0xFF80];
@@ -95,7 +99,7 @@ void wr(uint16_t a, uint8_t v) {
         else if (x == 0x02) { io[2] = v; if ((v & 0x81) == 0x81) serial_done = cycles + 4096; }
         else if (x == 0x00) io[0] = v & 0x30;
         else if (x == 0x44) {}
-        else io[x] = v;
+        else { io[x] = v; if (x >= 0x10 && x < 0x40) apu_write(a, v); }
     }
     else if (a < 0xFFFF) hram[a - 0xFF80] = v;
     else ie = v;
@@ -174,6 +178,7 @@ static void advance_hw(void) {
         render();
         gb_frames++;
         next_vblank += 70224;
+        if (gb_audio_hook) { static int16_t buf[2 * 800]; apu_mix(buf, 735); gb_audio_hook(buf, 735); }
         if (gb_frame_hook) gb_frame_hook(gb_frames);
     }
 }

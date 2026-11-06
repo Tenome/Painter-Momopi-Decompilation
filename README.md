@@ -39,6 +39,15 @@ python tools/report.py            # write progress/jp/report.json
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 
+## Playing it natively (Windows)
+
+```
+python tools/build_port.py --cc path\to\clang.exe    # recompiles your ROM to C and builds build/recomp/game_win.exe
+build\recomp\game_win.exe orig\painter_momopie.gb
+```
+
+Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit. The generated C is derived from the game and is not committed.
+
 ## Progress report and CI
 
 `progress/jp/report.json` is generated locally (`python tools/report.py`) and committed. `.github/workflows/report.yml` uploads it

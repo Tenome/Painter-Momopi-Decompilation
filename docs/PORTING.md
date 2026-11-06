@@ -15,7 +15,11 @@ game_headless orig/painter_momopie.gb 1500 --press 250:start:3 --shot 650 --outd
 Branches inside a routine are `goto`s, jumps between routines are tail calls through a trampoline, `call` is a nested run, backward branches
 call `gb_service()` so waiting loops let interrupts run, and indirect jumps (`jp hl`, enemy behaviour table) resolve through a table of
 known routines. Verified: the recompiled game reaches the same screens as `tools/emu.py` (identical frames at 650 and 1400 in a play session).
-Next: a Win32/SDL window with input, an APU for sound, then the HAL clean-up below.
+`port/main_win32.c` is a Windows front end (window scaled by integer factors, keyboard, waveOut audio that also paces the game; F11 fullscreen,
+Esc quits; arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select) and `port/apu.c` is a small APU (two pulse channels with
+sweep, wave, noise). `python tools/build_port.py` builds `build/recomp/game_win.exe` on Windows; run it with the path of your ROM.
+Verified on this machine: title screen, Enter starts a game, the kitchen room plays with the painter, enemy and music.
+Next: an SDL2 front end for Linux, save-less options (scaling filters, key mapping file), the HAL clean-up below.
 
 ## Plan
 

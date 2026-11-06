@@ -10,6 +10,13 @@ static int npress;
 static unsigned shots[MAXP];
 static int nshots;
 static unsigned limit;
+static FILE *wav;
+static unsigned wav_frames;
+static int wav_peak;
+static void audio(const int16_t *st, int n) {
+    for (int i = 0; i < n * 2; i++) { int v = st[i] < 0 ? -st[i] : st[i]; if (v > wav_peak) wav_peak = v; }
+    if (wav) { fwrite(st, 4, n, wav); wav_frames += n; }
+}
 static const char *outdir = ".";
 
 static void hook(unsigned frame) {
@@ -29,7 +36,8 @@ static void hook(unsigned frame) {
                 fclose(f);
             }
         }
-    if (frame >= limit) { fprintf(stderr, "done after %u frames (cycles %llu)\n", frame, (unsigned long long)cycles); exit(0); }
+    if (frame >= limit) { fprintf(stderr, "done after %u frames (cycles %llu), audio peak %d\n", frame, (unsigned long long)cycles, wav_peak);
+        if (wav) { unsigned bytes = wav_frames * 4, h[11] = {0x46464952, 36 + bytes, 0x45564157, 0x20746d66, 16, 0x20001, 44100, 44100 * 4, 0x100004, 0x61746164, bytes}; fseek(wav, 0, SEEK_SET); fwrite(h, 4, 11, wav); fclose(wav); } exit(0); }
 }
 
 static uint8_t button(const char *s) {
@@ -53,9 +61,11 @@ int main(int argc, char **argv) {
             if (sscanf(argv[++i], "%u:%31[^:]:%u", &fr, b, &h) == 3) { press[npress].from = fr; press[npress].hold = h; press[npress].bit = button(b); npress++; }
         } else if (!strcmp(argv[i], "--shot") && i + 1 < argc && nshots < MAXP) shots[nshots++] = (unsigned)atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
+        else if (!strcmp(argv[i], "--wav") && i + 1 < argc) { wav = fopen(argv[++i], "wb"); for (int k = 0; k < 44; k++) fputc(0, wav); }
     }
     if (getenv("GB_TRACE")) gb_trace = atoi(getenv("GB_TRACE"));
     gb_frame_hook = hook;
+    gb_audio_hook = audio;
     gb_game_main();
     return 0;
 }
