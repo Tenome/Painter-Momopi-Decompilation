@@ -207,3 +207,11 @@ DEF wProjectileAnimLo EQU $c49f ; wProjectile +1: animation pointer
 DEF wProjectileAnimHi EQU $c4a0
 DEF wPaintAnimLo    EQU $c4ff   ; wPaintObject +1: animation pointer
 DEF wPaintAnimHi    EQU $c500
+; sound channel records (wSoundChannels = record 0), $20 bytes each
+DEF wSoundChan1     EQU $c347
+DEF wSoundChan2     EQU $c367
+DEF wSoundChan3     EQU $c387
+DEF wSoundChan4     EQU $c3a7   ; SoundStartEffect loads its stream here (records 5-7 provisional)
+DEF wSoundChan5     EQU $c3c7
+DEF wSoundChan6     EQU $c3e7
+DEF wSoundChan7     EQU $c407

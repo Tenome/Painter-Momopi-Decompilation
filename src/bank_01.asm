@@ -137,13 +137,13 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
 SoundClearChannels::  ; clears the first byte of all 8 channel records and sets NR50 default ($77)
     ld a, $00
     ld [wSoundChannels], a
-    ld [$c347], a
-    ld [$c367], a
-    ld [$c387], a
-    ld [$c3a7], a
-    ld [$c3c7], a
-    ld [$c3e7], a
-    ld [$c407], a
+    ld [wSoundChan1], a
+    ld [wSoundChan2], a
+    ld [wSoundChan3], a
+    ld [wSoundChan4], a
+    ld [wSoundChan5], a
+    ld [wSoundChan6], a
+    ld [wSoundChan7], a
     ld a, $77
     ld [$c315], a
 SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13 NR23 NR33
@@ -200,9 +200,9 @@ SoundStartMusicNow::  ; music accepted by the priority check: records the priori
     call SoundClearChannels
     ld a, $00
     ld [wSoundChannels], a
-    ld [$c347], a
-    ld [$c367], a
-    ld [$c387], a
+    ld [wSoundChan1], a
+    ld [wSoundChan2], a
+    ld [wSoundChan3], a
     ld hl, wSoundChannels
     jp SoundLoadStream
 SoundRequestStop::  ; sets wSoundCmd to $80 (stop request; name provisional)
@@ -223,11 +223,11 @@ SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
     ld [wEffectPriority], a
     call SoundClearRegisterShadow
     ld a, $00
-    ld [$c3a7], a
-    ld [$c3c7], a
-    ld [$c3e7], a
-    ld [$c407], a
-    ld hl, $c3a7
+    ld [wSoundChan4], a
+    ld [wSoundChan5], a
+    ld [wSoundChan6], a
+    ld [wSoundChan7], a
+    ld hl, wSoundChan4
     jp SoundLoadStream
 SoundPauseMusicChannels::  ; sets the pause flag (bit 4) on the music channel records while an effect plays
     ld a, [wEffectPriority]
@@ -326,7 +326,7 @@ SoundAssignChannels::
     ld hl, wSoundChannels
     ld a, $04
     ld [wSoundArg], a
-    ld de, $c3a7
+    ld de, wSoundChan4
 .L_01_4379:
     ld a, [de]
     bit 7, a
