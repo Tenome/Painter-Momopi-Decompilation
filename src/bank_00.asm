@@ -610,9 +610,9 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
     ld h, a
     add hl, bc
     ld a, l
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
     ld a, h
-    ldh [hScratch0F], a
+    ldh [hOtherObjHi], a
     ldh a, [hScratch05]
     ld c, a
     ldh a, [hScratch03]
@@ -625,7 +625,7 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
     ld h, a
     add hl, bc
     push hl
-    ld hl, hScratch0E
+    ld hl, hOtherObjLo
     ld a, [hl]
     ld e, a
     inc hl
@@ -981,7 +981,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld e, $05
     add hl, de
     ld a, [hl]
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
     ldh a, [hScratch06]
     ld h, a
     ldh a, [hScratch05]
@@ -1002,16 +1002,16 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld l, a
     ld a, [hl]
     ldh [hScratch09], a
-    ldh [hScratch0F], a
+    ldh [hOtherObjHi], a
 .L_00_08f6:
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld hl, hScratch09
     cp a, [hl]
     jr c, .L_00_0901
     xor a, a
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
 .L_00_0901:
-    ld hl, hScratch0E
+    ld hl, hOtherObjLo
     inc [hl]
     sla a
     ld c, a
@@ -1078,7 +1078,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ldh a, [hScratch06]
     ld h, a
     ld d, $00
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld e, a
     add hl, de
     ld a, [hl]
@@ -1099,7 +1099,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ldh [hScratch0D], a
     call L_00_09ab
 .L_00_098a:
-    ld hl, hScratch0F
+    ld hl, hOtherObjHi
     dec [hl]
     jp nz, .L_00_08f6
     ldh a, [hObjPtrLo]
@@ -1110,14 +1110,14 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld b, a
     ldh a, [hScratch00]
     ld [hl], a
-    ld hl, hScratch0E
+    ld hl, hOtherObjLo
     dec [hl]
     ld e, $05
     ld d, $00
     push bc
     pop hl
     add hl, de
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld [hl], a
 L_00_09aa::
     ret
@@ -1302,15 +1302,15 @@ LookupWord::  ; HL = word at HL + A*2 (also copied to DE and BC)
     push de
     pop bc
     ret
-L_00_0abf::
+ObjectsOverlap::  ; hObjPtr object against the object at hOtherObj: A = $80 and C = $80 when their boxes overlap else 0
     ldh a, [$ffb9]
     sla a
     ldh [hScratch02], a
     ld e, $04
     ld d, $00
-    ldh a, [hScratch0F]
+    ldh a, [hOtherObjHi]
     ld h, a
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld l, a
     add hl, de
     ld a, [hl]
@@ -1321,9 +1321,9 @@ L_00_0abf::
     jr nz, .L_00_0b03
     ld e, $08
     ld d, $00
-    ldh a, [hScratch0F]
+    ldh a, [hOtherObjHi]
     ld h, a
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld l, a
     add hl, de
     ld a, [hl]
@@ -1331,7 +1331,7 @@ L_00_0abf::
     jr nz, .L_00_0b03
     ld e, $07
     ld d, $00
-    call L_00_0b0a
+    call CompareObjectCoordinate
     jr nc, .L_00_0b03
     ld hl, hScratch02
     inc [hl]
@@ -1339,7 +1339,7 @@ L_00_0abf::
     inc [hl]
     ld e, $0a
     ld d, $00
-    call L_00_0b0a
+    call CompareObjectCoordinate
     jr c, .L_00_0b06
 .L_00_0b03:
     xor a, a
@@ -1349,7 +1349,7 @@ L_00_0abf::
     ld a, $80
     ld c, a
     ret
-L_00_0b0a::
+CompareObjectCoordinate::  ; compares a coordinate (offset in DE) of the two objects; carry = within the box size
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -1357,9 +1357,9 @@ L_00_0b0a::
     add hl, de
     ld a, [hl]
     push af
-    ldh a, [hScratch0F]
+    ldh a, [hOtherObjHi]
     ld h, a
-    ldh a, [hScratch0E]
+    ldh a, [hOtherObjLo]
     ld l, a
     add hl, de
     pop af
@@ -3979,15 +3979,15 @@ L_00_32a2::
     ret z
     ld hl, $c49e
     ld a, l
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
     ld a, h
-    ldh [hScratch0F], a
+    ldh [hOtherObjHi], a
     ld hl, wPlayer
     ld a, l
     ldh [hObjPtrLo], a
     ld a, h
     ldh [hObjPtrHi], a
-    call L_00_0abf
+    call ObjectsOverlap
     and a, a
     ret z
     ld hl, wPlayerDir
@@ -4156,7 +4156,7 @@ L_00_340c::
     or a, $90
     ldh [hEnemyDir], a
     ret
-L_00_341f::
+CheckEnemyTouchesPlayer::  ; if the enemy in hObject2 overlaps wPlayer then wPlayerDir bit 5 is set (PlayFrame then runs PlayerDeath)
     ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3432
@@ -4169,11 +4169,11 @@ L_00_341f::
 .L_00_3432:
     ld hl, wPlayer
     ld a, l
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
     ld a, h
-    ldh [hScratch0F], a
+    ldh [hOtherObjHi], a
     call SelectObject2
-    call L_00_0abf
+    call ObjectsOverlap
     and a, a
     ret z
     ld hl, wPlayerDir
@@ -4528,17 +4528,17 @@ L_00_368a::
     ld a, [wPlayerY]
     ld h, a
     ret
-L_00_3693::
+CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2; on a hit sets wPlayerStatus bit 3 and hEnemyFlags bit 2
     ld a, [$c4fe]
     bit 7, a
     ret z
     ld hl, $c4fe
     ld a, l
-    ldh [hScratch0E], a
+    ldh [hOtherObjLo], a
     ld a, h
-    ldh [hScratch0F], a
+    ldh [hOtherObjHi], a
     call SelectObject2
-    call L_00_0abf
+    call ObjectsOverlap
     and a, a
     ret z
     ld hl, $c4fe
@@ -4893,8 +4893,8 @@ EnemyBehavior0::  ; routine 0 of EnemyBehaviorTable
     call L_00_39b1
     call L_00_352f
     call L_00_392e
-    call L_00_341f
-    call L_00_3693
+    call CheckEnemyTouchesPlayer
+    call CheckPaintHitsEnemy
     call L_00_3956
     call SelectObject2
     jp DrawObject
@@ -5154,8 +5154,8 @@ EnemyBehavior1::  ; routine 1 of EnemyBehaviorTable: ticks the object timer then
     call L_00_39b1
     call L_00_352f
     call L_00_392e
-    call L_00_341f
-    call L_00_3693
+    call CheckEnemyTouchesPlayer
+    call CheckPaintHitsEnemy
     call L_00_3b57
     jp DrawObject
 L_00_3b3b::
@@ -5246,8 +5246,8 @@ L_00_3c91::
     jp nz, L_00_32df
     call L_00_3d18
     call L_00_3643
-    call L_00_341f
-    call L_00_3693
+    call CheckEnemyTouchesPlayer
+    call CheckPaintHitsEnemy
     call L_00_3cb5
     jp DrawObject
 L_00_3cb5::
@@ -5397,9 +5397,9 @@ EnemyBehavior5::  ; routine 5 of EnemyBehaviorTable
     bit 0, a
     jr nz, .L_00_3e84
 .L_00_3e81:
-    call L_00_341f
+    call CheckEnemyTouchesPlayer
 .L_00_3e84:
-    call L_00_3693
+    call CheckPaintHitsEnemy
     call L_00_3e90
     call L_00_3ed1
     jp DrawObject

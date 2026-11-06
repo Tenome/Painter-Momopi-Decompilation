@@ -2520,7 +2520,7 @@ EnemyBehavior4::  ; routine 4 of EnemyBehaviorTable
 .L_01_5385:
     call L_00_3599
     call L_00_39b1
-    call L_00_341f
+    call CheckEnemyTouchesPlayer
     call L_01_5394
     jp DrawObject
 L_01_5394::
@@ -2587,8 +2587,8 @@ EnemyBehavior2::  ; routine 2 of EnemyBehaviorTable
     call L_01_58ee
     call L_00_32a2
     call L_00_392e
-    call L_00_341f
-    call L_00_3693
+    call CheckEnemyTouchesPlayer
+    call CheckPaintHitsEnemy
     call L_01_596f
     call SelectObject2
     jp DrawObject
@@ -2750,7 +2750,7 @@ EnemyBehavior3::  ; routine 3 of EnemyBehaviorTable
     call L_00_3603
     call L_00_3643
     call L_00_392e
-    call L_00_341f
+    call CheckEnemyTouchesPlayer
     call L_01_5a29
     jp DrawObject
 L_01_5a29::

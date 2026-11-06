@@ -131,3 +131,5 @@ DEF vTiles1         EQU $8700   ; second block of sprite tiles
 DEF vBGMap0         EQU $9800   ; background map 0
 DEF vBGMapLast      EQU $9bff   ; last byte of background map 0 (FillBackwardsFF starts here)
 DEF hOamDma         EQU $ff80   ; HRAM copy of OamDmaRoutine
+DEF hOtherObjLo     EQU $ffa4   ; pointer to the second object for ObjectsOverlap (set by callers)
+DEF hOtherObjHi     EQU $ffa5

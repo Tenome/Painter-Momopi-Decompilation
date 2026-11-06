@@ -106,7 +106,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 - **Play rules seen in the emulator**: the room map (`wRoomMap`) marks the path cells; walking over an unpainted path cell paints it and decrements `wPaintRemaining`
   ($c520, 80 at the start of round 1); when it reaches 0 `RoundCleared` runs (sound $8a), and `wGameFlags` bit 0 makes `PlayFrame` finish the clear
-  sequence. `PlayerDeath` (sound $8b) runs when `wPlayerDir` bit 5 is set by `L_01_4c4e`.
+  sequence. `PlayerDeath` (sound $8b) runs when `wPlayerDir` bit 5 is set: by `CheckEnemyTouchesPlayer` (an enemy overlapping the player, tested with `ObjectsOverlap`) or by `L_01_4c4e` (stepping off the path). The paint blob object at `$c4fe` is tested against enemies by `CheckPaintHitsEnemy`.
 
 - **Enemies**: 16 slots of $20 bytes at `wEnemySlots` ($c542-$c741), addressed through `EnemySlotTable` ($37af). `UpdateEnemyLoop` copies each active slot
   into the HRAM record `hObject2` ($ffb5-$ffd4, `LoadEnemySlot`), runs `UpdateEnemy`, and copies it back (`StoreEnemySlot`). Record +1/+2 is the animation

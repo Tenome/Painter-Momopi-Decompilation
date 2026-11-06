@@ -65,8 +65,8 @@ bank	addr	size	name
 0	0a6b	63	ByteToBCD
 0	0aaa	5	LookupByte
 0	0aaf	16	LookupWord
-0	0abf	75	L_00_0abf
-0	0b0a	58	L_00_0b0a
+0	0abf	75	ObjectsOverlap
+0	0b0a	58	CompareObjectCoordinate
 0	0b44	34	L_00_0b44
 0	0b66	80	L_00_0b66
 0	0bf8	50	MultiplyByDE
@@ -143,7 +143,7 @@ bank	addr	size	name
 0	32df	286	L_00_32df
 0	33fd	15	L_00_33fd
 0	340c	19	L_00_340c
-0	341f	42	L_00_341f
+0	341f	42	CheckEnemyTouchesPlayer
 0	3449	47	L_00_3449
 0	3478	9	L_00_3478
 0	3481	164	L_00_3481
@@ -161,7 +161,7 @@ bank	addr	size	name
 0	3673	14	L_00_3673
 0	3681	9	L_00_3681
 0	368a	9	L_00_368a
-0	3693	41	L_00_3693
+0	3693	41	CheckPaintHitsEnemy
 0	36c6	3	L_00_36c6
 0	36c9	49	L_00_36c9
 0	36fa	25	L_00_36fa
