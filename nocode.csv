@@ -6,3 +6,10 @@ bank,addr,comment
 1,59f5,animation data
 1,59fa,animation data
 1,4142,priority table before SoundUpdate
+0,11e7,data table before TimeUpSpawnEnemy
+0,253b,data table
+0,1400,data before L_00_1409
+0,36c6,data table before EnemyEdgeBlockedDirs
+0,0a3f,data before SerialSendByte
+0,33fd,data table before EnemySnapToGrid
+1,4927,animation data (pointer loaded as $4927)

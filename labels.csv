@@ -342,3 +342,20 @@ bank,addr,name,comment
 0,3c87,AnimFrames0_3c87,animation frames (typed text form)
 1,48ac,AnimFrames1_48ac,animation frames (typed text form)
 1,48dc,AnimFrames1_48dc,animation frames (typed text form)
+0,3651,SetObjectAnimationStub,tail jump to SetObjectAnimation (name provisional)
+0,3681,GetEnemyPos,C = hEnemyX and B = hEnemyY
+0,368a,GetPlayerPos,L = wPlayerX and H = wPlayerY
+0,0a13,AddObjectField,object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance (name provisional)
+0,09ed,AddObjectFieldSigned,two AddObjectField steps then sign-extends the delta into the next byte (name provisional)
+0,307f,SelectEndingObject,hObjPtr = wEndingObject
+0,31eb,SetEnemyHitFlag,sets hEnemyFlags bit 2 (paint hit)
+0,340c,EnemySnapToGrid,aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)
+0,394d,EnemyRemoveIfPlayerDead,removes the enemy when wPlayerDir bit 5 is set
+1,428c,SoundRequestStop,sets wSoundCmd to $80 (stop request; name provisional)
+1,46fa,SoundSkipOperand2,skips two stream bytes (command with an unused 2 byte operand)
+1,4722,SoundSetPendingWave,stores the next stream byte at $c312 (pending wave pattern index)
+1,492f,ClearBonusFlags,clears wGameFlags bits 7 and 0 (name provisional)
+1,4d3e,SetLinkFlag5,sets hSerialByte bit 5 (name provisional)
+1,5183,SetPlayerStatusBit0,sets wPlayerStatus bit 0 and clears $c4cf
+1,553a,ProjectileRemoveIfHit,removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
+1,566a,EnemyFlagBit3IfDead,sets hEnemyFlags bit 3 when hEnemyDir bit 5 is set

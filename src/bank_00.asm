@@ -1152,8 +1152,8 @@ L_00_09d1::
     ld e, $08
     ld a, e
     ldh [hScratch01], a
-    call L_00_0a13
-    jr L_00_0a13
+    call AddObjectField
+    jr AddObjectField
 ClampObjectToRoom::  ; keeps the object inside the room limits after MoveObject (offsets $06 and $0c)
     ld e, $06
     ld a, e
@@ -1161,11 +1161,11 @@ ClampObjectToRoom::  ; keeps the object inside the room limits after MoveObject 
     ld e, $0c
     ld a, e
     ldh [hScratch01], a
-    call L_00_09ed
-L_00_09ed::
+    call AddObjectFieldSigned
+AddObjectFieldSigned::  ; two AddObjectField steps then sign-extends the delta into the next byte (name provisional)
     and a, a
-    call L_00_0a13
-    call L_00_0a13
+    call AddObjectField
+    call AddObjectField
     ld c, $00
     ldh a, [hScratch02]
     bit 7, a
@@ -1188,7 +1188,7 @@ L_00_09ed::
     ld hl, hScratch00
     inc [hl]
     ret
-L_00_0a13::
+AddObjectField::  ; object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance (name provisional)
     ldh a, [hScratch01]
     ld e, a
     ld d, $00
@@ -1220,13 +1220,8 @@ L_00_0a13::
     ld hl, hScratch01
     inc [hl]
     ret
-L_00_0a3f::
-    dec b
-    dec b
-    inc b
-    inc b
-    jr L_00_0a5d
-    INCBIN "assets/bank_00/0a45.bin"
+D_00_0a3f::
+    INCBIN "assets/bank_00/0a3f.bin"
 SerialSendByte::  ; sends C over the link port with the internal clock and waits for the reply
     ld a, [rSC]
     res 7, a
@@ -1236,7 +1231,6 @@ SerialSendByte::  ; sends C over the link port with the internal clock and waits
     ld a, [rSC]
     set 0, a
     ld [rSC], a
-L_00_0a5d::
     ld a, [rSC]
     set 7, a
     ld [rSC], a
@@ -1376,10 +1370,10 @@ CompareObjectCoordinate::  ; compares a coordinate (offset in DE) of the two obj
     ldh a, [hScratch03]
     ld c, a
     ld b, $00
-    ld hl, $0a3f
+    ld hl, D_00_0a3f
     add hl, de
     ld a, [hl]
-    ld hl, $0a3f
+    ld hl, D_00_0a3f
     add hl, bc
     add a, [hl]
     ldh [hScratch06], a
@@ -1838,7 +1832,7 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ld [$c488], a
 .L_00_11d5:
     ld c, a
-    ld hl, $11e7
+    ld hl, D_00_11e7
     call LookupByte
     cp a, d
     ret nz
@@ -1847,11 +1841,8 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ld hl, $c488
     inc [hl]
     ret
-L_00_11e7::
-    ld [bc], a
-    inc b
-    ld b, $08
-    nop
+D_00_11e7::
+    INCBIN "assets/bank_00/11e7.bin"
 TimeUpSpawnEnemy::  ; when hTimeSeconds reaches 0 (once per round): creates an extra enemy ($a0/$04) in a free slot
     ldh a, [hLinkFlags]
     bit 0, a
@@ -2093,22 +2084,14 @@ StartRoundMusic::  ; plays the song for the current round (id from a table index
     srl a
     srl a
     ld c, a
-    ld hl, $1400
+    ld hl, D_00_1400
     call LookupByte
     call PlaySound
     ld hl, hVBlankTasks
     set 4, [hl]
     ret
-L_00_1400::
-    add a, [hl]
-    add a, [hl]
-    add a, a
-    add a, a
-    adc a, b
-    add a, [hl]
-    add a, [hl]
-    add a, a
-    add a, a
+D_00_1400::
+    INCBIN "assets/bank_00/1400.bin"
 L_00_1409::
     ld a, [$c463]
     ld c, a
@@ -2720,7 +2703,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     call RequestOamDma
     call ClearOamShadowY
     call ClearRoomState
-    call L_01_492f
+    call ClearBonusFlags
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
@@ -3184,132 +3167,17 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld [rLCDC], a
     ei
     ld a, [wPlayerBlocked]
-    ld hl, $253b
+    ld hl, D_00_253b
     call LookupWord
     jp hl
-L_00_253b::
-    ld b, c
-    dec h
-    ld [hl], h
-    dec h
-    ld e, b
-    dec h
-    ld a, $d0
-    ldh [hScratch00], a
-.L_00_2545:
-    call WaitVBlankFlag
-    call ReadJoypad
-    ld hl, hScratch00
-    dec [hl]
-    jr nz, .L_00_2545
-    ld hl, wPlayerBlocked
-    inc [hl]
-    jp Mode2_Init
+D_00_253b::
+    INCBIN "assets/bank_00/253b.bin"
 BonusResultWait::  ; waits $e0 frames after the door result then goes to mode 3
-    ld d, $01
-    ld e, $00
-    call AddScore
-    ld a, $e0
-    ldh [hScratch00], a
-.L_00_2563:
-    call WaitVBlankFlag
-    call ReadJoypad
-    ld hl, hScratch00
-    dec [hl]
-    jr nz, .L_00_2563
-    ld a, $03
-    jp GameModeDispatch
+    INCBIN "assets/bank_00/2558_BonusResultWait.bin"
 BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
-    ld a, $10
-    call DelayFrames
-    ld hl, wPlayerBlocked
-    inc [hl]
-.L_00_257d:
-    call WaitFrameAndSyncOam
-    call ReadJoypad
-    call MenuCursorInput
-    ld a, [wCursorFlags]
-    bit 7, a
-    jr z, .L_00_257d
-    ld a, [$c487]
-    ld e, $03
-    call MultiplyByDE
-    ld c, a
-    ld b, $00
-    ld hl, D_00_25cb
-    add hl, bc
-    ldh a, [hFrameSpin]
-    cp a, $7f
-    jr c, .L_00_25a8
-    inc hl
-    cp a, $cd
-    jr c, .L_00_25a8
-    inc hl
-.L_00_25a8:
-    ld a, [hl]
-    ldh [hScratch00], a
-    ld hl, wMagicCards
-.L_00_25ae:
-    ld a, [hl]
-    and a, a
-    jr z, .L_00_25bc
-    ld c, a
-    ldh a, [hScratch00]
-    cp a, c
-    jp z, .L_00_25c5
-    inc hl
-    jr .L_00_25ae
-.L_00_25bc:
-    ldh a, [hScratch00]
-    ld [hl], a
-    ld [$c75a], a
-    jp Mode2_Init
-.L_00_25c5:
-    ld [$c75a], a
-    jp Mode2_Init
-D_00_25cb::
-    INCBIN "assets/bank_00/25cb.bin"
+    INCBIN "assets/bank_00/2574_BonusSelectLoop.bin"
 MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
-    ldh a, [hJoyNew]
-    bit 5, a
-    jr z, .L_00_25f8
-    ld a, SND_SFX_CURSOR
-    call PlaySound
-    ld a, [wCursorIndex]
-    dec a
-    bit 7, a
-    jr z, .L_00_25f5
-    ld a, $02
-.L_00_25f5:
-    ld [wCursorIndex], a
-.L_00_25f8:
-    ldh a, [hJoyNew]
-    bit 4, a
-    jr z, .L_00_260f
-    ld a, SND_SFX_CURSOR
-    call PlaySound
-    ld a, [wCursorIndex]
-    inc a
-    cp a, $03
-    jr c, .L_00_260c
-    xor a, a
-.L_00_260c:
-    ld [wCursorIndex], a
-.L_00_260f:
-    ldh a, [hJoyNew]
-    bit 0, a
-    jr z, .L_00_261a
-    ld hl, wCursorFlags
-    set 7, [hl]
-.L_00_261a:
-    ld a, [wCursorIndex]
-    ld c, a
-    ld hl, D_00_2630
-    call LookupByte
-    ld [wCursorX], a
-    ld hl, wCursorObject
-    call SetObjPtr
-    jp DrawObjectBytePos
+    INCBIN "assets/bank_00/25e0_MenuCursorInput.bin"
 D_00_2630::
     INCBIN "assets/bank_00/2630.bin"
 InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
@@ -3788,7 +3656,7 @@ EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld a, $10
     ld [$c77e], a
 .L_00_2f5e:
-    call L_00_307f
+    call SelectEndingObject
     call MoveObject
     call ClampObjectToRoom
     ld hl, $c781
@@ -3882,12 +3750,12 @@ EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     xor a, a
     ld [$c780], a
 .L_00_3070:
-    call L_00_307f
+    call SelectEndingObject
     call MoveObject
     call ClampObjectToRoom
-    call L_00_307f
+    call SelectEndingObject
     jp DrawObject
-L_00_307f::
+SelectEndingObject::  ; hObjPtr = wEndingObject
     ld hl, wEndingObject
     jp SetObjPtr
 EndingCastleBlink::  ; toggles the castle flag animation from D_00_3148
@@ -3944,7 +3812,7 @@ TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     ld a, [hl]
     bit 7, a
     ret
-L_00_31eb::
+SetEnemyHitFlag::  ; sets hEnemyFlags bit 2 (paint hit)
     ld hl, hEnemyFlags
     set 2, [hl]
     ret
@@ -4128,7 +3996,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld hl, D_00_36bc
     jr .L_00_333b
 .L_00_3338:
-    ld hl, $36c6
+    ld hl, D_00_36c6
 .L_00_333b:
     push hl
     ld a, l
@@ -4208,7 +4076,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     res 2, [hl]
     ldh a, [hEnemyKind]
     ld c, a
-    ld hl, $33fd
+    ld hl, D_00_33fd
     call LookupByte
     ld e, a
     ld d, $00
@@ -4216,23 +4084,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld hl, wProjectile
     res 7, [hl]
     jp RemoveEnemy
-L_00_33fd::
-    dec b
-    dec b
-    rrca
-    rrca
-    nop
-    dec b
-    dec b
-    dec b
-    ld a, [bc]
-    rrca
-    rrca
-    dec b
-    rrca
-    nop
-    dec b
-L_00_340c::
+D_00_33fd::
+    INCBIN "assets/bank_00/33fd.bin"
+EnemySnapToGrid::  ; aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)
     ld a, $04
     ldh [$ffb9], a
     ldh a, [hEnemyX]
@@ -4571,10 +4425,10 @@ MoveAndClampObject::  ; MoveObject then ClampObjectToRoom
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [hEnemyTick]
     and a, $08
-    jr z, L_00_3651
+    jr z, SetObjectAnimationStub
     push bc
     pop de
-L_00_3651::
+SetObjectAnimationStub::  ; tail jump to SetObjectAnimation (name provisional)
     jp SetObjectAnimation
 SelectObject2::  ; hObjPtr = hObject2
     ld hl, hObject2
@@ -4604,13 +4458,13 @@ EnemyTileUnder::  ; A = room map tile under the enemy (Y aligned to the grid)
     and a, $f0
     add a, $08
     jp LookupMapTile
-L_00_3681::
+GetEnemyPos::  ; C = hEnemyX and B = hEnemyY
     ld hl, hEnemyX
     ld c, [hl]
     ld hl, hEnemyY
     ld b, [hl]
     ret
-L_00_368a::
+GetPlayerPos::  ; L = wPlayerX and H = wPlayerY
     ld a, [wPlayerX]
     ld l, a
     ld a, [wPlayerY]
@@ -4631,7 +4485,7 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     ret z
     ld hl, wPaintObject
     res 7, [hl]
-    call L_00_31eb
+    call SetEnemyHitFlag
     xor a, a
     ld [wMagicState], a
     ld hl, wPlayerStatus
@@ -4641,10 +4495,8 @@ D_00_36bc::
     INCBIN "assets/bank_00/36bc.bin"
 D_00_36c1::
     INCBIN "assets/bank_00/36c1.bin"
-L_00_36c6::
-    inc c
-    ld c, d
-    ld c, e
+D_00_36c6::
+    INCBIN "assets/bank_00/36c6.bin"
 EnemyEdgeBlockedDirs::  ; adds the screen edge limits (X $20-$f0; Y $28-$f8) to hEnemyBlocked
     xor a, a
     ldh [hEnemyBlocked], a
@@ -5007,7 +4859,7 @@ L_00_392e::
     ret nz
     ld a, b
     jp PaintCell
-L_00_394d::
+EnemyRemoveIfPlayerDead::  ; removes the enemy when wPlayerDir bit 5 is set
     ld a, [wPlayerDir]
     bit 5, a
     ret z
@@ -5183,15 +5035,15 @@ L_00_3a75::
     jr z, .L_00_3a99
     ld de, D_00_3aa6
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 .L_00_3a90:
     ld de, D_00_3acf
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 .L_00_3a99:
     ld de, D_00_3ad9
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 D_00_3aa2::
     INCBIN "assets/bank_00/3aa2.bin"
 D_00_3aa6::
@@ -5316,7 +5168,7 @@ L_00_3bad::
     ldh [hEnemyCounter], a
     ld de, D_00_3bbe
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 D_00_3bbe::
     INCBIN "assets/bank_00/3bbe.bin"
 D_00_3bc8::
@@ -5544,7 +5396,7 @@ L_00_3e20::
     set 6, [hl]
     ld de, D_00_3e4d
     call SetObjectAnimation
-    call L_00_340c
+    call EnemySnapToGrid
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
@@ -5608,10 +5460,10 @@ L_00_3e90::
     and a, $04
     jr z, .L_00_3ec5
     ld de, D_00_3f3a
-    jp L_00_3651
+    jp SetObjectAnimationStub
 .L_00_3ec5:
     ld de, D_00_3aca
-    jp L_00_3651
+    jp SetObjectAnimationStub
 .L_00_3ecb:
     ld hl, hEnemyDir
     set 0, [hl]

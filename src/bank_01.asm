@@ -193,7 +193,7 @@ SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces low
     ld a, [wMusicPriority]
     cp a, b
     jr z, SoundStartMusicNow
-    jr nc, L_01_428c
+    jr nc, SoundRequestStop
 SoundStartMusicNow::  ; music accepted by the priority check: records the priority
     ld a, b
     ld [wMusicPriority], a
@@ -205,7 +205,7 @@ SoundStartMusicNow::  ; music accepted by the priority check: records the priori
     ld [$c387], a
     ld hl, wSoundChannels
     jp SoundLoadStream
-L_01_428c::
+SoundRequestStop::  ; sets wSoundCmd to $80 (stop request; name provisional)
     ld a, $80
     ld [wSoundCmd], a
     ret
@@ -217,7 +217,7 @@ SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
     ld a, [wEffectPriority]
     cp a, b
     jr z, .L_01_42a0
-    jr nc, L_01_428c
+    jr nc, SoundRequestStop
 .L_01_42a0:
     ld a, b
     ld [wEffectPriority], a
@@ -879,7 +879,7 @@ SoundCmdRepeat::  ; command $e4: counted loop; operands: counter slot and jump t
 .L_01_46e9:
     inc de
     dec [hl]
-    jr z, L_01_46fa
+    jr z, SoundSkipOperand2
 SoundCmdJump::  ; command $e5: sets the stream pointer from the next two bytes
     ld a, [de]
     inc de
@@ -892,7 +892,7 @@ SoundCmdJump::  ; command $e5: sets the stream pointer from the next two bytes
     ld a, [hl]
     ld e, a
     ret
-L_01_46fa::
+SoundSkipOperand2::  ; skips two stream bytes (command with an unused 2 byte operand)
     inc de
     inc de
     ret
@@ -924,7 +924,7 @@ SoundCmdSetField6::  ; command $f0: record +6 = next byte
 SoundCmdSetPitch::  ; command $f1: record +$e = next byte (pitch)
     ld hl, $000e
     jr SoundSetField
-L_01_4722::
+SoundSetPendingWave::  ; stores the next stream byte at $c312 (pending wave pattern index)
     ld a, [de]
     inc de
     ld [$c312], a
@@ -932,7 +932,7 @@ L_01_4722::
 SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the wave channel
     ld a, [bc]
     bit 2, a
-    jr nz, L_01_4722
+    jr nz, SoundSetPendingWave
     ld a, [de]
     inc de
     ld hl, $c314
@@ -1175,16 +1175,15 @@ D_01_491b::
     INCBIN "assets/bank_01/491b.bin"
 D_01_4921::
     INCBIN "assets/bank_01/4921.bin"
-L_01_4927::
-    rlca
-    ld c, h
-    rlca
-    ld c, l
-    rlca
-    inc b
-    rlca
-    dec b
-L_01_492f::
+D_01_4927::
+    INCBIN "assets/bank_01/4927.bin"
+D_01_4929::
+    INCBIN "assets/bank_01/4929.bin"
+D_01_492b::
+    INCBIN "assets/bank_01/492b.bin"
+D_01_492d::
+    INCBIN "assets/bank_01/492d.bin"
+ClearBonusFlags::  ; clears wGameFlags bits 7 and 0 (name provisional)
     ld hl, wGameFlags
     res 7, [hl]
     res 0, [hl]
@@ -1232,7 +1231,7 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     set 4, [hl]
     ld a, $2a
     ld [$c50f], a
-    ld hl, $4929
+    ld hl, D_01_4929
     ld a, l
     ld [$c4ff], a
     ld a, h
@@ -1285,7 +1284,7 @@ L_01_49a0::
 SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player's position (flags $86)
     ld hl, wPaintObject
     call Clear32Bytes
-    ld hl, $492b
+    ld hl, D_01_492b
     ld a, l
     ld [$c4ff], a
     ld a, h
@@ -1322,10 +1321,10 @@ L_01_4a31::
     ld a, [$c519]
     and a, $02
     jr z, .L_01_4a3d
-    ld hl, $4927
+    ld hl, D_01_4927
     jr .L_01_4a40
 .L_01_4a3d:
-    ld hl, $4929
+    ld hl, D_01_4929
 .L_01_4a40:
     ld a, l
     ld [$c4ff], a
@@ -1708,15 +1707,15 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     call WaitSerialByte
     ld a, [rSB]
     cp a, $02
-    call z, L_01_4d3e
+    call z, SetLinkFlag5
     ld a, [$c7bf]
     bit 5, a
-    call nz, L_01_4d3e
+    call nz, SetLinkFlag5
     call SerialStartTransfer
     xor a, a
     ld [wMagicPoints], a
     ret
-L_01_4d3e::
+SetLinkFlag5::  ; sets hSerialByte bit 5 (name provisional)
     ld hl, hSerialByte
     set 5, [hl]
     ret
@@ -1809,10 +1808,10 @@ SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492
     ld a, [$c519]
     and a, $02
     jr z, .L_01_4dfa
-    ld hl, $492b
+    ld hl, D_01_492b
     jr .L_01_4dfd
 .L_01_4dfa:
-    ld hl, $492d
+    ld hl, D_01_492d
 .L_01_4dfd:
     ld a, l
     ld [$c4ff], a
@@ -2231,10 +2230,10 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld a, [wPlayerBlocked]
     swap a
     and a, e
-    jp nz, L_01_5183
+    jp nz, SetPlayerStatusBit0
     ldh a, [hJoyHeld]
     and a, $f0
-    jp z, L_01_5183
+    jp z, SetPlayerStatusBit0
     swap a
     ld d, a
     ld a, [wPlayerDir]
@@ -2277,7 +2276,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ret
 DirectionToAnimIndex::  ; dpad direction nibble to animation index
     INCBIN "assets/bank_01/5178_DirectionToAnimIndex.bin"
-L_01_5183::
+SetPlayerStatusBit0::  ; sets wPlayerStatus bit 0 and clears $c4cf
     ld hl, wPlayerStatus
     set 0, [hl]
     xor a, a
@@ -2524,20 +2523,20 @@ SelectKind4Animation::  ; animation pointers of enemy kind 4 by hEnemyDir
     bit 2, a
     jr nz, .L_01_53be
     ld de, D_01_53e5
-    jp L_00_3651
+    jp SetObjectAnimationStub
 .L_01_53a8:
     ld hl, hObject2
     set 5, [hl]
     ld de, D_01_53ec
-    jp L_00_3651
+    jp SetObjectAnimationStub
 .L_01_53b3:
     ld hl, hObject2
     res 5, [hl]
     ld de, D_01_53ec
-    jp L_00_3651
+    jp SetObjectAnimationStub
 .L_01_53be:
     ld de, D_01_53f3
-    jp L_00_3651
+    jp SetObjectAnimationStub
 EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
     ld a, $08
     ldh [hEnemyAnimState], a
@@ -2575,11 +2574,11 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call L_01_5636
     call UpdateProjectile
     call L_01_55bc
-    call L_01_553a
+    call ProjectileRemoveIfHit
     call L_01_5549
     call SelectObject2
     jp DrawObject
-L_01_553a::
+ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
     ldh a, [hEnemyFlags]
     and a, $0a
     cp a, $0a
@@ -2739,7 +2738,7 @@ L_01_5636::
     ld hl, hEnemyFlags
     set 3, [hl]
     ret
-L_01_566a::
+EnemyFlagBit3IfDead::  ; sets hEnemyFlags bit 3 when hEnemyDir bit 5 is set
     ldh a, [hEnemyDir]
     bit 5, a
     jr nz, .L_01_5671
@@ -2799,7 +2798,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld de, D_01_578f
     ld hl, D_01_578b
 .L_01_56d3:
-    call L_00_340c
+    call EnemySnapToGrid
     push af
     push de
     swap a
@@ -2977,7 +2976,7 @@ EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ldh [hEnemyCounter], a
     ld de, D_01_586f
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 D_01_586f::
     INCBIN "assets/bank_01/586f.bin"
 D_01_587d::
@@ -3122,7 +3121,7 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     push bc
     pop de
 .L_01_59b3:
-    jp L_00_3651
+    jp SetObjectAnimationStub
 EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld a, $05
     ldh [hEnemyAnimState], a
@@ -3132,7 +3131,7 @@ EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ldh [hEnemyStep], a
     ld de, D_01_59cb
     call SetObjectAnimation
-    jp L_00_340c
+    jp EnemySnapToGrid
 D_01_59cb::
     INCBIN "assets/bank_01/59cb.bin"
 D_01_59d2::
@@ -3196,7 +3195,7 @@ EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ldh [hEnemyAnimState], a
     ld a, $20
     ldh [hEnemyCounter], a
-    jp L_00_340c
+    jp EnemySnapToGrid
 D_01_5a76::
     INCBIN "assets/bank_01/5a76.bin"
 D_01_5a84::
