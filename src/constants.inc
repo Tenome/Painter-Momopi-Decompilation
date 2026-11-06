@@ -32,3 +32,8 @@ DEF wSoundCmd       EQU $c30e   ; command being started (bit 7 set = music/effec
 DEF wSoundQueueLen  EQU $c316
 DEF wSoundQueue     EQU $c317
 DEF wSoundChannels  EQU $c327   ; 8 records x $20 bytes
+DEF wLives          EQU $c1a9   ; starts at 3 (shown as "x 03" on the round intro)
+DEF wRound          EQU $c522   ; round number, starts at 1 ("ROUND 01")
+DEF wRoundBackup    EQU $c523   ; also set to 1 at boot; incremented together with wRound
+DEF wRoomIndex      EQU $c524   ; selects the room tile set / name (0 = kitchen room)
+DEF hLinkFlags      EQU $ffed   ; bit 0 = 2 player link game

@@ -348,7 +348,7 @@
      }
     },
     {
-     "name": "RequestBank1Command",
+     "name": "PlaySound",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1268,7 +1268,7 @@
      }
     },
     {
-     "name": "L_00_10b5",
+     "name": "Mode1_Play",
      "size": "89",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1876,7 +1876,7 @@
      }
     },
     {
-     "name": "L_00_1c57",
+     "name": "Mode3_RoundIntro",
      "size": "54",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1932,7 +1932,7 @@
      }
     },
     {
-     "name": "L_00_1dc0",
+     "name": "Mode7_LinkLose",
      "size": "38",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1996,7 +1996,7 @@
      }
     },
     {
-     "name": "L_00_1ea4",
+     "name": "Mode4_GameOver",
      "size": "74",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2020,7 +2020,7 @@
      }
     },
     {
-     "name": "L_00_1f1c",
+     "name": "Mode5_Continue",
      "size": "102",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2124,7 +2124,7 @@
      }
     },
     {
-     "name": "L_00_2497",
+     "name": "Mode2_BonusSelect",
      "size": "32",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2292,7 +2292,7 @@
      }
     },
     {
-     "name": "L_00_29ea",
+     "name": "Mode0_Title",
      "size": "61",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2476,7 +2476,7 @@
      }
     },
     {
-     "name": "L_00_2c70",
+     "name": "Mode6_Ending",
      "size": "166",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -3863,7 +3863,7 @@
      }
     },
     {
-     "name": "L_01_4157",
+     "name": "SoundUpdate",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -3903,7 +3903,7 @@
      }
     },
     {
-     "name": "L_01_418c",
+     "name": "SoundDequeue",
      "size": "22",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -3927,7 +3927,7 @@
      }
     },
     {
-     "name": "L_01_41ad",
+     "name": "SoundStartCommand",
      "size": "40",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -4063,7 +4063,7 @@
      }
     },
     {
-     "name": "L_01_435e",
+     "name": "SoundAssignChannels",
      "size": "8",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -4119,7 +4119,7 @@
      }
     },
     {
-     "name": "L_01_43a3",
+     "name": "SoundUpdateChannel",
      "size": "50",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -4647,7 +4647,7 @@
      }
     },
     {
-     "name": "L_01_485b",
+     "name": "PlaySound_Bank1",
      "size": "32",
      "fuzzy_match_percent": 100.0,
      "metadata": {
