@@ -157,5 +157,5 @@ DEF CARD_SEALED     EQU 6
 DEF CARD_DOM        EQU 7
 DEF CARD_CLEAR      EQU 8
 DEF CARD_PYON       EQU 9
-DEF wFriendObject   EQU $c49e   ; object record of the helper created by magic (removed by T.STOP / FRIEND effects)
+DEF wProjectile     EQU $c49e   ; object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it)
 DEF wMagicScreenFlags EQU $c53b ; bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling

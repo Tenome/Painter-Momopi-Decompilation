@@ -1772,7 +1772,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call InitPlayer
 .L_00_1147:
     call L_00_36fa
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call Clear32Bytes
     call SerialStartTransfer
     xor a, a
@@ -1812,7 +1812,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call PlayFrame
     call ShowMagicScreen
     call UpdateCamera
-    call L_00_31f1
+    call StepEnemySpawnScript
     call UpdateAllEnemies
     call L_00_11ec
     call L_00_11b4
@@ -3944,7 +3944,7 @@ L_00_31eb::
     ld hl, hEnemyFlags
     set 2, [hl]
     ret
-L_00_31f1::
+StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound; position $c481/$c482
     ld a, [wRound]
     dec a
     ld hl, RoundDataTable
@@ -4058,10 +4058,10 @@ L_00_32a2::
     bit 0, a
     ret nz
 .L_00_32bc:
-    ld a, [wFriendObject]
+    ld a, [wProjectile]
     bit 7, a
     ret z
-    ld hl, wFriendObject
+    ld hl, wProjectile
     ld a, l
     ldh [hOtherObjLo], a
     ld a, h
@@ -4141,7 +4141,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld [$c49f], a
     ld a, h
     ld [$c4a0], a
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     call DrawObject
 .L_00_3361:
@@ -4152,9 +4152,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_3381
-    ld hl, wFriendObject
+    ld hl, wProjectile
     set 6, [hl]
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     call DrawObject
 .L_00_3381:
@@ -4166,10 +4166,10 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_33a5
-    ld hl, wFriendObject
+    ld hl, wProjectile
     set 5, [hl]
     res 6, [hl]
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     call DrawObject
 .L_00_33a5:
@@ -4180,9 +4180,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_33c5
-    ld hl, wFriendObject
+    ld hl, wProjectile
     set 6, [hl]
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     call DrawObject
 .L_00_33c5:
@@ -4192,9 +4192,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     ret z
-    ld a, [wFriendObject]
+    ld a, [wProjectile]
     and a, $9f
-    ld [wFriendObject], a
+    ld [wProjectile], a
     ret
 .L_00_33da:
     ld hl, wPlayerStatus
@@ -4209,7 +4209,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld e, a
     ld d, $00
     call AddScore
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
     jp L_00_3525
 L_00_33fd::

@@ -1751,7 +1751,7 @@ MagicEffectTStop::  ; card 3 T.STOP: $d0 frames; removes the object at $c49e
     ld a, $d0
     ldh [$ffdf], a
     call BeginMagicCast
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
 .L_01_4d8e:
     jp MagicTimerTick
@@ -1771,7 +1771,7 @@ MagicEffectFriend::  ; card 5 FRIEND: $b0 frames; removes the object at $c49e
     ld a, $b0
     ldh [$ffdf], a
     call BeginMagicCast
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
 .L_01_4db5:
     jp MagicTimerTick
@@ -2561,14 +2561,14 @@ D_01_53f3::
 EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call TickObjectTimer
     jr nz, .L_01_551b
-    jp L_01_56a2
+    jp InitProjectile
 .L_01_551b:
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
     call L_00_39b1
     call L_01_5636
-    call L_01_556a
+    call UpdateProjectile
     call L_01_55bc
     call L_01_553a
     call L_01_5549
@@ -2579,7 +2579,7 @@ L_01_553a::
     and a, $0a
     cp a, $0a
     ret nz
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
     jp L_00_3525
 L_01_5549::
@@ -2604,14 +2604,14 @@ L_01_5549::
     ld a, [hl]
     ldh [$ffb7], a
     ret
-L_01_556a::
+UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed when the shooter is hit
     ldh a, [hEnemyFlags]
     bit 0, a
     ret nz
     ldh a, [hEnemyFlags]
     bit 3, a
     jr z, .L_01_557b
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
     ret
 .L_01_557b:
@@ -2630,7 +2630,7 @@ L_01_556a::
     ldh a, [hEnemyY]
     ld [$c4a8], a
     ld a, $86
-    ld [wFriendObject], a
+    ld [wProjectile], a
     ldh a, [hEnemyKind]
     cp a, $0a
     jr nz, .L_01_55a7
@@ -2679,13 +2679,13 @@ L_01_55bc::
     ld [$c4af], a
 .L_01_55fb:
     call L_01_5618
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     call L_00_0b66
     call L_00_09e0
     jp DrawObject
 .L_01_560d:
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
     ld hl, hEnemyFlags
     set 1, [hl]
@@ -2771,8 +2771,8 @@ L_01_5677::
 .L_01_56a0:
     xor a, a
     ret
-L_01_56a2::
-    ld hl, wFriendObject
+InitProjectile::  ; creates the projectile object at wProjectile for the kind 10 enemy
+    ld hl, wProjectile
     call Clear32Bytes
     ld a, $01
     ld [$c4a2], a
@@ -3001,13 +3001,13 @@ EnemyKind2::  ; enemy kind 2
     call SelectObject2
     jp DrawObject
 L_01_58cf::
-    ld a, [wFriendObject]
+    ld a, [wProjectile]
     bit 7, a
     ret nz
     ld hl, $ffca
     dec [hl]
     ret nz
-    ld a, [wFriendObject]
+    ld a, [wProjectile]
     bit 7, a
     ret nz
     ldh a, [hEnemyX]
@@ -3033,7 +3033,7 @@ L_01_58ee::
     bit 0, a
     jr nz, .L_01_5938
 .L_01_590a:
-    ld a, [wFriendObject]
+    ld a, [wProjectile]
     bit 7, a
     ret z
     ld hl, $c4b4
@@ -3051,7 +3051,7 @@ L_01_58ee::
     ld [$c49f], a
     ld a, h
     ld [$c4a0], a
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call SetObjPtr
     jp DrawObject
 .L_01_5938:
@@ -3059,11 +3059,11 @@ L_01_58ee::
     ldh [$ffca], a
     ld a, $a0
     ld [$c4b4], a
-    ld hl, wFriendObject
+    ld hl, wProjectile
     res 7, [hl]
     ret
 L_01_5947::
-    ld hl, wFriendObject
+    ld hl, wProjectile
     call Clear32Bytes
     ld a, $04
     ld [$c4a2], a
@@ -3078,7 +3078,7 @@ L_01_5947::
     add a, $08
     ld [$c4a8], a
     ld a, $82
-    ld [wFriendObject], a
+    ld [wProjectile], a
     ret
 L_01_596f::
     ld a, [hEnemyDir]

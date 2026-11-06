@@ -137,7 +137,7 @@ bank	addr	size	name
 0	30aa	26	L_00_30aa
 0	31e2	9	TickObjectTimer
 0	31eb	6	L_00_31eb
-0	31f1	177	L_00_31f1
+0	31f1	177	StepEnemySpawnScript
 0	32a2	61	L_00_32a2
 0	32df	286	EnemyDefeated
 0	33fd	15	L_00_33fd
@@ -323,13 +323,13 @@ bank	addr	size	name
 1	5513	39	EnemyKind10
 1	553a	15	L_01_553a
 1	5549	33	L_01_5549
-1	556a	82	L_01_556a
+1	556a	82	UpdateProjectile
 1	55bc	92	L_01_55bc
 1	5618	30	L_01_5618
 1	5636	52	L_01_5636
 1	566a	13	L_01_566a
 1	5677	43	L_01_5677
-1	56a2	106	L_01_56a2
+1	56a2	106	InitProjectile
 1	570c	118	L_01_570c
 1	57f0	39	EnemyKind9
 1	5817	10	L_01_5817

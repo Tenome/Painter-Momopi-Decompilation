@@ -257,3 +257,6 @@ bank,addr,name,comment
 1,4962,MagicTimerTick,counts $ffdf down; ends the effect when it reaches 0
 1,4967,EndMagic,clears wMagicState
 1,4ceb,CancelMagic,clears wActiveMagic and wMagicState
+0,31f1,StepEnemySpawnScript,reads the round's spawn list (RoundDataTable by wRound; position $c481/$c482, index $c483/$c484) and creates enemies
+1,56a2,InitProjectile,creates the projectile object at wProjectile for the kind 10 enemy
+1,556a,UpdateProjectile,projectile steps while the shooter enemy lives; removed when the shooter is hit
