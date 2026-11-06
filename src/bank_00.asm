@@ -1524,7 +1524,7 @@ L_00_0c2a::
     sla b
     ld c, b
     ret
-D_00_0c49::
+PaintCellCountTable::  ; number of path cells to paint per round (index (round-1)&15): initial wPaintRemaining
     INCBIN "orig/painter_momopie.gb", $00c49, 197
 UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked to the 256 byte wRoomMap
     ld c, $00
@@ -1680,7 +1680,7 @@ AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld a, [$c46c]
     call L_00_10a2
     ld [$c474], a
-    jp L_00_11b4
+    jp CheckExtraLife
 DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     push hl
     ld a, [hl]
@@ -1749,7 +1749,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     and a, $0f
     ld c, a
 .L_00_1111:
-    ld hl, D_00_0c49
+    ld hl, PaintCellCountTable
     call LookupByte
     ld [wPaintRemaining], a
     call RequestOamDma
@@ -1799,7 +1799,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     srl a
     srl a
     ld c, a
-    ld hl, D_00_14f0
+    ld hl, RoundTimeTable
     call LookupByte
 .L_00_118a:
     ldh [hTimeSeconds], a
@@ -1814,12 +1814,12 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call UpdateCamera
     call StepEnemySpawnScript
     call UpdateAllEnemies
-    call L_00_11ec
-    call L_00_11b4
+    call TimeUpSpawnEnemy
+    call CheckExtraLife
     ld hl, $ffde
     inc [hl]
     jr .L_00_1193
-L_00_11b4::
+CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7): wLives += 1 (once per threshold)
     ld a, [$c51f]
     bit 1, a
     jr nz, .L_00_11c6
@@ -1852,7 +1852,7 @@ L_00_11e7::
     inc b
     ld b, $08
     nop
-L_00_11ec::
+TimeUpSpawnEnemy::  ; when hTimeSeconds reaches 0 (once per round): creates an extra enemy ($a0/$04) in a free slot
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_00_11f8
@@ -2192,7 +2192,7 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     ld [$c474], a
     ret
     INCBIN "orig/painter_momopie.gb", $014e4, 12
-D_00_14f0::
+RoundTimeTable::  ; seconds per round block (index wRound/4): initial hTimeSeconds
     INCBIN "orig/painter_momopie.gb", $014f0, 9
 RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
     dw D_00_151b

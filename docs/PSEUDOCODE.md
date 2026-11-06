@@ -83,3 +83,30 @@ void VBlankHandler(void) {            // $02c0, interrupt
     hVBlankFlag |= 1; hFrameCounter++;
 }
 ```
+
+## Mode1_Play (bank 0, `$10b5`): setup and main loop
+
+```c
+void Mode1_Play(void) {
+    SP = wStackTop;  LcdOff();  di();
+    FillBackwardsFF(vBGMapLast);  LoadGfxBank2();  ClearOamShadow();
+    UnpackRoomMap(RoomMapTable[(wRound - 1) & 15]);              // 2 bit cells -> wRoomMap (16 x 16)
+    DrawMetatileMap(vBGMap0, RoomMetatileTable[wRoomIndex], wRoomMap, mask 0x0f);
+    RunVramCopyList(RoomVramJobTable[wRoomIndex]);               // static tiles and furniture
+    wPaintRemaining = PaintCellCountTable[(wRound - 1) & 15];
+    InitMagicScreenState(); InitMagicPoints(); ResetCamera();
+    if (!(c51f & 4)) { c51f |= 4; ClearRoundVariables(); }       // once per round
+    if (!(wGameFlags & 0x80)) { wGameFlags |= 0x80; InitPlayer(); ClearAllEnemies(); Clear32Bytes(wProjectile); }
+    SerialStartTransfer();  scroll = 0;  IE = VBLANK|SERIAL;  LCDC = ON|BG|OBJ;  ei();
+    StartRoundMusic();
+    hTimeFrames = 60;  hTimeSeconds = RoundTimeTable[wRound / 4];   // 90 s in round 33
+    hVBlankTasks |= 0x10;                                        // the VBlank handler now counts the time down
+    for (;;) {
+        WaitFrameAndSyncOam();  ReadJoypad();
+        PlayFrame();  ShowMagicScreen();  UpdateCamera();
+        StepEnemySpawnScript();  UpdateAllEnemies();
+        TimeUpSpawnEnemy();  CheckExtraLife();
+        hFrameCounter2++;
+    }
+}
+```

@@ -76,9 +76,9 @@ bank	addr	size	name
 0	10a2	2	L_00_10a2
 0	10a4	7	L_00_10a4
 0	10b5	255	Mode1_Play
-0	11b4	51	L_00_11b4
+0	11b4	51	CheckExtraLife
 0	11e7	5	L_00_11e7
-0	11ec	48	L_00_11ec
+0	11ec	48	TimeUpSpawnEnemy
 0	121c	272	ShowMagicScreen
 0	132c	186	L_00_132c
 0	13e6	26	StartRoundMusic

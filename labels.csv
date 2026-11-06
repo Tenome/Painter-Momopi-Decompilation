@@ -282,3 +282,7 @@ bank,addr,name,comment
 1,4ca7,PayMagicCost,subtracts the card cost from wMagicPoints (borrowing from the high byte) and starts the effect; cancels the cast when MP is too low
 1,4feb,PaintUnderPlayerCell,looks up the cell under the player and paints it (shared tail of PaintUnderPlayer)
 1,4f5a,AnimatePlayerWalk,while a direction is held: advances the walk animation counter $c4d9 and selects the frame
+0,11ec,TimeUpSpawnEnemy,when hTimeSeconds reaches 0 (once per round): creates an extra enemy ($a0/$04) in a free slot
+0,11b4,CheckExtraLife,when a score digit reaches the next threshold (table $11e7): wLives += 1 (once per threshold)
+0,0c49,PaintCellCountTable,number of path cells to paint per round (index (round-1)&15): initial wPaintRemaining
+0,14f0,RoundTimeTable,seconds per round block (index wRound/4): initial hTimeSeconds
