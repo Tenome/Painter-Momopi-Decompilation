@@ -80,7 +80,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   |---|---|---|
   | 0 | `Mode0_Title` | title: "Painter Momopie" logo, 1 PLAYER / 2 PLAYER, (c)1990 Sigma Enterprises, LICENSED BY NINTENDO; boot-time serial handshake |
   | 1 | `Mode1_Play` | gameplay: the painter (witch hat) walks the path cells of a room and paints them white; enemy sprites roam the room |
-  | 2 | `Mode2_BonusSelect` | "SELECT JUST ONE!" with three choices A, B, C |
+  | 2 | `Mode2_BonusSelect` | after a cleared round: "CONGRATURATION!! BONUS : 10000P / I WANT TO GIVE YOU GOOD PRESENT" (the king with the painter), then "SELECT JUST ONE!" with three doors A, B, C and a bouncing ball as cursor |
   | 3 | `Mode3_RoundIntro` | "ROUND 01 / KITCHEN ROOM / lives x 03 / READY !!" |
   | 4 | `Mode4_GameOver` | GAME OVER |
   | 5 | `Mode5_Continue` | CONTINUE ? countdown, YES / NO |
