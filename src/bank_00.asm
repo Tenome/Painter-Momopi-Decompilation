@@ -1772,7 +1772,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call InitPlayer
 .L_00_1147:
     call L_00_36fa
-    ld hl, $c49e
+    ld hl, wFriendObject
     call Clear32Bytes
     call SerialStartTransfer
     xor a, a
@@ -2070,7 +2070,7 @@ L_00_132c::
     ldh a, [hJoyNew]
     bit 1, a
     jr z, .L_00_1396
-    ld hl, $c53b
+    ld hl, wMagicScreenFlags
     res 1, [hl]
     call LcdOff
     di
@@ -2297,7 +2297,7 @@ RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 1
     dw D_00_2297
     dw D_00_2457
 CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
-    ld a, [$c53b]
+    ld a, [wMagicScreenFlags]
     bit 2, a
     ret z
     ld a, [$c47d]
@@ -2319,11 +2319,11 @@ SetCursorAnimation::  ; HL = animation pointer stored in the cursor object recor
     ld [$c750], a
     ret
 L_00_1769::
-    ld hl, $c53b
+    ld hl, wMagicScreenFlags
     res 2, [hl]
     jr L_00_175d
 MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B closes or casts; uses $c53b flags
-    ld a, [$c53b]
+    ld a, [wMagicScreenFlags]
     bit 1, a
     jr nz, .L_00_17a9
     ldh a, [hJoyNew]
@@ -2374,7 +2374,7 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
     ld a, [$c44b]
     and a, a
     jr nz, .L_00_17e2
-    ld hl, $c53b
+    ld hl, wMagicScreenFlags
     res 2, [hl]
     ret
 .L_00_17e2:
@@ -2391,9 +2391,9 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
     ld hl, wMagicCards
     call LookupByte
     ld [wActiveMagic], a
-    ld a, [$c53b]
+    ld a, [wMagicScreenFlags]
     or a, $06
-    ld [$c53b], a
+    ld [wMagicScreenFlags], a
     ld hl, hJoyNew
     res 7, [hl]
     jr .L_00_179c
@@ -2575,7 +2575,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     ld [wMagicCol], a
     ld [wMagicRow], a
     ld [$c47d], a
-    ld [$c53b], a
+    ld [wMagicScreenFlags], a
     ld hl, wCursorObject
     call Clear32Bytes
     ld a, $a0
@@ -4058,10 +4058,10 @@ L_00_32a2::
     bit 0, a
     ret nz
 .L_00_32bc:
-    ld a, [$c49e]
+    ld a, [wFriendObject]
     bit 7, a
     ret z
-    ld hl, $c49e
+    ld hl, wFriendObject
     ld a, l
     ldh [hOtherObjLo], a
     ld a, h
@@ -4141,7 +4141,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld [$c49f], a
     ld a, h
     ld [$c4a0], a
-    ld hl, $c49e
+    ld hl, wFriendObject
     call SetObjPtr
     call DrawObject
 .L_00_3361:
@@ -4152,9 +4152,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_3381
-    ld hl, $c49e
+    ld hl, wFriendObject
     set 6, [hl]
-    ld hl, $c49e
+    ld hl, wFriendObject
     call SetObjPtr
     call DrawObject
 .L_00_3381:
@@ -4166,10 +4166,10 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_33a5
-    ld hl, $c49e
+    ld hl, wFriendObject
     set 5, [hl]
     res 6, [hl]
-    ld hl, $c49e
+    ld hl, wFriendObject
     call SetObjPtr
     call DrawObject
 .L_00_33a5:
@@ -4180,9 +4180,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_33c5
-    ld hl, $c49e
+    ld hl, wFriendObject
     set 6, [hl]
-    ld hl, $c49e
+    ld hl, wFriendObject
     call SetObjPtr
     call DrawObject
 .L_00_33c5:
@@ -4192,9 +4192,9 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     ret z
-    ld a, [$c49e]
+    ld a, [wFriendObject]
     and a, $9f
-    ld [$c49e], a
+    ld [wFriendObject], a
     ret
 .L_00_33da:
     ld hl, wPlayerStatus
@@ -4209,7 +4209,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld e, a
     ld d, $00
     call AddScore
-    ld hl, $c49e
+    ld hl, wFriendObject
     res 7, [hl]
     jp L_00_3525
 L_00_33fd::

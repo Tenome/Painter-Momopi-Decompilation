@@ -157,3 +157,5 @@ DEF CARD_SEALED     EQU 6
 DEF CARD_DOM        EQU 7
 DEF CARD_CLEAR      EQU 8
 DEF CARD_PYON       EQU 9
+DEF wFriendObject   EQU $c49e   ; object record of the helper created by magic (removed by T.STOP / FRIEND effects)
+DEF wMagicScreenFlags EQU $c53b ; bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling
