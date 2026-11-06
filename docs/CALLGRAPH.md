@@ -2,7 +2,7 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-250 named routines of 347 found.
+269 named routines of 347 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
@@ -45,15 +45,18 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:05e8 | `QueueVramCopyRows` | 27 | 5 |  |
 | 0:0603 | `QueueVramCopyList` | 21 | 2 |  |
 | 0:0618 | `VramCopyRows` | 16 | 1 |  |
+| 0:0628 | `VramCopyStream` | 59 | 7 |  |
 | 0:0663 | `VramCopyList` | 8 | 1 |  |
-| 0:066b | `RunVramCopyList` | 49 | 8 | `L_00_0628` |
+| 0:066b | `RunVramCopyList` | 49 | 8 | `VramCopyStream` |
 | 0:069c | `WaitVramCopyDone` | 8 | 6 |  |
 | 0:07e7 | `ClearOamShadowY` | 18 | 10 |  |
 | 0:07f9 | `ClearOamShadow` | 13 | 8 |  |
 | 0:0806 | `RequestOamDma` | 6 | 12 |  |
 | 0:080c | `DrawObjectBytePos` | 52 | 4 | `L_00_09aa` |
 | 0:0840 | `DrawObject` | 38 | 22 | `L_00_09aa` |
-| 0:0866 | `DrawObjectParts` | 324 | 0 | `L_00_09ab` |
+| 0:0866 | `DrawObjectParts` | 324 | 0 | `AddOamSprite` |
+| 0:09ab | `AddOamSprite` | 38 | 1 |  |
+| 0:09e0 | `ClampObjectToRoom` | 13 | 9 | `L_00_09ed` |
 | 0:0a49 | `SerialSendByte` | 20 | 4 |  |
 | 0:0a6b | `ByteToBCD` | 63 | 4 |  |
 | 0:0aaa | `LookupByte` | 5 | 19 |  |
@@ -61,14 +64,16 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0abf | `ObjectsOverlap` | 75 | 3 | `CompareObjectCoordinate` |
 | 0:0b0a | `CompareObjectCoordinate` | 58 | 1 |  |
 | 0:0b44 | `NextRandomDirection` | 34 | 2 |  |
+| 0:0b66 | `MoveObject` | 80 | 7 | `MultiplyByDE` |
 | 0:0bf8 | `MultiplyByDE` | 50 | 9 |  |
+| 0:0c2a | `CounterToFrame` | 31 | 3 |  |
 | 0:0d0e | `UnpackRoomMap` | 47 | 1 |  |
 | 0:100b | `AddScore` | 121 | 2 | `ByteToBCD`, `CheckExtraLife`, `DrawDecimalDigits`, `L_00_10a2` |
 | 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
 | 0:10b5 | `Mode1_Play` | 255 | 0 | `CheckExtraLife`, `Clear32Bytes`, `ClearAllEnemies`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF` ... |
 | 0:11b4 | `CheckExtraLife` | 51 | 2 | `LookupByte` |
 | 0:11ec | `TimeUpSpawnEnemy` | 48 | 1 | `FindFreeEnemySlot`, `SerialStartTransfer` |
-| 0:121c | `ShowMagicScreen` | 272 | 1 | `ByteToBCD`, `ClearOamShadowY`, `DrawMagicPage`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `InitMagicScreenState`, `L_00_04fc`, `L_00_0628` ... |
+| 0:121c | `ShowMagicScreen` | 272 | 1 | `ByteToBCD`, `ClearOamShadowY`, `DrawMagicPage`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `InitMagicScreenState`, `L_00_04fc`, `L_00_10a4` ... |
 | 0:13e6 | `StartRoundMusic` | 26 | 1 | `LookupByte`, `PlaySound`, `WaitVBlankFlag` |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
 | 0:142a | `TableIndexFromRound` | 14 | 2 | `LookupWord` |
@@ -83,40 +88,54 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:1876 | `MagicCursorDown` | 45 | 1 | `L_00_196f`, `LookupByte`, `MultiplyByDE` |
 | 0:18a3 | `DrawMagicPage` | 204 | 1 | `LookupByte`, `LookupWord`, `QueueVramCopyRows`, `WaitVramCopyDone` |
 | 0:1973 | `InitMagicScreenState` | 40 | 2 | `Clear32Bytes`, `SetCursorAnimation` |
-| 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `ClearRoomState`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_01_492f` ... |
+| 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `ClearRoomState`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_01_492f`, `LcdOff` ... |
 | 0:1ce7 | `ClearRoomState` | 22 | 1 |  |
-| 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
+| 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `DigitToTile`, `VramCopyStream` |
+| 0:1d23 | `DigitToTile` | 12 | 1 | `LookupByte` |
 | 0:1dc0 | `Mode7_LinkLose` | 110 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `ReadJoypad` ... |
-| 0:1ea4 | `Mode4_GameOver` | 108 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `LcdOff`, `LoadTilesBank3A` ... |
+| 0:1ea4 | `Mode4_GameOver` | 108 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3A`, `PlaySound` ... |
 | 0:1f1c | `Mode5_Continue` | 329 | 0 | `Clear32Bytes`, `ClearMemory`, `ClearOamShadow`, `ClearOamShadowY`, `ContinueCursorInput`, `DrawObjectBytePos`, `Entry`, `FillBackwardsFF` ... |
 | 0:2065 | `ContinueCursorInput` | 30 | 1 |  |
-| 0:2497 | `Mode2_BonusSelect` | 32 | 0 | `L_00_2633`, `LcdOff`, `LoadTilesBank3C`, `PlaySound` |
-| 0:24b7 | `Mode2_Init` | 132 | 2 | `ClearOamShadow`, `L_00_051d`, `L_00_0628`, `LcdOff`, `LookupWord`, `RequestOamDma`, `RunVramCopyList` |
+| 0:2497 | `Mode2_BonusSelect` | 32 | 0 | `InitBonusCursor`, `LcdOff`, `LoadTilesBank3C`, `PlaySound` |
+| 0:24b7 | `Mode2_Init` | 132 | 2 | `ClearOamShadow`, `L_00_051d`, `LcdOff`, `LookupWord`, `RequestOamDma`, `RunVramCopyList`, `VramCopyStream` |
 | 0:2558 | `BonusResultWait` | 28 | 0 | `AddScore`, `GameModeDispatch`, `ReadJoypad`, `WaitVBlankFlag` |
 | 0:2574 | `BonusSelectLoop` | 87 | 0 | `DelayFrames`, `MenuCursorInput`, `Mode2_Init`, `MultiplyByDE`, `ReadJoypad`, `WaitFrameAndSyncOam` |
 | 0:25e0 | `MenuCursorInput` | 80 | 1 | `DrawObjectBytePos`, `LookupByte`, `PlaySound`, `SetObjPtr` |
+| 0:2633 | `InitBonusCursor` | 23 | 1 | `SetCursorAnimation` |
 | 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `InitTitleVariables`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
 | 0:2a27 | `TitleLoop` | 227 | 0 | `GameModeDispatch`, `PickRandomRound`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `TitleCursorUpdate`, `WaitFrameAndSyncOam` |
 | 0:2b0a | `PickRandomRound` | 25 | 2 | `NextRandomDirection` |
 | 0:2b23 | `TitleCursorUpdate` | 35 | 1 | `DrawObjectBytePos`, `SetObjPtr` |
 | 0:2b46 | `InitTitleVariables` | 62 | 1 | `SetCursorAnimation` |
-| 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `EndingCreditsWindow`, `EndingScrollStep`, `EndingSetup`, `Entry` ... |
+| 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `EndingCastleBlink`, `EndingCreditsWindow`, `EndingScrollStep`, `EndingSetup` ... |
 | 0:2d5d | `EndingCreditsWindow` | 124 | 1 | `EndingShowCreditsPage` |
 | 0:2dd9 | `EndingShowCreditsPage` | 24 | 1 | `EndingScrollStep`, `L_00_2df1`, `LookupWord`, `QueueVramCopyList`, `WaitVramCopyDone` |
+| 0:2f26 | `EndingTick` | 6 | 1 | `EndingAnimateObject`, `EndingMoveHero` |
+| 0:2f2c | `EndingMoveHero` | 27 | 1 | `EndingHeroFrame` |
+| 0:2f47 | `EndingHeroFrame` | 47 | 1 | `ClampObjectToRoom`, `L_00_307f`, `MoveObject` |
+| 0:2f76 | `EndingAnimateObject` | 47 | 1 | `DrawObject`, `SetObjPtr` |
 | 0:2fa5 | `EndingScrollStep` | 20 | 2 |  |
 | 0:2fb9 | `EndingSetup` | 80 | 1 | `ClearMemory`, `ClearOamShadowY`, `FillBackwardsFF`, `LcdOff`, `RequestOamDma`, `RunVramCopyList` |
+| 0:3054 | `EndingWalkStep` | 43 | 1 | `ClampObjectToRoom`, `DrawObject`, `L_00_307f`, `MoveObject` |
+| 0:3085 | `EndingCastleBlink` | 37 | 1 | `DrawObject`, `SetObjPtr` |
+| 0:30aa | `EndingAdvance` | 26 | 0 |  |
 | 0:31e2 | `TickObjectTimer` | 9 | 10 |  |
 | 0:31f1 | `StepEnemySpawnScript` | 177 | 1 | `FindFreeEnemySlot`, `LookupByte`, `LookupWord` |
 | 0:32a2 | `ProjectileFrame` | 61 | 2 | `ObjectsOverlap` |
-| 0:32df | `EnemyDefeated` | 286 | 9 | `AddScore`, `DrawObject`, `L_00_0c2a`, `L_00_3525`, `LookupByte`, `PlaySound`, `SelectObject2`, `SetObjPtr` |
+| 0:32df | `EnemyDefeated` | 286 | 9 | `AddScore`, `CounterToFrame`, `DrawObject`, `LookupByte`, `PlaySound`, `RemoveEnemy`, `SelectObject2`, `SetObjPtr` |
 | 0:341f | `CheckEnemyTouchesPlayer` | 42 | 8 | `ObjectsOverlap`, `SelectObject2` |
+| 0:3449 | `EnemyScreenPosition` | 47 | 4 |  |
 | 0:3478 | `EnemyOnTileGrid` | 9 | 1 | `IsOnTileGrid` |
 | 0:3481 | `EnemyComputeBlockedDirs` | 164 | 4 | `LookupMapTile`, `PixelXToColumn` |
+| 0:3525 | `RemoveEnemy` | 10 | 6 |  |
 | 0:3599 | `EnemyAimAtPlayer` | 95 | 3 | `EnemyChooseDirection`, `IsOnTileGrid` |
+| 0:35f8 | `RememberEnemyPosition` | 11 | 0 |  |
+| 0:3643 | `MoveAndClampObject` | 6 | 3 | `ClampObjectToRoom`, `MoveObject` |
 | 0:3649 | `SetAnimationVariant` | 8 | 7 |  |
 | 0:3654 | `SelectObject2` | 11 | 15 |  |
 | 0:365f | `SetObjectAnimation` | 7 | 12 |  |
 | 0:3666 | `EnemyRequestTurn` | 13 | 2 |  |
+| 0:3673 | `EnemyTileUnder` | 14 | 1 | `LookupMapTile`, `PixelXToColumn` |
 | 0:3693 | `CheckPaintHitsEnemy` | 41 | 5 | `L_00_31eb`, `ObjectsOverlap`, `SelectObject2` |
 | 0:36c9 | `EnemyEdgeBlockedDirs` | 49 | 1 |  |
 | 0:36fa | `ClearAllEnemies` | 25 | 1 | `SelectEnemySlot` |
@@ -133,8 +152,8 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:3af7 | `EnemyKind1` | 68 | 0 | `CheckEnemyTouchesPlayer`, `CheckPaintHitsEnemy`, `DrawObject`, `EnemyChooseDirection`, `EnemyComputeBlockedDirs`, `EnemyDefeated`, `EnemyEdgeBlockedDirs`, `L_00_352f` ... |
 | 0:3b57 | `SetEnemyAnimation` | 6 | 1 | `SelectEnemyAnimation`, `SetAnimationVariant` |
 | 0:3b5d | `SelectEnemyAnimation` | 60 | 1 | `SetAnimationVariant` |
-| 0:3bdc | `EnemyKind11` | 114 | 0 | `DrawObject`, `EnemyDefeated`, `L_00_3525`, `L_00_3c4e`, `L_00_3c57`, `L_00_3c6e`, `L_00_3c75`, `L_00_3c7d` ... |
-| 0:3c91 | `EnemyKind7` | 36 | 0 | `CheckEnemyTouchesPlayer`, `CheckPaintHitsEnemy`, `DrawObject`, `EnemyDefeated`, `L_00_3643`, `L_00_3cb5`, `L_00_3d18`, `L_00_3e20` ... |
+| 0:3bdc | `EnemyKind11` | 114 | 0 | `DrawObject`, `EnemyDefeated`, `L_00_3c4e`, `L_00_3c57`, `L_00_3c6e`, `L_00_3c75`, `L_00_3c7d`, `RemoveEnemy` ... |
+| 0:3c91 | `EnemyKind7` | 36 | 0 | `CheckEnemyTouchesPlayer`, `CheckPaintHitsEnemy`, `DrawObject`, `EnemyDefeated`, `L_00_3cb5`, `L_00_3d18`, `L_00_3e20`, `MoveAndClampObject` ... |
 | 0:3e61 | `EnemyKind5` | 47 | 0 | `CheckEnemyTouchesPlayer`, `CheckPaintHitsEnemy`, `DrawObject`, `EnemyDefeated`, `L_00_3e90`, `L_00_3ed1`, `L_00_3ef9`, `SelectObject2` ... |
 | 1:4157 | `SoundUpdate` | 53 | 1 | `SoundAssignChannels`, `SoundDequeue`, `SoundStartCommand`, `SoundUpdateChannel` |
 | 1:418c | `SoundDequeue` | 33 | 1 |  |
@@ -215,15 +234,15 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:4d7b | `MagicEffectTStop` | 22 | 0 | `BeginMagicCast`, `MagicTimerTick` |
 | 1:4d91 | `MagicEffectGhost` | 17 | 0 | `BeginMagicCast`, `MagicTimerTick` |
 | 1:4da2 | `MagicEffectFriend` | 22 | 0 | `BeginMagicCast`, `MagicTimerTick` |
-| 1:4db8 | `MagicEffectPyon` | 54 | 0 | `DrawObject`, `L_00_09e0`, `L_00_0b66`, `L_00_3449`, `L_01_4e53`, `SelectBlobAnimation`, `SetObjPtr`, `SpawnPaintBlob` |
+| 1:4db8 | `MagicEffectPyon` | 54 | 0 | `ClampObjectToRoom`, `DrawObject`, `EnemyScreenPosition`, `L_01_4e53`, `MoveObject`, `SelectBlobAnimation`, `SetObjPtr`, `SpawnPaintBlob` |
 | 1:4dee | `SelectBlobAnimation` | 24 | 1 |  |
-| 1:4e06 | `MagicEffectBom` | 65 | 0 | `DrawObject`, `L_00_09e0`, `L_00_0b66`, `L_01_49a0`, `L_01_4a31`, `L_01_4e47`, `LoadTrailSegment`, `SetObjPtr` ... |
+| 1:4e06 | `MagicEffectBom` | 65 | 0 | `ClampObjectToRoom`, `DrawObject`, `L_01_49a0`, `L_01_4a31`, `L_01_4e47`, `LoadTrailSegment`, `MoveObject`, `SetObjPtr` ... |
 | 1:4e77 | `MagicEffectClear` | 102 | 0 | `BeginMagicCast`, `EndMagic`, `MapCellToVramAddr`, `QueueCellTileRows`, `RoundCleared` |
 | 1:4edd | `MapCellToVramAddr` | 42 | 1 |  |
 | 1:4f07 | `QueueCellTileRows` | 26 | 1 | `QueueVramCopyRows`, `WaitVramCopyDone` |
 | 1:4f21 | `ClampPlayerPosition` | 48 | 1 |  |
 | 1:4f51 | `LoadPlayerXY` | 9 | 1 |  |
-| 1:4f5a | `AnimatePlayerWalk` | 55 | 1 | `L_00_0c2a` |
+| 1:4f5a | `AnimatePlayerWalk` | 55 | 1 | `CounterToFrame` |
 | 1:4f91 | `HoldDirectionUntilAligned` | 69 | 1 | `IsOnTileGrid` |
 | 1:4fd6 | `PaintUnderPlayer` | 21 | 1 | `PaintUnderPlayerAligned` |
 | 1:4feb | `PaintUnderPlayerCell` | 27 | 1 | `IsOnTileGrid`, `LookupMapTile`, `PixelXToColumn` |
@@ -232,9 +251,9 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:50b1 | `GotoLinkLose` | 5 | 3 | `GameModeDispatch` |
 | 1:50b6 | `NextRound` | 68 | 0 | `CheckBonusRound`, `GameModeDispatch` |
 | 1:50fa | `PaintUnderPlayerAligned` | 21 | 1 | `LookupMapTile`, `PaintUnderPlayerCell`, `PixelXToColumn` |
-| 1:510f | `PlayerSetDirection` | 105 | 1 | `L_00_09e0`, `L_01_5183`, `LookupByte`, `SetObjPtr` |
+| 1:510f | `PlayerSetDirection` | 105 | 1 | `ClampObjectToRoom`, `L_01_5183`, `LookupByte`, `SetObjPtr` |
 | 1:51ad | `InitPlayer` | 118 | 1 | `Clear32Bytes` |
-| 1:5223 | `PlayerDeath` | 222 | 1 | `DelayFrames`, `DrawObject`, `GameModeDispatch`, `L_00_0c2a`, `PlaySound`, `SerialSendByte`, `SetObjPtr` |
+| 1:5223 | `PlayerDeath` | 222 | 1 | `CounterToFrame`, `DelayFrames`, `DrawObject`, `GameModeDispatch`, `PlaySound`, `SerialSendByte`, `SetObjPtr` |
 | 1:5301 | `UpdateCamera` | 16 | 1 | `CameraFollowPlayerX` |
 | 1:5311 | `CameraFollowPlayerX` | 89 | 1 |  |
 | 1:536a | `ResetCamera` | 16 | 1 |  |
@@ -242,7 +261,7 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:5394 | `SelectKind4Animation` | 48 | 1 | `L_00_3651` |
 | 1:53c4 | `EnemyKind4Init` | 33 | 1 | `SetObjectAnimation` |
 | 1:5513 | `EnemyKind10` | 39 | 0 | `DrawObject`, `EnemyDefeated`, `InitProjectile`, `L_00_39b1`, `L_01_553a`, `L_01_5549`, `L_01_55bc`, `L_01_5636` ... |
-| 1:556a | `UpdateProjectile` | 82 | 1 | `L_00_3449`, `L_01_570c` |
+| 1:556a | `UpdateProjectile` | 82 | 1 | `EnemyScreenPosition`, `L_01_570c` |
 | 1:5677 | `ProjectileHitTest` | 43 | 2 |  |
 | 1:56a2 | `InitProjectile` | 106 | 1 | `Clear32Bytes`, `L_00_340c`, `L_01_5549` |
 | 1:57f0 | `EnemyKind9` | 39 | 0 | `CheckEnemyTouchesPlayer`, `DrawObject`, `EnemyAimAtPlayer`, `EnemyComputeBlockedDirs`, `EnemyDefeated`, `EnemyKind9Init`, `L_00_392e`, `L_00_39b1` ... |
@@ -252,7 +271,7 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:5947 | `SpawnEnemyProjectile` | 40 | 1 | `Clear32Bytes` |
 | 1:596f | `SelectKind2Animation` | 71 | 1 | `L_00_3651` |
 | 1:59b6 | `EnemyKind2Init` | 21 | 1 | `L_00_340c`, `SetObjectAnimation` |
-| 1:59ff | `EnemyKind3` | 42 | 0 | `CheckEnemyTouchesPlayer`, `DrawObject`, `EnemyAimAtPlayer`, `EnemyDefeated`, `EnemyKind3Init`, `L_00_3603`, `L_00_3643`, `L_00_392e` ... |
+| 1:59ff | `EnemyKind3` | 42 | 0 | `CheckEnemyTouchesPlayer`, `DrawObject`, `EnemyAimAtPlayer`, `EnemyDefeated`, `EnemyKind3Init`, `L_00_3603`, `L_00_392e`, `L_00_3b99` ... |
 | 1:5a29 | `SelectKind3Animation` | 60 | 1 | `SetAnimationVariant` |
 | 1:5a65 | `EnemyKind3Init` | 17 | 1 | `L_00_340c`, `SetObjectAnimation` |
 | 1:5cba | `Sound93EffectData` | 3 | 0 |  |

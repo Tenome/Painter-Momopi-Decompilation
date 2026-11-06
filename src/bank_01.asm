@@ -1790,15 +1790,15 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     ld c, a
     ld a, [wPlayerY]
     ld b, a
-    call L_00_3449
+    call EnemyScreenPosition
     and a, a
     jr z, .L_01_4de2
     ld hl, wPaintObject
     res 7, [hl]
 .L_01_4de2:
     call SelectBlobAnimation
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     jp DrawObject
 SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
     ld a, [$c519]
@@ -1825,8 +1825,8 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     call LoadTrailSegment
     ld hl, wPaintObject
     call SetObjPtr
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     call DrawObject
     call StoreTrailSegment
     call L_01_4a31
@@ -2009,7 +2009,7 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     ld a, [$c4d9]
     ldh [hScratch08], a
     ld a, $04
-    call L_00_0c2a
+    call CounterToFrame
     ldh a, [hScratch08]
     ld [$c4d9], a
     ld a, [$c4e3]
@@ -2266,7 +2266,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld [$c4cf], a
     ld hl, wPlayer
     call SetObjPtr
-    call L_00_09e0
+    call ClampObjectToRoom
     ld hl, wPlayerStatus
     res 0, [hl]
     ret
@@ -2354,7 +2354,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld a, [$c4d2]
     ldh [hScratch08], a
     ld a, $0f
-    call L_00_0c2a
+    call CounterToFrame
     ldh a, [hScratch08]
     ld [$c4d2], a
     ld a, $1e
@@ -2581,7 +2581,7 @@ L_01_553a::
     ret nz
     ld hl, wProjectile
     res 7, [hl]
-    jp L_00_3525
+    jp RemoveEnemy
 L_01_5549::
     ldh a, [hEnemyTick]
     and a, $04
@@ -2619,7 +2619,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld c, a
     ldh a, [hEnemyY]
     ld b, a
-    call L_00_3449
+    call EnemyScreenPosition
     ret nz
     ld hl, hEnemyStep
     dec [hl]
@@ -2681,8 +2681,8 @@ L_01_55bc::
     call L_01_5618
     ld hl, wProjectile
     call SetObjPtr
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     jp DrawObject
 .L_01_560d:
     ld hl, wProjectile
@@ -2718,8 +2718,8 @@ L_01_5636::
     ld a, [hl]
     ldh [$ffc5], a
     call SelectObject2
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     ldh a, [hEnemyX]
     ldh [hScratch00], a
     ldh a, [hEnemyXHi]
@@ -2932,7 +2932,7 @@ L_01_5817::
     ld a, $06
     ldh [hEnemyAnimState], a
     call L_00_3603
-    jp L_00_3643
+    jp MoveAndClampObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
     res 5, [hl]
@@ -3014,7 +3014,7 @@ L_01_58cf::
     ld c, a
     ldh a, [hEnemyY]
     ld b, a
-    call L_00_3449
+    call EnemyScreenPosition
     and a, a
     ret nz
     jp SpawnEnemyProjectile
@@ -3152,7 +3152,7 @@ EnemyKind3::  ; enemy kind 3
     call EnemyAimAtPlayer
     call L_00_3b99
     call L_00_3603
-    call L_00_3643
+    call MoveAndClampObject
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call SelectKind3Animation

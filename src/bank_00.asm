@@ -728,7 +728,7 @@ VramCopyRows::  ; run-length copy of rows to VRAM (from VBlank)
     ld d, a
     ld a, [wVramSrcLo]
     ld e, a
-L_00_0628::
+VramCopyStream::  ; HL = VRAM destination; DE = stream of count/rows/tiles (count bit 7 = repeat one tile); copies the rows (shared by VramCopyRows)
     ld a, [de]
     ldh [hScratch12], a
     inc de
@@ -799,7 +799,7 @@ RunVramCopyList::  ; BC = list of VRAM copy jobs run immediately
     inc bc
     ld a, [bc]
     ld d, a
-    call L_00_0628
+    call VramCopyStream
     ldh a, [hScratch15]
     dec a
     jr z, .L_00_0696
@@ -1096,7 +1096,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     and a, $70
     or a, b
     ldh [hScratch0D], a
-    call L_00_09ab
+    call AddOamSprite
 .L_00_098a:
     ld hl, hOtherObjHi
     dec [hl]
@@ -1120,7 +1120,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     ld [hl], a
 L_00_09aa::
     ret
-L_00_09ab::
+AddOamSprite::  ; appends one OAM entry from hScratch values to the shadow at $c000 (hOamCount wraps at 39)
     ldh a, [hOamCount]
     cp a, $27
     jr c, .L_00_09b4
@@ -1154,7 +1154,7 @@ L_00_09d1::
     ldh [hScratch01], a
     call L_00_0a13
     jr L_00_0a13
-L_00_09e0::
+ClampObjectToRoom::  ; keeps the object inside the room limits after MoveObject (offsets $06 and $0c)
     ld e, $06
     ld a, e
     ldh [hScratch00], a
@@ -1410,7 +1410,7 @@ NextRandomDirection::  ; derives a pseudo random direction nibble from hFrameSpi
     add a, b
     ldh [hRngCounter], a
     ret
-L_00_0b66::
+MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00_0bb6 to its position with MultiplyByDE
     ldh a, [hObjPtrLo]
     ld l, a
     ldh a, [hObjPtrHi]
@@ -1503,7 +1503,7 @@ MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     ld a, l
     ldh [hScratch00], a
     ret
-L_00_0c2a::
+CounterToFrame::  ; turns a running counter and a bit mask (hScratch06-08) into a frame index
     dec a
     ldh [hScratch05], a
     ld hl, hScratch06
@@ -1921,7 +1921,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call InitMagicScreenState
     ld hl, $9c66
     ld de, $c46d
-    call L_00_0628
+    call VramCopyStream
     ld a, [wMagicPointsHi]
     ld c, a
     ld a, [wMagicPoints]
@@ -1944,7 +1944,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld [$c44d], a
     ld hl, $9ca5
     ld de, $c44c
-    call L_00_0628
+    call VramCopyStream
     ldh a, [hTimeSeconds]
     ld c, $00
     call ByteToBCD
@@ -1966,7 +1966,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld [$ffe5], a
     ld hl, $9cb0
     ld de, $ffe4
-    call L_00_0628
+    call VramCopyStream
     ld a, [wRound]
     ld b, a
     ld hl, $9c71
@@ -2716,7 +2716,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld hl, RoomNameJobTable
     call TableIndexFromRoundDec
     ld hl, $98c3
-    call L_00_0628
+    call VramCopyStream
     call RequestOamDma
     call ClearOamShadowY
     call ClearRoomState
@@ -2765,15 +2765,15 @@ DrawTwoDigitNumber::  ; B = value drawn as two BCD digits at HL
     ldh [hScratch00], a
     and a, $f0
     swap a
-    call L_00_1d23
+    call DigitToTile
     ldh [hScratch0C], a
     ldh a, [hScratch00]
     and a, $0f
-    call L_00_1d23
+    call DigitToTile
     ldh [hScratch0D], a
     ld de, hScratch0A
-    jp L_00_0628
-L_00_1d23::
+    jp VramCopyStream
+DigitToTile::  ; A = BCD digit; returns the digit tile id from D_00_1d2f
     push hl
     push bc
     ld c, a
@@ -2877,7 +2877,7 @@ Mode4_GameOver::  ; GAME OVER screen
     call PlaySound
     ld hl, $9905
     ld de, D_00_1f10
-    call L_00_0628
+    call VramCopyStream
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
@@ -2966,7 +2966,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
 .L_00_1f93:
     ld de, $c44c
     ld hl, $98a9
-    call L_00_0628
+    call VramCopyStream
     ld a, PAL_NORMAL
     ld [rBGP], a
     ld [rOBP0], a
@@ -3129,7 +3129,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
-    call L_00_2633
+    call InitBonusCursor
 Mode2_Init::  ; bonus select setup after LcdOff
     call LcdOff
     di
@@ -3150,7 +3150,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     jr nz, .L_00_24e9
     ld de, D_00_264a
     ld hl, $988c
-    call L_00_0628
+    call VramCopyStream
 .L_00_24e9:
     cp a, $02
     jr nz, .L_00_250f
@@ -3160,14 +3160,14 @@ Mode2_Init::  ; bonus select setup after LcdOff
     push hl
     pop de
     ld hl, $9886
-    call L_00_0628
+    call VramCopyStream
     ld a, [$c75a]
     ld hl, D_00_2651
     call LookupWord
     push hl
     pop de
     ld hl, $98c9
-    call L_00_0628
+    call VramCopyStream
 .L_00_250f:
     call RequestOamDma
     call ClearOamShadow
@@ -3312,7 +3312,7 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     jp DrawObjectBytePos
 D_00_2630::
     INCBIN "assets/bank_00/2630.bin"
-L_00_2633::
+InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
     xor a, a
     ld [wCursorIndex], a
     ld [wCursorFlags], a
@@ -3606,18 +3606,18 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
-    call L_00_3085
-    call L_00_3054
+    call EndingCastleBlink
+    call EndingWalkStep
     ld a, SND_MUSIC_ENDING
     call PlaySound
     ld a, $46
     call DelayFrames
-    call L_00_3085
-    call L_00_3054
+    call EndingCastleBlink
+    call EndingWalkStep
 .L_00_2d16:
     call WaitFrameAndSyncOam
-    call L_00_3085
-    call L_00_3054
+    call EndingCastleBlink
+    call EndingWalkStep
     ld a, [$c7ae]
     bit 7, a
     jr z, .L_00_2d16
@@ -3629,7 +3629,7 @@ Mode6_Ending::  ; castle scene after the last round
 .L_00_2d33:
     call WaitFrameAndSyncOam
     call EndingScrollStep
-    call L_00_2f26
+    call EndingTick
     call EndingCreditsWindow
     call ReadJoypad
     ld a, [wCreditsPage]
@@ -3757,11 +3757,11 @@ D_00_2ee5::
     INCBIN "assets/bank_00/2ee5.bin"
 D_00_2eff::
     INCBIN "assets/bank_00/2eff.bin"
-L_00_2f26::
-    call L_00_2f2c
-    jp L_00_2f76
-L_00_2f2c::
-    call L_00_2f47
+EndingTick::  ; one step of the ending scene: hero movement then the object animation
+    call EndingMoveHero
+    jp EndingAnimateObject
+EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = $50
+    call EndingHeroFrame
     ld a, [$c7ae]
     bit 2, a
     ret nz
@@ -3775,7 +3775,7 @@ L_00_2f2c::
     ld hl, $c7ae
     set 2, [hl]
     ret
-L_00_2f47::
+EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld a, $02
     ld [$c77f], a
     ld a, [$c782]
@@ -3789,8 +3789,8 @@ L_00_2f47::
     ld [$c77e], a
 .L_00_2f5e:
     call L_00_307f
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     ld hl, $c781
     dec [hl]
     ret nz
@@ -3799,7 +3799,7 @@ L_00_2f47::
     ld hl, $c782
     inc [hl]
     ret
-L_00_2f76::
+EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_30df and D_00_3111
     ld c, $00
     ld hl, $c780
     inc [hl]
@@ -3866,10 +3866,10 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ei
     ret
     INCBIN "assets/bank_00/3009.bin"
-L_00_3054::
+EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [$c778]
     cp a, $08
-    jr c, L_00_30aa
+    jr c, EndingAdvance
     ld hl, $c780
     inc [hl]
     ld a, [hl]
@@ -3883,14 +3883,14 @@ L_00_3054::
     ld [$c780], a
 .L_00_3070:
     call L_00_307f
-    call L_00_0b66
-    call L_00_09e0
+    call MoveObject
+    call ClampObjectToRoom
     call L_00_307f
     jp DrawObject
 L_00_307f::
     ld hl, wEndingObject
     jp SetObjPtr
-L_00_3085::
+EndingCastleBlink::  ; toggles the castle flag animation from D_00_3148
     ld c, $00
     ld hl, $c7a0
     inc [hl]
@@ -3909,7 +3909,7 @@ L_00_3085::
     ld hl, $c78e
     call SetObjPtr
     jp DrawObject
-L_00_30aa::
+EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
     ld a, [$c781]
     add a, $10
     ld [$c781], a
@@ -4101,7 +4101,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ldh [hScratch08], a
 .L_00_330b:
     ld a, $03
-    call L_00_0c2a
+    call CounterToFrame
     ldh a, [hScratch08]
     ldh [$ffd3], a
     ld a, [wPlayerStatus]
@@ -4211,7 +4211,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     call AddScore
     ld hl, wProjectile
     res 7, [hl]
-    jp L_00_3525
+    jp RemoveEnemy
 L_00_33fd::
     dec b
     dec b
@@ -4263,7 +4263,7 @@ CheckEnemyTouchesPlayer::  ; if the enemy in hObject2 overlaps wPlayer then wPla
     ld hl, wPlayerDir
     set 5, [hl]
     ret
-L_00_3449::
+EnemyScreenPosition::  ; converts enemy pixel position to screen coordinates (camera subtracted) in hScratch00/01
     push hl
     ld a, [wCameraX]
     ld l, a
@@ -4395,7 +4395,7 @@ EnemyComputeBlockedDirs::  ; fills hEnemyBlocked from the room map cells around 
     or a, $01
     ldh [hEnemyBlocked], a
     ret
-L_00_3525::
+RemoveEnemy::  ; clears the active bit of hObject2 and decrements wEnemyCount
     ld hl, hObject2
     res 7, [hl]
     ld hl, wEnemyCount
@@ -4432,7 +4432,7 @@ L_00_352f::
     ld c, a
     ldh a, [hEnemyY]
     ld b, a
-    call L_00_3449
+    call EnemyScreenPosition
     and a, a
     ret nz
     ld a, e
@@ -4523,7 +4523,7 @@ EnemyAimAtPlayer::  ; when on the tile grid: compares enemy and player positions
     ld hl, hEnemyDir
     set 6, [hl]
     jp EnemyChooseDirection
-L_00_35f8::
+RememberEnemyPosition::  ; stores hEnemyX/hEnemyY at $c525/$c526
     ldh a, [hEnemyX]
     ld [$c525], a
     ldh a, [hEnemyY]
@@ -4561,9 +4561,9 @@ L_00_3603::
     ret
 D_00_363d::
     INCBIN "assets/bank_00/363d.bin"
-L_00_3643::
-    call L_00_0b66
-    jp L_00_09e0
+MoveAndClampObject::  ; MoveObject then ClampObjectToRoom
+    call MoveObject
+    jp ClampObjectToRoom
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [hEnemyTick]
     and a, $08
@@ -4593,7 +4593,7 @@ EnemyRequestTurn::  ; sets hEnemyDir bit 6 and clears the movement variables
     ldh [$ffc2], a
     ldh [$ffc4], a
     ret
-L_00_3673::
+EnemyTileUnder::  ; A = room map tile under the enemy (Y aligned to the grid)
     ldh a, [hEnemyX]
     call PixelXToColumn
     ldh a, [hEnemyY]
@@ -5007,7 +5007,7 @@ L_00_394d::
     ld a, [wPlayerDir]
     bit 5, a
     ret z
-    jp L_00_3525
+    jp RemoveEnemy
 L_00_3956::
     ldh a, [hEnemyKind]
     cp a, $06
@@ -5089,7 +5089,7 @@ L_00_39b1::
     ld a, [hl]
     ldh [$ffc4], a
     call SelectObject2
-    jp L_00_09e0
+    jp ClampObjectToRoom
 L_00_39f9::
     call EnemyOnTileGrid
     jr z, .L_00_3a04
@@ -5294,7 +5294,7 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     ld bc, $3bd7
     jp SetAnimationVariant
 L_00_3b99::
-    call L_00_3673
+    call EnemyTileUnder
     and a, $0f
     or a, a
     jr nz, .L_00_3ba7
@@ -5349,7 +5349,7 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call L_00_3c7d
     ldh a, [hEnemyAux]
     ld [hl], a
-    jp L_00_3525
+    jp RemoveEnemy
 .L_00_3c1a:
     ld a, [wActiveMagic]
     cp a, $04
@@ -5422,7 +5422,7 @@ EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from
     bit 2, a
     jp nz, EnemyDefeated
     call L_00_3d18
-    call L_00_3643
+    call MoveAndClampObject
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call L_00_3cb5
@@ -5474,7 +5474,7 @@ L_00_3cb5::
     ld bc, $3e5c
     jp SetAnimationVariant
 .L_00_3d15:
-    jp L_00_3525
+    jp RemoveEnemy
 L_00_3d18::
     ldh a, [hEnemyDir]
     bit 0, a
@@ -5626,7 +5626,7 @@ L_00_3ed1::
     add hl, bc
     ld a, [hl+]
     or a, a
-    jp z, L_00_3525
+    jp z, RemoveEnemy
     ldh [hEnemyX], a
     ld a, [hl]
     ldh [hEnemyY], a
