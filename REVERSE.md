@@ -134,6 +134,11 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `hTimeSeconds`), X, Y and a kind/flavour byte (`and $f8` is stored as the kind data, bit 0 or bit 1 picks the variant from round 17 on). An enemy is created when the delay has
   elapsed and fewer than 3 are alive (`wEnemyCount`); `wSpawnIndex` advances, then `wSpawnWave` when the list is exhausted.
 
+- **Link cable (2 player)**, partly decoded: the title screen handshake sends `$ee` and treats `$ff` (no partner) as a single player game; Start sends `wRound | $80` (`SerialSendByte`).
+  `SerialHandler` ($0221) decodes the received byte `rSB`: bit 7 set = round number from the other side (`$c7bf`, `hSerialByte` bit 4); `$04` sets `hLinkFlags` bit 1 and `hSerialByte` bits 6 and 7
+  (the other player lost: `GotoLinkLose` runs from `PlayFrame`); `$08` sets `hLinkFlags` bit 2; a transfer started with the internal clock sets `hSerialByte` bits 0 and 2.
+  `LinkSyncFrame` ($4cf3) sends `$02` every frame while `wMagicPoints` high byte is 0 and reacts to the answer. Not testable in `tools/emu.py` (no partner).
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,
