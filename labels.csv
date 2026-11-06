@@ -73,7 +73,7 @@ bank,addr,name,comment
 3,6000,TilesEnding,castle and trees: ending scene tiles (LoadTilesBank3C)
 3,6e10,TilesFont2,second font and misc tiles (LoadTilesBank3D)
 3,7e10,Bank3Padding,$ff padding to the end of the bank
-0,06a4,ObjectShapeTable,word pointers indexed by shape id; each shape = count then count pairs of signed (y x) offsets of 8x8 parts (read by DrawObject)
+0,06a4,ObjectShapeTable,word pointers indexed by shape id; each shape = count then count pairs of signed (x y) offsets of 8x8 parts (read by DrawObject)
 0,199b,MagicCostTable,MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
 1,4048,SoundFrequencyTable,word frequency (NRx3/NRx4 value) per note index; SoundParseStream reads it with 2 * (note byte + transpose)
 1,40f4,SoundCommandDataTable,per command word pointers used by SoundStartCommand

@@ -122,8 +122,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   (card ids and costs read from the screen: 1 S.UP 10MP, 2 W.IN 50, 3 T.STOP 40, 4 GHOST 90, 5 FRIEND 60, 6 SEALED 30, 7 B.O.M 80, 8 CLEAR 70, 9 PYON 20; a new game starts with S.UP, round 2 adds PYON, the link game starts with 1 2 3 5 6). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
 
 - **Animation and shape data** (decoded from `DrawObject` $0866 and checked against the data): the animation pointer of an object (record +1/+2) points at frames of
-  `shape id, tile id x count` where `count` is the first byte of the shape; `ObjectShapeTable` ($06a4) maps the shape id to `count, (y offset, x offset) x count` with signed
-  pixel offsets (for example shape 1 = four parts at (-8,-8) (0,-8) (-8,0) (0,0), a 16x16 sprite, with tile ids such as $bc $bd $cc $cd). Record flags bit 5 and 6 mirror the offsets.
+  `shape id, tile id x count` where `count` is the first byte of the shape; `ObjectShapeTable` ($06a4) maps the shape id to `count, (x offset, y offset) x count` with signed
+  pixel offsets (checked in `DrawObject`: the first byte goes through the X camera path; for example shape 1 = four parts at (-8,-8) (0,-8) (-8,0) (0,0), a 16x16 sprite, with tile ids such as $bc $bd $cc $cd;
+  shape 0 is 2 columns x 3 rows). Table entries 3 and 4 point at raw junk (count $fc and $f8) and are never used. Record flags bit 5 and 6 mirror the offsets.
   `SetAnimationVariant` picks between the two pointers of each animation pair depending on bit 3 of `$ffd0`.
 
 - **Casting a card** is two steps. On the magic screen (`MagicScreenInput` $1770) A *selects* a card: its id goes to `wActiveMagic` (formerly misnamed wRoomType), cost >= MP is refused, `SND_SFX_90` plays,

@@ -54,3 +54,4 @@ bank,addr,type,name,count
 1,5c93,song,sfx_91,0
 1,5ca7,song,sfx_92,0
 1,5cba,song,sfx_93,0
+0,06a4,shapes,object_shapes,0
