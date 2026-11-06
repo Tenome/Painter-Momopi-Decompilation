@@ -523,8 +523,6 @@ class Rom:
             while (b, q) in self.insns and q < nxt:
                 n, kind, _ = self.insns[(b, q)]
                 q += n
-                if kind in ("jru", "jpu", "retu", "jpind"):
-                    break
             res.append((b, a, q - a))
         return res
 

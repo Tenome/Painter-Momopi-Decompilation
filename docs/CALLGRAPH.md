@@ -16,8 +16,8 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:01f9 | `LoadTilesBank3C` | 6 | 2 |  |
 | 0:01ff | `LoadTilesBank3` | 17 | 0 | `CopyMemory` |
 | 0:0210 | `SerialStartTransfer` | 17 | 7 |  |
-| 0:0221 | `SerialHandler` | 32 | 1 | `SerialStartTransfer` |
-| 0:02c0 | `VBlankHandler` | 29 | 1 | `ClearOamShadowY`, `Entry`, `SoundUpdate`, `VramCopyList`, `VramCopyRows` |
+| 0:0221 | `SerialHandler` | 159 | 1 | `SerialStartTransfer` |
+| 0:02c0 | `VBlankHandler` | 150 | 1 | `ClearOamShadowY`, `Entry`, `SoundUpdate`, `VramCopyList`, `VramCopyRows` |
 | 0:0356 | `WaitSerialByte` | 25 | 2 |  |
 | 0:036f | `WaitFrameAndSyncOam` | 22 | 6 | `RequestOamDma`, `WaitVBlankFlag` |
 | 0:0385 | `WaitVBlankFlag` | 18 | 10 |  |
@@ -35,36 +35,36 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0505 | `CopyMemory` | 9 | 3 |  |
 | 0:050e | `Clear32Bytes` | 8 | 8 |  |
 | 0:0516 | `SetObjPtr` | 7 | 14 |  |
-| 0:0527 | `DrawMetatileMap` | 124 | 2 |  |
+| 0:0527 | `DrawMetatileMap` | 193 | 2 |  |
 | 0:05e8 | `QueueVramCopyRows` | 27 | 5 |  |
 | 0:0603 | `QueueVramCopyList` | 21 | 2 |  |
 | 0:0618 | `VramCopyRows` | 16 | 1 |  |
 | 0:0663 | `VramCopyList` | 8 | 1 |  |
-| 0:066b | `RunVramCopyList` | 43 | 8 | `L_00_0628` |
+| 0:066b | `RunVramCopyList` | 49 | 8 | `L_00_0628` |
 | 0:069c | `WaitVramCopyDone` | 8 | 6 |  |
 | 0:07e7 | `ClearOamShadowY` | 18 | 10 |  |
 | 0:07f9 | `ClearOamShadow` | 13 | 8 |  |
 | 0:0806 | `RequestOamDma` | 6 | 12 |  |
 | 0:0840 | `DrawObject` | 38 | 15 | `L_00_09aa` |
 | 0:0a49 | `SerialSendByte` | 20 | 4 |  |
-| 0:0a6b | `ByteToBCD` | 52 | 4 |  |
+| 0:0a6b | `ByteToBCD` | 63 | 4 |  |
 | 0:0aaa | `LookupByte` | 5 | 19 |  |
 | 0:0aaf | `LookupWord` | 16 | 6 |  |
-| 0:0bf8 | `MultiplyByDE` | 43 | 9 |  |
+| 0:0bf8 | `MultiplyByDE` | 50 | 9 |  |
 | 0:0d0e | `UnpackRoomMap` | 47 | 1 |  |
 | 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
-| 0:10b5 | `Mode1_Play` | 89 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `DrawMetatileMap`, `FillBackwardsFF`, `L_00_11b4`, `L_00_11ec`, `L_00_121c` ... |
+| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `DrawMetatileMap`, `FillBackwardsFF`, `L_00_11b4`, `L_00_11ec`, `L_00_121c` ... |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
-| 0:142a | `TableIndexFromRound` | 9 | 2 | `LookupWord` |
-| 0:1c57 | `Mode3_RoundIntro` | 54 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_00_1ce7`, `L_01_492f` ... |
+| 0:142a | `TableIndexFromRound` | 14 | 2 | `LookupWord` |
+| 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_00_1ce7`, `L_01_492f` ... |
 | 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
-| 0:1dc0 | `Mode7_LinkLose` | 38 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `ReadJoypad` ... |
-| 0:1ea4 | `Mode4_GameOver` | 105 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `LcdOff`, `LoadTilesBank3A` ... |
-| 0:1f1c | `Mode5_Continue` | 102 | 0 | `Clear32Bytes`, `ClearMemory`, `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628` ... |
+| 0:1dc0 | `Mode7_LinkLose` | 110 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `FillBackwardsFF`, `GameModeDispatch`, `LcdOff`, `LoadTilesBank3C`, `PlaySound`, `ReadJoypad` ... |
+| 0:1ea4 | `Mode4_GameOver` | 108 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `LcdOff`, `LoadTilesBank3A` ... |
+| 0:1f1c | `Mode5_Continue` | 329 | 0 | `Clear32Bytes`, `ClearMemory`, `ClearOamShadow`, `ClearOamShadowY`, `Entry`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628` ... |
 | 0:2497 | `Mode2_BonusSelect` | 32 | 0 | `L_00_2633`, `LcdOff`, `LoadTilesBank3C`, `PlaySound` |
 | 0:24b7 | `Mode2_Init` | 132 | 2 | `ClearOamShadow`, `L_00_051d`, `L_00_0628`, `LcdOff`, `LookupWord`, `RequestOamDma`, `RunVramCopyList` |
 | 0:29ea | `Mode0_Title` | 61 | 0 | `Clear32Bytes`, `FillBackwardsFF`, `L_00_2b46`, `LcdOff`, `LoadTilesBank3A`, `PlaySound`, `RequestOamDma`, `RunVramCopyList` ... |
-| 0:2a27 | `TitleLoop` | 24 | 0 | `GameModeDispatch`, `L_00_2b0a`, `L_00_2b23`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `WaitFrameAndSyncOam` |
+| 0:2a27 | `TitleLoop` | 227 | 0 | `GameModeDispatch`, `L_00_2b0a`, `L_00_2b23`, `ReadJoypad`, `SerialSendByte`, `SerialStartTransfer`, `WaitFrameAndSyncOam` |
 | 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `Entry`, `FillBackwardsFF`, `L_00_2d5d`, `L_00_2f26` ... |
 | 0:31e2 | `TickObjectTimer` | 9 | 5 |  |
 | 0:3649 | `SetAnimationVariant` | 8 | 5 |  |
@@ -72,16 +72,16 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:365f | `SetObjectAnimation` | 7 | 7 |  |
 | 0:3713 | `UpdateAllEnemies` | 9 | 1 |  |
 | 0:371c | `UpdateEnemyLoop` | 42 | 0 | `LoadEnemySlot`, `SelectEnemySlot`, `StoreEnemySlot`, `UpdateEnemy` |
-| 0:3746 | `UpdateEnemy` | 24 | 1 | `DrawObject` |
+| 0:3746 | `UpdateEnemy` | 60 | 1 | `DrawObject` |
 | 0:379e | `SelectEnemySlot` | 17 | 3 |  |
 | 0:382a | `ClearEnemySlot` | 6 | 1 | `Clear32Bytes` |
 | 0:3830 | `StoreEnemySlot` | 103 | 2 |  |
 | 0:3897 | `LoadEnemySlot` | 103 | 1 |  |
-| 1:4157 | `SoundUpdate` | 52 | 1 | `SoundAssignChannels`, `SoundDequeue`, `SoundStartCommand`, `SoundUpdateChannel` |
+| 1:4157 | `SoundUpdate` | 53 | 1 | `SoundAssignChannels`, `SoundDequeue`, `SoundStartCommand`, `SoundUpdateChannel` |
 | 1:418c | `SoundDequeue` | 33 | 1 |  |
-| 1:41ad | `SoundStartCommand` | 40 | 1 | `L_01_4271` |
-| 1:435e | `SoundAssignChannels` | 68 | 1 |  |
-| 1:43a3 | `SoundUpdateChannel` | 72 | 1 | `SoundApplyPitchSlide`, `SoundReadNextNote` |
+| 1:41ad | `SoundStartCommand` | 49 | 1 | `L_01_4271` |
+| 1:435e | `SoundAssignChannels` | 69 | 1 |  |
+| 1:43a3 | `SoundUpdateChannel` | 97 | 1 | `SoundApplyPitchSlide`, `SoundReadNextNote` |
 | 1:4404 | `SoundWriteChannel1` | 111 | 0 |  |
 | 1:4484 | `SoundWriteChannel2` | 111 | 0 |  |
 | 1:4504 | `SoundWriteChannel3` | 93 | 0 |  |
@@ -93,12 +93,12 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:4b58 | `PixelXToColumn` | 10 | 8 |  |
 | 1:4b62 | `LookupMapTile` | 13 | 8 | `LookupByte` |
 | 1:4b6f | `IsOnTileGrid` | 10 | 7 |  |
-| 1:4bde | `PlayFrame` | 35 | 1 | `CheckPlayerTileCollision`, `ClampPlayerPosition`, `DrawObject`, `HoldDirectionUntilAligned`, `L_00_32a2`, `L_01_4b79`, `L_01_4c4e`, `L_01_4f5a` ... |
+| 1:4bde | `PlayFrame` | 112 | 1 | `CheckPlayerTileCollision`, `ClampPlayerPosition`, `DrawObject`, `HoldDirectionUntilAligned`, `L_00_32a2`, `L_01_4b79`, `L_01_4c4e`, `L_01_4f5a` ... |
 | 1:4c6f | `PlayerAction` | 56 | 1 | `LookupByte` |
 | 1:4f21 | `ClampPlayerPosition` | 48 | 1 |  |
 | 1:4f51 | `LoadPlayerXY` | 9 | 1 |  |
-| 1:4f91 | `HoldDirectionUntilAligned` | 41 | 1 | `IsOnTileGrid` |
+| 1:4f91 | `HoldDirectionUntilAligned` | 69 | 1 | `IsOnTileGrid` |
 | 1:4fd6 | `CheckPlayerTileCollision` | 21 | 1 | `L_01_50fa` |
-| 1:5044 | `RoundCleared` | 43 | 2 | `DrawObject`, `FadeOut`, `GameModeDispatch`, `L_01_50b1`, `PlaySound`, `SerialSendByte`, `SetObjPtr`, `WaitVBlankFlag` |
+| 1:5044 | `RoundCleared` | 109 | 2 | `DrawObject`, `FadeOut`, `GameModeDispatch`, `L_01_50b1`, `PlaySound`, `SerialSendByte`, `SetObjPtr`, `WaitVBlankFlag` |
 | 1:510f | `PlayerSetDirection` | 105 | 1 | `L_00_09e0`, `L_01_5183`, `LookupByte`, `SetObjPtr` |
-| 1:5223 | `PlayerDeath` | 91 | 1 | `DelayFrames`, `DrawObject`, `GameModeDispatch`, `L_00_0c2a`, `PlaySound`, `SerialSendByte`, `SetObjPtr` |
+| 1:5223 | `PlayerDeath` | 222 | 1 | `DelayFrames`, `DrawObject`, `GameModeDispatch`, `L_00_0c2a`, `PlaySound`, `SerialSendByte`, `SetObjPtr` |
