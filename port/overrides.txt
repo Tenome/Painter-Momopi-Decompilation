@@ -13,3 +13,5 @@ ClearMemory
 FillBackwardsFF
 CopyMemory
 Clear32Bytes
+PixelXToColumn
+LookupMapTile

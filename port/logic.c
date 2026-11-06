@@ -72,3 +72,27 @@ void *gb_native_Clear32Bytes(void) {
     r.f = 0xC0;
     return 0;
 }
+
+#define wRoomMap 0xC0A7
+
+/* PixelXToColumn: E = (X + 8) / 16 - 1 (A is the pixel X); A ends equal to E. */
+void *gb_native_PixelXToColumn(void) {
+    uint8_t column = (uint8_t)(((uint8_t)(r.a + 8) & 0xF0) >> 4);
+    r.a = column;
+    alu_sub(1, 0);
+    r.e = r.a;
+    return 0;
+}
+
+/* LookupMapTile: A = room map tile at pixel Y (A) with column E; the map has 16 cells per row and rows start at pixel Y $18. */
+void *gb_native_LookupMapTile(void) {
+    uint8_t save_b = r.b, save_c = r.c;
+    alu_sub(0x18, 0);
+    alu_add(r.e, 0);
+    SET_HL(wRoomMap);
+    r.c = r.a;
+    gb_native_LookupByte();
+    r.b = save_b;
+    r.c = save_c;
+    return 0;
+}
