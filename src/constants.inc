@@ -137,3 +137,6 @@ DEF hEnemyBlocked   EQU $ffc7   ; bit mask of directions the enemy cannot walk (
 DEF hEnemyCounter   EQU $ffc9   ; frame counter used by the enemy behaviour routines
 DEF hEnemyAnimState EQU $ffc6
 DEF wPaintObject    EQU $c4fe   ; the paint blob object record (tested by CheckPaintHitsEnemy)
+DEF wCursorObject   EQU $c74e   ; menu cursor object record (8 bit position variant, drawn by DrawObjectBytePos)
+DEF wCursorX        EQU $c754
+DEF wCursorY        EQU $c755   ; title screen: $64 = 1 PLAYER, $74 = 2 PLAYER

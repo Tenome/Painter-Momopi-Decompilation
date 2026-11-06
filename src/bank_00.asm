@@ -3,7 +3,7 @@ INCLUDE "src/constants.inc"
 
 SECTION "bank00", ROM0[$0000]
 
-L_00_0000::
+RstVector00::  ; jp RstJumpTable
     jp RstJumpTable
     INCBIN "orig/painter_momopie.gb", $00003, 36
 D_00_0027::
@@ -11,16 +11,16 @@ D_00_0027::
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
     INCBIN "orig/painter_momopie.gb", $00043, 5
-L_00_0048::
+StatVector::  ; reti: the LCD STAT interrupt is not used
     reti
     INCBIN "orig/painter_momopie.gb", $00049, 7
-L_00_0050::
+TimerVector::  ; reti: the timer interrupt is not used
     reti
     INCBIN "orig/painter_momopie.gb", $00051, 7
-L_00_0058::
+SerialVector::  ; jp SerialHandler
     jp SerialHandler
     INCBIN "orig/painter_momopie.gb", $0005b, 5
-L_00_0060::
+JoypadVector::  ; reti: the joypad interrupt is not used
     reti
     INCBIN "orig/painter_momopie.gb", $00061, 159
 Entry::  ; nop; jp Start
@@ -1754,8 +1754,8 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld [wPaintRemaining], a
     call RequestOamDma
     call ClearOamShadowY
-    call L_00_1973
-    call L_00_1438
+    call InitCursorMenu
+    call InitRoundTimer
     call ResetCamera
     ld a, [$c51f]
     bit 2, a
@@ -1785,7 +1785,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
-    call L_00_13e6
+    call StartRoundMusic
     ld hl, wGameFlags
     res 5, [hl]
     ld a, $3c
@@ -1918,7 +1918,7 @@ L_00_121c::
     ld a, b
     or a, c
     jr nz, .L_00_1265
-    call L_00_1973
+    call InitCursorMenu
     ld hl, $9c66
     ld de, $c46d
     call L_00_0628
@@ -2087,7 +2087,7 @@ L_00_132c::
     ld a, LCDC_ON_BG_OBJ
     ld [rLCDC], a
     ei
-L_00_13e6::
+StartRoundMusic::  ; plays the song for the current round (id from a table indexed by wRound/4) and starts the frame countdown
     call WaitVBlankFlag
     ld a, [wRound]
     srl a
@@ -2141,7 +2141,7 @@ TableIndexFromRound::  ; A = (A-1)&15 or 16 for 32; then LookupWord
     and a, $0f
 .L_00_1435:
     jp LookupWord
-L_00_1438::
+InitRoundTimer::  ; loads the round countdown $c44a/$c44b from TimerValueTable (or $0140 in a link game)
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_00_144a
@@ -2347,9 +2347,9 @@ L_00_1770::
     ld c, a
     ld hl, D_00_2630
     call LookupByte
-    ld [$c754], a
+    ld [wCursorX], a
 .L_00_17a9:
-    ld hl, $c74e
+    ld hl, wCursorObject
     call SetObjPtr
     jp DrawObjectBytePos
 .L_00_17b2:
@@ -2570,20 +2570,20 @@ L_00_18a3::
 L_00_196f::
     ld [$c43d], a
     ret
-L_00_1973::
+InitCursorMenu::  ; clears the menu variables and creates the cursor object at wCursorObject
     xor a, a
     ld [$c43c], a
     ld [$c43d], a
     ld [$c47d], a
     ld [$c53b], a
-    ld hl, $c74e
+    ld hl, wCursorObject
     call Clear32Bytes
     ld a, $a0
-    ld [$c74e], a
+    ld [wCursorObject], a
     ld a, $28
-    ld [$c754], a
+    ld [wCursorX], a
     ld a, $68
-    ld [$c755], a
+    ld [wCursorY], a
     ld hl, D_00_1a30
     jp L_00_1760
 RoomTypeTable::  ; per room-type data indexed by wRoomType
@@ -2634,7 +2634,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     call L_00_0628
     call RequestOamDma
     call ClearOamShadowY
-    call L_00_1ce7
+    call ClearRoomState
     call L_01_492f
     xor a, a
     ld [wScrollX], a
@@ -2660,7 +2660,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     jr nz, .L_00_1cd6
     ld a, $01
     jp GameModeDispatch
-L_00_1ce7::
+ClearRoomState::  ; zeroes wRoomType wSubState and the room script variables
     xor a, a
     ld [wRoomType], a
     ld [wSubState], a
@@ -2837,7 +2837,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     di
     ld hl, vBGMapLast
     call FillBackwardsFF
-    ld hl, $c74e
+    ld hl, wCursorObject
     call Clear32Bytes
     call LoadTilesBank3A
     call ClearOamShadow
@@ -2846,11 +2846,11 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld hl, D_00_2083
     call L_00_1760
     ld a, $3c
-    ld [$c754], a
+    ld [wCursorX], a
     ld a, $50
-    ld [$c755], a
+    ld [wCursorY], a
     ld a, $80
-    ld [$c74e], a
+    ld [wCursorObject], a
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
@@ -2908,7 +2908,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     jr nz, .L_00_2024
     call ReadJoypad
     call L_00_2065
-    ld hl, $c74e
+    ld hl, wCursorObject
     call SetObjPtr
     call DrawObjectBytePos
     ld hl, $c43b
@@ -2950,7 +2950,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_00_2042
-    call L_00_2b0a
+    call PickRandomRound
     ld a, [rSC]
     bit 7, a
     jr z, .L_00_2050
@@ -2982,13 +2982,13 @@ L_00_2065::
     bit 4, a
     jr nz, .L_00_2078
     ld a, $3c
-    ld [$c754], a
+    ld [wCursorX], a
     xor a, a
     ld [$c43c], a
     ret
 .L_00_2078:
     ld a, $74
-    ld [$c754], a
+    ld [wCursorX], a
     ld a, $01
     ld [$c43c], a
     ret
@@ -3221,8 +3221,8 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ld c, a
     ld hl, D_00_2630
     call LookupByte
-    ld [$c754], a
-    ld hl, $c74e
+    ld [wCursorX], a
+    ld hl, wCursorObject
     call SetObjPtr
     jp DrawObjectBytePos
 D_00_2630::
@@ -3232,9 +3232,9 @@ L_00_2633::
     ld [$c758], a
     ld [$c759], a
     ld a, $50
-    ld [$c755], a
+    ld [wCursorY], a
     ld a, $80
-    ld [$c74e], a
+    ld [wCursorObject], a
     ld hl, D_00_2704
     jp L_00_1760
 D_00_264a::
@@ -3268,7 +3268,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     ld bc, $2b86
     call RunVramCopyList
     call RequestOamDma
-    ld hl, $c74e
+    ld hl, wCursorObject
     call Clear32Bytes
     call InitTitleVariables
     ld a, $ee
@@ -3313,10 +3313,10 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ldh a, [hJoyNew]
     cp a, $08
     jr nz, TitleLoop
-    ld a, [$c755]
+    ld a, [wCursorY]
     cp a, $64
     jr z, .L_00_2ae7
-    call L_00_2b0a
+    call PickRandomRound
     ld a, [wRound]
     or a, $80
     ld c, a
@@ -3356,7 +3356,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     jp GameModeDispatch
 .L_00_2abc:
     ld a, $64
-    ld [$c755], a
+    ld [wCursorY], a
     jp TitleLoop
 .L_00_2ac4:
     ld hl, hLinkFlags
@@ -3368,7 +3368,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld [wRoomIndex], a
     jr .L_00_2ab7
 .L_00_2ad8:
-    ld a, [$c755]
+    ld a, [wCursorY]
     cp a, $64
     jp nz, TitleLoop
     ldh a, [hJoyNew]
@@ -3389,11 +3389,11 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     dec a
     ld [wRoomIndex], a
     jr .L_00_2ab7
-L_00_2b0a::
+PickRandomRound::  ; title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
     call L_00_0b44
     ldh a, [hRngCounter]
     and a, $1f
-    jr z, L_00_2b0a
+    jr z, PickRandomRound
     cp a, $1f
     jr nz, .L_00_2b18
     dec a
@@ -3409,11 +3409,11 @@ L_00_2b23::
     jr nz, .L_00_2b2b
     jr .L_00_2b34
 .L_00_2b2b:
-    ld hl, $c74e
+    ld hl, wCursorObject
     call SetObjPtr
     jp DrawObjectBytePos
 .L_00_2b34:
-    ld a, [$c755]
+    ld a, [wCursorY]
     cp a, $64
     jr z, .L_00_2b3f
     ld a, $64
@@ -3421,7 +3421,7 @@ L_00_2b23::
 .L_00_2b3f:
     ld a, $74
 .L_00_2b41:
-    ld [$c755], a
+    ld [wCursorY], a
     jr .L_00_2b2b
 InitTitleVariables::  ; clears hLinkFlags and the variables used by the title screen
     xor a, a
@@ -3440,11 +3440,11 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     ld a, $05
     ld [$c49b], a
     ld a, $34
-    ld [$c754], a
+    ld [wCursorX], a
     ld a, $64
-    ld [$c755], a
+    ld [wCursorY], a
     ld a, $80
-    ld [$c74e], a
+    ld [wCursorObject], a
     ld hl, $2b84
     jp L_00_1760
 L_00_2b84::
@@ -5492,7 +5492,7 @@ D_00_3f4c::
     dw D_00_3f9e
     dw D_00_3faf
 D_00_3f56::
-    dw L_00_0000
+    dw RstVector00
     INCBIN "orig/painter_momopie.gb", $03f58, 61
 D_00_3f95::
     INCBIN "orig/painter_momopie.gb", $03f95, 9
