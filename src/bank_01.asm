@@ -1161,12 +1161,16 @@ PlaySound_Bank1::  ; appends wSoundArg to the sound command queue
     INCBIN "assets/bank_01/487b.bin"
 D_01_488c::
     INCBIN "assets/bank_01/488c.bin"
+AnimFrames1_48ac::  ; animation frames (typed text form)
+    INCBIN "assets/bank_01/48ac_AnimFrames1_48ac.bin"
 PlayerAnimPtrs::  ; player animation pointers (down/up/side) chosen by SelectPlayerAnimation
     INCBIN "assets/bank_01/48c4_PlayerAnimPtrs.bin"
 PlayerAnimPtrsFlipped::  ; pointers for the side animation drawn flipped
     INCBIN "assets/bank_01/48cc_PlayerAnimPtrsFlipped.bin"
 D_01_48d4::
     INCBIN "assets/bank_01/48d4.bin"
+AnimFrames1_48dc::  ; animation frames (typed text form)
+    INCBIN "assets/bank_01/48dc_AnimFrames1_48dc.bin"
 D_01_491b::
     INCBIN "assets/bank_01/491b.bin"
 D_01_4921::

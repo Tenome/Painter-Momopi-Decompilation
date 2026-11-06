@@ -3532,7 +3532,7 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     ld [wCursorObject], a
     ld hl, $2b84
     jp SetCursorAnimation
-L_00_2b84::
+AnimFrames0_2b84::  ; animation frames (typed text form)
     rlca
     or a, [hl]
     ld c, $04
@@ -3925,12 +3925,16 @@ EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
     INCBIN "assets/bank_00/30c4.bin"
 D_00_30df::
     INCBIN "assets/bank_00/30df.bin"
+AnimFrames0_30e3::  ; animation frames (typed text form)
+    INCBIN "assets/bank_00/30e3_AnimFrames0_30e3.bin"
 D_00_3111::
     INCBIN "assets/bank_00/3111.bin"
 D_00_3143::
     INCBIN "assets/bank_00/3143.bin"
 D_00_3148::
     INCBIN "assets/bank_00/3148.bin"
+AnimFrames0_314c::  ; animation frames (typed text form)
+    INCBIN "assets/bank_00/314c_AnimFrames0_314c.bin"
 D_00_31a6::
     INCBIN "assets/bank_00/31a6.bin"
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
@@ -5407,7 +5411,7 @@ L_00_3c7d::
     call PixelXToColumn
     ldh a, [hEnemyY]
     jp LookupMapTile
-L_00_3c87::
+AnimFrames0_3c87::  ; animation frames (typed text form)
     ld bc, $c9c8
     ret c
     reti

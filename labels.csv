@@ -336,3 +336,9 @@ bank,addr,name,comment
 1,79ad,UnusedSoundData9,bytes after song $89
 1,7bad,UnusedSoundDataA,bytes after song $8a
 1,7dad,UnusedSoundDataB,bytes after song $8b
+0,2b84,AnimFrames0_2b84,animation frames (typed text form)
+0,30e3,AnimFrames0_30e3,animation frames (typed text form)
+0,314c,AnimFrames0_314c,animation frames (typed text form)
+0,3c87,AnimFrames0_3c87,animation frames (typed text form)
+1,48ac,AnimFrames1_48ac,animation frames (typed text form)
+1,48dc,AnimFrames1_48dc,animation frames (typed text form)
