@@ -822,7 +822,7 @@ WaitVramCopyDone::  ; waits until the VBlank task bit 2 is cleared
     bit 2, a
     jr nz, WaitVramCopyDone
     ret
-ObjectShapeTable::  ; word pointers indexed by shape id; each shape = count then count pairs of signed (y x) offsets of 8x8 parts (read by DrawObject)
+ObjectShapeTable::  ; word pointers indexed by shape id; each shape = count then count pairs of signed (x y) offsets of 8x8 parts (read by DrawObject)
     INCBIN "assets/bank_00/06a4_ObjectShapeTable.bin"
 ClearOamShadowY::  ; clears Y of every OAM shadow entry
     ld hl, $c000

@@ -68,3 +68,41 @@ def to_bin(text, old, start):
             pass
         data[addr:addr + len(blk)] = blk
     return bytes(data)
+
+
+def counts(data, start):
+    """Part count of every shape in the ObjectShapeTable region."""
+    n = ((data[0] | data[1] << 8) - start) // 2
+    return [data[(data[2 * i] | data[2 * i + 1] << 8) - start] for i in range(n)]
+
+
+def anim_to_txt(data, length, cnt):
+    """Frames of `shape id, tile ids x count(shape)`; the first `length` bytes of the region."""
+    out, q = [], 0
+    while q < length:
+        s = data[q]
+        c = cnt[s]
+        if q + 1 + c > length:
+            raise ValueError("frame runs past the animation data")
+        out.append(f"frame {s} " + " ".join(f"{b:02x}" for b in data[q + 1:q + 1 + c]))
+        q += 1 + c
+    return "\n".join(out) + "\n"
+
+
+def anim_to_bin(text, old, length, cnt):
+    out = bytearray()
+    for ln in text.splitlines():
+        ln = ln.split("#")[0].strip()
+        if not ln:
+            continue
+        t = ln.split()
+        if t[0] != "frame":
+            raise SystemExit(f"bad line {ln!r}")
+        s = int(t[1])
+        tiles = [int(x, 16) for x in t[2:]]
+        if len(tiles) != cnt[s]:
+            raise SystemExit(f"shape {s} needs {cnt[s]} tile ids, found {len(tiles)}: {ln!r}")
+        out += bytes([s] + tiles)
+    if len(out) != length:
+        raise SystemExit(f"animation text assembles to {len(out)} bytes, expected {length}")
+    return bytes(out) + old[length:]

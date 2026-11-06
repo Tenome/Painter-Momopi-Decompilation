@@ -55,3 +55,15 @@ bank,addr,type,name,count
 1,5ca7,song,sfx_92,0
 1,5cba,song,sfx_93,0
 0,06a4,shapes,object_shapes,0
+0,1a17,anim,anim_00_1a17,25
+0,2704,anim,anim_00_2704,5
+0,3143,anim,anim_00_3143,5
+0,3aa6,anim,anim_00_3aa6,10
+0,3aca,anim,anim_00_3aca,5
+0,3bbe,anim,anim_00_3bbe,10
+0,3e4d,anim,anim_00_3e4d,10
+0,3f3a,anim,anim_00_3f3a,10
+1,53e5,anim,anim_01_53e5,7
+1,586f,anim,anim_01_586f,7
+1,59cb,anim,anim_01_59cb,7
+1,5a76,anim,anim_01_5a76,14

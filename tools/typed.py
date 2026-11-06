@@ -9,6 +9,7 @@ Types:
   u8     COUNT decimal values 0-255 (the first COUNT bytes of the region; the rest of the region is kept)
   u16be  COUNT decimal values 0-65535 stored high byte first
   shapes the sprite shape data (offsets of the 8x8 parts of each shape), see tools/shape_fmt.py
+  anim   animation frames (shape id + tile ids) in the first COUNT bytes of the region; needs the shape table
   song   a sound data region: header and token stream, see tools/song_fmt.py (notes, lengths, commands; the size must stay the same)
   rounddata  the enemy spawn waves of a round: 6 pointers then the wave lists. Text: `wave N` then one line per spawn `kind x y delay`
          (`kind` indexes the enemy kinds, `delay` is compared with the seconds counter). The number of spawns in each wave must stay the same.
@@ -87,7 +88,19 @@ def rounddata_to_bin(text, old, start, name):
     return bytes(data)
 
 
+_COUNTS = []
+
+
+def shape_counts():
+    if not _COUNTS:
+        data = open(find_bin(0, "06a4"), "rb").read()
+        _COUNTS.extend(shape_fmt.counts(data, 0x06A4))
+    return _COUNTS
+
+
 def to_txt(t, c, data, start=0):
+    if t == "anim":
+        return shape_fmt.anim_to_txt(data, c, shape_counts())
     if t == "shapes":
         return shape_fmt.to_txt(data, start)
     if t == "song":
@@ -102,6 +115,8 @@ def to_txt(t, c, data, start=0):
 
 
 def to_bin(t, c, n, text, old, start=0):
+    if t == "anim":
+        return shape_fmt.anim_to_bin(text, old, c, shape_counts())
     if t == "shapes":
         return shape_fmt.to_bin(text, old, start)
     if t == "song":
