@@ -3,9 +3,9 @@ INCLUDE "src/constants.inc"
 
 SECTION "bank01", ROMX[$4000], BANK[1]
 
-    INCBIN "orig/painter_momopie.gb", $04000, 72
+    INCBIN "assets/bank_01/4000.bin"
 SoundSongTable::  ; word offsets of song data (follows the frequency table at $4000)
-    INCBIN "orig/painter_momopie.gb", $04048, 172
+    INCBIN "assets/bank_01/4048_SoundSongTable.bin"
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     dw D_00_0027
     dw Sound81MusicData
@@ -47,7 +47,7 @@ SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (musi
     dw SoundStartEffect
     dw SoundStartEffect
     dw SoundStartEffect
-    INCBIN "orig/painter_momopie.gb", $04142, 21
+    INCBIN "assets/bank_01/4142.bin"
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -310,7 +310,7 @@ SoundLoadStream::  ; copies the stream header into a channel record
     ld [wSoundCmd], a
     ret
 D_01_4332::
-    INCBIN "orig/painter_momopie.gb", $04332, 44
+    INCBIN "assets/bank_01/4332.bin"
 SoundAssignChannels::
     ld d, $04
     ld hl, wSoundChannels
@@ -1157,19 +1157,19 @@ PlaySound_Bank1::  ; appends wSoundArg to the sound command queue
     xor a, a
     ld [wSoundBusy], a
     ret
-    INCBIN "orig/painter_momopie.gb", $0487b, 17
+    INCBIN "assets/bank_01/487b.bin"
 D_01_488c::
-    INCBIN "orig/painter_momopie.gb", $0488c, 56
+    INCBIN "assets/bank_01/488c.bin"
 PlayerAnimPtrs::  ; player animation pointers (down/up/side) chosen by SelectPlayerAnimation
-    INCBIN "orig/painter_momopie.gb", $048c4, 8
+    INCBIN "assets/bank_01/48c4_PlayerAnimPtrs.bin"
 PlayerAnimPtrsFlipped::  ; pointers for the side animation drawn flipped
-    INCBIN "orig/painter_momopie.gb", $048cc, 8
+    INCBIN "assets/bank_01/48cc_PlayerAnimPtrsFlipped.bin"
 D_01_48d4::
-    INCBIN "orig/painter_momopie.gb", $048d4, 71
+    INCBIN "assets/bank_01/48d4.bin"
 D_01_491b::
-    INCBIN "orig/painter_momopie.gb", $0491b, 6
+    INCBIN "assets/bank_01/491b.bin"
 D_01_4921::
-    INCBIN "orig/painter_momopie.gb", $04921, 6
+    INCBIN "assets/bank_01/4921.bin"
 L_01_4927::
     rlca
     ld c, h
@@ -1443,7 +1443,7 @@ SelectPlayerAnimation::  ; picks the animation table by direction
     jr nz, .L_01_4b4c
     ld hl, PlayerAnimPtrs
     jr .L_01_4b4f
-    INCBIN "orig/painter_momopie.gb", $04b33, 5
+    INCBIN "assets/bank_01/4b33.bin"
 .L_01_4b38:
     ld hl, wPlayer
     set 5, [hl]
@@ -2271,7 +2271,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     res 0, [hl]
     ret
 DirectionToAnimIndex::  ; dpad direction nibble to animation index
-    INCBIN "orig/painter_momopie.gb", $05178, 11
+    INCBIN "assets/bank_01/5178_DirectionToAnimIndex.bin"
 L_01_5183::
     ld hl, wPlayerStatus
     set 0, [hl]
@@ -2279,9 +2279,9 @@ L_01_5183::
     ld [$c4cf], a
     ret
 D_01_518d::
-    INCBIN "orig/painter_momopie.gb", $0518d, 16
+    INCBIN "assets/bank_01/518d.bin"
 D_01_519d::
-    INCBIN "orig/painter_momopie.gb", $0519d, 16
+    INCBIN "assets/bank_01/519d.bin"
 InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and animation start values
     ld hl, wPlayer
     call Clear32Bytes
@@ -2553,11 +2553,11 @@ L_01_53c4::
     ldh [hEnemyDir], a
     ret
 D_01_53e5::
-    INCBIN "orig/painter_momopie.gb", $053e5, 7
+    INCBIN "assets/bank_01/53e5.bin"
 D_01_53ec::
-    INCBIN "orig/painter_momopie.gb", $053ec, 7
+    INCBIN "assets/bank_01/53ec.bin"
 D_01_53f3::
-    INCBIN "orig/painter_momopie.gb", $053f3, 288
+    INCBIN "assets/bank_01/53f3.bin"
 EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call TickObjectTimer
     jr nz, .L_01_551b
@@ -2897,21 +2897,21 @@ L_01_570c::
     ld [$c4ae], a
     ret
 D_01_5782::
-    INCBIN "orig/painter_momopie.gb", $05782, 9
+    INCBIN "assets/bank_01/5782.bin"
 D_01_578b::
-    INCBIN "orig/painter_momopie.gb", $0578b, 4
+    INCBIN "assets/bank_01/578b.bin"
 D_01_578f::
-    INCBIN "orig/painter_momopie.gb", $0578f, 8
+    INCBIN "assets/bank_01/578f.bin"
 D_01_5797::
-    INCBIN "orig/painter_momopie.gb", $05797, 4
+    INCBIN "assets/bank_01/5797.bin"
 D_01_579b::
-    INCBIN "orig/painter_momopie.gb", $0579b, 46
+    INCBIN "assets/bank_01/579b.bin"
 D_01_57c9::
-    INCBIN "orig/painter_momopie.gb", $057c9, 35
+    INCBIN "assets/bank_01/57c9.bin"
 D_01_57ec::
-    INCBIN "orig/painter_momopie.gb", $057ec, 2
+    INCBIN "assets/bank_01/57ec.bin"
 D_01_57ee::
-    INCBIN "orig/painter_momopie.gb", $057ee, 2
+    INCBIN "assets/bank_01/57ee.bin"
 EnemyKind9::  ; enemy kind 9
     call SelectObject2
     call TickObjectTimer
@@ -2974,11 +2974,11 @@ L_01_585e::
     call SetObjectAnimation
     jp L_00_340c
 D_01_586f::
-    INCBIN "orig/painter_momopie.gb", $0586f, 14
+    INCBIN "assets/bank_01/586f.bin"
 D_01_587d::
-    INCBIN "orig/painter_momopie.gb", $0587d, 14
+    INCBIN "assets/bank_01/587d.bin"
 D_01_588b::
-    INCBIN "orig/painter_momopie.gb", $0588b, 14
+    INCBIN "assets/bank_01/588b.bin"
 EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
     jr nz, .L_01_58a1
@@ -3129,17 +3129,17 @@ L_01_59b6::
     call SetObjectAnimation
     jp L_00_340c
 D_01_59cb::
-    INCBIN "orig/painter_momopie.gb", $059cb, 7
+    INCBIN "assets/bank_01/59cb.bin"
 D_01_59d2::
-    INCBIN "orig/painter_momopie.gb", $059d2, 7
+    INCBIN "assets/bank_01/59d2.bin"
 D_01_59d9::
-    INCBIN "orig/painter_momopie.gb", $059d9, 21
+    INCBIN "assets/bank_01/59d9.bin"
 D_01_59ee::
-    INCBIN "orig/painter_momopie.gb", $059ee, 7
+    INCBIN "assets/bank_01/59ee.bin"
 D_01_59f5::
-    INCBIN "orig/painter_momopie.gb", $059f5, 5
+    INCBIN "assets/bank_01/59f5.bin"
 D_01_59fa::
-    INCBIN "orig/painter_momopie.gb", $059fa, 5
+    INCBIN "assets/bank_01/59fa.bin"
 EnemyKind3::  ; enemy kind 3
     call SelectObject2
     call TickObjectTimer
@@ -3193,47 +3193,47 @@ L_01_5a65::
     ldh [hEnemyCounter], a
     jp L_00_340c
 D_01_5a76::
-    INCBIN "orig/painter_momopie.gb", $05a76, 14
+    INCBIN "assets/bank_01/5a76.bin"
 D_01_5a84::
-    INCBIN "orig/painter_momopie.gb", $05a84, 14
+    INCBIN "assets/bank_01/5a84.bin"
 D_01_5a92::
-    INCBIN "orig/painter_momopie.gb", $05a92, 438
+    INCBIN "assets/bank_01/5a92.bin"
 Sound8DEffectData::  ; stream of sound id $8d
-    INCBIN "orig/painter_momopie.gb", $05c48, 20
+    INCBIN "assets/bank_01/5c48_Sound8DEffectData.bin"
 Sound8EEffectData::  ; stream of sound id $8e
-    INCBIN "orig/painter_momopie.gb", $05c5c, 20
+    INCBIN "assets/bank_01/5c5c_Sound8EEffectData.bin"
 Sound8FEffectData::  ; stream of sound id $8f
-    INCBIN "orig/painter_momopie.gb", $05c70, 16
+    INCBIN "assets/bank_01/5c70_Sound8FEffectData.bin"
 Sound90EffectData::  ; stream of sound id $90
-    INCBIN "orig/painter_momopie.gb", $05c80, 19
+    INCBIN "assets/bank_01/5c80_Sound90EffectData.bin"
 Sound91EffectData::  ; stream of sound id $91
-    INCBIN "orig/painter_momopie.gb", $05c93, 20
+    INCBIN "assets/bank_01/5c93_Sound91EffectData.bin"
 Sound92EffectData::  ; stream of sound id $92
-    INCBIN "orig/painter_momopie.gb", $05ca7, 19
+    INCBIN "assets/bank_01/5ca7_Sound92EffectData.bin"
 Sound93EffectData::  ; stream of sound id $93
     ld bc, $0380
-    INCBIN "orig/painter_momopie.gb", $05cbd, 437
+    INCBIN "assets/bank_01/5cbd.bin"
 Sound81MusicData::  ; stream of sound id $81
-    INCBIN "orig/painter_momopie.gb", $05e72, 553
+    INCBIN "assets/bank_01/5e72_Sound81MusicData.bin"
 Sound82EffectData::  ; stream of sound id $82
-    INCBIN "orig/painter_momopie.gb", $0609b, 505
+    INCBIN "assets/bank_01/609b_Sound82EffectData.bin"
 Sound83EffectData::  ; stream of sound id $83
-    INCBIN "orig/painter_momopie.gb", $06294, 510
+    INCBIN "assets/bank_01/6294_Sound83EffectData.bin"
 Sound84MusicData::  ; stream of sound id $84
-    INCBIN "orig/painter_momopie.gb", $06492, 715
+    INCBIN "assets/bank_01/6492_Sound84MusicData.bin"
 Sound85MusicData::  ; stream of sound id $85
-    INCBIN "orig/painter_momopie.gb", $0675d, 1152
+    INCBIN "assets/bank_01/675d_Sound85MusicData.bin"
 Sound86MusicData::  ; stream of sound id $86
-    INCBIN "orig/painter_momopie.gb", $06bdd, 1230
+    INCBIN "assets/bank_01/6bdd_Sound86MusicData.bin"
 Sound87MusicData::  ; stream of sound id $87
-    INCBIN "orig/painter_momopie.gb", $070ab, 902
+    INCBIN "assets/bank_01/70ab_Sound87MusicData.bin"
 Sound88MusicData::  ; stream of sound id $88
-    INCBIN "orig/painter_momopie.gb", $07431, 1129
+    INCBIN "assets/bank_01/7431_Sound88MusicData.bin"
 Sound89MusicData::  ; stream of sound id $89
-    INCBIN "orig/painter_momopie.gb", $0789a, 699
+    INCBIN "assets/bank_01/789a_Sound89MusicData.bin"
 Sound8AMusicData::  ; stream of sound id $8a
-    INCBIN "orig/painter_momopie.gb", $07b55, 512
+    INCBIN "assets/bank_01/7b55_Sound8AMusicData.bin"
 Sound8BMusicData::  ; stream of sound id $8b
-    INCBIN "orig/painter_momopie.gb", $07d55, 512
+    INCBIN "assets/bank_01/7d55_Sound8BMusicData.bin"
 D_01_7f55::
-    INCBIN "orig/painter_momopie.gb", $07f55, 171
+    INCBIN "assets/bank_01/7f55.bin"

@@ -61,6 +61,7 @@ class Rom:
         self.cross = set()
         self.tables = set()  # rst-table vectors
         self.cross_bank = {}
+        self.assets = {}     # asset file path -> bytes (filled by emit)
         self.nocode = {(int(r[0]), int(r[1], 16)) for r in read_csv(os.path.join(ROOT, "nocode.csv")) if r[0] != "bank"}
         self.ptables = [(int(r[0]), int(r[1], 16), int(r[2]), int(r[3]), r[4]) for r in read_csv(os.path.join(ROOT, "ptables.csv"))
                         if r[0] != "bank"]
@@ -524,7 +525,10 @@ class Rom:
             while (q < end and (bank, q) not in self.insns and (bank, q) not in self.targets
                    and (bank, q) not in self.names and (bank, q) not in self.dwords):
                 q += 1
-            out.append(f'    INCBIN "orig/painter_momopie.gb", ${base + pc - start:05x}, {q - pc}')
+            tag = self.names.get((bank, pc), "")
+            path = f"assets/bank_{bank:02x}/{pc:04x}" + (f"_{tag}" if tag else "") + ".bin"
+            self.assets[path] = self.data[base + pc - start:base + q - start]
+            out.append(f'    INCBIN "{path}"')
             pc = q
         # name immediate values by what the next instruction does with them (constants.inc prefix: SND_ LCDC_ PAL_ IE_)
         ctx = [(r"    call PlaySound", "SND_"), (r"    ldh? \[rLCDC\], a", "LCDC_"), (r"    ldh? \[(rBGP|rOBP0|rOBP1)\], a", "PAL_"),
@@ -580,7 +584,7 @@ def assemble(rom, sources):
             elif s.startswith("    dw "):
                 pc += 2
             elif s.startswith("    INCBIN"):
-                pc += int(s.rsplit(",", 1)[1])
+                pc += len(rom.assets[s.split('"')[1]])
             else:
                 pc += len(sm83.encode(unname(rom, s.strip()), pc, lookup))
     built = []
@@ -597,9 +601,7 @@ def assemble(rom, sources):
                 t = lookup(s[7:].strip())
                 v = bytes([t & 0xFF, t >> 8])
             elif s.startswith("    INCBIN"):
-                _, o, n = s.split(",")
-                o = int(o.strip()[1:], 16)
-                v = rom.data[o:o + int(n)]
+                v = rom.assets[s.split('"')[1]]
             else:
                 v = sm83.encode(unname(rom, s.strip()), pc, lookup)
             out += v
@@ -642,6 +644,13 @@ def main():
         os.makedirs(os.path.join(ROOT, "src"), exist_ok=True)
         for b, s in enumerate(src):
             open(os.path.join(ROOT, "src", f"bank_{b:02x}.asm"), "w", newline="\n").write(s)
+        import shutil
+        shutil.rmtree(os.path.join(ROOT, "assets"), ignore_errors=True)
+        for path, blob in rom.assets.items():
+            full = os.path.join(ROOT, path)
+            os.makedirs(os.path.dirname(full), exist_ok=True)
+            open(full, "wb").write(blob)
+        print(len(rom.assets), "asset files written to assets/ (git-ignored; extracted from your ROM)")
         os.makedirs(os.path.join(ROOT, "config"), exist_ok=True)
         with open(os.path.join(ROOT, "config", "functions.tsv"), "w", newline="\n") as f:
             f.write("bank\taddr\tsize\tname\n")

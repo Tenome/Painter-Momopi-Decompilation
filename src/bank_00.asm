@@ -5,28 +5,28 @@ SECTION "bank00", ROM0[$0000]
 
 RstVector00::  ; jp RstJumpTable
     jp RstJumpTable
-    INCBIN "orig/painter_momopie.gb", $00003, 36
+    INCBIN "assets/bank_00/0003.bin"
 D_00_0027::
-    INCBIN "orig/painter_momopie.gb", $00027, 25
+    INCBIN "assets/bank_00/0027.bin"
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
-    INCBIN "orig/painter_momopie.gb", $00043, 5
+    INCBIN "assets/bank_00/0043.bin"
 StatVector::  ; reti: the LCD STAT interrupt is not used
     reti
-    INCBIN "orig/painter_momopie.gb", $00049, 7
+    INCBIN "assets/bank_00/0049.bin"
 TimerVector::  ; reti: the timer interrupt is not used
     reti
-    INCBIN "orig/painter_momopie.gb", $00051, 7
+    INCBIN "assets/bank_00/0051.bin"
 SerialVector::  ; jp SerialHandler
     jp SerialHandler
-    INCBIN "orig/painter_momopie.gb", $0005b, 5
+    INCBIN "assets/bank_00/005b.bin"
 JoypadVector::  ; reti: the joypad interrupt is not used
     reti
-    INCBIN "orig/painter_momopie.gb", $00061, 159
+    INCBIN "assets/bank_00/0061.bin"
 Entry::  ; nop; jp Start
     nop
     jp Start
-    INCBIN "orig/painter_momopie.gb", $00104, 76
+    INCBIN "assets/bank_00/0104.bin"
 Start::  ; sets SP=$dfff; clears WRAM and HRAM; inits LCD and palettes; enters mode 0
     ld sp, wStackTop
     call LcdOff
@@ -823,7 +823,7 @@ WaitVramCopyDone::  ; waits until the VBlank task bit 2 is cleared
     jr nz, WaitVramCopyDone
     ret
 ObjectShapeTable::  ; word pointers indexed by shape id; each shape = count then count pairs of signed (y x) offsets of 8x8 parts (read by DrawObject)
-    INCBIN "orig/painter_momopie.gb", $006a4, 323
+    INCBIN "assets/bank_00/06a4_ObjectShapeTable.bin"
 ClearOamShadowY::  ; clears Y of every OAM shadow entry
     ld hl, $c000
 .L_00_07ea:
@@ -1226,7 +1226,7 @@ L_00_0a3f::
     inc b
     inc b
     jr L_00_0a5d
-    INCBIN "orig/painter_momopie.gb", $00a45, 4
+    INCBIN "assets/bank_00/0a45.bin"
 SerialSendByte::  ; sends C over the link port with the internal clock and waits for the reply
     ld a, [rSC]
     res 7, a
@@ -1466,7 +1466,7 @@ L_00_0b66::
     ld [hl], a
     ret
 D_00_0bb6::
-    INCBIN "orig/painter_momopie.gb", $00bb6, 66
+    INCBIN "assets/bank_00/0bb6.bin"
 MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     push af
     bit 7, a
@@ -1525,7 +1525,7 @@ L_00_0c2a::
     ld c, b
     ret
 PaintCellCountTable::  ; number of path cells to paint per round (index (round-1)&15): initial wPaintRemaining
-    INCBIN "orig/painter_momopie.gb", $00c49, 197
+    INCBIN "assets/bank_00/0c49_PaintCellCountTable.bin"
 UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked to the 256 byte wRoomMap
     ld c, $00
     ld b, $01
@@ -1594,39 +1594,39 @@ RoundDataTable::  ; 33 pointers indexed by wRound-1
     dw D_00_0fbd
     dw D_00_0fda
 D_00_0d7f::
-    INCBIN "orig/painter_momopie.gb", $00d7f, 38
+    INCBIN "assets/bank_00/0d7f.bin"
 D_00_0da5::
-    INCBIN "orig/painter_momopie.gb", $00da5, 43
+    INCBIN "assets/bank_00/0da5.bin"
 D_00_0dd0::
-    INCBIN "orig/painter_momopie.gb", $00dd0, 47
+    INCBIN "assets/bank_00/0dd0.bin"
 D_00_0dff::
-    INCBIN "orig/painter_momopie.gb", $00dff, 38
+    INCBIN "assets/bank_00/0dff.bin"
 D_00_0e25::
-    INCBIN "orig/painter_momopie.gb", $00e25, 38
+    INCBIN "assets/bank_00/0e25.bin"
 D_00_0e4b::
-    INCBIN "orig/painter_momopie.gb", $00e4b, 42
+    INCBIN "assets/bank_00/0e4b.bin"
 D_00_0e75::
-    INCBIN "orig/painter_momopie.gb", $00e75, 51
+    INCBIN "assets/bank_00/0e75.bin"
 D_00_0ea8::
-    INCBIN "orig/painter_momopie.gb", $00ea8, 25
+    INCBIN "assets/bank_00/0ea8.bin"
 D_00_0ec1::
-    INCBIN "orig/painter_momopie.gb", $00ec1, 45
+    INCBIN "assets/bank_00/0ec1.bin"
 D_00_0eee::
-    INCBIN "orig/painter_momopie.gb", $00eee, 29
+    INCBIN "assets/bank_00/0eee.bin"
 D_00_0f0b::
-    INCBIN "orig/painter_momopie.gb", $00f0b, 37
+    INCBIN "assets/bank_00/0f0b.bin"
 D_00_0f30::
-    INCBIN "orig/painter_momopie.gb", $00f30, 38
+    INCBIN "assets/bank_00/0f30.bin"
 D_00_0f56::
-    INCBIN "orig/painter_momopie.gb", $00f56, 29
+    INCBIN "assets/bank_00/0f56.bin"
 D_00_0f73::
-    INCBIN "orig/painter_momopie.gb", $00f73, 33
+    INCBIN "assets/bank_00/0f73.bin"
 D_00_0f94::
-    INCBIN "orig/painter_momopie.gb", $00f94, 41
+    INCBIN "assets/bank_00/0f94.bin"
 D_00_0fbd::
-    INCBIN "orig/painter_momopie.gb", $00fbd, 29
+    INCBIN "assets/bank_00/0fbd.bin"
 D_00_0fda::
-    INCBIN "orig/painter_momopie.gb", $00fda, 49
+    INCBIN "assets/bank_00/0fda.bin"
 AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld bc, $0000
     ld hl, wScoreDigits
@@ -1710,7 +1710,7 @@ L_00_10a4::
     ld hl, D_00_10ab
     jp LookupByte
 D_00_10ab::
-    INCBIN "orig/painter_momopie.gb", $010ab, 10
+    INCBIN "assets/bank_00/10ab.bin"
 Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld sp, wStackTop
     call LcdOff
@@ -2166,7 +2166,7 @@ InitMagicPoints::  ; loads the magic points ($c44a/$c44b) from MagicPointsTable 
     ldh [$ffea], a
     ret
 MagicPointsTable::  ; 16 bit MP per round (round 1 = 50)
-    INCBIN "orig/painter_momopie.gb", $01462, 68
+    INCBIN "assets/bank_00/1462_MagicPointsTable.bin"
 ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     xor a, a
     ld [$c488], a
@@ -2191,9 +2191,9 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     ld [$c473], a
     ld [$c474], a
     ret
-    INCBIN "orig/painter_momopie.gb", $014e4, 12
+    INCBIN "assets/bank_00/14e4.bin"
 RoundTimeTable::  ; seconds per round block (index wRound/4): initial hTimeSeconds
-    INCBIN "orig/painter_momopie.gb", $014f0, 9
+    INCBIN "assets/bank_00/14f0_RoundTimeTable.bin"
 RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
     dw D_00_151b
     dw D_00_1538
@@ -2213,35 +2213,35 @@ RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
     dw D_00_1640
     dw D_00_1649
 D_00_151b::
-    INCBIN "orig/painter_momopie.gb", $0151b, 29
+    INCBIN "assets/bank_00/151b.bin"
 D_00_1538::
-    INCBIN "orig/painter_momopie.gb", $01538, 25
+    INCBIN "assets/bank_00/1538.bin"
 D_00_1551::
-    INCBIN "orig/painter_momopie.gb", $01551, 25
+    INCBIN "assets/bank_00/1551.bin"
 D_00_156a::
-    INCBIN "orig/painter_momopie.gb", $0156a, 25
+    INCBIN "assets/bank_00/156a.bin"
 D_00_1583::
-    INCBIN "orig/painter_momopie.gb", $01583, 21
+    INCBIN "assets/bank_00/1583.bin"
 D_00_1598::
-    INCBIN "orig/painter_momopie.gb", $01598, 25
+    INCBIN "assets/bank_00/1598.bin"
 D_00_15b1::
-    INCBIN "orig/painter_momopie.gb", $015b1, 17
+    INCBIN "assets/bank_00/15b1.bin"
 D_00_15c2::
-    INCBIN "orig/painter_momopie.gb", $015c2, 21
+    INCBIN "assets/bank_00/15c2.bin"
 D_00_15d7::
-    INCBIN "orig/painter_momopie.gb", $015d7, 25
+    INCBIN "assets/bank_00/15d7.bin"
 D_00_15f0::
-    INCBIN "orig/painter_momopie.gb", $015f0, 25
+    INCBIN "assets/bank_00/15f0.bin"
 D_00_1609::
-    INCBIN "orig/painter_momopie.gb", $01609, 21
+    INCBIN "assets/bank_00/1609.bin"
 D_00_161e::
-    INCBIN "orig/painter_momopie.gb", $0161e, 25
+    INCBIN "assets/bank_00/161e.bin"
 D_00_1637::
-    INCBIN "orig/painter_momopie.gb", $01637, 9
+    INCBIN "assets/bank_00/1637.bin"
 D_00_1640::
-    INCBIN "orig/painter_momopie.gb", $01640, 9
+    INCBIN "assets/bank_00/1640.bin"
 D_00_1649::
-    INCBIN "orig/painter_momopie.gb", $01649, 145
+    INCBIN "assets/bank_00/1649.bin"
 RoomMetatileTable::  ; 17 pointers to metatile definitions per room theme
     dw D_00_20a7
     dw D_00_20a7
@@ -2587,7 +2587,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     ld hl, D_00_1a30
     jp SetCursorAnimation
 MagicCostTable::  ; MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
-    INCBIN "orig/painter_momopie.gb", $0199b, 10
+    INCBIN "assets/bank_00/199b_MagicCostTable.bin"
 MagicCardTitleJobs::  ; 10 pointers to the card name VRAM jobs (index = card id)
     dw D_00_1c1b
     dw D_00_1c21
@@ -2622,67 +2622,67 @@ MagicCardCostJobs::  ; 10 pointers to the MP cost VRAM jobs
     dw D_00_1a0b
     dw D_00_1a11
 D_00_19e1::
-    INCBIN "orig/painter_momopie.gb", $019e1, 6
+    INCBIN "assets/bank_00/19e1.bin"
 D_00_19e7::
-    INCBIN "orig/painter_momopie.gb", $019e7, 6
+    INCBIN "assets/bank_00/19e7.bin"
 D_00_19ed::
-    INCBIN "orig/painter_momopie.gb", $019ed, 6
+    INCBIN "assets/bank_00/19ed.bin"
 D_00_19f3::
-    INCBIN "orig/painter_momopie.gb", $019f3, 6
+    INCBIN "assets/bank_00/19f3.bin"
 D_00_19f9::
-    INCBIN "orig/painter_momopie.gb", $019f9, 6
+    INCBIN "assets/bank_00/19f9.bin"
 D_00_19ff::
-    INCBIN "orig/painter_momopie.gb", $019ff, 6
+    INCBIN "assets/bank_00/19ff.bin"
 D_00_1a05::
-    INCBIN "orig/painter_momopie.gb", $01a05, 6
+    INCBIN "assets/bank_00/1a05.bin"
 D_00_1a0b::
-    INCBIN "orig/painter_momopie.gb", $01a0b, 6
+    INCBIN "assets/bank_00/1a0b.bin"
 D_00_1a11::
-    INCBIN "orig/painter_momopie.gb", $01a11, 6
+    INCBIN "assets/bank_00/1a11.bin"
 D_00_1a17::
-    INCBIN "orig/painter_momopie.gb", $01a17, 25
+    INCBIN "assets/bank_00/1a17.bin"
 D_00_1a30::
-    INCBIN "orig/painter_momopie.gb", $01a30, 311
+    INCBIN "assets/bank_00/1a30.bin"
 D_00_1b67::
-    INCBIN "orig/painter_momopie.gb", $01b67, 18
+    INCBIN "assets/bank_00/1b67.bin"
 D_00_1b79::
-    INCBIN "orig/painter_momopie.gb", $01b79, 18
+    INCBIN "assets/bank_00/1b79.bin"
 D_00_1b8b::
-    INCBIN "orig/painter_momopie.gb", $01b8b, 18
+    INCBIN "assets/bank_00/1b8b.bin"
 D_00_1b9d::
-    INCBIN "orig/painter_momopie.gb", $01b9d, 18
+    INCBIN "assets/bank_00/1b9d.bin"
 D_00_1baf::
-    INCBIN "orig/painter_momopie.gb", $01baf, 18
+    INCBIN "assets/bank_00/1baf.bin"
 D_00_1bc1::
-    INCBIN "orig/painter_momopie.gb", $01bc1, 18
+    INCBIN "assets/bank_00/1bc1.bin"
 D_00_1bd3::
-    INCBIN "orig/painter_momopie.gb", $01bd3, 18
+    INCBIN "assets/bank_00/1bd3.bin"
 D_00_1be5::
-    INCBIN "orig/painter_momopie.gb", $01be5, 18
+    INCBIN "assets/bank_00/1be5.bin"
 D_00_1bf7::
-    INCBIN "orig/painter_momopie.gb", $01bf7, 18
+    INCBIN "assets/bank_00/1bf7.bin"
 D_00_1c09::
-    INCBIN "orig/painter_momopie.gb", $01c09, 18
+    INCBIN "assets/bank_00/1c09.bin"
 D_00_1c1b::
-    INCBIN "orig/painter_momopie.gb", $01c1b, 6
+    INCBIN "assets/bank_00/1c1b.bin"
 D_00_1c21::
-    INCBIN "orig/painter_momopie.gb", $01c21, 6
+    INCBIN "assets/bank_00/1c21.bin"
 D_00_1c27::
-    INCBIN "orig/painter_momopie.gb", $01c27, 6
+    INCBIN "assets/bank_00/1c27.bin"
 D_00_1c2d::
-    INCBIN "orig/painter_momopie.gb", $01c2d, 6
+    INCBIN "assets/bank_00/1c2d.bin"
 D_00_1c33::
-    INCBIN "orig/painter_momopie.gb", $01c33, 6
+    INCBIN "assets/bank_00/1c33.bin"
 D_00_1c39::
-    INCBIN "orig/painter_momopie.gb", $01c39, 6
+    INCBIN "assets/bank_00/1c39.bin"
 D_00_1c3f::
-    INCBIN "orig/painter_momopie.gb", $01c3f, 6
+    INCBIN "assets/bank_00/1c3f.bin"
 D_00_1c45::
-    INCBIN "orig/painter_momopie.gb", $01c45, 6
+    INCBIN "assets/bank_00/1c45.bin"
 D_00_1c4b::
-    INCBIN "orig/painter_momopie.gb", $01c4b, 6
+    INCBIN "assets/bank_00/1c4b.bin"
 D_00_1c51::
-    INCBIN "orig/painter_momopie.gb", $01c51, 6
+    INCBIN "assets/bank_00/1c51.bin"
 Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld sp, wStackTop
     call LcdOff
@@ -2783,7 +2783,7 @@ L_00_1d23::
     pop hl
     ret
 D_00_1d2f::
-    INCBIN "orig/painter_momopie.gb", $01d2f, 10
+    INCBIN "assets/bank_00/1d2f.bin"
 RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
     dw D_00_1d5b
     dw D_00_1d5b
@@ -2803,17 +2803,17 @@ RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
     dw D_00_1d7e
     dw D_00_1d87
 D_00_1d5b::
-    INCBIN "orig/painter_momopie.gb", $01d5b, 9
+    INCBIN "assets/bank_00/1d5b.bin"
 D_00_1d64::
-    INCBIN "orig/painter_momopie.gb", $01d64, 8
+    INCBIN "assets/bank_00/1d64.bin"
 D_00_1d6c::
-    INCBIN "orig/painter_momopie.gb", $01d6c, 9
+    INCBIN "assets/bank_00/1d6c.bin"
 D_00_1d75::
-    INCBIN "orig/painter_momopie.gb", $01d75, 9
+    INCBIN "assets/bank_00/1d75.bin"
 D_00_1d7e::
-    INCBIN "orig/painter_momopie.gb", $01d7e, 9
+    INCBIN "assets/bank_00/1d7e.bin"
 D_00_1d87::
-    INCBIN "orig/painter_momopie.gb", $01d87, 57
+    INCBIN "assets/bank_00/1d87.bin"
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld sp, wStackTop
     call LcdOff
@@ -2864,7 +2864,7 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
 .L_00_1e29:
     ld a, $04
     jp GameModeDispatch
-    INCBIN "orig/painter_momopie.gb", $01e2e, 118
+    INCBIN "assets/bank_00/1e2e.bin"
 Mode4_GameOver::  ; GAME OVER screen
     ld sp, wStackTop
     call LcdOff
@@ -2915,7 +2915,7 @@ Mode4_GameOver::  ; GAME OVER screen
 .L_00_1f0d:
     jp Entry
 D_00_1f10::
-    INCBIN "orig/painter_momopie.gb", $01f10, 12
+    INCBIN "assets/bank_00/1f10.bin"
 Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld sp, wStackTop
     call LcdOff
@@ -3078,43 +3078,43 @@ ContinueCursorInput::  ; A or B moves the YES/NO cursor (wCursorX $3c or $74) in
     ld [wMagicCol], a
     ret
 D_00_2083::
-    INCBIN "orig/painter_momopie.gb", $02083, 36
+    INCBIN "assets/bank_00/2083.bin"
 D_00_20a7::
-    INCBIN "orig/painter_momopie.gb", $020a7, 16
+    INCBIN "assets/bank_00/20a7.bin"
 D_00_20b7::
-    INCBIN "orig/painter_momopie.gb", $020b7, 16
+    INCBIN "assets/bank_00/20b7.bin"
 D_00_20c7::
-    INCBIN "orig/painter_momopie.gb", $020c7, 16
+    INCBIN "assets/bank_00/20c7.bin"
 D_00_20d7::
-    INCBIN "orig/painter_momopie.gb", $020d7, 64
+    INCBIN "assets/bank_00/20d7.bin"
 D_00_2117::
-    INCBIN "orig/painter_momopie.gb", $02117, 64
+    INCBIN "assets/bank_00/2117.bin"
 D_00_2157::
-    INCBIN "orig/painter_momopie.gb", $02157, 64
+    INCBIN "assets/bank_00/2157.bin"
 D_00_2197::
-    INCBIN "orig/painter_momopie.gb", $02197, 64
+    INCBIN "assets/bank_00/2197.bin"
 D_00_21d7::
-    INCBIN "orig/painter_momopie.gb", $021d7, 64
+    INCBIN "assets/bank_00/21d7.bin"
 D_00_2217::
-    INCBIN "orig/painter_momopie.gb", $02217, 64
+    INCBIN "assets/bank_00/2217.bin"
 D_00_2257::
-    INCBIN "orig/painter_momopie.gb", $02257, 64
+    INCBIN "assets/bank_00/2257.bin"
 D_00_2297::
-    INCBIN "orig/painter_momopie.gb", $02297, 64
+    INCBIN "assets/bank_00/2297.bin"
 D_00_22d7::
-    INCBIN "orig/painter_momopie.gb", $022d7, 64
+    INCBIN "assets/bank_00/22d7.bin"
 D_00_2317::
-    INCBIN "orig/painter_momopie.gb", $02317, 64
+    INCBIN "assets/bank_00/2317.bin"
 D_00_2357::
-    INCBIN "orig/painter_momopie.gb", $02357, 64
+    INCBIN "assets/bank_00/2357.bin"
 D_00_2397::
-    INCBIN "orig/painter_momopie.gb", $02397, 64
+    INCBIN "assets/bank_00/2397.bin"
 D_00_23d7::
-    INCBIN "orig/painter_momopie.gb", $023d7, 64
+    INCBIN "assets/bank_00/23d7.bin"
 D_00_2417::
-    INCBIN "orig/painter_momopie.gb", $02417, 64
+    INCBIN "assets/bank_00/2417.bin"
 D_00_2457::
-    INCBIN "orig/painter_momopie.gb", $02457, 64
+    INCBIN "assets/bank_00/2457.bin"
 Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld sp, wStackTop
     ld hl, $c487
@@ -3268,7 +3268,7 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
     ld [$c75a], a
     jp Mode2_Init
 D_00_25cb::
-    INCBIN "orig/painter_momopie.gb", $025cb, 21
+    INCBIN "assets/bank_00/25cb.bin"
 MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
     bit 5, a
@@ -3311,7 +3311,7 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     call SetObjPtr
     jp DrawObjectBytePos
 D_00_2630::
-    INCBIN "orig/painter_momopie.gb", $02630, 3
+    INCBIN "assets/bank_00/2630.bin"
 L_00_2633::
     xor a, a
     ld [wCursorIndex], a
@@ -3323,24 +3323,24 @@ L_00_2633::
     ld hl, D_00_2704
     jp SetCursorAnimation
 D_00_264a::
-    INCBIN "orig/painter_momopie.gb", $0264a, 7
+    INCBIN "assets/bank_00/264a.bin"
 D_00_2651::
-    INCBIN "orig/painter_momopie.gb", $02651, 74
+    INCBIN "assets/bank_00/2651.bin"
 D_00_269b::
-    INCBIN "orig/painter_momopie.gb", $0269b, 105
+    INCBIN "assets/bank_00/269b.bin"
 D_00_2704::
-    INCBIN "orig/painter_momopie.gb", $02704, 5
+    INCBIN "assets/bank_00/2704.bin"
 BonusSelectJobTable::  ; 3 pointers to VRAM job lists
     dw D_00_28a3
     dw D_00_28fd
     dw D_00_2957
-    INCBIN "orig/painter_momopie.gb", $0270f, 404
+    INCBIN "assets/bank_00/270f.bin"
 D_00_28a3::
-    INCBIN "orig/painter_momopie.gb", $028a3, 90
+    INCBIN "assets/bank_00/28a3.bin"
 D_00_28fd::
-    INCBIN "orig/painter_momopie.gb", $028fd, 90
+    INCBIN "assets/bank_00/28fd.bin"
 D_00_2957::
-    INCBIN "orig/painter_momopie.gb", $02957, 147
+    INCBIN "assets/bank_00/2957.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
     ld sp, wStackTop
     call LcdOff
@@ -3547,7 +3547,7 @@ L_00_2b84::
     sbc a, b
     add sp, 43
     jp L_00_0498
-    INCBIN "orig/painter_momopie.gb", $02b96, 218
+    INCBIN "assets/bank_00/2b96.bin"
 Mode6_Ending::  ; castle scene after the last round
     ld sp, wStackTop
     call LcdOff
@@ -3728,7 +3728,7 @@ L_00_2df1::
     bit 0, a
     jr nz, .L_00_2df7
     ret
-    INCBIN "orig/painter_momopie.gb", $02dff, 16
+    INCBIN "assets/bank_00/2dff.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
     dw D_00_2e21
     dw D_00_2e2d
@@ -3740,23 +3740,23 @@ CreditsPageTable::  ; 9 pointers to credit pages
     dw D_00_2ee5
     dw D_00_2eff
 D_00_2e21::
-    INCBIN "orig/painter_momopie.gb", $02e21, 12
+    INCBIN "assets/bank_00/2e21.bin"
 D_00_2e2d::
-    INCBIN "orig/painter_momopie.gb", $02e2d, 31
+    INCBIN "assets/bank_00/2e2d.bin"
 D_00_2e4c::
-    INCBIN "orig/painter_momopie.gb", $02e4c, 32
+    INCBIN "assets/bank_00/2e4c.bin"
 D_00_2e6c::
-    INCBIN "orig/painter_momopie.gb", $02e6c, 28
+    INCBIN "assets/bank_00/2e6c.bin"
 D_00_2e88::
-    INCBIN "orig/painter_momopie.gb", $02e88, 31
+    INCBIN "assets/bank_00/2e88.bin"
 D_00_2ea7::
-    INCBIN "orig/painter_momopie.gb", $02ea7, 31
+    INCBIN "assets/bank_00/2ea7.bin"
 D_00_2ec6::
-    INCBIN "orig/painter_momopie.gb", $02ec6, 31
+    INCBIN "assets/bank_00/2ec6.bin"
 D_00_2ee5::
-    INCBIN "orig/painter_momopie.gb", $02ee5, 26
+    INCBIN "assets/bank_00/2ee5.bin"
 D_00_2eff::
-    INCBIN "orig/painter_momopie.gb", $02eff, 39
+    INCBIN "assets/bank_00/2eff.bin"
 L_00_2f26::
     call L_00_2f2c
     jp L_00_2f76
@@ -3865,7 +3865,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [rLCDC], a
     ei
     ret
-    INCBIN "orig/painter_momopie.gb", $03009, 75
+    INCBIN "assets/bank_00/3009.bin"
 L_00_3054::
     ld a, [$c778]
     cp a, $08
@@ -3922,17 +3922,17 @@ L_00_30aa::
     ld hl, $c7ae
     set 7, [hl]
     ret
-    INCBIN "orig/painter_momopie.gb", $030c4, 27
+    INCBIN "assets/bank_00/30c4.bin"
 D_00_30df::
-    INCBIN "orig/painter_momopie.gb", $030df, 50
+    INCBIN "assets/bank_00/30df.bin"
 D_00_3111::
-    INCBIN "orig/painter_momopie.gb", $03111, 50
+    INCBIN "assets/bank_00/3111.bin"
 D_00_3143::
-    INCBIN "orig/painter_momopie.gb", $03143, 5
+    INCBIN "assets/bank_00/3143.bin"
 D_00_3148::
-    INCBIN "orig/painter_momopie.gb", $03148, 94
+    INCBIN "assets/bank_00/3148.bin"
 D_00_31a6::
-    INCBIN "orig/painter_momopie.gb", $031a6, 60
+    INCBIN "assets/bank_00/31a6.bin"
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     ld hl, hEnemyTick
     inc [hl]
@@ -4560,7 +4560,7 @@ L_00_3603::
     ldh [$ffc5], a
     ret
 D_00_363d::
-    INCBIN "orig/painter_momopie.gb", $0363d, 6
+    INCBIN "assets/bank_00/363d.bin"
 L_00_3643::
     call L_00_0b66
     jp L_00_09e0
@@ -4634,9 +4634,9 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     set 3, [hl]
     ret
 D_00_36bc::
-    INCBIN "orig/painter_momopie.gb", $036bc, 5
+    INCBIN "assets/bank_00/36bc.bin"
 D_00_36c1::
-    INCBIN "orig/painter_momopie.gb", $036c1, 5
+    INCBIN "assets/bank_00/36c1.bin"
 L_00_36c6::
     inc c
     ld c, d
@@ -4761,7 +4761,7 @@ EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); Up
     dw EnemyKind9
     dw EnemyKind10
     dw EnemyKind11
-    INCBIN "orig/painter_momopie.gb", $0379a, 4
+    INCBIN "assets/bank_00/379a.bin"
 SelectEnemySlot::  ; HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
     sla a
     ld c, a
@@ -4793,7 +4793,7 @@ EnemySlotTable::  ; 16 word addresses of the enemy slots: $c542 + $20 * i
     dw $c6e2
     dw $c702
     dw $c722
-    INCBIN "orig/painter_momopie.gb", $037cf, 38
+    INCBIN "assets/bank_00/37cf.bin"
 FindFreeEnemySlot::  ; scans slots 15 down to 0 for one whose bit 7 is clear
     ld a, $0f
     ldh [hScratch06], a
@@ -5189,23 +5189,23 @@ L_00_3a75::
     call SetObjectAnimation
     jp L_00_340c
 D_00_3aa2::
-    INCBIN "orig/painter_momopie.gb", $03aa2, 4
+    INCBIN "assets/bank_00/3aa2.bin"
 D_00_3aa6::
-    INCBIN "orig/painter_momopie.gb", $03aa6, 10
+    INCBIN "assets/bank_00/3aa6.bin"
 D_00_3ab0::
-    INCBIN "orig/painter_momopie.gb", $03ab0, 10
+    INCBIN "assets/bank_00/3ab0.bin"
 D_00_3aba::
-    INCBIN "orig/painter_momopie.gb", $03aba, 10
+    INCBIN "assets/bank_00/3aba.bin"
 D_00_3ac4::
-    INCBIN "orig/painter_momopie.gb", $03ac4, 6
+    INCBIN "assets/bank_00/3ac4.bin"
 D_00_3aca::
-    INCBIN "orig/painter_momopie.gb", $03aca, 5
+    INCBIN "assets/bank_00/3aca.bin"
 D_00_3acf::
-    INCBIN "orig/painter_momopie.gb", $03acf, 10
+    INCBIN "assets/bank_00/3acf.bin"
 D_00_3ad9::
-    INCBIN "orig/painter_momopie.gb", $03ad9, 10
+    INCBIN "assets/bank_00/3ad9.bin"
 D_00_3ae3::
-    INCBIN "orig/painter_momopie.gb", $03ae3, 10
+    INCBIN "assets/bank_00/3ae3.bin"
 L_00_3aed::
     ld [bc], a
     nop
@@ -5314,11 +5314,11 @@ L_00_3bad::
     call SetObjectAnimation
     jp L_00_340c
 D_00_3bbe::
-    INCBIN "orig/painter_momopie.gb", $03bbe, 10
+    INCBIN "assets/bank_00/3bbe.bin"
 D_00_3bc8::
-    INCBIN "orig/painter_momopie.gb", $03bc8, 10
+    INCBIN "assets/bank_00/3bc8.bin"
 D_00_3bd2::
-    INCBIN "orig/painter_momopie.gb", $03bd2, 10
+    INCBIN "assets/bank_00/3bd2.bin"
 EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call TickObjectTimer
     jr nz, .L_00_3be4
@@ -5411,7 +5411,7 @@ L_00_3c87::
     ld bc, $c9c8
     ret c
     reti
-    INCBIN "orig/painter_momopie.gb", $03c8c, 5
+    INCBIN "assets/bank_00/3c8c.bin"
 EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
     call TickObjectTimer
@@ -5527,9 +5527,9 @@ D_00_3d6a::
     dw D_00_3d6e
     dw D_00_3dc7
 D_00_3d6e::
-    INCBIN "orig/painter_momopie.gb", $03d6e, 89
+    INCBIN "assets/bank_00/3d6e.bin"
 D_00_3dc7::
-    INCBIN "orig/painter_momopie.gb", $03dc7, 89
+    INCBIN "assets/bank_00/3dc7.bin"
 L_00_3e20::
     ld a, $05
     ldh [hEnemyAnimState], a
@@ -5552,9 +5552,9 @@ L_00_3e20::
     ld [$c534], a
     ret
 D_00_3e4d::
-    INCBIN "orig/painter_momopie.gb", $03e4d, 10
+    INCBIN "assets/bank_00/3e4d.bin"
 D_00_3e57::
-    INCBIN "orig/painter_momopie.gb", $03e57, 10
+    INCBIN "assets/bank_00/3e57.bin"
 EnemyKind5::  ; enemy kind 5
     call SelectObject2
     call TickObjectTimer
@@ -5663,9 +5663,9 @@ L_00_3ef9::
     ldh [hEnemyDir], a
     ret
 D_00_3f3a::
-    INCBIN "orig/painter_momopie.gb", $03f3a, 10
+    INCBIN "assets/bank_00/3f3a.bin"
 D_00_3f44::
-    INCBIN "orig/painter_momopie.gb", $03f44, 8
+    INCBIN "assets/bank_00/3f44.bin"
 SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
     dw $cecd
     dw D_00_3f56
@@ -5674,10 +5674,10 @@ SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (th
     dw D_00_3faf
 D_00_3f56::
     dw RstVector00
-    INCBIN "orig/painter_momopie.gb", $03f58, 61
+    INCBIN "assets/bank_00/3f58.bin"
 D_00_3f95::
-    INCBIN "orig/painter_momopie.gb", $03f95, 9
+    INCBIN "assets/bank_00/3f95.bin"
 D_00_3f9e::
-    INCBIN "orig/painter_momopie.gb", $03f9e, 17
+    INCBIN "assets/bank_00/3f9e.bin"
 D_00_3faf::
-    INCBIN "orig/painter_momopie.gb", $03faf, 81
+    INCBIN "assets/bank_00/3faf.bin"

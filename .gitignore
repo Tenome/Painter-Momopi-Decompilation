@@ -5,6 +5,9 @@ orig/*
 *.gbc
 *.sav
 
+# Data extracted from the ROM by tools/gb_dis.py --write (edit these to mod the game)
+assets/
+
 # Build outputs
 build/
 *.o
