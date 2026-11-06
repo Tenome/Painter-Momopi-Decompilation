@@ -4,8 +4,8 @@ INCLUDE "src/constants.inc"
 SECTION "bank01", ROMX[$4000], BANK[1]
 
     INCBIN "assets/bank_01/4000.bin"
-SoundSongTable::  ; word offsets of song data (follows the frequency table at $4000)
-    INCBIN "assets/bank_01/4048_SoundSongTable.bin"
+SoundFrequencyTable::  ; word frequency (NRx3/NRx4 value) per note index; SoundParseStream reads it with 2 * (note byte + transpose)
+    INCBIN "assets/bank_01/4048_SoundFrequencyTable.bin"
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     dw D_00_0027
     dw Sound81MusicData
@@ -740,7 +740,7 @@ SoundParseStream::  ; reads bytes of the channel's song stream; notes below $e0;
     push de
     ld e, a
     ld d, $00
-    ld hl, SoundSongTable
+    ld hl, SoundFrequencyTable
     add hl, de
     ld d, h
     ld e, l

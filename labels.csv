@@ -75,7 +75,7 @@ bank,addr,name,comment
 3,7e10,Bank3Padding,$ff padding to the end of the bank
 0,06a4,ObjectShapeTable,word pointers indexed by shape id; each shape = count then count pairs of signed (y x) offsets of 8x8 parts (read by DrawObject)
 0,199b,MagicCostTable,MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
-1,4048,SoundSongTable,word offsets of song data (follows the frequency table at $4000)
+1,4048,SoundFrequencyTable,word frequency (NRx3/NRx4 value) per note index; SoundParseStream reads it with 2 * (note byte + transpose)
 1,40f4,SoundCommandDataTable,per command word pointers used by SoundStartCommand
 1,48c4,PlayerAnimPtrs,player animation pointers (down/up/side) chosen by SelectPlayerAnimation
 1,48cc,PlayerAnimPtrsFlipped,pointers for the side animation drawn flipped

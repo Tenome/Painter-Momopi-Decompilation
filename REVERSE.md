@@ -38,7 +38,7 @@ Traced by `tools/gb_dis.py` (21% code) and confirmed with tile sheets (`tools/ti
 | bank 0 $0000-$00ff | | vectors, $ff padding | VBlank at $40, serial at $58, `rst $00` dispatcher |
 | bank 0 $0100-$014f | | cartridge header | |
 | bank 0 $0150-$3fff | | code (about 7 KB) and data tables | mode handlers, VBlank, VRAM copy queues, DrawObject, text/room data |
-| bank 1 $4000-$4156 | | sound tables (frequencies, song offsets) | `SoundSongTable` $4048 |
+| bank 1 $4000-$4156 | | sound tables (frequencies, song offsets) | `SoundFrequencyTable` $4048 |
 | bank 1 $4157-$487a | | sound engine | `SoundUpdate` |
 | bank 1 $487b-$7f54 | | game logic code and data (animations, rooms, maps) | `PlayFrame` $4bde |
 | bank 1 $7f55-$7fff | | $ff padding | |
@@ -144,6 +144,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - **Card effects measured in the emulator** (cast each card at MP 128, hold right/down for 240 frames): MP drops by the cost exactly. S.UP: the painter moves about twice as fast for $f0 frames.
   W.IN: the painter passes through walls for $d0 frames. T.STOP ($d0 frames), GHOST ($b0), FRIEND ($b0) and SEALED ($a0) leave the painter's own movement unchanged and act on enemies and
   projectiles (T.STOP freezes enemies, FRIEND and T.STOP remove the projectile). B.O.M ends in one frame (immediate explosion), CLEAR runs a short sequence and PYON has no timer.
+
+- **Sound stream format** (`SoundParseStream` $461f): one byte at a time from the channel's pointer (record +3/+4). `$e0-$f1` = command (see `SoundCommandTable`; operands follow).
+  `$80-$df` = note: index into `SoundFrequencyTable` ($4048, words) plus the transpose in record +5 (`$80` itself = rest, no transpose); if the channel flag bit 5 is set one extra byte
+  (duty/length NRx1) follows the note; then a byte below `$80` is the note length (record +$b); a byte of `$80` or more means "keep the previous length". `$00-$7f` alone = a new length.
 
 ### Text and VRAM jobs
 
