@@ -1,0 +1,21 @@
+# bank,addr,type,name -- data regions with an editable text form: assets/typed/<name>.txt (types: map, u8, u16be; count = number of values for the list types)
+bank,addr,type,name,count
+0,20d7,map,round01
+0,2117,map,round02
+0,2157,map,round03
+0,2197,map,round04
+0,21d7,map,round05
+0,2217,map,round06
+0,2257,map,round07
+0,2297,map,round08
+0,22d7,map,round09
+0,2317,map,round10
+0,2357,map,round11
+0,2397,map,round13
+0,23d7,map,round14
+0,2417,map,round15
+0,2457,map,round17
+0,0c49,u8,paint_cells_per_round,16
+0,14f0,u8,seconds_per_round_block,9
+0,199b,u8,magic_cost_by_card,10
+0,1462,u16be,magic_points_by_round,34

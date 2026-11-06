@@ -10,6 +10,8 @@ if "--rgbds" in sys.argv:
     d = sys.argv[sys.argv.index("--rgbds") + 1]
 exe = lambda n: os.path.join(d, n) if d else n
 os.makedirs(os.path.join(ROOT, "build"), exist_ok=True)
+if os.path.isdir(os.path.join(ROOT, "assets", "typed")):        # edited text forms (maps, ...)
+    subprocess.run([sys.executable, os.path.join(ROOT, "tools", "typed.py"), "bin"], check=True, cwd=ROOT)
 if os.path.isdir(os.path.join(ROOT, "assets", "gfx")):          # edited PNG sheets become the tile data
     subprocess.run([sys.executable, os.path.join(ROOT, "tools", "gfx.py"), "bin"], check=True, cwd=ROOT)
 objs = []
