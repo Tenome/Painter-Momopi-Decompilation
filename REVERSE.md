@@ -184,14 +184,15 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 ### RE Investigation
 
-- [x] `src/hardware.inc` register names used in the generated source (`DEF` constants, 1:1 verified by the round trip)
-- [x] VBlank handler, serial handler, joypad, OAM DMA, fade, VRAM copy queues named (labels.csv); main loop = the 8 game modes still to name
-- [x] Name the 8 game-mode handlers (done, see Key Findings)
-- [ ] Map the HRAM variables ($FF80-$FFFE) and the WRAM variables referenced from bank 1 ($C3xx/$C5xx) into `src/constants.inc`
-- [ ] Classify banks 1-3 data: tile data (2bpp), tilemaps, palettes, text, music/sfx; add `D_` labels and structured `db`/`dw` records
-- [ ] Find the bank-switch helper and every `ld [$3fff],a` site; mark which bank each cross-bank call enters (extend `seeds.csv`)
-- [ ] Find unreferenced code (pointer tables, `jp hl` dispatchers) so the 14 % code figure rises
-- [x] Headless interpreter `tools/emu.py` with screenshots (Ph5.5); next: trace per-mode RAM use
+- [x] Hardware register names, VBlank/serial handlers, joypad, OAM DMA, fades, VRAM copy queues
+- [x] The 8 game-mode handlers, the sound engine (ids, commands, channel writers), the enemy slot system and its 12 kinds, the room map format
+- [x] Headless interpreter `tools/emu.py`; dynamic coverage (`tools/coverage.py`) shows every executed instruction is in the static trace
+- [ ] Name the remaining WRAM variables ($c4xx/$c5xx/$c7xx; see docs/RAM_MAP.md for the most used unnamed addresses)
+- [ ] Name the rest of the play logic: `PlayFrame` sub-steps in bank 1, `L_01_4a9d`/`L_01_4e06` (paint blob), special room types (`wRoomType` values 1-9: bonus, boss, ...)
+- [ ] Understand the magic cards (ids, MP costs, effects) and where `wMagicCards` is filled (bonus select)
+- [ ] Decode the animation stream format (`SetObjectAnimation` data: frame ids and durations) and the `ObjectShapeTable` records into structured `db`/`dw`
+- [ ] Classify the remaining `INCBIN` blocks in bank 0 and bank 1 (tilemaps, VRAM job streams, animation data)
+- [ ] 2 player link mode: serial protocol (`SerialSendByte`, `LinkSyncFrame`, `SerialHandler`)
 
 ### Web Port Fixes
 
@@ -199,4 +200,4 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 ### Documentation
 
-- [ ] `docs/architecture_exe.md`: bank layout, call graph, data flow
+- [x] `docs/architecture_exe.md`, `docs/CALLGRAPH.md`, `docs/RAM_MAP.md`
