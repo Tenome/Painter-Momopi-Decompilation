@@ -91,6 +91,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   (7 on a link-cable event, 2 after a round is cleared).
 - Bank 1: $4000-$4156 sound tables, $4157-$487a sound engine (`SoundUpdate`, `PlaySound` queue at `wSoundQueue`, 8 channel records of $20 bytes at
   `wSoundChannels`), the rest is game logic (per-frame object updates for the play mode). Bank 0 `PlaySound` (A = sound id, $80+ for music/effects).
+- Sound engine detail: `SoundUpdateChannel` handles each of the 8 channel records ($20 bytes at `wSoundChannels`); record byte +1 selects the hardware channel and a
+  `jp hl` goes to `SoundWriteChannel1..4` (pulse 1, pulse 2, wave, noise), which write NR1x-NR4x and the shared pan register NR51. `SoundReadNextNote` reads
+  note data from the pointer at +3/+4 of the record (bytes $e0 and up are commands). Field layout is listed at the end of `src/constants.inc`.
 - Emulator: `tools/emu.py` is a small non-cycle-exact interpreter (DMG, MBC1, serial with no partner returns $FF) with an end-of-frame renderer.
 - Graphics loading: bank 2 `$4000` 0x700 bytes and bank 3 `$4000/$5000/$6000/$6e10` blocks are copied to VRAM $8000 (2bpp tiles).
 - Joypad: `ReadJoypad` stores the D-pad in the high nibble and the buttons in the low nibble of `hJoyHeld` (down $80, up $40, left $20, right $10,

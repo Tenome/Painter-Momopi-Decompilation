@@ -53,3 +53,7 @@ DEF wSubState       EQU $c53a   ; bit 0 = special action in progress
 DEF wRoomMap        EQU $c0a7   ; tile map of the room: 16 bytes per row; pixel Y $18 + row*16, column from PixelXToColumn
 DEF hObject2        EQU $ffb5   ; a second object record kept in HRAM (flags at +0, target at $ffb6/$ffb7)
 DEF wPaintRemaining EQU $c520   ; unpainted path cells left; decremented as the painter paints a cell; 0 = round cleared
+; Sound channel record ($20 bytes at wSoundChannels, 8 records; hardware channel = byte +1):
+;  +0 flags (bit 0 note started, bit 2 mute, bit 4 paused, bit 7 active), +1 hardware channel 0-3 (pulse1 pulse2 wave noise),
+;  +2 NR51 pan mask, +3/+4 song data pointer, +7 envelope (NRx2), +8/+9 tempo accumulator and step, +$b/+$c note length and counter,
+;  +$e/+$f pitch, +$12/+$13 frequency written to NRx3/NRx4, +$15 duty/length (NRx1)

@@ -102,3 +102,9 @@ bank,addr,name,comment
 0,1084,DrawDecimalDigits,draws a byte as decimal digits using ByteToBCD
 0,1cfd,DrawTwoDigitNumber,B = value drawn as two BCD digits at HL
 0,31e2,TickObjectTimer,increments $ffd0; Z flag from bit 7 of $ffd1
+1,4404,SoundWriteChannel1,writes pulse channel 1 registers (NR11 NR12 NR13/NR14) from the channel record
+1,4484,SoundWriteChannel2,writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
+1,4504,SoundWriteChannel3,writes wave channel 3 registers (NR32 NR33/NR34)
+1,4572,SoundWriteChannel4,writes noise channel 4 registers (NR42 NR43 NR44)
+1,4613,SoundReadNextNote,reads the next note byte from the channel's song pointer (+3/+4); bytes >= $e0 are commands
+1,47a6,SoundApplyPitchSlide,copies the pitch word at +$e into +$12 (frequency) for the channel writers

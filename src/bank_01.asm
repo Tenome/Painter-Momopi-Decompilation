@@ -373,7 +373,7 @@ SoundUpdateChannel::  ; one of 8 channel records of $20 bytes at wSoundChannels
     ld a, [hl]
     cp a, d
     jr nz, L_01_43d5
-    call L_01_4613
+    call SoundReadNextNote
     ld a, [bc]
     bit 0, a
     jr z, L_01_43d5
@@ -387,7 +387,7 @@ L_01_43d5::
     ld a, [hl]
     bit 2, a
     ret nz
-    call L_01_47a6
+    call SoundApplyPitchSlide
     ld hl, $0001
     add hl, bc
     ld a, [hl]
@@ -412,7 +412,7 @@ L_01_43fb::
     jp hl
 L_01_4403::
     ret
-L_01_4404::
+SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) from the channel record
     ld hl, $0015
     add hl, bc
     ld a, [hl]
@@ -482,7 +482,7 @@ L_01_4473::
     ld [rNR14], a
     ld [$c429], a
     ret
-L_01_4484::
+SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     ld hl, $0015
     add hl, bc
     ld a, [hl]
@@ -552,7 +552,7 @@ L_01_44f3::
     ld [rNR24], a
     ld [$c42c], a
     ret
-L_01_4504::
+SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     ld hl, $0012
     add hl, bc
     ld a, [hl+]
@@ -610,7 +610,7 @@ L_01_4561::
     ld [rNR34], a
     ld [$c42f], a
     ret
-L_01_4572::
+SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     ld hl, $0007
     add hl, bc
     ld a, [$c430]
@@ -702,7 +702,7 @@ L_01_45f4::
     call z, L_01_4473
     pop hl
     ret
-L_01_4613::
+SoundReadNextNote::  ; reads the next note byte from the channel's song pointer (+3/+4); bytes >= $e0 are commands
     ld a, [bc]
     or a, $01
     ld [bc], a
@@ -987,7 +987,7 @@ L_01_479d::
     ld [rNR50], a
     ld [$c315], a
     ret
-L_01_47a6::
+SoundApplyPitchSlide::  ; copies the pitch word at +$e into +$12 (frequency) for the channel writers
     ld hl, $000e
     add hl, bc
     ld a, [hl+]
