@@ -38,7 +38,7 @@ if a.cc:
     run("recompile and build the native runner", [py, "tools/build_port.py", "--cc", a.cc])
     exe = os.path.join(ROOT, "build", "recomp", "game_headless" + (".exe" if os.name == "nt" else ""))
     for seed in range(1, a.seeds + 1):
-        run(f"native stress run, seed {seed}", [exe, os.path.join(ROOT, "orig", "painter_momopie.gb"), str(a.frames), "--press",
+        run(f"native stress run, seed {seed}", [exe, "-", str(a.frames), "--press",
                                                 "250:start:3", "--random", str(seed)])
 else:
     print("SKIP native build (pass --cc)")

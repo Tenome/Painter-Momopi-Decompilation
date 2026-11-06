@@ -44,8 +44,9 @@ python tools/report.py            # write progress/jp/report.json
 ## Playing it natively (Windows)
 
 ```
-python tools/build_port.py --cc path\to\clang.exe    # recompiles your ROM to C and builds build/recomp/game_win.exe
-build\recomp\game_win.exe orig\painter_momopie.gb
+python tools/gb_dis.py --write                                   # once: extract src/ and assets/ from your ROM
+python tools/build_port.py --rgbds E:\rgbds --cc path\to\clang.exe   # builds build/recomp/game_win.exe with the data inside
+build\recomp\game_win.exe                                          # no ROM file needed any more
 ```
 
 Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit, P = pause, M = mute, F2 = palette, Tab = fast forward. The generated C is derived from the game and is not committed.
