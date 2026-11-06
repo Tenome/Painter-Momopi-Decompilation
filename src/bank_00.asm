@@ -1657,22 +1657,22 @@ AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld a, $01
     ld [$c46e], a
     ld a, [$c467]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c46f], a
     ld a, [$c468]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c470], a
     ld a, [$c469]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c471], a
     ld a, [$c46a]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c472], a
     ld a, [$c46b]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c473], a
     ld a, [$c46c]
-    call L_00_10a2
+    call LowNibbleToDigitTile
     ld [$c474], a
     jp CheckExtraLife
 DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
@@ -1697,9 +1697,9 @@ DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     ld [hl], a
     pop hl
     ret
-L_00_10a2::
+LowNibbleToDigitTile::  ; A and $0f then falls into NumberToTile
     and a, $0f
-L_00_10a4::
+NumberToTile::  ; digit in A to its tile id using the table at 10ab
     ld c, a
     ld hl, D_00_10ab
     jp LookupByte
@@ -1919,15 +1919,15 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call ByteToBCD
     ldh a, [hScratch02]
     and a, $0f
-    call L_00_10a4
+    call NumberToTile
     ld [$c450], a
     ldh a, [hScratch02]
     swap a
     and a, $0f
-    call L_00_10a4
+    call NumberToTile
     ld [$c44f], a
     ldh a, [hScratch03]
-    call L_00_10a4
+    call NumberToTile
     ld [$c44e], a
     ld a, $03
     ld [wTextBuf], a
@@ -1941,15 +1941,15 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call ByteToBCD
     ldh a, [hScratch02]
     and a, $0f
-    call L_00_10a4
+    call NumberToTile
     ld [$ffe8], a
     ldh a, [hScratch02]
     swap a
     and a, $0f
-    call L_00_10a4
+    call NumberToTile
     ld [$ffe7], a
     ldh a, [hScratch03]
-    call L_00_10a4
+    call NumberToTile
     ld [$ffe6], a
     ld a, $03
     ld [$ffe4], a
@@ -2285,15 +2285,15 @@ CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation betwee
     ret z
     ld a, [$c47d]
     cp a, $50
-    jr nc, L_00_1769
+    jr nc, ResetMagicCursorAnimation
     inc a
     ld [$c47d], a
     ld a, [$c769]
     and a, $04
-    jr nz, L_00_175d
+    jr nz, SetCursorDefaultAnimation
     ld hl, D_00_1a17
     jr SetCursorAnimation
-L_00_175d::
+SetCursorDefaultAnimation::  ; cursor object animation = D_00_1a30
     ld hl, D_00_1a30
 SetCursorAnimation::  ; HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
     ld a, l
@@ -2301,10 +2301,10 @@ SetCursorAnimation::  ; HL = animation pointer stored in the cursor object recor
     ld a, h
     ld [$c750], a
     ret
-L_00_1769::
+ResetMagicCursorAnimation::  ; clears wMagicScreenFlags bit 2 and sets the default cursor animation
     ld hl, wMagicScreenFlags
     res 2, [hl]
-    jr L_00_175d
+    jr SetCursorDefaultAnimation
 MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B closes or casts; uses $c53b flags
     ld a, [wMagicScreenFlags]
     bit 1, a
@@ -2442,7 +2442,7 @@ MagicCursorUp::  ; moves the magic card cursor one row up
 MagicCursorDown::  ; moves the magic card cursor one row down
     ld a, [wMagicRow]
     cp a, $02
-    jp z, L_00_196f
+    jp z, SetMagicRowAndReturn
     ld a, [wMagicRow]
     inc a
     ld e, $03
@@ -2550,7 +2550,7 @@ DrawMagicPage::  ; draws the three cards of the current row (name
     ld hl, $9dee
     call QueueVramCopyRows
     jp WaitVramCopyDone
-L_00_196f::
+SetMagicRowAndReturn::  ; stores A in wMagicRow (tail of a cursor move; name provisional)
     ld [wMagicRow], a
     ret
 InitMagicScreenState::  ; clears the cursor and card variables and creates the cursor object at wCursorObject
@@ -2953,7 +2953,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld [wTextBuf], a
     ld [$c44d], a
     ld a, [wContinues]
-    call L_00_10a4
+    call NumberToTile
     ld [$c44e], a
 .L_00_1f93:
     ld de, wTextBuf
@@ -3708,14 +3708,14 @@ EndingCreditsWindow::  ; when the scene is done: turns the window on (rWY/rWX) a
     ret
 EndingShowCreditsPage::  ; queues the credit page $c790 from CreditsPageTable
     call EndingScrollStep
-    call L_00_2df1
+    call RunEndingTextListAndWait
     call EndingScrollStep
     ld a, [wCreditsPage]
     ld hl, CreditsPageTable
     call LookupWord
     call QueueVramCopyList
     jp WaitVramCopyDone
-L_00_2df1::
+RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until it is done (name provisional)
     ld bc, D_00_2dff
     call QueueVramCopyList
 .L_00_2df7:

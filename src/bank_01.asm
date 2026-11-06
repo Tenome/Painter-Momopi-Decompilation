@@ -1841,13 +1841,13 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     inc [hl]
     jr .L_01_4e16
 .L_01_4e3a:
-    call L_01_4e47
+    call MagicTimerCountdown
     ld a, $08
     ld [$c449], a
     xor a, a
     ld [wTrailIdx], a
     ret
-L_01_4e47::
+MagicTimerCountdown::  ; decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
     ldh a, [hMagicTimer]
     dec a
     ldh [hMagicTimer], a

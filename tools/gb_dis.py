@@ -39,6 +39,8 @@ class Rom:
         for r in read_csv(os.path.join(ROOT, "labels.csv")):
             if r[0] == "bank":
                 continue
+            if r[2] in self.names.values():
+                raise SystemExit(f"labels.csv: the name {r[2]} is used twice")
             self.names[(int(r[0]), int(r[1], 16))] = r[2]
             if len(r) > 3 and r[3]:
                 self.comments[(int(r[0]), int(r[1], 16))] = r[3]

@@ -387,9 +387,10 @@ bank,addr,name,comment
 0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
 0,39b1,EnemyTurnOrAnimate,like EnemyTurnIfBlocked and then picks the animation table D_00_3ae3 or D_00_3aed (name provisional)
 0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
-0,10a2,LowNibbleToDigitTile,A and $0f then falls into DigitToTile
-0,10a4,DigitToTile,A (0-9) to its tile id with the table at $10ab
+0,10a2,LowNibbleToDigitTile,A and $0f then falls into NumberToTile
 0,175d,SetCursorDefaultAnimation,cursor object animation = D_00_1a30
 0,1769,ResetMagicCursorAnimation,clears wMagicScreenFlags bit 2 and sets the default cursor animation
 0,196f,SetMagicRowAndReturn,stores A in wMagicRow (tail of a cursor move; name provisional)
 0,2df1,RunEndingTextListAndWait,queues the VRAM copy list at $2dff and waits until it is done (name provisional)
+0,10a4,NumberToTile,digit in A to its tile id using the table at 10ab
+1,4e47,MagicTimerCountdown,decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
