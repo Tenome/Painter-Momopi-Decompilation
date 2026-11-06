@@ -69,6 +69,7 @@ class Rom:
 
     def trace(self):
         for b, a in self.seeds:
+            self.targets[(b, a)] = "code"
             if a >= BANK:
                 self.cross_bank[a] = b
         self.trace_once(None)
@@ -84,8 +85,9 @@ class Rom:
             if new:
                 self.trace_once(new)
                 continue
-            if not self.orphan_scan():
+            if not self.orphan_scan() and not self.imm_scan() and not self.table_scan():
                 break
+        self.data_labels()
 
     TERM = ("retu", "jpu", "jru", "jpind")
 
@@ -106,10 +108,11 @@ class Rom:
             if nops > 1 or (n_ins == 0 and self.data[o] in (0x00,)):
                 return False
             if k in ("jp", "jpu", "call"):
-                if tg >= 0x8000 or (tg < BANK and (0, tg) not in self.insns):
+                if tg >= 0x8000 or tg < 0x150 and tg % 8:
                     return False
-                if tg >= BANK and b != 0 and (b, tg) not in self.insns:
-                    return False
+                tb = self.home(tg, b)
+                if (tb, tg) in self.code_bytes and (tb, tg) not in self.insns:
+                    return False          # lands inside another instruction
             if k in ("jr", "jru") and not (0 <= tg < 0x8000):
                 return False
             pc += n
@@ -130,7 +133,7 @@ class Rom:
                 cands.add((b, a + 2))
         found = 0
         for b, a in sorted(cands):
-            if a < BANK * (1 if b else 0) + (BANK if b else 0) or a >= (BANK if b == 0 else 2 * BANK):
+            if not ((a < BANK) if b == 0 else (BANK <= a < 2 * BANK)):
                 continue
             if b >= 2:
                 continue
@@ -138,13 +141,111 @@ class Rom:
                 found += 1
         return found
 
+    def imm_scan(self):
+        """`ld bc/de/hl, imm16` whose value is the start of a plausible routine: a code pointer passed in a register."""
+        found = 0
+        for (b, pc), (n, kind, tgt) in sorted(self.insns.items()):
+            o = off(b, pc)
+            if self.data[o] not in (0x01, 0x11, 0x21):
+                continue
+            t = self.data[o + 1] | self.data[o + 2] << 8
+            if t < 0x150 or t >= 0x8000:
+                continue
+            if t >= BANK and b == 0:
+                continue
+            tb = self.home(t, b)
+            if tb >= 2 and b == 0:
+                continue
+            if (tb, t) in self.code_bytes:
+                continue
+            if self.plausible(tb, t) and self.try_run(tb, t):
+                found += 1
+        return found
+
+    def data_labels(self):
+        """Label ROM data that code points at with `ld bc/de/hl, imm16` (and `ld [x], imm` style loads of the same)."""
+        n = 0
+        for (b, pc) in sorted(self.insns):
+            o = off(b, pc)
+            if self.data[o] not in (0x11, 0x21):      # not BC: it usually holds a length
+                continue
+            t = self.data[o + 1] | self.data[o + 2] << 8
+            if not (0x150 <= t < 0x8000) or (b == 0 and t >= BANK):
+                continue
+            tb = self.home(t, b)
+            if (tb, t) in self.code_bytes or (tb, t) in self.targets:
+                continue
+            self.targets[(tb, t)] = "data"
+            n += 1
+        return n
+
+    def table_scan(self):
+        """Runs of >= 4 words that all point at code (known instruction starts or plausible routines): jump tables."""
+        found = 0
+        for b in (0, 1):
+            lo, hi = (0x150, BANK) if b == 0 else (BANK, 2 * BANK)
+            a = lo
+            while a + 1 < hi:
+                if (b, a) in self.code_bytes or (b, a + 1) in self.code_bytes:
+                    a += 1
+                    continue
+                chain = []
+                q = a
+                while q + 1 < hi and (b, q) not in self.code_bytes and (b, q + 1) not in self.code_bytes:
+                    o = off(b, q)
+                    t = self.data[o] | self.data[o + 1] << 8
+                    tb = self.home(t, b)
+                    if not (0x150 <= t < 0x8000) or (b == 0 and t >= BANK) or tb >= 2:
+                        break
+                    if (tb, t) in self.insns and self.targets.get((tb, t)) == "code":
+                        chain.append((q, t))
+                    elif (tb, t) not in self.code_bytes and self.plausible(tb, t):
+                        chain.append((q, t))
+                    else:
+                        break
+                    q += 2
+                if len(chain) >= 4:
+                    snap = (dict(self.insns), set(self.code_bytes), dict(self.targets), dict(self.dwords), set(self.cross))
+                    ok = True
+                    for q, t in chain:
+                        tb = self.home(t, b)
+                        if (tb, t) not in self.insns and not self.try_run(tb, t):
+                            ok = False
+                            break
+                    if ok:
+                        for q, t in chain:
+                            self.dwords[(b, q)] = t
+                            self.code_bytes.update({(b, q), (b, q + 1)})
+                            self.targets[(self.home(t, b), t)] = "code"
+                        found += 1
+                        a = chain[-1][0] + 2
+                        continue
+                    self.rollback(snap)
+                a += 1
+        return found
+
     def try_run(self, b, a):
         """Trace (b,a); keep it only if every branch lands on an instruction start."""
         snap = (dict(self.insns), set(self.code_bytes), dict(self.targets), dict(self.dwords), set(self.cross))
         self.targets[(b, a)] = "code"
         self.run([(b, a)])
-        if self.cross - snap[4] - set(self.cross_bank):
-            return self.rollback(snap)
+        cb = dict(self.cross_bank)
+        while True:
+            pending = self.cross - set(self.cross_bank)
+            if not pending:
+                break
+            for t in sorted(pending):
+                # bank 1 is the only switchable code bank (banks 2-3 are graphics), so cross-bank calls enter it
+                if (1, t) in self.insns:
+                    self.cross_bank[t] = 1
+                    self.targets[(1, t)] = "code"
+                    continue
+                if not self.plausible(1, t):
+                    self.cross_bank = cb
+                    return self.rollback(snap)
+                self.cross_bank[t] = 1
+                self.targets[(1, t)] = "code"
+                self.run([(1, t)])
         for key in set(self.insns) - set(snap[0]):
             n, kind, tg = self.insns[key]
             if kind in ("jr", "jru", "jp", "jpu", "call"):
@@ -158,6 +259,7 @@ class Rom:
 
     def rollback(self, snap):
         self.insns, self.code_bytes, self.targets, self.dwords, self.cross = snap
+        self.cross_bank = {k: v for k, v in self.cross_bank.items() if k in self.cross or (v, k) in self.targets}
         return False
 
     def guess_bank(self, t):
@@ -265,7 +367,7 @@ class Rom:
                 b = self.cross_bank.get(t, 0)
             if t >= 0x8000 or (b, t) not in self.targets and (b, t) not in self.names:
                 return f"${t:04x}"
-            return self.names.get((b, t)) or (f"L_{b:02x}_{t:04x}")
+            return self.names.get((b, t)) or (f"{'D' if self.targets.get((b, t)) == 'data' else 'L'}_{b:02x}_{t:04x}")
         return f
 
     def emit(self, bank):
@@ -296,6 +398,11 @@ class Rom:
             if key in self.insns:
                 n, kind, tgt = self.insns[key]
                 _, text, _, _ = sm83.decode(self.data, pc, base + pc - start, lab)
+                if self.data[base + pc - start] in (0x11, 0x21) and not (bank == 0 and
+                        (self.data[base + pc - start + 1] | self.data[base + pc - start + 2] << 8) >= BANK):
+                    v = self.data[base + pc - start + 1] | self.data[base + pc - start + 2] << 8
+                    if 0x150 <= v < 0x8000 and self.targets.get((self.home(v, bank), v)) == "data":
+                        text = text.rsplit("$", 1)[0] + lab(v)
                 if kind not in ("jr", "jru", "jp", "jpu", "call"):
                     text = re.sub(r"\$([0-9a-f]{4})", lambda m: self.by_value.get(int(m[1], 16), m[0]), text)
                 out.append("    " + text)

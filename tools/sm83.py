@@ -77,7 +77,7 @@ def decode(rom, pc, off, label=None):
     if tpl is None:
         return 1, None, "bad", None
     n = length(tpl)
-    if off + n > len(rom):
+    if off + n > len(rom) or (op == 0x10 and rom[off + 1] != 0):
         return 1, None, "bad", None
     kind, target = "plain", None
     if "j8" in tpl:
@@ -131,7 +131,7 @@ def _build_encoder():
     for op, tpl in list(OPS.items()):
         pat = re.escape(tpl)
         pat = pat.replace(re.escape("+e8"), "@@SP@@").replace("e8", "@@E8@@")
-        for ph, rx in (("j8", r"(?P<j8>[A-Z]\w*|\$[0-9a-f]{4})"), ("a16", r"(?P<a16>[A-Z]\w*|\$[0-9a-f]{4})"), ("n16", r"\$(?P<n16>[0-9a-f]{4})"),
+        for ph, rx in (("j8", r"(?P<j8>[A-Z]\w*|\$[0-9a-f]{4})"), ("a16", r"(?P<a16>[A-Z]\w*|\$[0-9a-f]{4})"), ("n16", r"(?P<n16>\$[0-9a-f]{4}|[A-Z]\w*)"),
                        ("a8", r"\$ff(?P<a8>[0-9a-f]{2})"), ("n8", r"\$(?P<n8>[0-9a-f]{2})")):
             pat = pat.replace(ph, rx)
         pat = pat.replace("@@SP@@", r" (?P<sp>[+-]) (?P<e8>\d+)").replace("@@E8@@", r"(?P<e8>-?\d+)")
@@ -161,7 +161,7 @@ def encode(text, pc, resolve):
             t = resolve(g["a16"])
             return bytes([op, t & 0xFF, t >> 8])
         if g.get("n16") is not None:
-            t = int(g["n16"], 16)
+            t = resolve(g["n16"])
             return bytes([op, t & 0xFF, t >> 8])
         if g.get("a8") is not None:
             return bytes([op, int(g["a8"], 16)])
