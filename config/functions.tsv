@@ -54,7 +54,7 @@ bank	addr	size	name
 0	0866	324	DrawObjectParts
 0	09aa	1	L_00_09aa
 0	09ab	38	AddOamSprite
-0	09d1	15	L_00_09d1
+0	09d1	15	MoveObjectHalfStep
 0	09e0	13	ClampObjectToRoom
 0	09ed	38	AddObjectFieldSigned
 0	0a13	44	AddObjectField
@@ -168,9 +168,9 @@ bank	addr	size	name
 0	3830	103	StoreEnemySlot
 0	3897	103	LoadEnemySlot
 0	38fe	48	EnemyKindIdle
-0	392e	31	L_00_392e
+0	392e	31	EnemyPaintUnderB0M
 0	394d	9	EnemyRemoveIfPlayerDead
-0	3956	91	L_00_3956
+0	3956	91	EnemySelectAnimByKind
 0	39b1	72	EnemyTurnOrAnimate
 0	39f9	31	EnemyGridStep
 0	3a18	93	EnemyChooseDirection
@@ -182,10 +182,10 @@ bank	addr	size	name
 0	3b99	20	EnemyFlagOnPaintedTile
 0	3bad	17	EnemyInitAnim3bbe
 0	3bdc	114	EnemyKind11
-0	3c4e	9	L_00_3c4e
-0	3c57	23	L_00_3c57
-0	3c6e	7	L_00_3c6e
-0	3c75	8	L_00_3c75
+0	3c4e	9	EnemyKind7SetAnimation
+0	3c57	23	EnemyKind7Start
+0	3c6e	7	EnemyStoreAuxToTile
+0	3c75	8	EnemyClearTileSaveStep
 0	3c7d	10	EnemyMapTile
 0	3c91	36	EnemyKind7
 0	3cb5	99	EnemyKind7Update

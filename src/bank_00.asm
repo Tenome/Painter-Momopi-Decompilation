@@ -1145,7 +1145,7 @@ AddOamSprite::  ; appends one OAM entry from hScratch values to the shadow at $c
     inc a
     ldh [hOamCount], a
     ret
-L_00_09d1::
+MoveObjectHalfStep::  ; adds the X and Y deltas at offsets 6 and 8 to the position (name provisional)
     ld e, $06
     ld a, e
     ldh [hScratch00], a
@@ -4967,13 +4967,13 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call EnemyChooseDirection
     call EnemyTurnOrAnimate
     call EnemyPaintStep
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
-    call L_00_3956
+    call EnemySelectAnimByKind
     call SelectObject2
     jp DrawObject
-L_00_392e::
+EnemyPaintUnderB0M::  ; with the B.O.M card active paints the cell under an enemy that is not frozen (name provisional)
     ld a, [wActiveMagic]
     cp a, $05
     ret nz
@@ -4996,7 +4996,7 @@ EnemyRemoveIfPlayerDead::  ; removes the enemy when wPlayerDir bit 5 is set
     bit 5, a
     ret z
     jp RemoveEnemy
-L_00_3956::
+EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (D_00_3acf and D_00_3ad9) or the default (name provisional)
     ldh a, [hEnemyKind]
     cp a, $06
     jr z, .L_00_3963
@@ -5231,7 +5231,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
 .L_00_3b26:
     call EnemyTurnOrAnimate
     call EnemyPaintStep
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call SetEnemyAnimation
@@ -5319,7 +5319,7 @@ D_00_3bd7::
 EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call TickObjectTimer
     jr nz, .L_00_3be4
-    jp L_00_3c57
+    jp EnemyKind7Start
 .L_00_3be4:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5329,13 +5329,13 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     jp nz, EnemyDefeated
     set 1, a
     ldh [hEnemyDir], a
-    call L_00_3c6e
+    call EnemyStoreAuxToTile
     jp EnemyDefeated
 .L_00_3bfb:
     ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_00_3c09
-    call L_00_3c75
+    call EnemyClearTileSaveStep
     ld hl, hEnemyDir
     set 0, [hl]
 .L_00_3c09:
@@ -5368,16 +5368,16 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     ld [hl], a
     jr .L_00_3c45
 .L_00_3c42:
-    call L_00_3c75
+    call EnemyClearTileSaveStep
 .L_00_3c45:
-    call L_00_3c4e
+    call EnemyKind7SetAnimation
     call SelectObject2
     jp DrawObject
-L_00_3c4e::
+EnemyKind7SetAnimation::  ; animation pair at $3c87 and $3c8c (name provisional)
     ld de, AnimFrames0_3c87
     ld bc, D_00_3c8c
     jp SetAnimationVariant
-L_00_3c57::
+EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87 (name provisional)
     ld a, $20
     ldh [hEnemyCounter], a
     call EnemyMapTile
@@ -5388,12 +5388,12 @@ L_00_3c57::
     ldh [hEnemyDir], a
     ld de, AnimFrames0_3c87
     jp SetObjectAnimation
-L_00_3c6e::
+EnemyStoreAuxToTile::  ; stores hEnemyAux into the map cell under the enemy (name provisional)
     call EnemyMapTile
     ldh a, [hEnemyAux]
     ld [hl], a
     ret
-L_00_3c75::
+EnemyClearTileSaveStep::  ; hEnemyStep = map tile under the enemy and clears that cell (name provisional)
     call EnemyMapTile
     ldh [hEnemyStep], a
     xor a, a

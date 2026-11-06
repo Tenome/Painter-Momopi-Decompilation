@@ -2932,7 +2932,7 @@ EnemyKind9::  ; enemy kind 9
     call EnemyComputeBlockedDirs
     call EnemyAimAtPlayer
     call EnemyTurnOrAnimate
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
@@ -3008,7 +3008,7 @@ EnemyKind2::  ; enemy kind 2
     call EnemyShootIfReady
     call L_01_58ee
     call ProjectileFrame
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call SelectKind2Animation
@@ -3171,7 +3171,7 @@ EnemyKind3::  ; enemy kind 3
     call EnemyFlagOnPaintedTile
     call EnemyTurnIfBlocked
     call MoveAndClampObject
-    call L_00_392e
+    call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind3Animation
     jp DrawObject
