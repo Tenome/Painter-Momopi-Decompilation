@@ -1716,7 +1716,7 @@ L_00_110e::
 L_00_1111::
     ld hl, D_00_0c49
     call LookupByte
-    ld [$c520], a
+    ld [wPaintRemaining], a
     call RequestOamDma
     call ClearOamShadowY
     call L_00_1973
@@ -4273,7 +4273,7 @@ L_00_3541::
     ld de, D_00_3ac4
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ld hl, $c520
+    ld hl, wPaintRemaining
     inc [hl]
     ret
 L_00_3599::

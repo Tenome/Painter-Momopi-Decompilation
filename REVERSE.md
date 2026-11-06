@@ -79,7 +79,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   | Mode | Handler | Screen |
   |---|---|---|
   | 0 | `Mode0_Title` | title: "Painter Momopie" logo, 1 PLAYER / 2 PLAYER, (c)1990 Sigma Enterprises, LICENSED BY NINTENDO; boot-time serial handshake |
-  | 1 | `Mode1_Play` | gameplay: a painter walks around a room (kitchen room) with a tiled floor |
+  | 1 | `Mode1_Play` | gameplay: the painter (witch hat) walks the path cells of a room and paints them white; enemy sprites roam the room |
   | 2 | `Mode2_BonusSelect` | "SELECT JUST ONE!" with three choices A, B, C |
   | 3 | `Mode3_RoundIntro` | "ROUND 01 / KITCHEN ROOM / lives x 03 / READY !!" |
   | 4 | `Mode4_GameOver` | GAME OVER |
@@ -97,6 +97,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   start $08, select $04, B $02, A $01). Button codes on the title screen (checked in the title loop, `TitleLoop` $2a27): Down+Right+A+B ($93) jumps to mode 6
   (the ending scene; confirmed in the emulator), Up+Select+A+B ($47) sets bit 0 of $c49c (effect not yet identified; Start then begins a normal game).
 - Serial: `SerialHandler` ($0221) and `WaitSerialByte` ($0356): the game has a link-cable mode (`hSerialByte`).
+
+- **Play rules seen in the emulator**: the room map (`wRoomMap`) marks the path cells; walking over an unpainted path cell paints it and decrements `wPaintRemaining`
+  ($c520, 80 at the start of round 1); when it reaches 0 `RoundCleared` runs (sound $8a), and `wGameFlags` bit 0 makes `PlayFrame` finish the clear
+  sequence. `PlayerDeath` (sound $8b) runs when `wPlayerDir` bit 5 is set by `L_01_4c4e`.
 
 ### Data Structures
 

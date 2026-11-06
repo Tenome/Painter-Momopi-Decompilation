@@ -637,7 +637,7 @@ bank	addr	size	name
 1	4feb	27	L_01_4feb
 1	5006	51	L_01_5006
 1	5039	11	L_01_5039
-1	5044	43	PlayerCaught
+1	5044	43	RoundCleared
 1	506f	4	L_01_506f
 1	5073	40	L_01_5073
 1	509b	22	L_01_509b
@@ -651,7 +651,7 @@ bank	addr	size	name
 1	5183	10	L_01_5183
 1	51ad	90	L_01_51ad
 1	5207	28	L_01_5207
-1	5223	22	PlayerRoundCleared
+1	5223	22	PlayerDeath
 1	5239	46	L_01_5239
 1	5267	23	L_01_5267
 1	527e	7	L_01_527e

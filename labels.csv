@@ -63,8 +63,8 @@ bank,addr,name,comment
 1,510f,PlayerSetDirection,dpad to wPlayerDir and the animation index
 1,4fd6,CheckPlayerTileCollision,
 1,4b1f,SelectPlayerAnimation,picks the animation table by direction
-1,5044,PlayerCaught,restores palettes; plays sound $8a; draws the player once
-1,5223,PlayerRoundCleared,plays sound $8b and runs the clear animation
+1,5044,RoundCleared,runs when every path cell is painted ($c520 reached 0): restores palettes; plays sound $8a; clear animation
+1,5223,PlayerDeath,waits $27 frames; plays sound $8b; runs the death animation (wPlayerDir bit 5)
 2,4000,SpriteTiles,2bpp sprite tiles (characters and enemies): first $700 bytes are copied to VRAM $8000
 2,4700,SpriteTilesPart2,more sprite tiles; $900 bytes at an offset chosen from wRoomIndex are copied to $8700
 2,7400,Bank2Padding,$ff padding to the end of the bank

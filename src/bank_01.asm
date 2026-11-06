@@ -1517,7 +1517,7 @@ L_01_4bc6::
 PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the player
     ld a, [wGameFlags]
     bit 0, a
-    jp nz, PlayerCaught
+    jp nz, RoundCleared
     ldh a, [hSerialByte]
     bit 2, a
     jr z, L_01_4bf6
@@ -1529,7 +1529,7 @@ L_01_4bf6::
     ld a, [wPlayerDir]
     bit 5, a
     jp z, L_01_4c01
-    jp PlayerRoundCleared
+    jp PlayerDeath
 L_01_4c01::
     call PlayerAction
     ld a, [wRoomType]
@@ -1903,9 +1903,9 @@ L_01_4ec5::
     call L_01_4edd
     call L_01_4f07
     pop bc
-    ld hl, $c520
+    ld hl, wPaintRemaining
     dec [hl]
-    jp z, PlayerCaught
+    jp z, RoundCleared
     jr L_01_4ebc
 L_01_4edd::
     xor a, a
@@ -2104,10 +2104,10 @@ L_01_5006::
 L_01_5039::
     call QueueVramCopyRows
     call WaitVramCopyDone
-    ld hl, $c520
+    ld hl, wPaintRemaining
     dec [hl]
     ret nz
-PlayerCaught::  ; restores palettes; plays sound $8a; draws the player once
+RoundCleared::  ; runs when every path cell is painted ($c520 reached 0): restores palettes; plays sound $8a; clear animation
     ld a, [wPlayerStatus]
     bit 2, a
     jr nz, L_01_506f
@@ -2317,7 +2317,7 @@ L_01_5207::
     ld a, $06
     ld [$c440], a
     ret
-PlayerRoundCleared::  ; plays sound $8b and runs the clear animation
+PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wPlayerDir bit 5)
     ld a, [wPlayerStatus]
     bit 2, a
     jr nz, L_01_5239
