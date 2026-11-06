@@ -120,3 +120,5 @@ bank,addr,type,name,count
 0,2ec6,textpage,credits_2ec6,0
 0,2ee5,textpage,credits_2ee5,0
 0,2eff,textpage,credits_last_page_2eff,0
+0,1d90,textpage,text_round_intro,0
+0,2085,textpage,text_continue,0
