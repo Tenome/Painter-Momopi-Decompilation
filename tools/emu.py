@@ -42,6 +42,7 @@ class GB:
         self.watch = set()
         self.breaks = set()    # pcs to log
         self.hits = []         # (frame, pc, a)
+        self.coverage = None   # set of (bank, pc) of executed instructions when not None
 
     # ---- memory ----
     def rd(self, a):
@@ -416,6 +417,8 @@ class GB:
         target = 70224
         t = 0
         while t < target:
+            if self.coverage is not None:
+                self.coverage.add((self.bank if self.pc >= 0x4000 and self.pc < 0x8000 else 0, self.pc))
             if self.pc in self.breaks:
                 self.hits.append((self.frame, self.pc, self.a))
             c = self.step()
