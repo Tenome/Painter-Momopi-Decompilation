@@ -117,6 +117,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   rounds 5-7 add kinds 7 and 11; round 8 = kind 8 (stationary); round 9 and 11 = kind 11; rounds 13-15 = kinds 0 and 10; round 16 = kinds 3, 5 and 8; rounds 17-32
   repeat 1-16. `EnemyBehaviorTable` has 12 entries (kinds 0-11).
 
+- **Magic screen** (found by pressing B in play with `tools/emu.py`): MOMOPIE'S MAGIC shows SCR (8 BCD score digits at `wScoreDigits`), Rn (`wRound`), MP (`wMagicPoints`,
+  16 bit, initial value from `MagicPointsTable` by round: 50 in round 1), TIME (`hTimeSeconds`, counted down once per `hTimeFrames` = 60 frames) and three magic cards
+  (the first is S. UP for 10 MP; the tile set in bank 3 also contains the cards SEALED, CLEAR, T. STOP and others). `ShowMagicScreen` ($121c) builds it from `TilesIcons`.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

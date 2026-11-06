@@ -37,7 +37,7 @@ bank,addr,name,comment
 0,01ff,LoadTilesBank3,copy BC bytes from bank 3 HL to VRAM $8000
 0,0210,SerialStartTransfer,link port: clears internal clock bit; sets transfer start
 0,0221,SerialHandler,serial interrupt: stores received byte state in hSerialByte flags
-0,1462,TimerValueTable,16-bit values indexed by $c522 loaded into $c44a/$c44b
+0,1462,MagicPointsTable,16 bit MP per round (round 1 = 50)
 0,29ea,Mode0_Title,title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
 0,10b5,Mode1_Play,gameplay in a room (paint the floor); loads tiles of bank 2
 0,2497,Mode2_BonusSelect,SELECT JUST ONE! choose A/B/C
@@ -182,7 +182,7 @@ bank,addr,name,comment
 0,0050,TimerVector,reti: the timer interrupt is not used
 0,0058,SerialVector,jp SerialHandler
 0,0060,JoypadVector,reti: the joypad interrupt is not used
-0,1438,InitRoundTimer,loads the round countdown $c44a/$c44b from TimerValueTable (or $0140 in a link game)
+0,1438,InitMagicPoints,loads the magic points ($c44a/$c44b) from MagicPointsTable by round ($0140 in a link game)
 0,13e6,StartRoundMusic,plays the song for the current round (id from a table indexed by wRound/4) and starts the frame countdown
 0,2b0a,PickRandomRound,title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
 0,1973,InitCursorMenu,clears the menu variables and creates the cursor object at wCursorObject
@@ -229,3 +229,5 @@ bank,addr,name,comment
 0,3bdc,EnemyKind11,enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
 1,57f0,EnemyKind9,enemy kind 9
 1,5513,EnemyKind10,enemy kind 10 (rounds 14 and 30)
+0,121c,ShowMagicScreen,B button in play: MOMOPIE'S MAGIC screen (score, round, MP, time, three magic cards) until closed
+0,100b,AddScore,adds to the BCD score digits at wScoreDigits

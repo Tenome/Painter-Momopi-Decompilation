@@ -14,8 +14,8 @@ DEF hObjPtrHi       EQU $ffd6
 DEF hOamCount       EQU $ffd9
 DEF hRngCounter     EQU $ffda   ; incremented while the game waits for VBlank: cheap random source
 DEF hFrameSpin      EQU $ffdb
-DEF hCountdownLo    EQU $ffe0   ; 16-bit frame countdown (reloaded with 60)
-DEF hCountdownHi    EQU $ffe1
+DEF hTimeFrames     EQU $ffe0   ; frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds)
+DEF hTimeSeconds    EQU $ffe1   ; seconds left in the round (shown as TIME)
 DEF hSerialByte     EQU $ffeb   ; byte received over the link port
 DEF wVramCopyFlags  EQU $c0a0   ; bit0 pending bit7 list mode
 DEF wVramListPtrHi  EQU $c0a1
@@ -140,3 +140,5 @@ DEF wPaintObject    EQU $c4fe   ; the paint blob object record (tested by CheckP
 DEF wCursorObject   EQU $c74e   ; menu cursor object record (8 bit position variant, drawn by DrawObjectBytePos)
 DEF wCursorX        EQU $c754
 DEF wCursorY        EQU $c755   ; title screen: $64 = 1 PLAYER, $74 = 2 PLAYER
+DEF wMagicPoints    EQU $c44a   ; 16 bit MP (MP 050 on the magic screen)
+DEF wScoreDigits    EQU $c464   ; 8 BCD digits of the score (SCR on the magic screen)

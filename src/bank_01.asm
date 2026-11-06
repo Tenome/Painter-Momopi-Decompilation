@@ -1631,20 +1631,20 @@ PlayerAction::  ; handles the A button (paint action)
     ld c, a
     call LookupByte
     ld c, a
-    ld a, [$c44a]
+    ld a, [wMagicPoints]
     sub a, c
     ld e, a
     jr z, LinkSyncFrame
 L_01_4ca7::
     jr c, .L_01_4cae
-    ld [$c44a], a
+    ld [wMagicPoints], a
     jr L_01_4cbc
 .L_01_4cae:
     ld a, [$c44b]
     and a, a
     jr z, L_01_4ceb
     ld a, e
-    ld [$c44a], a
+    ld [wMagicPoints], a
     xor a, a
     ld [$c44b], a
 L_01_4cbc::
@@ -1708,7 +1708,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     call nz, L_01_4d3e
     call SerialStartTransfer
     xor a, a
-    ld [$c44a], a
+    ld [wMagicPoints], a
     ret
 L_01_4d3e::
     ld hl, hSerialByte

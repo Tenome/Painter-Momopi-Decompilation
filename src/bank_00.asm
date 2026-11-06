@@ -260,22 +260,22 @@ VBlankHandler::  ; runs OAM DMA; queued VRAM copies; scroll; bank 1 per-frame up
     ldh a, [hVBlankTasks]
     bit 4, a
     jr z, .L_00_0348
-    ldh a, [hCountdownHi]
+    ldh a, [hTimeSeconds]
     and a, a
     jr z, .L_00_0348
-    ldh a, [hCountdownLo]
+    ldh a, [hTimeFrames]
     sub a, $01
-    ldh [hCountdownLo], a
+    ldh [hTimeFrames], a
     jr nc, .L_00_0348
-    ldh a, [hCountdownHi]
+    ldh a, [hTimeSeconds]
     sbc a, $00
-    ldh [hCountdownHi], a
+    ldh [hTimeSeconds], a
     jr nc, .L_00_0344
     ld hl, hVBlankTasks
     res 4, [hl]
 .L_00_0344:
     ld a, $3c
-    ldh [hCountdownLo], a
+    ldh [hTimeFrames], a
 .L_00_0348:
     ld hl, hVBlankFlag
     set 0, [hl]
@@ -1627,9 +1627,9 @@ D_00_0fbd::
     INCBIN "orig/painter_momopie.gb", $00fbd, 29
 D_00_0fda::
     INCBIN "orig/painter_momopie.gb", $00fda, 49
-L_00_100b::
+AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld bc, $0000
-    ld hl, $c464
+    ld hl, wScoreDigits
     ld a, e
     add a, [hl]
     ld [$c47a], a
@@ -1755,7 +1755,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call RequestOamDma
     call ClearOamShadowY
     call InitCursorMenu
-    call InitRoundTimer
+    call InitMagicPoints
     call ResetCamera
     ld a, [$c51f]
     bit 2, a
@@ -1789,7 +1789,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld hl, wGameFlags
     res 5, [hl]
     ld a, $3c
-    ldh [hCountdownLo], a
+    ldh [hTimeFrames], a
     ld a, [wRound]
     cp a, $21
     jr nz, .L_00_117f
@@ -1802,7 +1802,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld hl, D_00_14f0
     call LookupByte
 .L_00_118a:
-    ldh [hCountdownHi], a
+    ldh [hTimeSeconds], a
     ldh [$ffe3], a
     ld hl, hVBlankTasks
     set 4, [hl]
@@ -1810,7 +1810,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call WaitFrameAndSyncOam
     call ReadJoypad
     call PlayFrame
-    call L_00_121c
+    call ShowMagicScreen
     call UpdateCamera
     call L_00_31f1
     call UpdateAllEnemies
@@ -1860,7 +1860,7 @@ L_00_11ec::
     bit 5, a
     jr nz, .L_00_11ff
 .L_00_11f8:
-    ldh a, [hCountdownHi]
+    ldh a, [hTimeSeconds]
     ld b, a
     ldh a, [$ffe2]
     or a, b
@@ -1879,7 +1879,7 @@ L_00_11ec::
     ldh [hScratch0A], a
     call L_00_37f5
     jp SerialStartTransfer
-L_00_121c::
+ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld a, [wPlayerDir]
     bit 5, a
     ret nz
@@ -1924,7 +1924,7 @@ L_00_121c::
     call L_00_0628
     ld a, [$c44b]
     ld c, a
-    ld a, [$c44a]
+    ld a, [wMagicPoints]
     call ByteToBCD
     ldh a, [hScratch02]
     and a, $0f
@@ -1945,7 +1945,7 @@ L_00_121c::
     ld hl, $9ca5
     ld de, $c44c
     call L_00_0628
-    ldh a, [hCountdownHi]
+    ldh a, [hTimeSeconds]
     ld c, $00
     call ByteToBCD
     ldh a, [hScratch02]
@@ -1994,7 +1994,7 @@ L_00_121c::
 .L_00_1325:
     ld e, $00
 .L_00_1327:
-    ld a, [$c44a]
+    ld a, [wMagicPoints]
     ldh [hScratch00], a
 L_00_132c::
     ldh a, [hScratch00]
@@ -2141,12 +2141,12 @@ TableIndexFromRound::  ; A = (A-1)&15 or 16 for 32; then LookupWord
     and a, $0f
 .L_00_1435:
     jp LookupWord
-InitRoundTimer::  ; loads the round countdown $c44a/$c44b from TimerValueTable (or $0140 in a link game)
+InitMagicPoints::  ; loads the magic points ($c44a/$c44b) from MagicPointsTable by round ($0140 in a link game)
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_00_144a
     ld a, $40
-    ld [$c44a], a
+    ld [wMagicPoints], a
     ld a, $01
     ld [$c44b], a
     jr .L_00_145e
@@ -2155,22 +2155,22 @@ InitRoundTimer::  ; loads the round countdown $c44a/$c44b from TimerValueTable (
     sla a
     ld c, a
     ld b, $00
-    ld hl, TimerValueTable
+    ld hl, MagicPointsTable
     add hl, bc
     ld a, [hl+]
     ld [$c44b], a
     ld a, [hl]
-    ld [$c44a], a
+    ld [wMagicPoints], a
 .L_00_145e:
     xor a, a
     ldh [$ffea], a
     ret
-TimerValueTable::  ; 16-bit values indexed by $c522 loaded into $c44a/$c44b
+MagicPointsTable::  ; 16 bit MP per round (round 1 = 50)
     INCBIN "orig/painter_momopie.gb", $01462, 68
 ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     xor a, a
     ld [$c488], a
-    ld [$c464], a
+    ld [wScoreDigits], a
     ld [$c465], a
     ld [$c466], a
     ld [$c467], a
@@ -2368,7 +2368,7 @@ L_00_1770::
     ld hl, RoomTypeTable
     add hl, bc
     ld d, [hl]
-    ld a, [$c44a]
+    ld a, [wMagicPoints]
     cp a, d
     jr nc, .L_00_17e2
     ld a, [$c44b]
@@ -3123,7 +3123,7 @@ L_00_253b::
 L_00_2558::
     ld d, $01
     ld e, $00
-    call L_00_100b
+    call AddScore
     ld a, $e0
     ldh [hScratch00], a
 .L_00_2563:
@@ -3908,7 +3908,7 @@ L_00_31f1::
 .L_00_324a:
     ldh a, [$ffe9]
     ld e, a
-    ldh a, [hCountdownHi]
+    ldh a, [hTimeSeconds]
     ld d, a
     ldh a, [$ffe3]
     sub a, e
@@ -4123,7 +4123,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     call LookupByte
     ld e, a
     ld d, $00
-    call L_00_100b
+    call AddScore
     ld hl, $c49e
     res 7, [hl]
     jp L_00_3525

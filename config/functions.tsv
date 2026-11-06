@@ -71,7 +71,7 @@ bank	addr	size	name
 0	0bf8	50	MultiplyByDE
 0	0c2a	31	L_00_0c2a
 0	0d0e	47	UnpackRoomMap
-0	100b	121	L_00_100b
+0	100b	121	AddScore
 0	1084	30	DrawDecimalDigits
 0	10a2	2	L_00_10a2
 0	10a4	7	L_00_10a4
@@ -79,14 +79,14 @@ bank	addr	size	name
 0	11b4	51	L_00_11b4
 0	11e7	5	L_00_11e7
 0	11ec	48	L_00_11ec
-0	121c	272	L_00_121c
+0	121c	272	ShowMagicScreen
 0	132c	186	L_00_132c
 0	13e6	26	StartRoundMusic
 0	1400	9	L_00_1400
 0	1409	32	L_00_1409
 0	1429	1	TableIndexFromRoundDec
 0	142a	14	TableIndexFromRound
-0	1438	42	InitRoundTimer
+0	1438	42	InitMagicPoints
 0	14a6	62	ClearRoundVariables
 0	1740	29	CursorBlinkStep
 0	175d	3	L_00_175d
