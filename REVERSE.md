@@ -105,6 +105,11 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   ($c520, 80 at the start of round 1); when it reaches 0 `RoundCleared` runs (sound $8a), and `wGameFlags` bit 0 makes `PlayFrame` finish the clear
   sequence. `PlayerDeath` (sound $8b) runs when `wPlayerDir` bit 5 is set by `L_01_4c4e`.
 
+- **Enemies**: 16 slots of $20 bytes at `wEnemySlots` ($c542-$c741), addressed through `EnemySlotTable` ($37af). `UpdateEnemyLoop` copies each active slot
+  into the HRAM record `hObject2` ($ffb5-$ffd4, `LoadEnemySlot`), runs `UpdateEnemy`, and copies it back (`StoreEnemySlot`). Record +1/+2 is the animation
+  pointer (`SetObjectAnimation`), so the many `ld bc, $3abf; jp L_00_3649` sequences select animation data. Writers of `hObject2` flags were found with
+  write watches in `tools/emu.py` ($38a0, $99c, $3b79, $3b87 flip bit 5 = facing).
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,

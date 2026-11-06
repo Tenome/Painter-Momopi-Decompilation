@@ -1778,7 +1778,7 @@ L_00_1193::
     call L_00_121c
     call L_01_5301
     call L_00_31f1
-    call L_00_3713
+    call UpdateAllEnemies
     call L_00_11ec
     call L_00_11b4
     ld hl, $ffde
@@ -4381,14 +4381,14 @@ D_00_363d::
 L_00_3643::
     call L_00_0b66
     jp L_00_09e0
-L_00_3649::
+SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [$ffd0]
     and a, $08
     jr z, L_00_3651
     push bc
     pop de
 L_00_3651::
-    jp SetObjectTarget
+    jp SetObjectAnimation
 SelectObject2::  ; hObjPtr = hObject2
     ld hl, hObject2
     ld a, l
@@ -4396,7 +4396,7 @@ SelectObject2::  ; hObjPtr = hObject2
     ld a, $ff
     ldh [hObjPtrHi], a
     ret
-SetObjectTarget::  ; stores DE at $ffb6/$ffb7 (movement target)
+SetObjectAnimation::  ; stores DE as the animation pointer (record +1/+2) of hObject2
     ld a, e
     ldh [$ffb6], a
     ld a, d
@@ -4492,8 +4492,8 @@ L_00_36fa::
     ld a, $0f
     ld [$c53e], a
 L_00_36ff::
-    ld hl, D_00_37af
-    call L_00_379e
+    ld hl, EnemySlotTable
+    call SelectEnemySlot
     xor a, a
     ld [hl], a
     ld a, [$c53e]
@@ -4502,33 +4502,33 @@ L_00_36ff::
     bit 7, a
     jr z, L_00_36ff
     ret
-L_00_3713::
+UpdateAllEnemies::  ; starts the enemy loop with $c53f incremented and $c53e = 15
     ld hl, $c53f
     inc [hl]
     ld a, $0f
     ld [$c53e], a
-L_00_371c::
+UpdateEnemyLoop::  ; for each slot index: load the slot into HRAM; run UpdateEnemy; store it back
     ld a, [$c53f]
     ld b, a
     ld a, [$c53e]
     add a, b
     and a, $0f
-    ld hl, D_00_37af
-    call L_00_379e
+    ld hl, EnemySlotTable
+    call SelectEnemySlot
     ld a, [hl]
     bit 7, a
     jr z, L_00_373a
-    call L_00_3897
-    call L_00_3746
-    call L_00_3830
+    call LoadEnemySlot
+    call UpdateEnemy
+    call StoreEnemySlot
 L_00_373a::
     ld a, [$c53e]
     dec a
     ld [$c53e], a
     bit 7, a
-    jr z, L_00_371c
+    jr z, UpdateEnemyLoop
     ret
-L_00_3746::
+UpdateEnemy::  ; one enemy step on the record held in hObject2
     ldh a, [$ffd1]
     bit 4, a
     jr nz, L_00_375e
@@ -4572,29 +4572,45 @@ D_00_3782::
     dw L_00_3c91
     dw L_00_38fe
     INCBIN "orig/painter_momopie.gb", $03794, 10
-L_00_379e::
+SelectEnemySlot::  ; HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
     sla a
     ld c, a
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ldh [$ffd7], a
+    ldh [hEnemySlotLo], a
     push af
     ld a, [hl]
-    ldh [$ffd8], a
+    ldh [hEnemySlotHi], a
     ld h, a
     pop af
     ld l, a
     ret
-D_00_37af::
-    INCBIN "orig/painter_momopie.gb", $037af, 70
+EnemySlotTable::  ; 16 word addresses of the enemy slots: $c542 + $20 * i
+    dw $c542
+    dw $c562
+    dw $c582
+    dw $c5a2
+    dw $c5c2
+    dw $c5e2
+    dw $c602
+    dw $c622
+    dw $c642
+    dw $c662
+    dw $c682
+    dw $c6a2
+    dw $c6c2
+    dw $c6e2
+    dw $c702
+    dw $c722
+    INCBIN "orig/painter_momopie.gb", $037cf, 38
 L_00_37f5::
     ld a, $0f
     ldh [$ff9c], a
 L_00_37f9::
     ldh a, [$ff9c]
-    ld hl, D_00_37af
-    call L_00_379e
+    ld hl, EnemySlotTable
+    call SelectEnemySlot
     ld a, [hl]
     bit 7, a
     jr z, L_00_3810
@@ -4605,7 +4621,7 @@ L_00_37f9::
     jr z, L_00_37f9
     ret
 L_00_3810::
-    call L_00_382a
+    call ClearEnemySlot
     ld a, $82
     ldh [hObject2], a
     ldh a, [$ff9d]
@@ -4616,14 +4632,14 @@ L_00_3810::
     ldh [$ffbf], a
     ldh a, [$ffee]
     ldh [$ffcf], a
-    jp L_00_3830
-L_00_382a::
+    jp StoreEnemySlot
+ClearEnemySlot::  ; zero fills hObject2
     ld hl, hObject2
     jp Clear32Bytes
-L_00_3830::
-    ldh a, [$ffd7]
+StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($ffd7/$ffd8)
+    ldh a, [hEnemySlotLo]
     ld l, a
-    ldh a, [$ffd8]
+    ldh a, [hEnemySlotHi]
     ld h, a
     ldh a, [hObject2]
     ld [hl+], a
@@ -4690,10 +4706,10 @@ L_00_3830::
     ldh a, [$ffd4]
     ld [hl], a
     ret
-L_00_3897::
-    ldh a, [$ffd7]
+LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
+    ldh a, [hEnemySlotLo]
     ld l, a
-    ldh a, [$ffd8]
+    ldh a, [hEnemySlotHi]
     ld h, a
     ld a, [hl+]
     ldh [hObject2], a
@@ -4812,11 +4828,11 @@ L_00_3956::
 L_00_3963::
     ld de, D_00_3acf
     ld bc, $3ad4
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_396c::
     ld de, D_00_3ad9
     ld bc, $3ade
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3975::
     ldh a, [$ffd1]
     bit 0, a
@@ -4827,23 +4843,23 @@ L_00_3975::
     jr nz, L_00_39a8
     ld de, D_00_3aa6
     ld bc, $3aab
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_398c::
     ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3ab0
     ld bc, $3ab5
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_399a::
     ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3ab0
     ld bc, $3ab5
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_39a8::
     ld de, D_00_3aba
     ld bc, $3abf
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_39b1::
     ld a, [wRoomType]
     cp a, $03
@@ -4972,15 +4988,15 @@ L_00_3a75::
     cp a, $08
     jr z, L_00_3a99
     ld de, D_00_3aa6
-    call SetObjectTarget
+    call SetObjectAnimation
     jp L_00_340c
 L_00_3a90::
     ld de, D_00_3acf
-    call SetObjectTarget
+    call SetObjectAnimation
     jp L_00_340c
 L_00_3a99::
     ld de, D_00_3ad9
-    call SetObjectTarget
+    call SetObjectAnimation
     jp L_00_340c
 D_00_3aa2::
     INCBIN "orig/painter_momopie.gb", $03aa2, 4
@@ -5058,7 +5074,7 @@ L_00_3b4e::
     ret
 L_00_3b57::
     call L_00_3b5d
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3b5d::
     ldh a, [$ffd1]
     bit 0, a
@@ -5069,23 +5085,23 @@ L_00_3b5d::
     jr nz, L_00_3b90
     ld de, D_00_3bbe
     ld bc, $3bc3
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3b74::
     ld hl, hObject2
     set 5, [hl]
     ld de, D_00_3bc8
     ld bc, $3bcd
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3b82::
     ld hl, hObject2
     res 5, [hl]
     ld de, D_00_3bc8
     ld bc, $3bcd
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3b90::
     ld de, $3bd2
     ld bc, $3bd7
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3b99::
     call L_00_3673
     and a, $0f
@@ -5104,7 +5120,7 @@ L_00_3bad::
     ld a, $20
     ldh [$ffc9], a
     ld de, D_00_3bbe
-    call SetObjectTarget
+    call SetObjectAnimation
     jp L_00_340c
 D_00_3bbe::
     INCBIN "orig/painter_momopie.gb", $03bbe, 10
@@ -5141,7 +5157,7 @@ L_00_3cb5::
     ldh [$ffcc], a
     ld de, D_00_3aca
     ld bc, $3e4d
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3ccd::
     ldh a, [hObject2]
     set 5, a
@@ -5161,21 +5177,21 @@ L_00_3ce7::
     res 6, [hl]
     ld de, D_00_3e4d
     ld bc, $3e52
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3cf5::
     ld hl, hObject2
     res 5, [hl]
     ld de, $3e57
     ld bc, $3e5c
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3d03::
     ld de, D_00_3e4d
     ld bc, $3e52
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3d0c::
     ld de, $3e57
     ld bc, $3e5c
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3d15::
     jp L_00_3525
 L_00_3d18::
@@ -5237,7 +5253,7 @@ L_00_3e20::
     ld hl, hObject2
     set 6, [hl]
     ld de, D_00_3e4d
-    call SetObjectTarget
+    call SetObjectAnimation
     call L_00_340c
     ldh a, [$ffd1]
     and a, $0f
@@ -5289,7 +5305,7 @@ L_00_3e90::
     ldh [$ffc9], a
     ld de, D_00_3f3a
     ld bc, $3f3f
-    jp L_00_3649
+    jp SetAnimationVariant
 L_00_3ea8::
     xor a, a
     ldh [$ffc9], a
@@ -5334,7 +5350,7 @@ L_00_3ed1::
     ld hl, $ffca
     inc [hl]
     ld de, D_00_3f44
-    jp SetObjectTarget
+    jp SetObjectAnimation
 L_00_3ef9::
     ld a, $20
     ldh [$ffc9], a
@@ -5359,7 +5375,7 @@ L_00_3ef9::
     xor a, a
     ld [$c493], a
     ld de, D_00_3f3a
-    call SetObjectTarget
+    call SetObjectAnimation
     ld a, $90
     ldh [$ffd1], a
     ret

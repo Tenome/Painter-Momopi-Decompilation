@@ -51,9 +51,12 @@ DEF wGameFlags      EQU $c51e   ; bit 0 = round cleared (PlayFrame jumps to Roun
 DEF wRoomType       EQU $c447   ; compared with 2/4/6/9 for special rooms
 DEF wSubState       EQU $c53a   ; bit 0 = special action in progress
 DEF wRoomMap        EQU $c0a7   ; tile map of the room: 16 bytes per row; pixel Y $18 + row*16, column from PixelXToColumn
-DEF hObject2        EQU $ffb5   ; a second object record kept in HRAM (flags at +0, target at $ffb6/$ffb7)
+DEF hObject2        EQU $ffb5   ; the enemy being updated: a 32 byte object record copied into HRAM from its slot (flags +0, animation pointer $ffb6/$ffb7)
 DEF wPaintRemaining EQU $c520   ; unpainted path cells left; decremented as the painter paints a cell; 0 = round cleared
 ; Sound channel record ($20 bytes at wSoundChannels, 8 records; hardware channel = byte +1):
 ;  +0 flags (bit 0 note started, bit 2 mute, bit 4 paused, bit 7 active), +1 hardware channel 0-3 (pulse1 pulse2 wave noise),
 ;  +2 NR51 pan mask, +3/+4 song data pointer, +7 envelope (NRx2), +8/+9 tempo accumulator and step, +$b/+$c note length and counter,
 ;  +$e/+$f pitch, +$12/+$13 frequency written to NRx3/NRx4, +$15 duty/length (NRx1)
+DEF hEnemySlotLo    EQU $ffd7   ; address of the slot hObject2 was loaded from
+DEF hEnemySlotHi    EQU $ffd8
+DEF wEnemySlots     EQU $c542   ; 16 enemy records of $20 bytes (to $c741)

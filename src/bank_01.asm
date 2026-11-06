@@ -1217,7 +1217,7 @@ L_01_49a0::
     ldh [$ff96], a
 L_01_49a4::
     ldh a, [$ff96]
-    ld hl, D_00_37af
+    ld hl, EnemySlotTable
     sla a
     ld c, a
     ld b, $00
@@ -2531,7 +2531,7 @@ L_01_53d6::
 L_01_53d8::
     ldh [$ffc9], a
     ld de, D_01_53e5
-    call SetObjectTarget
+    call SetObjectAnimation
     ld a, $91
     ldh [$ffd1], a
     ret

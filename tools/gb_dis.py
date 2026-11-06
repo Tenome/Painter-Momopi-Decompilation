@@ -200,6 +200,8 @@ class Rom:
                 t = self.data[o] | self.data[o + 1] << 8
                 self.dwords[(b, q)] = t
                 self.code_bytes.update({(b, q), (b, q + 1)})
+                if t >= 0x8000:
+                    continue                      # RAM address: stays a numeric `dw`
                 tb = tbank if (tbank and t >= BANK) else self.home(t, b)
                 if (tb, t) not in self.code_bytes and (tb, t) not in self.targets:
                     self.targets[(tb, t)] = "data"

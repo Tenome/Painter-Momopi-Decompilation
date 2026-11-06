@@ -85,7 +85,7 @@ bank,addr,name,comment
 0,0a49,SerialSendByte,sends C over the link port with the internal clock and waits for the reply
 0,0a6b,ByteToBCD,converts a byte in A (and C flag) to decimal digits using daa
 0,3654,SelectObject2,hObjPtr = hObject2
-0,365f,SetObjectTarget,stores DE at $ffb6/$ffb7 (movement target)
+0,365f,SetObjectAnimation,stores DE as the animation pointer (record +1/+2) of hObject2
 1,4b58,PixelXToColumn,E = (X+8)/16 - 1
 1,4b62,LookupMapTile,A = wRoomMap tile at pixel Y with column E
 0,0d0e,UnpackRoomMap,HL = packed map (2 bits per cell; 4 cells per byte) unpacked to the 256 byte wRoomMap
@@ -108,3 +108,12 @@ bank,addr,name,comment
 1,4572,SoundWriteChannel4,writes noise channel 4 registers (NR42 NR43 NR44)
 1,4613,SoundReadNextNote,reads the next note byte from the channel's song pointer (+3/+4); bytes >= $e0 are commands
 1,47a6,SoundApplyPitchSlide,copies the pitch word at +$e into +$12 (frequency) for the channel writers
+0,3649,SetAnimationVariant,DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
+0,3713,UpdateAllEnemies,starts the enemy loop with $c53f incremented and $c53e = 15
+0,371c,UpdateEnemyLoop,for each slot index: load the slot into HRAM; run UpdateEnemy; store it back
+0,3746,UpdateEnemy,one enemy step on the record held in hObject2
+0,379e,SelectEnemySlot,HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
+0,3830,StoreEnemySlot,copies the 32 byte HRAM object hObject2 back to its slot ($ffd7/$ffd8)
+0,3897,LoadEnemySlot,copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
+0,382a,ClearEnemySlot,zero fills hObject2
+0,37af,EnemySlotTable,16 word addresses of the enemy slots: $c542 + $20 * i

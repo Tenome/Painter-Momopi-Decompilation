@@ -4,3 +4,4 @@ bank,addr,count,target_bank,comment
 0,16fc,17,2,RoomSpriteSetTable: source of the second sprite tile set in bank 2
 0,171e,17,0,RoomMapTable: packed 2 bit room maps (64 bytes each)
 0,14f9,17,0,RoomVramJobTable: VRAM copy jobs per room
+0,37af,16,0,EnemySlotTable: addresses of the 16 enemy slots in WRAM ($c542 + $20*i)
