@@ -126,6 +126,10 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   pixel offsets (for example shape 1 = four parts at (-8,-8) (0,-8) (-8,0) (0,0), a 16x16 sprite, with tile ids such as $bc $bd $cc $cd). Record flags bit 5 and 6 mirror the offsets.
   `SetAnimationVariant` picks between the two pointers of each animation pair depending on bit 3 of `$ffd0`.
 
+- **Casting a card** (`MagicScreenInput` $1770): A on a slot reads the card id from `wMagicCards`, compares the cost from `MagicCostTable` ($199b: 0 10 50 40 90 60 30 80 70 20 MP) with `wMagicPoints`, plays
+  `SND_SFX_90`, stores the id in `wActiveMagic` (formerly misnamed wRoomType) and sets `wMagicState` bits 1 and 2. Next frame `RunMagicEffect` jumps through `MagicEffectTable` ($4cd7) to the card's
+  routine, which starts `BeginMagicCast` and a frame countdown in `$ffdf` (`MagicTimerTick`). Enemy routines test `wActiveMagic` (T.STOP and others) and `wMagicState` bit 0 to change their behaviour.
+
 ### Text and VRAM jobs
 
 - **Charmap** (read from the BG map of the round intro screen): tile `$80+n` = letter `A+n`, `$ab+n` = digit `n`, `$ff` = space, `$b5` = `!`, `$b6` = `x`,
@@ -193,7 +197,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - [x] The 8 game-mode handlers, the sound engine (ids, commands, channel writers), the enemy slot system and its 12 kinds, the room map format
 - [x] Headless interpreter `tools/emu.py`; dynamic coverage (`tools/coverage.py`) shows every executed instruction is in the static trace
 - [ ] Name the remaining WRAM variables ($c4xx/$c5xx/$c7xx; see docs/RAM_MAP.md for the most used unnamed addresses)
-- [ ] Name the rest of the play logic: `PlayFrame` sub-steps in bank 1, `L_01_4a9d`/`L_01_4e06` (paint blob), special room types (`wRoomType` values 1-9: bonus, boss, ...)
+- [ ] Name the rest of the play logic: `PlayFrame` sub-steps in bank 1, `L_01_4a9d`/`L_01_4e06` (paint blob), special room types (`wActiveMagic` values 1-9: bonus, boss, ...)
 - [ ] Understand the magic cards (ids, MP costs, effects) and where `wMagicCards` is filled (bonus select)
 - [ ] Decode the animation stream format (`SetObjectAnimation` data: frame ids and durations) and the `ObjectShapeTable` records into structured `db`/`dw`
 - [ ] Classify the remaining `INCBIN` blocks in bank 0 and bank 1 (tilemaps, VRAM job streams, animation data)

@@ -48,8 +48,8 @@ DEF wPlayerVelY     EQU $c4cd
 DEF wPlayerDir      EQU $c4de   ; low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed
 DEF wPlayerStatus   EQU $c4df   ; bit 2 = caught/clear animation started
 DEF wGameFlags      EQU $c51e   ; bit 0 = round cleared (PlayFrame jumps to RoundCleared), bit 6 = advance to the next mode after the clear
-DEF wRoomType       EQU $c447   ; compared with 2/4/6/9 for special rooms
-DEF wSubState       EQU $c53a   ; bit 0 = special action in progress
+DEF wActiveMagic    EQU $c447   ; card id of the magic being cast or in effect (0 = none); effects test it (3 = T.STOP freezes enemies ...)
+DEF wMagicState     EQU $c53a   ; bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process
 DEF wRoomMap        EQU $c0a7   ; tile map of the room: 16 bytes per row; pixel Y $18 + row*16, column from PixelXToColumn
 DEF hObject2        EQU $ffb5   ; the enemy being updated: a 32 byte object record copied into HRAM from its slot (flags +0, animation pointer $ffb6/$ffb7)
 DEF wPaintRemaining EQU $c520   ; unpainted path cells left; decremented as the painter paints a cell; 0 = round cleared

@@ -18,3 +18,4 @@ bank,addr,count,target_bank,kind,comment
 0,19a5,10,0,data,MagicCardTitleJobs: VRAM job per card id (card name strip)
 0,19b9,10,0,data,MagicCardPictureJobs: VRAM job per card id (card picture)
 0,19cd,10,0,data,MagicCardCostJobs: VRAM job per card id (MP cost label)
+1,4cd7,10,1,code,MagicEffectTable: routine that applies each card (index = card id)

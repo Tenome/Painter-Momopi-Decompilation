@@ -1202,19 +1202,19 @@ L_01_4937::
     ld hl, wGameFlags
     set 6, [hl]
     ret
-L_01_4957::
+BeginMagicCast::  ; plays SND_SFX_82 and sets wMagicState bit 1
     ld a, SND_SFX_82
     call PlaySound
-    ld hl, wSubState
+    ld hl, wMagicState
     set 1, [hl]
     ret
-L_01_4962::
+MagicTimerTick::  ; counts $ffdf down; ends the effect when it reaches 0
     ld hl, $ffdf
     dec [hl]
     ret nz
-L_01_4967::
+EndMagic::  ; clears wMagicState
     xor a, a
-    ld [wSubState], a
+    ld [wMagicState], a
     ret
 L_01_496c::
     ld hl, wPaintObject
@@ -1237,7 +1237,7 @@ L_01_496c::
     ld a, $82
     ld [wPaintObject], a
     call L_01_4a9d
-    jp L_01_4957
+    jp BeginMagicCast
 L_01_49a0::
     ld a, $0f
     ldh [hScratch00], a
@@ -1309,7 +1309,7 @@ L_01_49d6::
     call PlaySound
     ld a, $d0
     ldh [$ffdf], a
-    ld hl, wSubState
+    ld hl, wMagicState
     set 4, [hl]
     set 1, [hl]
     ret
@@ -1558,10 +1558,10 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     jp PlayerDeath
 .L_01_4c01:
     call PlayerAction
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $02
     jr nz, .L_01_4c12
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr nz, .L_01_4c1b
 .L_01_4c12:
@@ -1575,10 +1575,10 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     call CheckPlayerTileCollision
     call SelectPlayerAnimation
     call L_00_32a2
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     or a, a
     jr z, .L_01_4c42
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr z, .L_01_4c42
     ld hl, $c4d3
@@ -1608,26 +1608,26 @@ PlayerCheckOffPath::  ; sets wPlayerDir bit 5 (death) when the player stands on 
     set 5, [hl]
     ret
 PlayerAction::  ; handles the A button (paint action)
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
-    jr nz, L_01_4cbc
+    jr nz, RunMagicEffect
     ldh a, [hJoyNew]
     bit 0, a
     ret z
     ld hl, wPlayerDir
     set 6, [hl]
-    ld hl, wSubState
+    ld hl, wMagicState
     res 1, [hl]
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     and a, a
     ret z
     ld a, [wPlayerStatus]
     bit 0, a
     ret z
-    ld hl, wSubState
+    ld hl, wMagicState
     set 0, [hl]
-    ld hl, RoomTypeTable
-    ld a, [wRoomType]
+    ld hl, MagicCostTable
+    ld a, [wActiveMagic]
     ld c, a
     call LookupByte
     ld c, a
@@ -1638,21 +1638,21 @@ PlayerAction::  ; handles the A button (paint action)
 L_01_4ca7::
     jr c, .L_01_4cae
     ld [wMagicPoints], a
-    jr L_01_4cbc
+    jr RunMagicEffect
 .L_01_4cae:
     ld a, [$c44b]
     and a, a
-    jr z, L_01_4ceb
+    jr z, CancelMagic
     ld a, e
     ld [wMagicPoints], a
     xor a, a
     ld [$c44b], a
-L_01_4cbc::
-    ld a, [wSubState]
+RunMagicEffect::  ; jumps to the effect routine of wActiveMagic (clears wMagicState bit 2 first)
+    ld a, [wMagicState]
     res 2, a
-    ld [wSubState], a
+    ld [wMagicState], a
     ld hl, $4cd7
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     sla a
     ld c, a
     call LookupByte
@@ -1663,20 +1663,21 @@ L_01_4cbc::
     push de
     pop hl
     jp hl
-    dw L_01_4d55
-    dw L_01_4d55
-    dw L_01_4d66
-    dw L_01_4d7b
-    dw L_01_4d91
-    dw L_01_4da2
-    dw L_01_4d44
-    dw L_01_4e06
-    dw L_01_4e77
-    dw L_01_4db8
-L_01_4ceb::
+MagicEffectTable::  ; 10 pointers to the card effect routines (index = card id)
+    dw MagicEffectSUp
+    dw MagicEffectSUp
+    dw MagicEffectWIn
+    dw MagicEffectTStop
+    dw MagicEffectGhost
+    dw MagicEffectFriend
+    dw MagicEffectSealed
+    dw MagicEffectDom
+    dw MagicEffectClear
+    dw MagicEffectPyon
+CancelMagic::  ; clears wActiveMagic and wMagicState
     xor a, a
-    ld [wRoomType], a
-    ld [wSubState], a
+    ld [wActiveMagic], a
+    ld [wMagicState], a
     ret
 LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     ldh a, [hLinkFlags]
@@ -1714,68 +1715,68 @@ L_01_4d3e::
     ld hl, hSerialByte
     set 5, [hl]
     ret
-L_01_4d44::
-    ld a, [wSubState]
+MagicEffectSealed::  ; card 6 SEALED: $a0 frames
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d52
     ld a, $a0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
 .L_01_4d52:
-    jp L_01_4962
-L_01_4d55::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectSUp::  ; card 1 S.UP (also id 0): runs for $f0 frames
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d63
     ld a, $f0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
 .L_01_4d63:
-    jp L_01_4962
-L_01_4d66::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectWIn::  ; card 2 W.IN: $d0 frames; clears wPlayerBlocked
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d74
     ld a, $d0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
 .L_01_4d74:
     xor a, a
     ld [wPlayerBlocked], a
-    jp L_01_4962
-L_01_4d7b::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectTStop::  ; card 3 T.STOP: $d0 frames; removes the object at $c49e
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d8e
     ld a, $d0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
     ld hl, $c49e
     res 7, [hl]
 .L_01_4d8e:
-    jp L_01_4962
-L_01_4d91::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectGhost::  ; card 4 GHOST: $b0 frames
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4d9f
     ld a, $b0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
 .L_01_4d9f:
-    jp L_01_4962
-L_01_4da2::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectFriend::  ; card 5 FRIEND: $b0 frames; removes the object at $c49e
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4db5
     ld a, $b0
     ldh [$ffdf], a
-    call L_01_4957
+    call BeginMagicCast
     ld hl, $c49e
     res 7, [hl]
 .L_01_4db5:
-    jp L_01_4962
-L_01_4db8::
-    ld a, [wSubState]
+    jp MagicTimerTick
+MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4dc2
     call L_01_49d6
@@ -1813,9 +1814,9 @@ L_01_4dee::
     ld a, h
     ld [$c500], a
     ret
-L_01_4e06::
+MagicEffectDom::  ; card 7 D.O.M: spawns the paint blob object and draws it
     ld hl, $c519
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4e16
     call L_01_496c
@@ -1848,7 +1849,7 @@ L_01_4e47::
     ldh [$ffdf], a
     ret nz
     xor a, a
-    ld [wSubState], a
+    ld [wMagicState], a
     jr L_01_4e59
 L_01_4e53::
     ld a, [wPaintObject]
@@ -1857,25 +1858,25 @@ L_01_4e53::
 L_01_4e59::
     ld hl, wPaintObject
     res 7, [hl]
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $09
     jr nz, .L_01_4e6e
-    ld a, [wSubState]
+    ld a, [wMagicState]
     and a, $f8
-    ld [wSubState], a
+    ld [wMagicState], a
     ret
 .L_01_4e6e:
-    ld a, [wSubState]
+    ld a, [wMagicState]
     and a, $08
-    ld [wSubState], a
+    ld [wMagicState], a
     ret
-L_01_4e77::
-    ld a, [wSubState]
+MagicEffectClear::  ; card 8 CLEAR: $50 steps
+    ld a, [wMagicState]
     bit 1, a
     jp nz, .L_01_4e86
     xor a, a
     ld [$c1f8], a
-    call L_01_4957
+    call BeginMagicCast
 .L_01_4e86:
     ld hl, $c519
     inc [hl]
@@ -1908,7 +1909,7 @@ L_01_4e77::
     dec bc
     ld a, c
     cp a, $ff
-    jp z, L_01_4967
+    jp z, EndMagic
     jr .L_01_4eb3
 .L_01_4ec5:
     and a, $0f
@@ -2065,14 +2066,14 @@ HoldDirectionUntilAligned::  ; keeps hJoyHeld direction until the player reaches
     ldh [hJoyHeld], a
     ret
 CheckPlayerTileCollision::
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $09
     jr nz, .L_01_4fe3
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret nz
 .L_01_4fe3:
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $02
     jp z, L_01_50fa
 L_01_4feb::
@@ -2244,10 +2245,10 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld c, a
     ld b, $00
     ld hl, D_01_518d
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $01
     jr nz, .L_01_5153
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr z, .L_01_5153
     ld hl, D_01_519d
@@ -2383,7 +2384,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     jr .L_01_5267
 .L_01_5285:
     xor a, a
-    ld [wRoomType], a
+    ld [wActiveMagic], a
     ld [$c4d2], a
     ldh a, [hLinkFlags]
     bit 1, a
@@ -2666,10 +2667,10 @@ L_01_55bc::
     set 5, [hl]
     ld a, $0b
     ld [$c4af], a
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_55fb
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jp z, .L_01_55fb
     xor a, a
@@ -3018,17 +3019,17 @@ L_01_58cf::
     ret nz
     jp L_01_5947
 L_01_58ee::
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_58fc
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr nz, .L_01_5938
 .L_01_58fc:
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $05
     jr nz, .L_01_590a
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr nz, .L_01_5938
 .L_01_590a:

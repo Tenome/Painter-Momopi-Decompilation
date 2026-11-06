@@ -1883,7 +1883,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld a, [wPlayerDir]
     bit 5, a
     ret nz
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 1, a
     ret nz
     ldh a, [hJoyNew]
@@ -2365,7 +2365,7 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
     call LookupByte
     ld c, a
     ld b, $00
-    ld hl, RoomTypeTable
+    ld hl, MagicCostTable
     add hl, bc
     ld d, [hl]
     ld a, [wMagicPoints]
@@ -2390,7 +2390,7 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
     ld c, a
     ld hl, wMagicCards
     call LookupByte
-    ld [wRoomType], a
+    ld [wActiveMagic], a
     ld a, [$c53b]
     or a, $06
     ld [$c53b], a
@@ -2586,7 +2586,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     ld [wCursorY], a
     ld hl, D_00_1a30
     jp SetCursorAnimation
-RoomTypeTable::  ; per room-type data indexed by wRoomType
+MagicCostTable::  ; MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
     INCBIN "orig/painter_momopie.gb", $0199b, 10
 MagicCardTitleJobs::  ; 10 pointers to the card name VRAM jobs (index = card id)
     dw D_00_1c1b
@@ -2745,10 +2745,10 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     jr nz, .L_00_1cd6
     ld a, $01
     jp GameModeDispatch
-ClearRoomState::  ; zeroes wRoomType wSubState and the room script variables
+ClearRoomState::  ; zeroes wActiveMagic wMagicState and the room script variables
     xor a, a
-    ld [wRoomType], a
-    ld [wSubState], a
+    ld [wActiveMagic], a
+    ld [wMagicState], a
     ld [$c47e], a
     ld [$c486], a
     ld [$c483], a
@@ -4044,17 +4044,17 @@ L_00_31f1::
     res 5, [hl]
     jp L_00_37f5
 L_00_32a2::
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $06
     jr nz, .L_00_32af
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret nz
 .L_00_32af:
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $04
     jr nz, .L_00_32bc
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret nz
 .L_00_32bc:
@@ -4244,10 +4244,10 @@ CheckEnemyTouchesPlayer::  ; if the enemy in hObject2 overlaps wPlayer then wPla
     ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3432
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $04
     jr nz, .L_00_3432
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret nz
 .L_00_3432:
@@ -4405,10 +4405,10 @@ L_00_352f::
     ldh a, [hEnemyKind]
     cp a, $08
     ret z
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $05
     jr nz, .L_00_3541
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret nz
 .L_00_3541:
@@ -4535,10 +4535,10 @@ L_00_3603::
     jr z, .L_00_3620
     cp a, $03
     jr nz, .L_00_3620
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_00_3620
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jp nz, EnemyRequestTurn
     ld a, $05
@@ -4629,7 +4629,7 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     res 7, [hl]
     call L_00_31eb
     xor a, a
-    ld [wSubState], a
+    ld [wMagicState], a
     ld hl, wPlayerStatus
     set 3, [hl]
     ret
@@ -4986,10 +4986,10 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call SelectObject2
     jp DrawObject
 L_00_392e::
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $05
     ret nz
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     ret z
     ldh a, [hEnemyFlags]
@@ -5051,10 +5051,10 @@ L_00_3956::
     ld bc, $3abf
     jp SetAnimationVariant
 L_00_39b1::
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_00_39c0
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jp nz, EnemyRequestTurn
 .L_00_39c0:
@@ -5351,18 +5351,18 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     ld [hl], a
     jp L_00_3525
 .L_00_3c1a:
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $04
     jp nz, .L_00_3c2b
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr z, .L_00_3c2b
     jr .L_00_3c3a
 .L_00_3c2b:
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $06
     jp nz, .L_00_3c42
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr z, .L_00_3c42
 .L_00_3c3a:
@@ -5479,10 +5479,10 @@ L_00_3d18::
     ldh a, [hEnemyDir]
     bit 0, a
     ret nz
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_00_3d2b
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr nz, .L_00_3d54
 .L_00_3d2b:
@@ -5564,10 +5564,10 @@ EnemyKind5::  ; enemy kind 5
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    ld a, [wRoomType]
+    ld a, [wActiveMagic]
     cp a, $06
     jr nz, .L_00_3e81
-    ld a, [wSubState]
+    ld a, [wMagicState]
     bit 0, a
     jr nz, .L_00_3e84
 .L_00_3e81:

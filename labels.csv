@@ -74,7 +74,7 @@ bank,addr,name,comment
 3,6e10,TilesFont2,second font and misc tiles (LoadTilesBank3D)
 3,7e10,Bank3Padding,$ff padding to the end of the bank
 0,06a4,ObjectShapeTable,word pointers indexed by shape id; each shape = count then count pairs of signed (y x) offsets of 8x8 parts (read by DrawObject)
-0,199b,RoomTypeTable,per room-type data indexed by wRoomType
+0,199b,MagicCostTable,MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
 1,4048,SoundSongTable,word offsets of song data (follows the frequency table at $4000)
 1,40f4,SoundCommandDataTable,per command word pointers used by SoundStartCommand
 1,48c4,PlayerAnimPtrs,player animation pointers (down/up/side) chosen by SelectPlayerAnimation
@@ -186,7 +186,7 @@ bank,addr,name,comment
 0,13e6,StartRoundMusic,plays the song for the current round (id from a table indexed by wRound/4) and starts the frame countdown
 0,2b0a,PickRandomRound,title button code path: chooses wRound from hRngCounter (value $1f selects round $1e)
 0,1973,InitMagicScreenState,clears the cursor and card variables and creates the cursor object at wCursorObject
-0,1ce7,ClearRoomState,zeroes wRoomType wSubState and the room script variables
+0,1ce7,ClearRoomState,zeroes wActiveMagic wMagicState and the room script variables
 1,467b,SoundCommandTable,18 word handlers for stream commands $e0-$f1 (index = byte and $1f)
 1,469f,SoundCmdCall,commands $e0 and $e1: pushes the return address on the record's small stack ($a) and jumps to the address that follows
 1,46bf,SoundCmdReturn,command $e2: pops the return address from the record's small stack
@@ -242,3 +242,18 @@ bank,addr,name,comment
 0,19a5,MagicCardTitleJobs,10 pointers to the card name VRAM jobs (index = card id)
 0,19b9,MagicCardPictureJobs,10 pointers to the card picture VRAM jobs
 0,19cd,MagicCardCostJobs,10 pointers to the MP cost VRAM jobs
+1,4cd7,MagicEffectTable,10 pointers to the card effect routines (index = card id)
+1,4cbc,RunMagicEffect,jumps to the effect routine of wActiveMagic (clears wMagicState bit 2 first)
+1,4d55,MagicEffectSUp,card 1 S.UP (also id 0): runs for $f0 frames
+1,4d66,MagicEffectWIn,card 2 W.IN: $d0 frames; clears wPlayerBlocked
+1,4d7b,MagicEffectTStop,card 3 T.STOP: $d0 frames; removes the object at $c49e
+1,4d91,MagicEffectGhost,card 4 GHOST: $b0 frames
+1,4da2,MagicEffectFriend,card 5 FRIEND: $b0 frames; removes the object at $c49e
+1,4d44,MagicEffectSealed,card 6 SEALED: $a0 frames
+1,4e06,MagicEffectDom,card 7 D.O.M: spawns the paint blob object and draws it
+1,4e77,MagicEffectClear,card 8 CLEAR: $50 steps
+1,4db8,MagicEffectPyon,card 9 PYON: creates the paint blob object at the player
+1,4957,BeginMagicCast,plays SND_SFX_82 and sets wMagicState bit 1
+1,4962,MagicTimerTick,counts $ffdf down; ends the effect when it reaches 0
+1,4967,EndMagic,clears wMagicState
+1,4ceb,CancelMagic,clears wActiveMagic and wMagicState

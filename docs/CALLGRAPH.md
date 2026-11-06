@@ -2,7 +2,7 @@
 
 Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct `call`/`jp` targets.
 
-180 named routines of 347 found.
+204 named routines of 347 found.
 
 | Bank:Addr | Name | Size | Called by | Calls |
 |---|---|---|---|---|
@@ -62,16 +62,24 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:0b0a | `CompareObjectCoordinate` | 58 | 1 |  |
 | 0:0bf8 | `MultiplyByDE` | 50 | 9 |  |
 | 0:0d0e | `UnpackRoomMap` | 47 | 1 |  |
+| 0:100b | `AddScore` | 121 | 2 | `ByteToBCD`, `DrawDecimalDigits`, `L_00_10a2`, `L_00_11b4` |
 | 0:1084 | `DrawDecimalDigits` | 30 | 1 | `ByteToBCD` |
-| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF`, `InitCursorMenu`, `InitPlayer` ... |
+| 0:10b5 | `Mode1_Play` | 255 | 0 | `Clear32Bytes`, `ClearOamShadow`, `ClearOamShadowY`, `ClearRoundVariables`, `DrawMetatileMap`, `FillBackwardsFF`, `InitMagicPoints`, `InitMagicScreenState` ... |
+| 0:121c | `ShowMagicScreen` | 272 | 1 | `ByteToBCD`, `ClearOamShadowY`, `DrawMagicPage`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `InitMagicScreenState`, `L_00_04fc`, `L_00_0628` ... |
 | 0:13e6 | `StartRoundMusic` | 26 | 1 | `LookupByte`, `PlaySound`, `WaitVBlankFlag` |
 | 0:1429 | `TableIndexFromRoundDec` | 1 | 2 |  |
 | 0:142a | `TableIndexFromRound` | 14 | 2 | `LookupWord` |
-| 0:1438 | `InitRoundTimer` | 42 | 1 |  |
+| 0:1438 | `InitMagicPoints` | 42 | 1 |  |
 | 0:14a6 | `ClearRoundVariables` | 62 | 1 |  |
 | 0:1740 | `CursorBlinkStep` | 29 | 1 |  |
 | 0:1760 | `SetCursorAnimation` | 9 | 4 |  |
-| 0:1973 | `InitCursorMenu` | 40 | 2 | `Clear32Bytes`, `SetCursorAnimation` |
+| 0:1770 | `MagicScreenInput` | 159 | 1 | `DrawObjectBytePos`, `LookupByte`, `MagicCursorDown`, `MagicCursorLeft`, `MagicCursorRight`, `MagicCursorUp`, `MultiplyByDE`, `PlaySound` ... |
+| 0:180f | `MagicCursorRight` | 42 | 1 | `LookupByte`, `MultiplyByDE` |
+| 0:1839 | `MagicCursorLeft` | 38 | 1 | `LookupByte`, `MultiplyByDE` |
+| 0:185f | `MagicCursorUp` | 23 | 1 | `MultiplyByDE` |
+| 0:1876 | `MagicCursorDown` | 45 | 1 | `L_00_196f`, `LookupByte`, `MultiplyByDE` |
+| 0:18a3 | `DrawMagicPage` | 204 | 1 | `LookupByte`, `LookupWord`, `QueueVramCopyRows`, `WaitVramCopyDone` |
+| 0:1973 | `InitMagicScreenState` | 40 | 2 | `Clear32Bytes`, `SetCursorAnimation` |
 | 0:1c57 | `Mode3_RoundIntro` | 144 | 0 | `ClearOamShadow`, `ClearOamShadowY`, `ClearRoomState`, `DrawTwoDigitNumber`, `FillBackwardsFF`, `GameModeDispatch`, `L_00_0628`, `L_01_492f` ... |
 | 0:1ce7 | `ClearRoomState` | 22 | 1 |  |
 | 0:1cfd | `DrawTwoDigitNumber` | 38 | 2 | `ByteToBCD`, `L_00_0628`, `L_00_1d23` |
@@ -87,7 +95,7 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 0:2b46 | `InitTitleVariables` | 62 | 1 | `SetCursorAnimation` |
 | 0:2c70 | `Mode6_Ending` | 237 | 0 | `ClearMemory`, `ClearOamShadowY`, `DelayFrames`, `DrawMetatileMap`, `Entry`, `FillBackwardsFF`, `L_00_2d5d`, `L_00_2f26` ... |
 | 0:31e2 | `TickObjectTimer` | 9 | 10 |  |
-| 0:32df | `EnemyDefeated` | 286 | 9 | `DrawObject`, `L_00_0c2a`, `L_00_100b`, `L_00_3525`, `LookupByte`, `PlaySound`, `SelectObject2`, `SetObjPtr` |
+| 0:32df | `EnemyDefeated` | 286 | 9 | `AddScore`, `DrawObject`, `L_00_0c2a`, `L_00_3525`, `LookupByte`, `PlaySound`, `SelectObject2`, `SetObjPtr` |
 | 0:341f | `CheckEnemyTouchesPlayer` | 42 | 8 | `ObjectsOverlap`, `SelectObject2` |
 | 0:3478 | `EnemyOnTileGrid` | 9 | 1 | `IsOnTileGrid` |
 | 0:3481 | `EnemyComputeBlockedDirs` | 164 | 4 | `LookupMapTile`, `PixelXToColumn` |
@@ -159,13 +167,29 @@ Routines with a name other than `L_BB_AAAA` are listed first. `calls` are direct
 | 1:47a6 | `SoundApplyPitchSlide` | 37 | 1 | `L_01_4820`, `SoundSetFrequency` |
 | 1:47cb | `SoundSetFrequency` | 85 | 1 |  |
 | 1:485b | `PlaySound_Bank1` | 32 | 1 |  |
+| 1:4957 | `BeginMagicCast` | 11 | 8 | `PlaySound` |
+| 1:4962 | `MagicTimerTick` | 5 | 6 |  |
+| 1:4967 | `EndMagic` | 5 | 1 |  |
 | 1:4b1f | `SelectPlayerAnimation` | 20 | 1 |  |
 | 1:4b58 | `PixelXToColumn` | 10 | 9 |  |
 | 1:4b62 | `LookupMapTile` | 13 | 9 | `LookupByte` |
 | 1:4b6f | `IsOnTileGrid` | 10 | 7 |  |
-| 1:4bde | `PlayFrame` | 112 | 1 | `CheckPlayerTileCollision`, `ClampPlayerPosition`, `DrawObject`, `GotoLinkLose`, `HoldDirectionUntilAligned`, `L_00_32a2`, `L_01_4b79`, `L_01_4c4e` ... |
+| 1:4b79 | `PlayerComputeBlockedDirs` | 101 | 1 | `IsOnTileGrid`, `LookupMapTile`, `PixelXToColumn` |
+| 1:4bde | `PlayFrame` | 112 | 1 | `CheckPlayerTileCollision`, `ClampPlayerPosition`, `DrawObject`, `GotoLinkLose`, `HoldDirectionUntilAligned`, `L_00_32a2`, `L_01_4f5a`, `LoadPlayerXY` ... |
+| 1:4c4e | `PlayerCheckOffPath` | 33 | 1 | `IsOnTileGrid`, `LookupMapTile`, `PixelXToColumn` |
 | 1:4c6f | `PlayerAction` | 56 | 1 | `LookupByte` |
+| 1:4cbc | `RunMagicEffect` | 27 | 0 | `LookupByte` |
+| 1:4ceb | `CancelMagic` | 8 | 0 |  |
 | 1:4cf3 | `LinkSyncFrame` | 75 | 0 | `L_01_4d3e`, `SerialStartTransfer`, `WaitSerialByte` |
+| 1:4d44 | `MagicEffectSealed` | 17 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4d55 | `MagicEffectSUp` | 17 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4d66 | `MagicEffectWIn` | 21 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4d7b | `MagicEffectTStop` | 22 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4d91 | `MagicEffectGhost` | 17 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4da2 | `MagicEffectFriend` | 22 | 0 | `BeginMagicCast`, `MagicTimerTick` |
+| 1:4db8 | `MagicEffectPyon` | 54 | 0 | `DrawObject`, `L_00_09e0`, `L_00_0b66`, `L_00_3449`, `L_01_49d6`, `L_01_4dee`, `L_01_4e53`, `SetObjPtr` |
+| 1:4e06 | `MagicEffectDom` | 65 | 0 | `DrawObject`, `L_00_09e0`, `L_00_0b66`, `L_01_496c`, `L_01_49a0`, `L_01_4a31`, `L_01_4a49`, `L_01_4a75` ... |
+| 1:4e77 | `MagicEffectClear` | 102 | 0 | `BeginMagicCast`, `EndMagic`, `L_01_4edd`, `L_01_4f07`, `RoundCleared` |
 | 1:4f21 | `ClampPlayerPosition` | 48 | 1 |  |
 | 1:4f51 | `LoadPlayerXY` | 9 | 1 |  |
 | 1:4f91 | `HoldDirectionUntilAligned` | 69 | 1 | `IsOnTileGrid` |
