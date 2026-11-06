@@ -774,7 +774,7 @@ SoundJumpHL::  ; jp hl trampoline for the sound command table
     dw L_01_4798
     dw L_01_479d
     dw L_01_4718
-    INCBIN "orig/painter_momopie.gb", $0469d, 2
+    dw L_01_471d
 L_01_469f::
     ld hl, $000a
     add hl, bc
@@ -881,7 +881,9 @@ L_01_470e::
 L_01_4718::
     ld hl, $0006
     jr L_01_4700
-    INCBIN "orig/painter_momopie.gb", $0471d, 5
+L_01_471d::
+    ld hl, $000e
+    jr L_01_4700
 L_01_4722::
     ld a, [de]
     inc de

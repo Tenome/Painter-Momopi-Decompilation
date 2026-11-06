@@ -11,3 +11,4 @@ bank,addr,comment
 1,470e,executed in the emulator
 1,46fd,executed in the emulator (sound command handler)
 1,4718,executed in the emulator (sound command handler)
+1,471d,executed in the emulator (sound command 17 handler)
