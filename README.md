@@ -24,7 +24,7 @@ Open tasks are in `REVERSE.md`.
 # put your ROM at orig/painter_momopie.gb, then
 python tools/build.py              # RGBDS 0.9+ (PATH, RGBDS_DIR or --rgbds DIR); prints OK when byte-identical
 python tools/gb_dis.py --check    # no RGBDS needed: the in-repo reference assembler rebuilds every byte
-python tools/gb_dis.py --write    # regenerate src/bank_NN.asm from the ROM, labels.csv and seeds.csv
+python tools/gb_dis.py --write    # regenerate src/bank_NN.asm and extract assets/ from the ROM (resets any edits)
 python tools/report.py            # write progress/jp/report.json
 ```
 
@@ -32,7 +32,8 @@ python tools/report.py            # write progress/jp/report.json
 
 | Path | Contents |
 |---|---|
-| `src/` | RGBDS sources: instructions and labels; data is `INCBIN` of your own ROM (no game data in git) |
+| `src/` | RGBDS sources: instructions and labels; data is `INCBIN` of files in `assets/` |
+| `assets/` | data extracted from your own ROM (git-ignored): editable PNG tile sheets, text forms of maps, spawns and balance tables, raw `.bin` for the rest; see `docs/MODDING.md` |
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
 | `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), static recompiler to C (`recomp.py`), report generator, ROM checker |

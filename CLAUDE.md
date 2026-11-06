@@ -9,7 +9,7 @@ Read `AGENTS.md` first, then `REVERSE.md`.
 - Tool prefix: `python tools/` (stdlib only). `python tools/gb_dis.py --check` proves the sources reproduce the ROM;
   `--write` regenerates `src/bank_NN.asm` from the ROM + `labels.csv` + `seeds.csv` (do not use it once a bank file is hand-edited).
 - `labels.csv` is banked: `bank,addr,name,comment` (addr = CPU address in hex, names start with an uppercase letter, no commas in comments).
-- Never commit the ROM or anything extracted from it.
+- Never commit the ROM or anything extracted from it (`assets/` is git-ignored). `python tools/build.py --mod` builds from `src/` + `assets/` without the ROM; see `docs/MODDING.md`.
 - Skills: `re` (task loop), `matcher`, `decomp-code-rules`, `helper-recovery`, `native-platform-porting`, `reverse-engineer-anything`.
 - Publishing: `progress/jp/report.json` (objdiff format) is committed; `.github/workflows/report.yml` uploads it for https://bytematch.dev/.
 - Native port: `python tools/build_port.py --cc <clang|gcc>` recompiles the traced routines to C (`build/recomp/game.c`, git-ignored) and builds `build/recomp/game_headless`. A compiler: `C:/Users/Michael/.local/share/retcomm/toolchains/cmake-clang-v1/latest/bin/clang.exe`.
