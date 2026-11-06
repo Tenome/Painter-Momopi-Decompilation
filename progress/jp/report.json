@@ -1204,7 +1204,7 @@
      }
     },
     {
-     "name": "L_00_352f",
+     "name": "EnemyPaintStep",
      "size": "106",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1228,7 +1228,7 @@
      }
     },
     {
-     "name": "L_00_3603",
+     "name": "EnemyTurnIfBlocked",
      "size": "58",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1428,7 +1428,7 @@
      }
     },
     {
-     "name": "L_00_39b1",
+     "name": "EnemyTurnOrAnimate",
      "size": "72",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1436,7 +1436,7 @@
      }
     },
     {
-     "name": "L_00_39f9",
+     "name": "EnemyGridStep",
      "size": "31",
      "fuzzy_match_percent": 100.0,
      "metadata": {

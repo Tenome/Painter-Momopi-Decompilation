@@ -2510,7 +2510,7 @@ EnemyKind4::  ; enemy kind 4
     jp EnemyKind4Init
 .L_01_5385:
     call EnemyAimAtPlayer
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call CheckEnemyTouchesPlayer
     call SelectKind4Animation
     jp DrawObject
@@ -2570,7 +2570,7 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call EnemyKind10Move
     call UpdateProjectile
     call ProjectileCheckPlayerHit
@@ -2931,7 +2931,7 @@ EnemyKind9::  ; enemy kind 9
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
     call EnemyAimAtPlayer
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
@@ -2939,7 +2939,7 @@ EnemyKind9::  ; enemy kind 9
 EnemyKind9Move::  ; sets hEnemyAnimState 6 then moves and clamps (name provisional)
     ld a, $06
     ldh [hEnemyAnimState], a
-    call L_00_3603
+    call EnemyTurnIfBlocked
     jp MoveAndClampObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
@@ -3002,9 +3002,9 @@ EnemyKind2::  ; enemy kind 2
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
-    call L_00_39f9
+    call EnemyGridStep
     call EnemyChooseDirection
-    call L_00_39b1
+    call EnemyTurnOrAnimate
     call EnemyShootIfReady
     call L_01_58ee
     call ProjectileFrame
@@ -3169,7 +3169,7 @@ EnemyKind3::  ; enemy kind 3
     jp nz, EnemyDefeated
     call EnemyAimAtPlayer
     call EnemyFlagOnPaintedTile
-    call L_00_3603
+    call EnemyTurnIfBlocked
     call MoveAndClampObject
     call L_00_392e
     call CheckEnemyTouchesPlayer

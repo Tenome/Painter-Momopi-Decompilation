@@ -143,10 +143,10 @@ bank	addr	size	name
 0	3478	9	EnemyOnTileGrid
 0	3481	164	EnemyComputeBlockedDirs
 0	3525	10	RemoveEnemy
-0	352f	106	L_00_352f
+0	352f	106	EnemyPaintStep
 0	3599	95	EnemyAimAtPlayer
 0	35f8	11	RememberEnemyPosition
-0	3603	58	L_00_3603
+0	3603	58	EnemyTurnIfBlocked
 0	3643	6	MoveAndClampObject
 0	3649	8	SetAnimationVariant
 0	3651	3	SetObjectAnimationStub
@@ -171,8 +171,8 @@ bank	addr	size	name
 0	392e	31	L_00_392e
 0	394d	9	EnemyRemoveIfPlayerDead
 0	3956	91	L_00_3956
-0	39b1	72	L_00_39b1
-0	39f9	31	L_00_39f9
+0	39b1	72	EnemyTurnOrAnimate
+0	39f9	31	EnemyGridStep
 0	3a18	93	EnemyChooseDirection
 0	3a75	45	EnemyInitMoveAnim
 0	3af7	68	EnemyKind1

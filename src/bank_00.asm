@@ -4391,7 +4391,7 @@ RemoveEnemy::  ; clears the active bit of hObject2 and decrements wEnemyCount
     ld hl, wEnemyCount
     dec [hl]
     ret
-L_00_352f::
+EnemyPaintStep::  ; paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
     ldh a, [hEnemyKind]
     cp a, $08
     ret z
@@ -4519,7 +4519,7 @@ RememberEnemyPosition::  ; stores hEnemyX/hEnemyY at $c525/$c526
     ldh a, [hEnemyY]
     ld [$c526], a
     ret
-L_00_3603::
+EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
     ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3620
@@ -4963,10 +4963,10 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
-    call L_00_39f9
+    call EnemyGridStep
     call EnemyChooseDirection
-    call L_00_39b1
-    call L_00_352f
+    call EnemyTurnOrAnimate
+    call EnemyPaintStep
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
@@ -5038,7 +5038,7 @@ L_00_3956::
     ld de, D_00_3aba
     ld bc, D_00_3abf
     jp SetAnimationVariant
-L_00_39b1::
+EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation table D_00_3ae3 or D_00_3aed (name provisional)
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_00_39c0
@@ -5078,7 +5078,7 @@ L_00_39b1::
     ldh [$ffc4], a
     call SelectObject2
     jp ClampObjectToRoom
-L_00_39f9::
+EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
     call EnemyOnTileGrid
     jr z, .L_00_3a04
     ld hl, hEnemyDir
@@ -5216,7 +5216,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
-    call L_00_39f9
+    call EnemyGridStep
     call EnemyEdgeBlockedDirs
     call EnemyChooseDirection
     call EnemyFlagOnPaintedTile
@@ -5229,8 +5229,8 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     and a, $08
     ret z
 .L_00_3b26:
-    call L_00_39b1
-    call L_00_352f
+    call EnemyTurnOrAnimate
+    call EnemyPaintStep
     call L_00_392e
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
