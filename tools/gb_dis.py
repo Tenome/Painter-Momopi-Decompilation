@@ -104,6 +104,12 @@ class Rom:
             n, tx, k, tg = sm83.decode(self.data, pc, o)
             if tx is None:
                 return False
+            op = self.data[o]
+            w = self.data[o + 1] | self.data[o + 2] << 8
+            if op in (0xCF, 0xD7, 0xDF, 0xE7, 0xEF, 0xF7, 0x76):   # the game only uses rst $00; halt never appears
+                return False
+            if (op == 0xEA and w < 0x8000 and not 0x2000 <= w < 0x4000) or (op == 0xFA and w < 0x8000)                     or (op == 0x08 and w < 0xC000):
+                return False
             nops = nops + 1 if self.data[o] == 0 else 0
             if nops > 1 or (n_ins == 0 and self.data[o] in (0x00,)):
                 return False

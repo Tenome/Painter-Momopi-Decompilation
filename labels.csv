@@ -73,3 +73,10 @@ bank,addr,name,comment
 3,6000,TilesEnding,castle and trees: ending scene tiles (LoadTilesBank3C)
 3,6e10,TilesFont2,second font and misc tiles (LoadTilesBank3D)
 3,7e10,Bank3Padding,$ff padding to the end of the bank
+0,06a4,ObjectShapeTable,word pointers indexed by animation frame; each entry points at {count; dy; dx; tile; attr} sprite parts used by DrawObject
+0,199b,RoomTypeTable,per room-type data indexed by wRoomType
+1,4048,SoundSongTable,word offsets of song data (follows the frequency table at $4000)
+1,40f4,SoundCommandDataTable,per command word pointers used by SoundStartCommand
+1,48c4,PlayerAnimPtrs,player animation pointers (down/up/side) chosen by SelectPlayerAnimation
+1,48cc,PlayerAnimPtrsFlipped,pointers for the side animation drawn flipped
+1,5178,DirectionToAnimIndex,dpad direction nibble to animation index

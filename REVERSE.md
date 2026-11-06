@@ -31,10 +31,23 @@
 
 ## Data-Range Map
 
-Initial pass by `tools/gb_dis.py` (recursive descent from vectors, entry point, all call/jump targets and `rst $00` word tables).
+Traced by `tools/gb_dis.py` (21% code) and confirmed with tile sheets (`tools/tilesheet.py`) and the emulator.
 
-| Start | End | Size | Classification | Notes |
-|-------|-----|------|----------------|-------|
+| Start | End | Classification | Notes |
+|-------|-----|----------------|-------|
+| bank 0 $0000-$00ff | | vectors, $ff padding | VBlank at $40, serial at $58, `rst $00` dispatcher |
+| bank 0 $0100-$014f | | cartridge header | |
+| bank 0 $0150-$3fff | | code (about 7 KB) and data tables | mode handlers, VBlank, VRAM copy queues, DrawObject, text/room data |
+| bank 1 $4000-$4156 | | sound tables (frequencies, song offsets) | `SoundSongTable` $4048 |
+| bank 1 $4157-$487a | | sound engine | `SoundUpdate` |
+| bank 1 $487b-$7f54 | | game logic code and data (animations, rooms, maps) | `PlayFrame` $4bde |
+| bank 1 $7f55-$7fff | | $ff padding | |
+| bank 2 $4000-$73ff | | 2bpp sprite tiles (characters, enemies) | `SpriteTiles` |
+| bank 2 $7400-$7fff | | $ff padding | |
+| bank 3 $4000-$7e0f | | 2bpp background tiles: title logo, fonts, icons, castle | `TilesTitle`, `TilesIcons`, `TilesEnding`, `TilesFont2` |
+| bank 3 $7e10-$7fff | | $ff padding | |
+
+-------|-----|------|----------------|-------|
 | bank 0 $0000 | $00FF | 256 | vectors + $FF padding | |
 | bank 0 $0100 | $014F | 80 | cartridge header | `db` |
 | bank 0 $0150 | ... | ~12 KB | code (291 routines) + data | |
