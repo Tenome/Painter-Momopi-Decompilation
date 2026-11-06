@@ -1618,11 +1618,11 @@ L_00_1027::
     ld a, $00
     adc a, [hl]
     ld [hl], a
-    call L_00_1084
+    call DrawDecimalDigits
     dec hl
-    call L_00_1084
+    call DrawDecimalDigits
     dec hl
-    call L_00_1084
+    call DrawDecimalDigits
     ld a, $06
     ld [$c46d], a
     ld a, $01
@@ -1646,7 +1646,7 @@ L_00_1027::
     call L_00_10a2
     ld [$c474], a
     jp L_00_11b4
-L_00_1084::
+DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     push hl
     ld a, [hl]
     push bc
@@ -1935,7 +1935,7 @@ L_00_1265::
     ld a, [wRound]
     ld b, a
     ld hl, $9c71
-    call L_00_1cfd
+    call DrawTwoDigitNumber
     ld a, $e4
     ld [rBGP], a
     ld [rOBP0], a
@@ -2580,7 +2580,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld a, [wRound]
     ld b, a
     ld hl, $986c
-    call L_00_1cfd
+    call DrawTwoDigitNumber
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, L_00_1c8d
@@ -2591,7 +2591,7 @@ L_00_1c8d::
     ld b, a
 L_00_1c91::
     ld hl, $992c
-    call L_00_1cfd
+    call DrawTwoDigitNumber
     ld a, [wRound]
     ld hl, D_00_1d39
     call TableIndexFromRoundDec
@@ -2635,7 +2635,7 @@ L_00_1ce7::
     ld a, $01
     ld [$c484], a
     ret
-L_00_1cfd::
+DrawTwoDigitNumber::  ; B = value drawn as two BCD digits at HL
     ld a, $02
     ldh [$ffa0], a
     ld a, $01
@@ -2982,7 +2982,7 @@ Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld [rLCDC], a
     ei
     call L_00_2633
-L_00_24b7::
+Mode2_Init::  ; bonus select setup after LcdOff
     call LcdOff
     di
     ld a, [$c43b]
@@ -3056,7 +3056,7 @@ L_00_2545::
     jr nz, L_00_2545
     ld hl, $c43b
     inc [hl]
-    jp L_00_24b7
+    jp Mode2_Init
 L_00_2558::
     ld d, $01
     ld e, $00
@@ -3115,10 +3115,10 @@ L_00_25bc::
     ldh a, [$ff96]
     ld [hl], a
     ld [$c75a], a
-    jp L_00_24b7
+    jp Mode2_Init
 L_00_25c5::
     ld [$c75a], a
-    jp L_00_24b7
+    jp Mode2_Init
 D_00_25cb::
     INCBIN "orig/painter_momopie.gb", $025cb, 21
 L_00_25e0::
@@ -3209,7 +3209,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     ld a, $93
     ld [rLCDC], a
     ei
-L_00_2a27::
+TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start sends the round over the link port
     call WaitFrameAndSyncOam
     ldh a, [hSerialByte]
     bit 4, a
@@ -3240,7 +3240,7 @@ L_00_2a48::
 L_00_2a61::
     ldh a, [hJoyNew]
     cp a, $08
-    jr nz, L_00_2a27
+    jr nz, TitleLoop
     ld a, [$c755]
     cp a, $64
     jr z, L_00_2ae7
@@ -3285,7 +3285,7 @@ L_00_2ab7::
 L_00_2abc::
     ld a, $64
     ld [$c755], a
-    jp L_00_2a27
+    jp TitleLoop
 L_00_2ac4::
     ld hl, hLinkFlags
     set 0, [hl]
@@ -3298,10 +3298,10 @@ L_00_2ac4::
 L_00_2ad8::
     ld a, [$c755]
     cp a, $64
-    jp nz, L_00_2a27
+    jp nz, TitleLoop
     ldh a, [hJoyNew]
     cp a, $08
-    jp nz, L_00_2a27
+    jp nz, TitleLoop
 L_00_2ae7::
     ld a, [rSC]
     res 7, a
@@ -3750,7 +3750,7 @@ D_00_3148::
     INCBIN "orig/painter_momopie.gb", $03148, 94
 D_00_31a6::
     INCBIN "orig/painter_momopie.gb", $031a6, 60
-L_00_31e2::
+TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     ld hl, $ffd0
     inc [hl]
     inc hl
@@ -4761,7 +4761,7 @@ L_00_3897::
     ldh [$ffd4], a
     ret
 L_00_38fe::
-    call L_00_31e2
+    call TickObjectTimer
     jr nz, L_00_3906
     jp L_00_3a75
 L_00_3906::
@@ -5010,7 +5010,7 @@ L_00_3aed::
     nop
     ld [bc], a
     call SelectObject2
-    call L_00_31e2
+    call TickObjectTimer
     jr nz, L_00_3b02
     jp L_00_3bad
 L_00_3b02::
@@ -5117,7 +5117,7 @@ L_00_3bd2::
     INCBIN "orig/painter_momopie.gb", $03bd7, 186
 L_00_3c91::
     call SelectObject2
-    call L_00_31e2
+    call TickObjectTimer
     jr nz, L_00_3c9c
     jp L_00_3e20
 L_00_3c9c::
@@ -5258,7 +5258,7 @@ L_00_3e57::
     sub a, $d7
 L_00_3e61::
     call SelectObject2
-    call L_00_31e2
+    call TickObjectTimer
     jr nz, L_00_3e6c
     jp L_00_3ef9
 L_00_3e6c::

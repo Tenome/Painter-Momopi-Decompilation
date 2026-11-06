@@ -1,6 +1,6 @@
 ; RAM variables named from their use (see REVERSE.md). HRAM = $ff80-$fffe, WRAM = $c000-$dfff.
-DEF hJoyHeld        EQU $ff8b   ; joypad state, bit 7-4 = start/select/b/a ... bit 3-0 = down/up/left/right; 15 = soft-reset combo
-DEF hJoyNew         EQU $ff8c   ; buttons newly pressed this frame
+DEF hJoyHeld        EQU $ff8b   ; held buttons: bit7 down, 6 up, 5 left, 4 right, 3 start, 2 select, 1 B, 0 A ($0f = A+B+Select+Start = soft reset)
+DEF hJoyNew         EQU $ff8c   ; buttons newly pressed this frame (same bit layout)
 DEF hSpriteY        EQU $ff8d   ; pixel Y input of PixelToTilemapAddr
 DEF hSpriteX        EQU $ff8e   ; pixel X input of PixelToTilemapAddr
 DEF hTilemapAddrHi  EQU $ff8f   ; result of PixelToTilemapAddr

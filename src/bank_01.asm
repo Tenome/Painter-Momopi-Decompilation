@@ -2484,7 +2484,7 @@ L_01_536a::
     ret
 L_01_537a::
     call SelectObject2
-    call L_00_31e2
+    call TickObjectTimer
     jr nz, L_01_5385
     jp L_01_53c4
 L_01_5385::

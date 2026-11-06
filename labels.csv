@@ -97,3 +97,8 @@ bank,addr,name,comment
 0,16fc,RoomSpriteSetTable,17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
 0,171e,RoomMapTable,17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
 0,14f9,RoomVramJobTable,17 pointers to VRAM copy job lists
+0,2a27,TitleLoop,title screen loop: serial check; joypad; button codes; Start sends the round over the link port
+0,24b7,Mode2_Init,bonus select setup after LcdOff
+0,1084,DrawDecimalDigits,draws a byte as decimal digits using ByteToBCD
+0,1cfd,DrawTwoDigitNumber,B = value drawn as two BCD digits at HL
+0,31e2,TickObjectTimer,increments $ffd0; Z flag from bit 7 of $ffd1

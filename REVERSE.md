@@ -93,6 +93,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `wSoundChannels`), the rest is game logic (per-frame object updates for the play mode). Bank 0 `PlaySound` (A = sound id, $80+ for music/effects).
 - Emulator: `tools/emu.py` is a small non-cycle-exact interpreter (DMG, MBC1, serial with no partner returns $FF) with an end-of-frame renderer.
 - Graphics loading: bank 2 `$4000` 0x700 bytes and bank 3 `$4000/$5000/$6000/$6e10` blocks are copied to VRAM $8000 (2bpp tiles).
+- Joypad: `ReadJoypad` stores the D-pad in the high nibble and the buttons in the low nibble of `hJoyHeld` (down $80, up $40, left $20, right $10,
+  start $08, select $04, B $02, A $01). Button codes on the title screen (checked in the title loop, `TitleLoop` $2a27): Down+Right+A+B ($93) jumps to mode 6
+  (the ending scene; confirmed in the emulator), Up+Select+A+B ($47) sets bit 0 of $c49c (effect not yet identified; Start then begins a normal game).
 - Serial: `SerialHandler` ($0221) and `WaitSerialByte` ($0356): the game has a link-cable mode (`hSerialByte`).
 
 ### Data Structures

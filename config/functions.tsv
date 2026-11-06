@@ -143,7 +143,7 @@ bank	addr	size	name
 0	0fb5	11	L_00_0fb5
 0	100b	28	L_00_100b
 0	1027	93	L_00_1027
-0	1084	30	L_00_1084
+0	1084	30	DrawDecimalDigits
 0	10a2	2	L_00_10a2
 0	10a4	7	L_00_10a4
 0	10b5	89	Mode1_Play
@@ -207,7 +207,7 @@ bank	addr	size	name
 0	1c91	69	L_00_1c91
 0	1cd6	17	L_00_1cd6
 0	1ce7	22	L_00_1ce7
-0	1cfd	38	L_00_1cfd
+0	1cfd	38	DrawTwoDigitNumber
 0	1d23	12	L_00_1d23
 0	1dc0	38	Mode7_LinkLose
 0	1de6	6	L_00_1de6
@@ -231,7 +231,7 @@ bank	addr	size	name
 0	2065	19	L_00_2065
 0	2078	11	L_00_2078
 0	2497	32	Mode2_BonusSelect
-0	24b7	50	L_00_24b7
+0	24b7	50	Mode2_Init
 0	24e9	38	L_00_24e9
 0	250f	44	L_00_250f
 0	253b	10	L_00_253b
@@ -252,7 +252,7 @@ bank	addr	size	name
 0	261a	22	L_00_261a
 0	2633	23	L_00_2633
 0	29ea	61	Mode0_Title
-0	2a27	24	L_00_2a27
+0	2a27	24	TitleLoop
 0	2a3f	9	L_00_2a3f
 0	2a48	25	L_00_2a48
 0	2a61	42	L_00_2a61
@@ -299,7 +299,7 @@ bank	addr	size	name
 0	307f	6	L_00_307f
 0	3085	37	L_00_3085
 0	30aa	26	L_00_30aa
-0	31e2	9	L_00_31e2
+0	31e2	9	TickObjectTimer
 0	31eb	6	L_00_31eb
 0	31f1	21	L_00_31f1
 0	3206	35	L_00_3206
