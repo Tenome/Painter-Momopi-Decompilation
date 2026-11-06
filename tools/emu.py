@@ -34,6 +34,8 @@ class GB:
         self.line_cyc = 0
         self.joy = 0           # pressed bits (BTN values)
         self.serial_t = 0
+        self.partner = None    # second GB for link cable tests
+        self.serial_out = 0xFF
         self.frame = 0
         self.io[0x40] = 0x91
         self.io[0x47] = 0xFC
@@ -122,6 +124,7 @@ class GB:
                 self.io[2] = v
                 if v & 0x81 == 0x81:
                     self.serial_t = 4096
+                    self.serial_out = self.io[1]
             elif r == 0x44:
                 pass
             elif r == 0x00:
@@ -429,7 +432,14 @@ class GB:
                 self.serial_t -= c
                 if self.serial_t <= 0:
                     self.serial_t = 0
-                    self.io[1] = 0xFF
+                    pt = self.partner
+                    if pt is not None and (pt.io[2] & 0x81) == 0x80:     # partner armed with the external clock
+                        self.io[1] = pt.io[1]
+                        pt.io[1] = self.serial_out
+                        pt.io[2] &= 0x7F
+                        pt.io[0x0F] |= 0x08
+                    else:
+                        self.io[1] = 0xFF
                     self.io[2] &= 0x7F
                     self.io[0x0F] |= 0x08
             if self.line_cyc >= 456:

@@ -138,6 +138,8 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 - **Link cable (2 player)**, partly decoded: the title screen handshake sends `$ee` and treats `$ff` (no partner) as a single player game; Start sends `wRound | $80` (`SerialSendByte`).
   `SerialHandler` ($0221) decodes the received byte `rSB`: bit 7 set = round number from the other side (`$c7bf`, `hSerialByte` bit 4); `$04` sets `hLinkFlags` bit 1 and `hSerialByte` bits 6 and 7
   (the other player lost: `GotoLinkLose` runs from `PlayFrame`); `$08` sets `hLinkFlags` bit 2; a transfer started with the internal clock sets `hSerialByte` bits 0 and 2.
+  **Tested with two emulated machines** (`tools/link_test.py`, `emu.GB.partner`): choosing 2 PLAYER on both and pressing Start on one starts the same random round (here 26, Rouya room) on both with
+  one life each and `hLinkFlags` bit 0 set; the master ends with `hSerialByte` $05, the other machine $16.
   `LinkSyncFrame` ($4cf3) sends `$02` every frame while `wMagicPoints` high byte is 0 and reacts to the answer. Not testable in `tools/emu.py` (no partner).
 
 - **Card effects measured in the emulator** (cast each card at MP 128, hold right/down for 240 frames): MP drops by the cost exactly. S.UP: the painter moves about twice as fast for $f0 frames.
