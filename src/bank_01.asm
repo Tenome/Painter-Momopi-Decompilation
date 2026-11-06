@@ -46,8 +46,9 @@ SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (musi
     dw SoundStartEffect
     dw SoundStartEffect
     dw SoundStartEffect
-    dw SoundStartEffect
-    INCBIN "assets/bank_01/4142.bin"
+    INCBIN "assets/bank_01/4140.bin"
+D_01_4141::
+    INCBIN "assets/bank_01/4141.bin"
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -117,7 +118,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
     ld e, a
     ld a, [hl]
     ld d, a
-    ld hl, $411a
+    ld hl, SoundCommandHandlerTable
     add hl, bc
     add hl, bc
     ld a, [hl+]
@@ -185,7 +186,7 @@ SoundClearRegisterShadow::  ; zeroes the register shadow bytes at $c427-$c431
     ld [$c432], a
     ret
 SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces lower priority music)
-    ld hl, $4141
+    ld hl, D_01_4141
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -209,7 +210,7 @@ L_01_428c::
     ld [wSoundCmd], a
     ret
 SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
-    ld hl, $4141
+    ld hl, D_01_4141
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -3211,8 +3212,7 @@ Sound91EffectData::  ; stream of sound id $91
 Sound92EffectData::  ; stream of sound id $92
     INCBIN "assets/bank_01/5ca7_Sound92EffectData.bin"
 Sound93EffectData::  ; stream of sound id $93
-    ld bc, $0380
-    INCBIN "assets/bank_01/5cbd.bin"
+    INCBIN "assets/bank_01/5cba_Sound93EffectData.bin"
 UnusedSoundData0::  ; bytes after the last effect stream ($93 ends at $5cc9); never read in play tests
     INCBIN "assets/bank_01/5cca_UnusedSoundData0.bin"
 Sound81MusicData::  ; stream of sound id $81
@@ -3221,23 +3221,43 @@ UnusedSoundData1::  ; bytes after the title song ($81 reads $5e72-$5ef2 only); n
     INCBIN "assets/bank_01/5ef3_UnusedSoundData1.bin"
 Sound82EffectData::  ; stream of sound id $82
     INCBIN "assets/bank_01/609b_Sound82EffectData.bin"
+UnusedSoundData2::  ; bytes after song $82
+    INCBIN "assets/bank_01/60ec_UnusedSoundData2.bin"
 Sound83EffectData::  ; stream of sound id $83
     INCBIN "assets/bank_01/6294_Sound83EffectData.bin"
+UnusedSoundData3::  ; bytes after song $83
+    INCBIN "assets/bank_01/62ea_UnusedSoundData3.bin"
 Sound84MusicData::  ; stream of sound id $84
     INCBIN "assets/bank_01/6492_Sound84MusicData.bin"
+UnusedSoundData4::  ; bytes after song $84
+    INCBIN "assets/bank_01/65b5_UnusedSoundData4.bin"
 Sound85MusicData::  ; stream of sound id $85
     INCBIN "assets/bank_01/675d_Sound85MusicData.bin"
+UnusedSoundData5::  ; bytes after song $85
+    INCBIN "assets/bank_01/6a35_UnusedSoundData5.bin"
 Sound86MusicData::  ; stream of sound id $86
     INCBIN "assets/bank_01/6bdd_Sound86MusicData.bin"
+UnusedSoundData6::  ; bytes after song $86
+    INCBIN "assets/bank_01/6f03_UnusedSoundData6.bin"
 Sound87MusicData::  ; stream of sound id $87
     INCBIN "assets/bank_01/70ab_Sound87MusicData.bin"
+UnusedSoundData7::  ; bytes after song $87
+    INCBIN "assets/bank_01/7289_UnusedSoundData7.bin"
 Sound88MusicData::  ; stream of sound id $88
     INCBIN "assets/bank_01/7431_Sound88MusicData.bin"
+UnusedSoundData8::  ; bytes after song $88
+    INCBIN "assets/bank_01/76f2_UnusedSoundData8.bin"
 Sound89MusicData::  ; stream of sound id $89
     INCBIN "assets/bank_01/789a_Sound89MusicData.bin"
+UnusedSoundData9::  ; bytes after song $89
+    INCBIN "assets/bank_01/79ad_UnusedSoundData9.bin"
 Sound8AMusicData::  ; stream of sound id $8a
     INCBIN "assets/bank_01/7b55_Sound8AMusicData.bin"
+UnusedSoundDataA::  ; bytes after song $8a
+    INCBIN "assets/bank_01/7bad_UnusedSoundDataA.bin"
 Sound8BMusicData::  ; stream of sound id $8b
     INCBIN "assets/bank_01/7d55_Sound8BMusicData.bin"
+UnusedSoundDataB::  ; bytes after song $8b
+    INCBIN "assets/bank_01/7dad_UnusedSoundDataB.bin"
 D_01_7f55::
     INCBIN "assets/bank_01/7f55.bin"

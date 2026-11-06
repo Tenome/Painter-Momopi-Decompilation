@@ -8,10 +8,13 @@ Types:
   map    a room map: 16 lines of 16 digits 0-3 (2 bits per cell; 0 empty, 1 and 2 path pieces, 3 unused so far); 64 bytes in the ROM.
   u8     COUNT decimal values 0-255 (the first COUNT bytes of the region; the rest of the region is kept)
   u16be  COUNT decimal values 0-65535 stored high byte first
+  song   a sound data region: header and token stream, see tools/song_fmt.py (notes, lengths, commands; the size must stay the same)
   rounddata  the enemy spawn waves of a round: 6 pointers then the wave lists. Text: `wave N` then one line per spawn `kind x y delay`
          (`kind` indexes the enemy kinds, `delay` is compared with the seconds counter). The number of spawns in each wave must stay the same.
 """
 import csv, glob, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import song_fmt
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -83,6 +86,8 @@ def rounddata_to_bin(text, old, start, name):
 
 
 def to_txt(t, c, data, start=0):
+    if t == "song":
+        return song_fmt.to_txt(data, start)
     if t == "rounddata":
         return rounddata_to_txt(data, start)
     if t == "map":
@@ -93,6 +98,8 @@ def to_txt(t, c, data, start=0):
 
 
 def to_bin(t, c, n, text, old, start=0):
+    if t == "song":
+        return song_fmt.to_bin(text, start, len(old))
     if t == "rounddata":
         return rounddata_to_bin(text, old, start, n)
     if t == "map":

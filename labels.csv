@@ -326,3 +326,13 @@ bank,addr,name,comment
 0,3673,EnemyTileUnder,A = room map tile under the enemy (Y aligned to the grid)
 1,5cca,UnusedSoundData0,bytes after the last effect stream ($93 ends at $5cc9); never read in play tests
 1,5ef3,UnusedSoundData1,bytes after the title song ($81 reads $5e72-$5ef2 only); never read in play tests
+1,60ec,UnusedSoundData2,bytes after song $82
+1,62ea,UnusedSoundData3,bytes after song $83
+1,65b5,UnusedSoundData4,bytes after song $84
+1,6a35,UnusedSoundData5,bytes after song $85
+1,6f03,UnusedSoundData6,bytes after song $86
+1,7289,UnusedSoundData7,bytes after song $87
+1,76f2,UnusedSoundData8,bytes after song $88
+1,79ad,UnusedSoundData9,bytes after song $89
+1,7bad,UnusedSoundDataA,bytes after song $8a
+1,7dad,UnusedSoundDataB,bytes after song $8b

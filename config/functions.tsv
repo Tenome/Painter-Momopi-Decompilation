@@ -345,4 +345,3 @@ bank	addr	size	name
 1	59ff	42	EnemyKind3
 1	5a29	60	SelectKind3Animation
 1	5a65	17	EnemyKind3Init
-1	5cba	3	Sound93EffectData

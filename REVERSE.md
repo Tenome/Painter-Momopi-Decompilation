@@ -150,8 +150,9 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   (duty/length NRx1) follows the note; then a byte below `$80` is the note length (record +$b); a byte of `$80` or more means "keep the previous length". `$00-$7f` alone = a new length.
 
 - **Sound stream extents** (read addresses logged while each id plays in `tools/emu.py`): effects are short and clean: `$8d` $5c48-$5c5b, `$8e` $5c5c-$5c6f, `$8f` $5c70-$5c7f, `$90` $5c80-$5c92, `$91` $5c93-$5ca6,
-  `$92` $5ca7-$5cb9, `$93` $5cba-$5cc9. The title song `$81` reads only $5e72-$5ef2 (header of 3 channels at $5e73, streams at $5e91, $5eae, $5ec4); the other music ids could not be separated because the round
-  music keeps playing during the test.
+  `$92` $5ca7-$5cb9, `$93` $5cba-$5cc9. The title song `$81` reads only $5e72-$5ef2 (header of 3 channels at $5e73, streams at $5e91, $5eae, $5ec4); the other music ids were measured the same way after stopping all sound
+  (`$ff`): `$82` $609b-$60eb, `$83` $6294-$62e9, `$84` $6492-$65b4, `$85` $675d-$6a34, `$86` $6bdd-$6f02, `$87` $70ab-$7288, `$88` $7431-$76f1, `$89` $789a-$79ac, `$8a` $7b55-$7bac,
+  `$8b` $7d55-$7dac. Each region parses exactly as header plus tokens, so they have an editable text form (`tools/song_fmt.py`); the bytes between songs are never read (`UnusedSoundData*`).
 
 ### Text and VRAM jobs
 
@@ -216,8 +217,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
 
 Names of the main systems (modes, sound engine, magic, enemy slots, room maps, VRAM jobs) were confirmed with the emulator. Names of small helpers (ending scene steps,
 object movement, enemy helper routines, trail segments) come from reading the code and spot checks; treat them as provisional until each routine is rewritten and tested in C.
-The sound data after the first three channel streams of a song region does not parse as plain stream tokens (a stray `$fb` appears at `$5ef3` in the title song region),
-so the music is not yet available in an editable text form.
+The bytes after each song's last read byte (for example `$5ef3` onward after the title song) are never read by the game and are kept as raw `UnusedSoundData*` blocks.
 
 ## Next Tasks
 
@@ -231,7 +231,8 @@ so the music is not yet available in an editable text form.
 - [x] Magic cards: ids, costs, casting and the effect table are decoded; still to do: what each effect changes in the player and enemy routines
 - [ ] Decode the animation stream format (`SetObjectAnimation` data: frame ids and durations) and the `ObjectShapeTable` records into structured `db`/`dw`
 - [x] Data is extracted into `assets/` (no ROM needed to build); tile sets are PNG sheets; room maps, enemy spawn waves and the balance tables have text forms (`typed.csv`, `docs/MODDING.md`)
-- [ ] More editable forms: sound streams (header and note format), text/VRAM job streams, animation and shape data, the remaining bank 0/1 `.bin` regions (see the `assets/bank_NN` file names)
+- [x] Sound streams have a text form (`typed.csv`, type `song`)
+- [ ] More editable forms: text/VRAM job streams, animation and shape data, the remaining bank 0/1 `.bin` regions (see the `assets/bank_NN` file names)
 - [ ] Remove the last raw `.bin` data from the source tree by converting each region to `db`/`dw` records or a typed text form, then drop `assets/bank_*` for regions that have a complete typed form
 - [x] 2 player link mode: tested with two linked emulated machines (tools/link_test.py); protocol details beyond the start handshake still to document
 
