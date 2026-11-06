@@ -162,3 +162,5 @@ DEF wMagicScreenFlags EQU $c53b ; bit 1 = a card was just chosen (input locked),
 DEF wEnemyCount     EQU $c47e   ; enemies alive (spawning stops at 3)
 DEF wSpawnWave      EQU $c483   ; index (0-5) of the current wave in the round's list
 DEF wSpawnIndex     EQU $c484   ; next entry within the wave (1 based)
+DEF wContinues      EQU $c49b   ; continues left (5 in a normal game, $ff with the cheat)
+DEF wCheatFlags     EQU $c49c   ; bit 0 = title code Up+Select+A+B entered: unlimited continues

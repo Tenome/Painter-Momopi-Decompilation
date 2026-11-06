@@ -2430,10 +2430,10 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld [wLives], a
     ld a, $50
     call DelayFrames
-    ld a, [$c49b]
+    ld a, [wContinues]
     and a, a
     jr nz, .L_01_52fc
-    ld a, [$c49c]
+    ld a, [wCheatFlags]
     bit 0, a
     jr nz, .L_01_52fc
     ld a, $04

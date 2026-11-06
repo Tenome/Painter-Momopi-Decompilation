@@ -143,7 +143,7 @@ SerialHandler::  ; serial interrupt: stores received byte state in hSerialByte f
     pop af
     reti
 .L_00_0241:
-    ld hl, $c49c
+    ld hl, wCheatFlags
     bit 3, [hl]
     jr nz, .L_00_02b3
     ld a, [rSB]
@@ -2856,7 +2856,7 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld hl, hScratch00
     dec [hl]
     jr nz, .L_00_1e12
-    ld a, [$c49b]
+    ld a, [wContinues]
     and a, a
     jr z, .L_00_1e29
     ld a, $05
@@ -2942,11 +2942,11 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld [wMagicCol], a
     call RequestOamDma
     call ClearOamShadowY
-    ld a, [$c49c]
+    ld a, [wCheatFlags]
     bit 0, a
     jr z, .L_00_1f82
     ld a, $ff
-    ld [$c49b], a
+    ld [wContinues], a
     ld a, $02
     ld [$c44c], a
     ld a, $01
@@ -2960,7 +2960,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld a, $01
     ld [$c44c], a
     ld [$c44d], a
-    ld a, [$c49b]
+    ld a, [wContinues]
     call L_00_10a4
     ld [$c44e], a
 .L_00_1f93:
@@ -3019,7 +3019,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld c, $10
     call SerialSendByte
 .L_00_2014:
-    ld a, [$c49c]
+    ld a, [wCheatFlags]
     bit 0, a
     jr z, .L_00_201f
     ld a, $ff
@@ -3027,7 +3027,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
 .L_00_201f:
     ld a, $05
 .L_00_2021:
-    ld [$c49b], a
+    ld [wContinues], a
 .L_00_2024:
     ld a, $04
     jp GameModeDispatch
@@ -3046,7 +3046,7 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
 .L_00_2042:
     ld hl, $c51f
     res 2, [hl]
-    ld hl, $c49b
+    ld hl, wContinues
     dec [hl]
     ld a, $03
     jp GameModeDispatch
@@ -3380,11 +3380,11 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
 .L_00_2a3f:
     cp a, $47
     jr nz, .L_00_2a48
-    ld hl, $c49c
+    ld hl, wCheatFlags
     set 0, [hl]
 .L_00_2a48:
     call L_00_2b23
-    ld a, [$c49c]
+    ld a, [wCheatFlags]
     bit 5, a
     jr z, .L_00_2a61
     ld hl, $c49d
@@ -3392,7 +3392,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld a, [$c49d]
     and a, a
     jr nz, .L_00_2ad8
-    ld hl, $c49c
+    ld hl, wCheatFlags
     res 5, [hl]
 .L_00_2a61:
     ldh a, [hJoyNew]
@@ -3415,21 +3415,21 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     jr z, .L_00_2a9b
     jr .L_00_2abc
 .L_00_2a8b:
-    ld hl, $c49c
+    ld hl, wCheatFlags
     res 1, [hl]
     res 5, [hl]
     jr .L_00_2aa5
 .L_00_2a94:
-    ld hl, $c49c
+    ld hl, wCheatFlags
     set 1, [hl]
     jr .L_00_2aa5
 .L_00_2a9b:
     ld a, $a0
     ld [$c49d], a
-    ld hl, $c49c
+    ld hl, wCheatFlags
     set 5, [hl]
 .L_00_2aa5:
-    ld a, [$c49c]
+    ld a, [wCheatFlags]
     bit 1, a
     jp nz, .L_00_2abc
     bit 5, a
@@ -3466,7 +3466,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld a, $88
     ld [rSB], a
     call SerialStartTransfer
-    ld hl, $c49c
+    ld hl, wCheatFlags
     set 3, [hl]
     ld a, $01
     ld [wRound], a
@@ -3511,7 +3511,7 @@ L_00_2b23::
 InitTitleVariables::  ; clears hLinkFlags and the variables used by the title screen
     xor a, a
     ldh [hLinkFlags], a
-    ld [$c49c], a
+    ld [wCheatFlags], a
     ld [wMagicCards], a
     ld [$c43f], a
     ld [$c440], a
@@ -3523,7 +3523,7 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     ld [$c446], a
     ld [$c487], a
     ld a, $05
-    ld [$c49b], a
+    ld [wContinues], a
     ld a, $34
     ld [wCursorX], a
     ld a, $64
@@ -3623,7 +3623,7 @@ Mode6_Ending::  ; castle scene after the last round
     jr z, .L_00_2d16
     call L_00_2fb9
     ld a, $10
-    ld [$c49c], a
+    ld [wCheatFlags], a
     ld a, $05
     ld [$c49d], a
 .L_00_2d33:
@@ -3635,7 +3635,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, [$c790]
     cp a, $08
     jr nz, .L_00_2d33
-    ld hl, $c49c
+    ld hl, wCheatFlags
     dec [hl]
     jr nz, .L_00_2d33
     ld a, [$c49d]
