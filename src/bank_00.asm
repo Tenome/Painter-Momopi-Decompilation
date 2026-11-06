@@ -3383,7 +3383,7 @@ TitleLoop::  ; title screen loop: serial check; joypad; button codes; Start send
     ld hl, wCheatFlags
     set 0, [hl]
 .L_00_2a48:
-    call L_00_2b23
+    call TitleCursorUpdate
     ld a, [wCheatFlags]
     bit 5, a
     jr z, .L_00_2a61
@@ -3488,7 +3488,7 @@ PickRandomRound::  ; title button code path: chooses wRound from hRngCounter (va
     dec a
     ld [wRoomIndex], a
     ret
-L_00_2b23::
+TitleCursorUpdate::  ; Select toggles wCursorY between $64 (1 PLAYER) and $74 (2 PLAYER); draws the cursor object
     ldh a, [hJoyNew]
     cp a, $04
     jr nz, .L_00_2b2b

@@ -118,7 +118,7 @@ bank	addr	size	name
 0	29ea	61	Mode0_Title
 0	2a27	227	TitleLoop
 0	2b0a	25	PickRandomRound
-0	2b23	35	L_00_2b23
+0	2b23	35	TitleCursorUpdate
 0	2b46	62	InitTitleVariables
 0	2b84	18	L_00_2b84
 0	2c70	237	Mode6_Ending

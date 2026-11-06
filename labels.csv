@@ -260,3 +260,4 @@ bank,addr,name,comment
 0,31f1,StepEnemySpawnScript,reads the round's spawn list (RoundDataTable by wRound; position $c481/$c482, index $c483/$c484) and creates enemies
 1,56a2,InitProjectile,creates the projectile object at wProjectile for the kind 10 enemy
 1,556a,UpdateProjectile,projectile steps while the shooter enemy lives; removed when the shooter is hit
+0,2b23,TitleCursorUpdate,Select toggles wCursorY between $64 (1 PLAYER) and $74 (2 PLAYER); draws the cursor object
