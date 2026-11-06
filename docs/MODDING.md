@@ -31,3 +31,11 @@ regions with padding after them (`Bank2Padding`, `Bank3Padding`, the end of bank
 `python tools/build_port.py` recompiles the traced routines to C and reads the ROM at run time, so a modded ROM (`build/painter_momopie.gb`) can be
 played natively as is: `build\recomp\game_win.exe build\painter_momopie.gb`. Code changes need `tools/gb_dis.py` to be re-run only if you want the
 disassembler to trace your new code (it works from the original ROM); edit `src/*.asm` directly for code mods and rebuild with `tools/build.py --mod`.
+
+## Size limits (why data cannot grow yet)
+
+Banks 0 and 1 are completely full ($4000 bytes each), so a mod cannot make any data in them longer (a longer song, more spawns, a bigger table);
+only bank 2 (3072 spare bytes) and bank 3 (496) have padding, and both hold only graphics. Code no longer contains raw addresses of moved data
+for the `ld bc` animation pointers, the bank 3 tile sources, the sound writers and the tables (`bcptrs.csv`, `farptrs.csv`), so data can move without
+breaking those references, but there is still no room to move it to. Level packs need either new ROM banks (header and MBC bank-switch code changes) or
+moving large static data (graphics, music) to new banks to free space in banks 0 and 1; see `docs/PORTING.md`.
