@@ -131,8 +131,7 @@ Traced as code: 9,379 bytes (14.3 %). Everything else is `db` in `src/bank_NN.as
   `RunMagicEffect` jumps through `MagicEffectTable` ($4cd7) to the card's routine, which starts `BeginMagicCast` and a countdown in `hMagicTimer` (`MagicTimerTick`). Enemy routines test `wActiveMagic`
   (T.STOP and others) and `wMagicState` bit 0 to change behaviour.
 
-- **Enemy spawning** (`StepEnemySpawnScript` $31f1): `RoundDataTable[wRound-1]` points to 6 wave lists; a wave list is `count` then `count` entries of 4 bytes: spawn delay (compared with
-  `hTimeSeconds`), X, Y and a kind/flavour byte (`and $f8` is stored as the kind data, bit 0 or bit 1 picks the variant from round 17 on). An enemy is created when the delay has
+- **Enemy spawning** (`StepEnemySpawnScript` $31f1): `RoundDataTable[wRound-1]` points to 6 wave lists; a wave list is `count` then `count` entries of 4 bytes: kind (`hEnemyKind`), X, Y (`and $f8`; the low bits 0/1 or 2 are variant flags stored in `$ffcf`, bit 1 from round 17 on) and a delay (compared with `hTimeSeconds`). An enemy is created when the delay has
   elapsed and fewer than 3 are alive (`wEnemyCount`); `wSpawnIndex` advances, then `wSpawnWave` when the list is exhausted.
 
 - **Link cable (2 player)**, partly decoded: the title screen handshake sends `$ee` and treats `$ff` (no partner) as a single player game; Start sends `wRound | $80` (`SerialSendByte`).

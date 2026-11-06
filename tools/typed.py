@@ -8,6 +8,8 @@ Types:
   map    a room map: 16 lines of 16 digits 0-3 (2 bits per cell; 0 empty, 1 and 2 path pieces, 3 unused so far); 64 bytes in the ROM.
   u8     COUNT decimal values 0-255 (the first COUNT bytes of the region; the rest of the region is kept)
   u16be  COUNT decimal values 0-65535 stored high byte first
+  rounddata  the enemy spawn waves of a round: 6 pointers then the wave lists. Text: `wave N` then one line per spawn `kind x y delay`
+         (`kind` indexes the enemy kinds, `delay` is compared with the seconds counter). The number of spawns in each wave must stay the same.
 """
 import csv, glob, os, sys
 
@@ -41,7 +43,48 @@ def map_to_bin(text):
     return bytes(cells[i] << 6 | cells[i + 1] << 4 | cells[i + 2] << 2 | cells[i + 3] for i in range(0, 256, 4))
 
 
-def to_txt(t, c, data):
+def rounddata_to_txt(data, start):
+    out = []
+    for w in range(6):
+        p = (data[2 * w] | data[2 * w + 1] << 8) - start
+        n = data[p]
+        out.append(f"wave {w}")
+        out += [" ".join(str(v) for v in data[p + 1 + 4 * i:p + 5 + 4 * i]) for i in range(n)]
+    return "\n".join(out) + "\n"
+
+
+def rounddata_to_bin(text, old, start, name):
+    data = bytearray(old)
+    cur, waves = None, {}
+    for ln in text.splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        if ln.startswith("wave"):
+            cur = int(ln.split()[1])
+            waves[cur] = []
+        else:
+            vals = [int(x) for x in ln.split()]
+            if len(vals) != 4 or any(not 0 <= v < 256 for v in vals):
+                raise SystemExit(f"{name}: a spawn line needs 4 values 0-255: {ln!r}")
+            waves[cur].append(vals)
+    written = {}
+    for w in range(6):
+        p = (old[2 * w] | old[2 * w + 1] << 8) - start
+        n = old[p]
+        if len(waves.get(w, [])) != n:
+            raise SystemExit(f"{name}: wave {w} must keep {n} spawns")
+        flat = bytes(v for e in waves[w] for v in e)
+        if p in written and written[p] != flat:
+            raise SystemExit(f"{name}: waves sharing the list at {p + start:04x} must stay identical")
+        written[p] = flat
+        data[p + 1:p + 1 + len(flat)] = flat
+    return bytes(data)
+
+
+def to_txt(t, c, data, start=0):
+    if t == "rounddata":
+        return rounddata_to_txt(data, start)
     if t == "map":
         return map_to_txt(data)
     if t == "u8":
@@ -49,7 +92,9 @@ def to_txt(t, c, data):
     return " ".join(str(data[2 * i] << 8 | data[2 * i + 1]) for i in range(c)) + "\n"
 
 
-def to_bin(t, c, n, text, old):
+def to_bin(t, c, n, text, old, start=0):
+    if t == "rounddata":
+        return rounddata_to_bin(text, old, start, n)
     if t == "map":
         return map_to_bin(text)
     vals = [int(x) for x in text.split()]
@@ -65,7 +110,7 @@ def main():
         os.makedirs(os.path.join(ROOT, "assets", "typed"), exist_ok=True)
         for b, a, t, n, c in entries():
             data = open(find_bin(b, a), "rb").read()
-            open(os.path.join(ROOT, "assets", "typed", n + ".txt"), "w", newline="\n").write(to_txt(t, c, data))
+            open(os.path.join(ROOT, "assets", "typed", n + ".txt"), "w", newline="\n").write(to_txt(t, c, data, int(a, 16)))
         print("wrote text forms to assets/typed/")
     elif cmd == "bin":
         done = 0
@@ -75,7 +120,7 @@ def main():
                 continue
             target = find_bin(b, a)
             old = open(target, "rb").read()
-            data = to_bin(t, c, n, open(p).read(), old)
+            data = to_bin(t, c, n, open(p).read(), old, int(a, 16))
             if data != old:
                 open(target, "wb").write(data)
                 print("updated", os.path.relpath(target, ROOT))
