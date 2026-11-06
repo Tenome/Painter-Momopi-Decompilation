@@ -1242,7 +1242,7 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     ld [wPaintObject], a
     call InitTrailSegments
     jp BeginMagicCast
-L_01_49a0::
+ForEachEnemySlotInit::  ; loops the 16 entries of EnemySlotTable (name provisional)
     ld a, $0f
     ldh [hScratch00], a
 .L_01_49a4:
@@ -1789,7 +1789,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     call SetObjPtr
     ld hl, $c519
     inc [hl]
-    call L_01_4e53
+    call MagicPaintEndUnlessBit2
     ld a, [wPlayerX]
     ld c, a
     ld a, [wPlayerY]
@@ -1824,7 +1824,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     bit 1, a
     jr nz, .L_01_4e16
     call SpawnBombBlob
-    call L_01_49a0
+    call ForEachEnemySlotInit
 .L_01_4e16:
     call LoadTrailSegment
     ld hl, wPaintObject
@@ -1855,7 +1855,7 @@ L_01_4e47::
     xor a, a
     ld [wMagicState], a
     jr EndMagicPaint
-L_01_4e53::
+MagicPaintEndUnlessBit2::  ; ends the magic paint unless wPaintObject bit 2 is set (name provisional)
     ld a, [wPaintObject]
     bit 2, a
     ret nz
@@ -2571,11 +2571,11 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     bit 2, a
     jp nz, EnemyDefeated
     call L_00_39b1
-    call L_01_5636
+    call EnemyKind10Move
     call UpdateProjectile
-    call L_01_55bc
+    call ProjectileCheckPlayerHit
     call ProjectileRemoveIfHit
-    call L_01_5549
+    call ProjectileSelectFrame
     call SelectObject2
     jp DrawObject
 ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
@@ -2586,7 +2586,7 @@ ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags
     ld hl, wProjectile
     res 7, [hl]
     jp RemoveEnemy
-L_01_5549::
+ProjectileSelectFrame::  ; picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2 (name provisional)
     ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_01_5559
@@ -2652,7 +2652,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyFlags
     set 0, [hl]
     ret
-L_01_55bc::
+ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9 (name provisional)
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
@@ -2682,7 +2682,7 @@ L_01_55bc::
     xor a, a
     ld [$c4af], a
 .L_01_55fb:
-    call L_01_5618
+    call EnemyKind10Animate
     ld hl, wProjectile
     call SetObjPtr
     call MoveObject
@@ -2694,7 +2694,7 @@ L_01_55bc::
     ld hl, hEnemyFlags
     set 1, [hl]
     ret
-L_01_5618::
+EnemyKind10Animate::  ; toggles between two animations D_01_57ec and D_01_57ee every 4 ticks (kind $0a only; name provisional)
     ldh a, [hEnemyKind]
     cp a, $0a
     ret nz
@@ -2711,7 +2711,7 @@ L_01_5618::
     ld a, h
     ld [$c4a0], a
     ret
-L_01_5636::
+EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 indexed by hEnemyDir (name provisional)
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
@@ -2832,7 +2832,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld [$c499], a
     ld a, h
     ld [$c49a], a
-    jp L_01_5549
+    jp ProjectileSelectFrame
 L_01_570c::
     ld a, [wPlayerY]
     ld e, a

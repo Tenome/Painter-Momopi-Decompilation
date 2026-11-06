@@ -4938,7 +4938,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
 EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards standing in the corridor rooms 13-15 and 29-31)
     call TickObjectTimer
     jr nz, .L_00_3906
-    jp L_00_3a75
+    jp EnemyInitMoveAnim
 .L_00_3906:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5136,7 +5136,7 @@ EnemyChooseDirection::  ; when hEnemyDir bit 6 is set: picks a new direction amo
     or a, b
     ldh [hEnemyDir], a
     ret
-L_00_3a75::
+EnemyInitMoveAnim::  ; sets counter $20 and picks the first animation by enemy kind 6 or 8 or default (name provisional)
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $04
@@ -5207,7 +5207,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call CheckPaintHitsEnemy
     call SetEnemyAnimation
     jp DrawObject
-L_00_3b3b::
+EnemyAuxCounterStep::  ; when hEnemyFlags bit 0 is set clears it and steps hEnemyAux up to $80 (name provisional)
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
@@ -5380,13 +5380,13 @@ EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    call L_00_3d18
+    call EnemyKind7NextStep
     call MoveAndClampObject
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
-    call L_00_3cb5
+    call EnemyKind7Update
     jp DrawObject
-L_00_3cb5::
+EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provisional)
     ldh a, [hEnemyDir]
     bit 0, a
     jr z, .L_00_3ccd
@@ -5434,7 +5434,7 @@ L_00_3cb5::
     jp SetAnimationVariant
 .L_00_3d15:
     jp RemoveEnemy
-L_00_3d18::
+EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provisional)
     ldh a, [hEnemyDir]
     bit 0, a
     ret nz
@@ -5518,7 +5518,7 @@ EnemyKind5::  ; enemy kind 5
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3e6c
-    jp L_00_3ef9
+    jp EnemyBuildTeleportTable
 .L_00_3e6c:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5533,10 +5533,10 @@ EnemyKind5::  ; enemy kind 5
     call CheckEnemyTouchesPlayer
 .L_00_3e84:
     call CheckPaintHitsEnemy
-    call L_00_3e90
+    call EnemyIdleAnimate
     call EnemyKind7Teleport
     jp DrawObject
-L_00_3e90::
+EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
     ldh a, [hEnemyDir]
     bit 1, a
     jr nz, .L_00_3eb0
@@ -5593,7 +5593,7 @@ EnemyKind7Teleport::  ; moves the enemy to the next position in the table at $c4
     inc [hl]
     ld de, D_00_3f44
     jp SetObjectAnimation
-L_00_3ef9::
+EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy (+-$10) (name provisional)
     ld a, $20
     ldh [hEnemyCounter], a
     ldh a, [hEnemyX]

@@ -1452,7 +1452,7 @@
      }
     },
     {
-     "name": "L_00_3a75",
+     "name": "EnemyInitMoveAnim",
      "size": "45",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1468,7 +1468,7 @@
      }
     },
     {
-     "name": "L_00_3b3b",
+     "name": "EnemyAuxCounterStep",
      "size": "28",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1564,7 +1564,7 @@
      }
     },
     {
-     "name": "L_00_3cb5",
+     "name": "EnemyKind7Update",
      "size": "99",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1572,7 +1572,7 @@
      }
     },
     {
-     "name": "L_00_3d18",
+     "name": "EnemyKind7NextStep",
      "size": "82",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1596,7 +1596,7 @@
      }
     },
     {
-     "name": "L_00_3e90",
+     "name": "EnemyIdleAnimate",
      "size": "65",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1612,7 +1612,7 @@
      }
     },
     {
-     "name": "L_00_3ef9",
+     "name": "EnemyBuildTeleportTable",
      "size": "65",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2143,7 +2143,7 @@
      }
     },
     {
-     "name": "L_01_49a0",
+     "name": "ForEachEnemySlotInit",
      "size": "54",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2383,7 +2383,7 @@
      }
     },
     {
-     "name": "L_01_4e53",
+     "name": "MagicPaintEndUnlessBit2",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2607,7 +2607,7 @@
      }
     },
     {
-     "name": "L_01_5549",
+     "name": "ProjectileSelectFrame",
      "size": "33",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2623,7 +2623,7 @@
      }
     },
     {
-     "name": "L_01_55bc",
+     "name": "ProjectileCheckPlayerHit",
      "size": "92",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2631,7 +2631,7 @@
      }
     },
     {
-     "name": "L_01_5618",
+     "name": "EnemyKind10Animate",
      "size": "30",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2639,7 +2639,7 @@
      }
     },
     {
-     "name": "L_01_5636",
+     "name": "EnemyKind10Move",
      "size": "52",
      "fuzzy_match_percent": 100.0,
      "metadata": {
