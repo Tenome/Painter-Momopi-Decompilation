@@ -259,13 +259,13 @@ bank	addr	size	name
 1	485b	32	PlaySound_Bank1
 1	4927	8	L_01_4927
 1	492f	8	L_01_492f
-1	4937	32	L_01_4937
+1	4937	32	CheckBonusRound
 1	4957	11	BeginMagicCast
 1	4962	5	MagicTimerTick
 1	4967	5	EndMagic
 1	496c	52	L_01_496c
 1	49a0	54	L_01_49a0
-1	49d6	91	L_01_49d6
+1	49d6	91	SpawnPaintBlob
 1	4a31	24	L_01_4a31
 1	4a49	44	L_01_4a49
 1	4a75	40	L_01_4a75
@@ -297,8 +297,8 @@ bank	addr	size	name
 1	4e53	6	L_01_4e53
 1	4e59	30	L_01_4e59
 1	4e77	102	MagicEffectClear
-1	4edd	42	L_01_4edd
-1	4f07	26	L_01_4f07
+1	4edd	42	MapCellToVramAddr
+1	4f07	26	QueueCellTileRows
 1	4f21	48	ClampPlayerPosition
 1	4f51	9	LoadPlayerXY
 1	4f5a	55	L_01_4f5a
@@ -328,7 +328,7 @@ bank	addr	size	name
 1	5618	30	L_01_5618
 1	5636	52	L_01_5636
 1	566a	13	L_01_566a
-1	5677	43	L_01_5677
+1	5677	43	ProjectileHitTest
 1	56a2	106	InitProjectile
 1	570c	118	L_01_570c
 1	57f0	39	EnemyKind9
@@ -339,7 +339,7 @@ bank	addr	size	name
 1	5899	54	EnemyKind2
 1	58cf	31	L_01_58cf
 1	58ee	89	L_01_58ee
-1	5947	40	L_01_5947
+1	5947	40	SpawnEnemyProjectile
 1	596f	71	L_01_596f
 1	59b6	21	L_01_59b6
 1	59ff	42	EnemyKind3

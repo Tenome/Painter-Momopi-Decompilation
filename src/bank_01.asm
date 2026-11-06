@@ -1184,7 +1184,7 @@ L_01_492f::
     res 7, [hl]
     res 0, [hl]
     ret
-L_01_4937::
+CheckBonusRound::  ; sets wGameFlags bit 6 (go to the bonus screens after the clear) when wRound is 4 8 12 20 24 or 28
     ld a, [wRound]
     cp a, $04
     jr z, .L_01_4951
@@ -1277,7 +1277,7 @@ L_01_49a0::
     bit 7, a
     ret nz
     jr .L_01_49a4
-L_01_49d6::
+SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player's position (flags $86)
     ld hl, wPaintObject
     call Clear32Bytes
     ld hl, $492b
@@ -1779,7 +1779,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
     ld a, [wMagicState]
     bit 1, a
     jr nz, .L_01_4dc2
-    call L_01_49d6
+    call SpawnPaintBlob
 .L_01_4dc2:
     ld hl, wPaintObject
     call SetObjPtr
@@ -1917,14 +1917,14 @@ MagicEffectClear::  ; card 8 CLEAR: $50 steps
     ld [hl], a
     ldh [hScratch02], a
     push bc
-    call L_01_4edd
-    call L_01_4f07
+    call MapCellToVramAddr
+    call QueueCellTileRows
     pop bc
     ld hl, wPaintRemaining
     dec [hl]
     jp z, RoundCleared
     jr .L_01_4ebc
-L_01_4edd::
+MapCellToVramAddr::  ; hScratch00/01 = background map address of the cell at pixel position B C
     xor a, a
     ldh [hScratch00], a
     ld a, $98
@@ -1951,7 +1951,7 @@ L_01_4edd::
     adc a, $00
     ldh [hScratch01], a
     ret
-L_01_4f07::
+QueueCellTileRows::  ; queues the 2x2 tile update of a cell (painted tiles D_01_4921 or normal D_01_491b)
     ld de, D_01_4921
     ldh a, [hScratch02]
     and a, $0f
@@ -2194,7 +2194,7 @@ NextRound::  ; wRound and room index advance by one (round $21 ends the game); c
     inc [hl]
     ld hl, wPlayerStatus
     res 5, [hl]
-    call L_01_4937
+    call CheckBonusRound
     ld a, [wGameFlags]
     bit 6, a
     jp z, .L_01_50eb
@@ -2660,7 +2660,7 @@ L_01_55bc::
     ldh [hScratch02], a
     ld a, [$c4a9]
     ldh [hScratch03], a
-    call L_01_5677
+    call ProjectileHitTest
     and a, a
     jr z, .L_01_560d
     ld hl, hEnemyDir
@@ -2728,7 +2728,7 @@ L_01_5636::
     ldh [hScratch02], a
     ldh a, [hEnemyYHi]
     ldh [hScratch03], a
-    call L_01_5677
+    call ProjectileHitTest
     and a, a
     ret nz
     ld hl, hEnemyFlags
@@ -2743,7 +2743,7 @@ L_01_566a::
     ld hl, hEnemyFlags
     set 3, [hl]
     ret
-L_01_5677::
+ProjectileHitTest::  ; compares projectile and player boxes (hScratch00-03): A = 1 on a hit
     ldh a, [hScratch01]
     cp a, $ff
     jr z, .L_01_56a0
@@ -3017,7 +3017,7 @@ L_01_58cf::
     call L_00_3449
     and a, a
     ret nz
-    jp L_01_5947
+    jp SpawnEnemyProjectile
 L_01_58ee::
     ld a, [wActiveMagic]
     cp a, $03
@@ -3062,7 +3062,7 @@ L_01_58ee::
     ld hl, wProjectile
     res 7, [hl]
     ret
-L_01_5947::
+SpawnEnemyProjectile::  ; creates the projectile at wProjectile in front of the shooter enemy
     ld hl, wProjectile
     call Clear32Bytes
     ld a, $04

@@ -261,3 +261,9 @@ bank,addr,name,comment
 1,56a2,InitProjectile,creates the projectile object at wProjectile for the kind 10 enemy
 1,556a,UpdateProjectile,projectile steps while the shooter enemy lives; removed when the shooter is hit
 0,2b23,TitleCursorUpdate,Select toggles wCursorY between $64 (1 PLAYER) and $74 (2 PLAYER); draws the cursor object
+1,4937,CheckBonusRound,sets wGameFlags bit 6 (go to the bonus screens after the clear) when wRound is 4 8 12 20 24 or 28
+1,49d6,SpawnPaintBlob,creates the paint blob object at wPaintObject at the player's position (flags $86)
+1,5947,SpawnEnemyProjectile,creates the projectile at wProjectile in front of the shooter enemy
+1,4edd,MapCellToVramAddr,hScratch00/01 = background map address of the cell at pixel position B C
+1,4f07,QueueCellTileRows,queues the 2x2 tile update of a cell (painted tiles D_01_4921 or normal D_01_491b)
+1,5677,ProjectileHitTest,compares projectile and player boxes (hScratch00-03): A = 1 on a hit
