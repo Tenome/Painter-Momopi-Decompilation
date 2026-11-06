@@ -61,7 +61,7 @@ bank,addr,name,comment
 1,4f21,ClampPlayerPosition,keeps the player inside X $20-$f0 and Y $28-$f8
 1,4f91,HoldDirectionUntilAligned,keeps hJoyHeld direction until the player reaches the next tile
 1,510f,PlayerSetDirection,dpad to wPlayerDir and the animation index
-1,4fd6,CheckPlayerTileCollision,
+1,4fd6,PaintUnderPlayer,when the player is on the tile grid and the map cell is a path cell: PaintCell
 1,4b1f,SelectPlayerAnimation,picks the animation table by direction
 1,5044,RoundCleared,runs when every path cell is painted ($c520 reached 0): restores palettes; plays sound $8a; clear animation
 1,5223,PlayerDeath,waits $27 frames; plays sound $8b; runs the death animation (wPlayerDir bit 5)
@@ -280,3 +280,5 @@ bank,addr,name,comment
 0,0b44,NextRandomDirection,derives a pseudo random direction nibble from hFrameSpin
 0,2065,ContinueCursorInput,A or B moves the YES/NO cursor (wCursorX $3c or $74) in the continue mode
 1,4ca7,PayMagicCost,subtracts the card cost from wMagicPoints (borrowing from the high byte) and starts the effect; cancels the cast when MP is too low
+1,4feb,PaintUnderPlayerCell,looks up the cell under the player and paints it (shared tail of PaintUnderPlayer)
+1,4f5a,AnimatePlayerWalk,while a direction is held: advances the walk animation counter $c4d9 and selects the frame

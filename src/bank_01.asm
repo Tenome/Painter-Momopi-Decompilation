@@ -1572,7 +1572,7 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     call HoldDirectionUntilAligned
     call PlayerSetDirection
     call ClampPlayerPosition
-    call CheckPlayerTileCollision
+    call PaintUnderPlayer
     call SelectPlayerAnimation
     call ProjectileFrame
     ld a, [wActiveMagic]
@@ -1587,7 +1587,7 @@ PlayFrame::  ; one frame of play mode: input; movement; collisions; drawing the 
     and a, $02
     ret z
 .L_01_4c42:
-    call L_01_4f5a
+    call AnimatePlayerWalk
     ld hl, wPlayer
     call SetObjPtr
     jp DrawObject
@@ -1996,7 +1996,7 @@ LoadPlayerXY::  ; B = wPlayerX and C = wPlayerY
     ld hl, wPlayerY
     ld c, [hl]
     ret
-L_01_4f5a::
+AnimatePlayerWalk::  ; while a direction is held: advances the walk animation counter $c4d9 and selects the frame
     ld a, [hJoyHeld]
     and a, $f0
     ret z
@@ -2065,7 +2065,7 @@ HoldDirectionUntilAligned::  ; keeps hJoyHeld direction until the player reaches
     or a, d
     ldh [hJoyHeld], a
     ret
-CheckPlayerTileCollision::
+PaintUnderPlayer::  ; when the player is on the tile grid and the map cell is a path cell: PaintCell
     ld a, [wActiveMagic]
     cp a, $09
     jr nz, .L_01_4fe3
@@ -2076,7 +2076,7 @@ CheckPlayerTileCollision::
     ld a, [wActiveMagic]
     cp a, $02
     jp z, L_01_50fa
-L_01_4feb::
+PaintUnderPlayerCell::  ; looks up the cell under the player and paints it (shared tail of PaintUnderPlayer)
     ld a, [wPlayerX]
     call PixelXToColumn
     ld a, [wPlayerY]
@@ -2219,7 +2219,7 @@ L_01_50fa::
     call LookupMapTile
     or a, a
     ret z
-    jp L_01_4feb
+    jp PaintUnderPlayerCell
 PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ldh a, [hJoyHeld]
     ld e, a

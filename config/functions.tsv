@@ -301,10 +301,10 @@ bank	addr	size	name
 1	4f07	26	QueueCellTileRows
 1	4f21	48	ClampPlayerPosition
 1	4f51	9	LoadPlayerXY
-1	4f5a	55	L_01_4f5a
+1	4f5a	55	AnimatePlayerWalk
 1	4f91	69	HoldDirectionUntilAligned
-1	4fd6	21	CheckPlayerTileCollision
-1	4feb	27	L_01_4feb
+1	4fd6	21	PaintUnderPlayer
+1	4feb	27	PaintUnderPlayerCell
 1	5006	62	PaintCell
 1	5044	109	RoundCleared
 1	50b1	5	GotoLinkLose
