@@ -190,3 +190,7 @@ ProjectileRemoveIfHit
 PixelToTilemapAddr
 MapCellToVramAddr
 UnpackRoomMap
+CameraFollowPlayerX
+ResetCamera
+UpdateCamera
+InitPlayer

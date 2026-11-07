@@ -3260,3 +3260,62 @@ void *gb_native_UnpackRoomMap(void) {
     r.f = 0x80;
     return 0;
 }
+
+/* The camera: a 16 bit position (wCameraX/Hi, wCameraY/Hi) that follows the player, clamped to 0..$60 horizontally and 0..$70 vertically. */
+static void follow(uint16_t cam, uint16_t cam_hi, uint8_t player, uint8_t offset, uint8_t limit) {
+    uint8_t lo = (uint8_t)(player - offset);
+    wr(cam, lo);
+    uint8_t hi = (uint8_t)(rd(cam_hi) - (player < offset ? 1 : 0));
+    wr(cam_hi, hi);
+    if (hi & 0x80) { wr(cam_hi, 0); wr(cam, 0); }
+    else if (lo >= limit) { wr(cam, limit); wr(cam_hi, 0); }
+}
+void *gb_native_CameraFollowPlayerX(void) {
+    follow(wCameraX, wCameraXHi, rd(wPlayerX), 0x58, 0x60);
+    follow(wCameraY, wCameraYHi, rd(wPlayerY), 0x68, 0x70);
+    return 0;
+}
+
+void *gb_native_ResetCamera(void) {
+    wr(wCameraX, 0x20);
+    wr(wCameraY, 0x20);
+    wr(wCameraXHi, 0);
+    wr(wCameraYHi, 0);
+    r.a = 0;
+    return 0;
+}
+
+/* UpdateCamera: follows the player, then the scroll registers of the next VBlank are the camera. */
+void *gb_native_UpdateCamera(void) {
+    gb_native_CameraFollowPlayerX();
+    wr(wScrollX, rd(wCameraX));
+    wr(wScrollY, rd(wCameraY));
+    r.a = rd(wCameraY);
+    return 0;
+}
+
+/* InitPlayer: a fresh player record (flags $a2, heading $10, X $80, Y $78, the first animation of PlayerAnimPtrs, all state cleared) and the cards the player starts
+ * with: card 1, from round 2 also card 9, from round 3 also card 6; in a link game cards 1, 2, 3, 5 and 6. */
+void *gb_native_InitPlayer(void) {
+    SET_HL(wPlayer);
+    gb_native_Clear32Bytes();
+    wr(wPlayerAngle, 0x10);
+    wr(wPlayer, 0xA2);
+    wr(wPlayerX, 0x80);
+    wr(wPlayerY, 0x78);
+    wr(wMagicCastTimer, 0); wr(0xC4C2, 0); wr(wPlayerBlocked, 0); wr(wTrailIdx, 0);
+    wr(wPlayerDir, 0); wr(wPlayerStatus, 0); wr(hMagicTimer, 0);
+    wr(wPlayerAnimLo, rd(DATA_PlayerAnimPtrs));
+    wr(wPlayerAnimHi, rd(DATA_PlayerAnimPtrs + 1));
+    if (rd(hLinkFlags) & 0x01) {
+        static const uint8_t cards[5] = {1, 2, 3, 5, 6};
+        for (int i = 0; i < 5; i++) wr(wMagicCards + i, cards[i]);
+        return 0;
+    }
+    wr(wMagicCards, 1);
+    if (rd(wRound) < 2) return 0;
+    wr(wMagicCards + 1, 9);
+    if (rd(wRound) < 3) return 0;
+    wr(wMagicCards + 2, 6);
+    return 0;
+}
