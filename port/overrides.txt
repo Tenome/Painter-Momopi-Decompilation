@@ -125,3 +125,7 @@ SoundWriteChannel3
 SoundWriteChannel4
 SoundUpdateChannel
 SoundReadNextNote
+SoundPitchSlideStep
+SoundSetFrequency
+SoundApplyPitchSlide
+PlaySound_Bank1

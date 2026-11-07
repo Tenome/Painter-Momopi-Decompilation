@@ -2305,3 +2305,63 @@ void *gb_native_SoundUpdateChannel(void) {
     }
     return 0;
 }
+
+/* SoundAddSigned16: the 16 bit word at record + off plus the signed byte in wSoundTmp; the sum is stored at +$12/+$13 (the frequency) and returned in DE. */
+static uint16_t sound_add_signed16(uint16_t rec, uint16_t off) {
+    uint16_t sum = (uint16_t)((rd(rec + off) | rd(rec + off + 1) << 8) + (int8_t)rd(wSoundTmp));
+    wr(rec + 0x12, (uint8_t)sum);
+    wr(rec + 0x13, sum >> 8);
+    SET_DE(sum);
+    return sum;
+}
+
+/* SoundPitchSlideStep: the signed slide byte in +$14 is added to the pitch word at +$10. */
+void *gb_native_SoundPitchSlideStep(void) {
+    uint16_t rec = rec_of_bc();
+    wr(wSoundTmp, rd(rec + 0x14));
+    uint16_t sum = sound_add_signed16(rec, 0x10);
+    wr(rec + 0x11, sum >> 8);
+    wr(rec + 0x10, (uint8_t)sum);
+    return 0;
+}
+
+/* SoundSetFrequency: the pitch envelope of the record (table number in +6, pointer table SoundPitchTables, position in +$d): each step byte is a signed change of
+ * the frequency (+$12/+$13); $80 restarts the envelope, $81 steps back two, $82 steps back one and stops, $83 jumps to the position given by the next byte. */
+void *gb_native_SoundSetFrequency(void) {
+    uint16_t rec = rec_of_bc();
+    for (;;) {
+        uint16_t table = rd(DATA_SoundPitchTables + 2 * rd(rec + 6)) | rd(DATA_SoundPitchTables + 2 * rd(rec + 6) + 1) << 8;
+        uint8_t pos = rd(rec + 0x0D);
+        wr(rec + 0x0D, pos + 1);
+        uint8_t step = rd(table + pos);
+        wr(wSoundTmp, step);
+        if (step == 0x80) wr(rec + 0x0D, 0);
+        else if (step == 0x81) wr(rec + 0x0D, rd(rec + 0x0D) - 2);
+        else if (step == 0x82) { wr(rec + 0x0D, rd(rec + 0x0D) - 1); return 0; }
+        else if (step == 0x83) wr(rec + 0x0D, rd(table + pos + 1));
+        else { sound_add_signed16(rec, 0x12); return 0; }
+    }
+}
+
+/* SoundApplyPitchSlide: copies the pitch word (+$e/+$f) to the frequency (+$12/+$13); when it is not 0, the slide (flag bit 5) and the pitch envelope (+6 not 0) apply. */
+void *gb_native_SoundApplyPitchSlide(void) {
+    uint16_t rec = rec_of_bc();
+    wr(rec + 0x13, rd(rec + 0x0F));
+    wr(rec + 0x12, rd(rec + 0x0E));
+    if (!(rd(rec + 0x0E) | rd(rec + 0x0F))) return 0;
+    if (rd(rec) & 0x20) gb_native_SoundPitchSlideStep();
+    if (rd(rec + 6)) gb_native_SoundSetFrequency();
+    return 0;
+}
+
+/* PlaySound_Bank1: appends wSoundArg to the sound command queue (wSoundBusy is set while the queue changes); HL and DE are kept. */
+void *gb_native_PlaySound_Bank1(void) {
+    wr(wSoundBusy, 1);
+    uint8_t len = rd(wSoundQueueLen);
+    wr(wSoundQueueLen, len + 1);
+    wr(wSoundQueue + len, rd(wSoundArg));
+    wr(wSoundBusy, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
