@@ -637,7 +637,7 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
 .L_00_058a:
     ld a, [de]
     push hl
-    ld hl, $c7c0
+    ld hl, wMapCellMask
     and a, [hl]
     pop hl
     ld [hl], a
@@ -1727,7 +1727,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld hl, vBGMap0
     ld de, wRoomMap
     ld a, $0f
-    ld [$c7c0], a
+    ld [wMapCellMask], a
     call DrawMetatileMap
     ld a, [wRoomIndex]
     ld hl, RoomVramJobTable
@@ -1898,7 +1898,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld hl, $9cd0
     call L_00_04fc
     xor a, a
-    ld [$c463], a
+    ld [wMpStreamIdx], a
     ld bc, $0010
     ld hl, $c462
 .L_00_1265:
@@ -1987,13 +1987,13 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
 .L_00_1327:
     ld a, [wMagicPoints]
     ldh [hScratch00], a
-L_00_132c::
+DrawMagicPointsDigits::  ; loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
     ldh a, [hScratch00]
     sub a, $64
     ld d, a
     jr c, .L_00_1338
     ldh [hScratch00], a
-    jp L_00_1409
+    jp StoreMagicPointsDigit
 .L_00_1338:
     ld a, e
     and a, a
@@ -2001,7 +2001,7 @@ L_00_132c::
     ld a, d
     ldh [hScratch00], a
     ld e, $00
-    jp L_00_1409
+    jp StoreMagicPointsDigit
 .L_00_1344:
     ldh a, [hScratch00]
     and a, a
@@ -2010,18 +2010,18 @@ L_00_132c::
     jr z, .L_00_1364
     sub a, $14
     ldh [hScratch00], a
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
     add hl, bc
     ld a, $b8
     ld [hl], a
-    ld hl, $c463
+    ld hl, wMpStreamIdx
     inc [hl]
     jr .L_00_1344
 .L_00_1364:
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
@@ -2030,11 +2030,11 @@ L_00_132c::
     ld [hl], a
 .L_00_1371:
     ld a, $10
-    ld [$c451], a
+    ld [wMpStream], a
     ld a, $01
     ld [$c452], a
     ld hl, $9cc2
-    ld de, $c451
+    ld de, wMpStream
     call QueueVramCopyRows
     call WaitVramCopyDone
     call WaitVBlankFlag
@@ -2092,8 +2092,8 @@ StartRoundMusic::  ; plays the song for the current round (id from a table index
     ret
 D_00_1400::
     INCBIN "assets/bank_00/1400.bin"
-L_00_1409::
-    ld a, [$c463]
+StoreMagicPointsDigit::  ; writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
@@ -2108,10 +2108,10 @@ L_00_1409::
     ld [hl], a
     inc hl
     ld [hl], a
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     add a, $05
-    ld [$c463], a
-    jp L_00_132c
+    ld [wMpStreamIdx], a
+    jp DrawMagicPointsDigits
 TableIndexFromRoundDec::  ; dec a then falls into TableIndexFromRound
     dec a
 TableIndexFromRound::  ; A = (A-1)&15 or 16 for 32; then LookupWord
@@ -3135,7 +3135,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld bc, D_00_270f
     ld hl, vBGMap0
     ld a, $ff
-    ld [$c7c0], a
+    ld [wMapCellMask], a
     call L_00_051d
     ld bc, D_00_29b1
     call RunVramCopyList
@@ -3562,7 +3562,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld bc, D_00_3156
     ld de, D_00_31a6
     ld a, $ff
-    ld [$c7c0], a
+    ld [wMapCellMask], a
     call DrawMetatileMap
     ld hl, wEndingObject
     ld bc, $0041

@@ -60,6 +60,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c44a | `wMagicPoints` | 10 | 16 bit MP (MP 050 on the magic screen) |
 | $c44b | `wMagicPointsHi` | 8 | high byte of the 16 bit MP |
 | $c44c | `wTextBuf` | 5 | VramCopyStream buffer: count, rows, tiles (round intro and continue texts) |
+| $c451 | `wMpStream` | 2 | VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453 |
+| $c463 | `wMpStreamIdx` | 8 | number of tiles written so far into the magic points stream (provisional) |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
 | $c47a | `wScoreTemp` | 4 | scratch byte of AddScore |
 | $c47e | `wEnemyCount` | 5 | enemies alive (spawning stops at 3) |
@@ -117,6 +119,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c798 | `wEnding2Y` | 3 | wEndingObject2 +$a |
 | $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished (provisional) |
 | $c7bf | `wRemoteRound` | 5 | round number received over the link cable (bit 7 stripped) |
+| $c7c0 | `wMapCellMask` | 4 | DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it) |
 | $dfff | `wStackTop` | 9 | SP is reset here at the start of every mode |
 | $ff80 | `hOamDma` | 1 | HRAM copy of OamDmaRoutine |
 | $ff8b | `hJoyHeld` | 14 | held buttons: bit7 down, 6 up, 5 left, 4 right, 3 start, 2 select, 1 B, 0 A ($0f = A+B+Select+Start = soft reset) |
@@ -127,7 +130,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ff90 | `hTilemapAddrLo` | 2 |  |
 | $ff91 | `hVBlankFlag` | 4 | bit 0 set by the VBlank handler each frame |
 | $ff92 | `hSavedIE` | 2 | IE saved by LcdOff |
-| $ff96 | `hScratch00` | 87 |  |
+| $ff96 | `hScratch00` | 88 |  |
 | $ff97 | `hScratch01` | 38 |  |
 | $ff98 | `hScratch02` | 39 |  |
 | $ff99 | `hScratch03` | 24 |  |
@@ -194,11 +197,10 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | Address | References |
 |---|---|
 | $c000 | 7 |
-| $c463 | 7 |
 | $ffcb | 6 |
 | $c1b7 | 6 |
-| $c7c0 | 5 |
 | $ffcf | 5 |
+| $c453 | 4 |
 | $c47d | 4 |
 | $c780 | 4 |
 | $c481 | 4 |
@@ -213,7 +215,6 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c46c | 3 |
 | $c44e | 3 |
 | $c44d | 3 |
-| $c453 | 3 |
 | $c486 | 3 |
 | $c487 | 3 |
 | $c43f | 3 |
@@ -233,3 +234,5 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4bf | 3 |
 | $c4c0 | 3 |
 | $c4cf | 3 |
+| $c4a8 | 3 |
+| $c4b4 | 3 |

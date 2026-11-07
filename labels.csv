@@ -402,3 +402,5 @@ bank,addr,name,comment
 0,3c75,EnemyClearTileSaveStep,hEnemyStep = map tile under the enemy and clears that cell (name provisional)
 0,09d1,MoveObjectHalfStep,adds the X and Y deltas at offsets 6 and 8 to the position (name provisional)
 0,0bb6,MoveVectorTable,32 headings (index 0-31) x (dx dy) signed bytes: points on a circle of radius about 50; MoveObject multiplies them by the speed
+0,132c,DrawMagicPointsDigits,loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
+0,1409,StoreMagicPointsDigit,writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)

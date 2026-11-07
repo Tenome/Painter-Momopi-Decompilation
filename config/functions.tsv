@@ -77,9 +77,9 @@ bank	addr	size	name
 0	11b4	51	CheckExtraLife
 0	11ec	48	TimeUpSpawnEnemy
 0	121c	272	ShowMagicScreen
-0	132c	186	L_00_132c
+0	132c	186	DrawMagicPointsDigits
 0	13e6	26	StartRoundMusic
-0	1409	32	L_00_1409
+0	1409	32	StoreMagicPointsDigit
 0	1429	1	TableIndexFromRoundDec
 0	142a	14	TableIndexFromRound
 0	1438	42	InitMagicPoints

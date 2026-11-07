@@ -244,3 +244,6 @@ DEF wEndingAngle    EQU $c77e   ; wEndingObject +$10
 DEF wEndingSpeed    EQU $c77f   ; wEndingObject +$11
 DEF wEnding2X       EQU $c795   ; wEndingObject2 +7
 DEF wEnding2Y       EQU $c798   ; wEndingObject2 +$a
+DEF wMapCellMask    EQU $c7c0   ; DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it)
+DEF wMpStream       EQU $c451   ; VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453
+DEF wMpStreamIdx    EQU $c463   ; number of tiles written so far into the magic points stream (provisional)
