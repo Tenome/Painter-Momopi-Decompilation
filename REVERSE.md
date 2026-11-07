@@ -248,7 +248,7 @@ The bytes after each song's last read byte (for example `$5ef3` onward after the
 ## More findings (naming pass)
 
 - **Movement**: every object record has a heading (+$10, index 0-31) and a speed (+$11). `MoveObject` adds `MoveVectorTable[heading] * speed` (via `MultiplyByDE`, signed)
-  to the 16 bit position; the table at $0bb6 holds 32 (dx, dy) pairs on a circle of radius about 50. Enemies use the headings of eight directions (`hEnemyAngle` from the table at $363d);
+  to the 16 bit position; the table at $0bb6 holds 32 (dx, dy) pairs on a circle of radius about 50. Enemies pick their heading from the four direction bits (`hEnemyAngle` from the 6 byte table at $363d);
   `hEnemySpeed` (+$11) is 5 or 6 for the enemy behaviours.
 - **Spawn entries** are `kind, x, y, delay`: the position is `y & $f8`; the low 3 bits of `y` are a flag copied to the enemy (`hEnemySpawnFlag`: bit 1 from round 17, else bit 0).
 - **Score** is stored as three bytes (base 100 digits) at `wScoreDigits`; `ByteToBCD` splits a byte into decimal digits, `DrawDecimalDigits` produces the six digit display buffer.
