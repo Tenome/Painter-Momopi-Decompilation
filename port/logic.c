@@ -805,3 +805,68 @@ void *gb_native_EnemyKind1(void) {
     gb_native_DrawObject();
     return 0;
 }
+
+/* EnemyKind2: an enemy that shoots (EnemyShooterAI decides, ProjectileFrame moves the shot). */
+void *gb_native_EnemyKind2(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind2Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyShootIfReady);
+    CALL(GAME_EnemyShooterAI);
+    CALL(GAME_ProjectileFrame);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_SelectKind2Animation);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind3: an enemy that flies straight at the player (EnemyAimAtPlayer), not bound to the grid. */
+void *gb_native_EnemyKind3(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind3Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyFlagOnPaintedTile);
+    CALL(GAME_EnemyTurnIfBlocked);
+    CALL(GAME_MoveAndApplyObject);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind3Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind4: aims at the player and turns; it cannot be hurt by paint (no defeat check). */
+void *gb_native_EnemyKind4(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind4Init;
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind4Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind5: a teleporting enemy (EnemyKind7Teleport moves it along its position table). It does not touch the player while the GHOST card (6) runs. */
+void *gb_native_EnemyKind5(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyBuildTeleportTable;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemyIdleAnimate);
+    CALL(GAME_EnemyKind7Teleport);
+    gb_native_DrawObject();
+    return 0;
+}
