@@ -536,3 +536,18 @@ void *gb_native_ClampPlayerPosition(void) {
     }
     return 0;
 }
+
+/* NextRandomDirection: steps the shift register hFrameSpin ($ffdb): shifted left; the new low bit is bit 7 when bit 4 is set,
+ * else the complement of bit 7; then adds the result to hRngCounter ($ffda). A = the new hRngCounter, B = the new hFrameSpin. */
+void *gb_native_NextRandomDirection(void) {
+    uint8_t spin = rd(0xFFDB), bit7 = spin >> 7, bit4 = (spin >> 4) & 1;
+    uint8_t next = (uint8_t)(spin << 1);
+    int low = bit4 ? bit7 : !bit7;
+    next = low ? (next | 1) : (next & 0xFE);
+    wr(0xFFDB, next);
+    r.b = next;
+    r.a = rd(0xFFDA);
+    alu_add(next, 0);
+    wr(0xFFDA, r.a);
+    return 0;
+}

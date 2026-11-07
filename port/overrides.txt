@@ -42,3 +42,4 @@ EnemyRequestTurn
 SelectEnemySlot
 RemoveEnemy
 ClampPlayerPosition
+NextRandomDirection
