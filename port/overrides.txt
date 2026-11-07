@@ -69,3 +69,5 @@ SelectPlayerAnimation
 ProjectileFrame
 EnemyDefeated
 AddScore
+StepEnemySpawnScript
+TimeUpSpawnEnemy

@@ -1208,3 +1208,58 @@ void *gb_native_AddScore(void) {
     }
     return (void *)GAME_CheckExtraLife;
 }
+
+/* StepEnemySpawnScript: runs the spawn list of the round (RoundDataTable[wRound - 1] -> six wave lists -> entries `kind, x, y, delay` of 4 bytes after a count byte).
+ * The delay of the next entry is loaded once (wPlayerStatus bit 5 marks that); when the seconds elapsed in the round (hRoundSeconds - hTimeSeconds) reach it
+ * and fewer than 3 enemies are alive, the entry is spawned through FindFreeEnemySlot (kind in hScratch07, X in hScratch08, Y in hScratch0A, flag in hSpawnFlag).
+ * After the last entry of a wave the next wave starts (wSpawnWave; it wraps after 6 and wWaveEnded is set). */
+void *gb_native_StepEnemySpawnScript(void) {
+    r.a = (uint8_t)(rd(wRound) - 1);
+    SET_HL(DATA_RoundDataTable);
+    gb_native_LookupWord();
+    if (rd(wSpawnWave) == 0x06) wr(wSpawnWave, 0);
+    r.a = rd(wSpawnWave);
+    gb_native_LookupWord();
+    uint16_t list = HL();
+    wr(wSpawnListPtr, (uint8_t)list);
+    wr(wSpawnListPtr + 1, list >> 8);
+    uint8_t count = rd(list);
+    wr(wSpawnCount, count);
+    if ((uint8_t)(rd(wSpawnIndex) - 1) == count) {
+        wr(wSpawnWave, rd(wSpawnWave) + 1);
+        wr(wSpawnIndex, 1);
+        wr(wWaveEnded, 1);
+    }
+    list = rd(wSpawnListPtr) | rd(wSpawnListPtr + 1) << 8;
+    if (!(rd(wPlayerStatus) & 0x20)) {
+        wr(hSpawnDelay, rd(list + (uint8_t)(rd(wSpawnIndex) << 2)));
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x20);
+    }
+    uint8_t delay = rd(hSpawnDelay);
+    if ((uint8_t)(rd(hRoundSeconds) - delay) < rd(hTimeSeconds)) return 0;
+    if (rd(wEnemyCount) >= 0x03) return 0;
+    uint16_t entry = list + (uint8_t)((rd(wSpawnIndex) << 2) - 3);
+    wr(hScratch00 + 7, rd(entry));
+    wr(hScratch00 + 8, rd(entry + 1));
+    wr(hScratch00 + 10, rd(entry + 2) & 0xF8);
+    wr(hSpawnFlag, rd(entry + 2) & (rd(wRound) >= 0x11 ? 0x02 : 0x01));
+    wr(wSpawnIndex, rd(wSpawnIndex) + 1);
+    wr(wWaveEnded, rd(wWaveEnded) + 1);
+    wr(wEnemyCount, rd(wEnemyCount) + 1);
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
+    return (void *)GAME_FindFreeEnemySlot;
+}
+
+/* TimeUpSpawnEnemy: when the round clock has run out (hTimeSeconds and $ffe2 both 0), or in a link game when the other machine asks for it (hSerialByte bit 5),
+ * one extra enemy (kind 4, X $a0, Y $98) is spawned once per round (wGameFlags bit 5) and the link transfer is started. */
+void *gb_native_TimeUpSpawnEnemy(void) {
+    int linked = (rd(hLinkFlags) & 0x01) && (rd(hSerialByte) & 0x20);
+    if (!linked && (rd(hTimeSeconds) | rd(0xFFE2))) return 0;
+    if (rd(wGameFlags) & 0x20) return 0;
+    wr(wGameFlags, rd(wGameFlags) | 0x20);
+    wr(hScratch00 + 7, 0x04);
+    wr(hScratch00 + 8, 0xA0);
+    wr(hScratch00 + 10, 0x98);
+    CALL(GAME_FindFreeEnemySlot);
+    return (void *)GAME_SerialStartTransfer;
+}
