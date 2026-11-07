@@ -515,3 +515,5 @@ bank,addr,name,comment
 0,36c6,PopFrames3,animation frames of the pop effect (last stage; name provisional)
 0,1d90,RoundIntroText,VRAM copy list of the round intro screen (ROUND, ROOM, READY !!, x lives)
 0,1f10,GameOverText,VRAM stream "GAME  OVER" (length, rows, tiles)
+0,1a94,MagicScreenJobsA,VRAM copy list of the magic screen (frame and text; name provisional)
+0,1a57,MagicScreenJobsB,VRAM copy list of the magic screen (card pictures; name provisional)

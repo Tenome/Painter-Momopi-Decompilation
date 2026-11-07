@@ -1501,3 +1501,149 @@ void *gb_native_SoundUpdate(void) {
         record += 0x20;
     }
 }
+
+/* ShowMagicScreen: the B button in play opens MOMOPIE'S MAGIC screen (not while the player is dying or a cast is starting). The screen is set up with the LCD
+ * off (tiles of bank 3, the frame and the card pictures, the score, the magic points as a number and as a gauge, the time, the round) and then runs its own
+ * frame loop (MagicScreenInput moves the cursor, CursorBlinkStep blinks it) until B is pressed again; then the play screen is restored and the round music is
+ * restarted (StartRoundMusic). The gauge: each 100 points give five full tiles ($b8), each 20 points one, and a remainder of 10 a half tile ($a8). */
+void *gb_native_ShowMagicScreen(void) {
+    if (rd(wPlayerDir) & 0x20) return 0;
+    if (rd(wMagicState) & 0x02) return 0;
+    if (!(rd(hJoyNew) & 0x02)) return 0;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    CALL(GAME_LoadTilesBank3B);
+    SET_HL(0x9FFF);
+    gb_native_FillBackwardsFF();
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(hVBlankTasks, rd(hVBlankTasks) & ~0x10);
+    SET_BC(DATA_MagicScreenJobsA);
+    CALL(GAME_RunVramCopyList);
+    SET_BC(DATA_MagicScreenJobsB);
+    CALL(GAME_RunVramCopyList);
+    SET_BC(0x0010);
+    SET_HL(0x9CD0);
+    CALL(GAME_FillBackwardsFFBC);
+    wr(wMpStreamIdx, 0);
+    SET_BC(0x0010);
+    SET_HL(0xC462);
+    do {                                    /* $c453-$c462 = tile $98 */
+        wr(HL(), 0x98);
+        SET_HL(HL() - 1);
+        SET_BC(BC() - 1);
+    } while (BC());
+    CALL(GAME_InitMagicScreenState);
+    SET_HL(0x9C66);
+    SET_DE(wScoreStream);
+    CALL(GAME_VramCopyStream);
+    r.c = rd(wMagicPointsHi);
+    r.a = rd(wMagicPoints);
+    gb_native_ByteToBCD();
+    r.a = rd(hScratch00 + 2) & 0x0F;
+    CALL(GAME_NumberToTile);
+    wr(0xC450, r.a);
+    r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
+    CALL(GAME_NumberToTile);
+    wr(0xC44F, r.a);
+    r.a = rd(hScratch00 + 3);
+    CALL(GAME_NumberToTile);
+    wr(0xC44E, r.a);
+    wr(wTextBuf, 0x03);
+    wr(wTextBuf + 1, 0x01);
+    SET_HL(0x9CA5);
+    SET_DE(wTextBuf);
+    CALL(GAME_VramCopyStream);
+    r.a = rd(hTimeSeconds);
+    r.c = 0;
+    gb_native_ByteToBCD();
+    r.a = rd(hScratch00 + 2) & 0x0F;
+    CALL(GAME_NumberToTile);
+    wr(0xFFE8, r.a);
+    r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
+    CALL(GAME_NumberToTile);
+    wr(0xFFE7, r.a);
+    r.a = rd(hScratch00 + 3);
+    CALL(GAME_NumberToTile);
+    wr(0xFFE6, r.a);
+    wr(0xFFE4, 0x03);
+    wr(0xFFE5, 0x01);
+    SET_HL(0x9CB0);
+    SET_DE(0xFFE4);
+    CALL(GAME_VramCopyStream);
+    r.b = rd(wRound);
+    SET_HL(0x9C71);
+    CALL(GAME_DrawTwoDigitNumber);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    CALL(GAME_ClearOamShadowY);
+    CALL(GAME_RequestOamDma);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, 0x9B);
+    ime = 1;
+    wr(hScratch00, 0);
+    CALL(GAME_DrawMagicPage);
+    /* the magic points gauge */
+    SET_BC(0x0002);
+    r.e = rd(wMagicPointsHi) ? 1 : 0;
+    wr(hScratch00, rd(wMagicPoints));
+    for (;;) {
+        uint8_t s = rd(hScratch00), minus100 = (uint8_t)(s - 100);
+        if (s >= 100) {
+            wr(hScratch00, minus100);
+        } else if (r.e) {
+            wr(hScratch00, minus100);
+            r.e = 0;
+        } else {
+            for (;;) {
+                s = rd(hScratch00);
+                if (s == 0) goto gauge_done;
+                if (s == 0x0A) {
+                    wr(0xC453 + rd(wMpStreamIdx), 0xA8);
+                    goto gauge_done;
+                }
+                wr(hScratch00, (uint8_t)(s - 0x14));
+                wr(0xC453 + rd(wMpStreamIdx), 0xB8);
+                wr(wMpStreamIdx, rd(wMpStreamIdx) + 1);
+            }
+        }
+        for (int i = 0; i < 5; i++) wr(0xC453 + rd(wMpStreamIdx) + i, 0xB8);      /* StoreMagicPointsDigit */
+        wr(wMpStreamIdx, rd(wMpStreamIdx) + 5);
+    }
+gauge_done:
+    wr(wMpStream, 0x10);
+    wr(wMpStream + 1, 0x01);
+    SET_HL(0x9CC2);
+    SET_DE(wMpStream);
+    CALL(GAME_QueueVramCopyRows);
+    CALL(GAME_WaitVramCopyDone);
+    CALL(GAME_WaitVBlankFlag);
+    r.a = 0xFF;
+    CALL(GAME_PlaySound);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    do {
+        CALL(GAME_WaitFrameAndSyncOam);
+        uint8_t link = rd(hSerialByte);
+        if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
+        CALL(GAME_ReadJoypad);
+        wr(0xC769, rd(0xC769) + 1);
+        CALL(GAME_MagicScreenInput);
+        CALL(GAME_CursorBlinkStep);
+    } while (!(rd(hJoyNew) & 0x02));
+    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x02);
+    CALL(GAME_LcdOff);
+    ime = 0;
+    CALL(GAME_LoadGfxBank2);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    CALL(GAME_ClearOamShadow);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    return (void *)GAME_StartRoundMusic;
+}
