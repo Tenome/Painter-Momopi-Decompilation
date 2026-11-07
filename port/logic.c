@@ -2818,3 +2818,93 @@ void *gb_native_CheckPaintHitsEnemy(void) {
     wr(wPlayerStatus, rd(wPlayerStatus) | 0x08);
     return 0;
 }
+
+/* ---- enemy animation selection ----
+ * An animation is a pointer to frame data (hEnemyAnimLo/Hi, record +1/+2). Most enemies have two pointers per direction ("variants") that are swapped with
+ * bit 3 of hEnemyTick (bit 2 for kind 2) to make the walk cycle; the sprite is mirrored with bit 5 of hObject2 for the right/left directions. */
+static void set_anim(uint16_t pointer) {
+    wr(hEnemyAnimLo, (uint8_t)pointer);
+    wr(hEnemyAnimHi, pointer >> 8);
+    SET_DE(pointer);
+    r.a = pointer >> 8;
+}
+static void set_flip(int on) { SET_HL(hObject2); wr(hObject2, on ? (rd(hObject2) | 0x20) : (rd(hObject2) & ~0x20)); }
+static void anim_variant(uint16_t a, uint16_t b) { SET_BC(b); set_anim((rd(hEnemyTick) & 0x08) ? b : a); }
+
+void *gb_native_SetObjectAnimation(void) { set_anim(DE()); return 0; }
+void *gb_native_SetObjectAnimationStub(void) { return gb_native_SetObjectAnimation(); }
+void *gb_native_SetAnimationVariant(void) {
+    if (rd(hEnemyTick) & 0x08) SET_DE(BC());
+    return gb_native_SetObjectAnimation();
+}
+void *gb_native_SetObjectFlipFlag(void) { SET_HL(hObject2); wr(hObject2, rd(hObject2) | 0x20); return 0; }
+
+/* SelectEnemyAnimation (kind 1): by direction bits 0 right (mirrored), 1 left, 2 up, else down. */
+void *gb_native_SelectEnemyAnimation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); anim_variant(0x3BC8, 0x3BCD); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x3BC8, 0x3BCD); }
+    else if (dir & 0x04) anim_variant(0x3BD2, 0x3BD7);
+    else anim_variant(0x3BBE, 0x3BC3);
+    return 0;
+}
+
+/* EnemySelectAnimByKind: kinds 6 and 8 have their own animations, the others choose like kind 1 with the tables at $3aa6-$3abf. */
+void *gb_native_EnemySelectAnimByKind(void) {
+    uint8_t kind = rd(hEnemyKind), dir = rd(hEnemyDir);
+    if (kind == 0x06) anim_variant(0x3ACF, 0x3AD4);
+    else if (kind == 0x08) anim_variant(0x3AD9, 0x3ADE);
+    else if (dir & 0x01) { set_flip(1); anim_variant(0x3AB0, 0x3AB5); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x3AB0, 0x3AB5); }
+    else if (dir & 0x04) anim_variant(0x3ABA, 0x3ABF);
+    else anim_variant(0x3AA6, 0x3AAB);
+    return 0;
+}
+
+void *gb_native_SelectKind3Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); anim_variant(0x5A84, 0x5A8B); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x5A84, 0x5A8B); }
+    else if (dir & 0x04) anim_variant(0x5A92, 0x5A99);
+    else anim_variant(0x5A76, 0x5A7D);
+    return 0;
+}
+
+void *gb_native_SelectKind4Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); set_anim(0x53EC); }
+    else if (dir & 0x02) { set_flip(0); set_anim(0x53EC); }
+    else if (dir & 0x04) set_anim(0x53F3);
+    else set_anim(0x53E5);
+    return 0;
+}
+
+/* SelectKind2Animation: four directions (bit 3 down), the animations of a pair alternate with bit 2 of hEnemyTick. */
+void *gb_native_SelectKind2Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    uint16_t de, bc;
+    if (dir & 0x01) { set_flip(1); de = 0x59D9; bc = 0x59E0; }
+    else if (dir & 0x02) { set_flip(0); de = 0x59D9; bc = 0x59E0; }
+    else if (dir & 0x04) { bc = 0x59E7; de = 0x59EE; }
+    else if (dir & 0x08) { bc = 0x59CB; de = 0x59D2; }
+    else return 0;
+    SET_BC(bc);
+    set_anim((rd(hEnemyTick) & 0x04) ? bc : de);
+    return 0;
+}
+
+/* SelectKind9Animation: up and down have their own pair; sideways uses a mirrored pair when bit 0 (right) is set. */
+void *gb_native_SelectKind9Animation(void) {
+    set_flip(0);
+    uint8_t dir = rd(hEnemyDir);
+    uint16_t de, bc;
+    if (dir & 0x04) { de = 0x588B; bc = 0x5892; }
+    else if (dir & 0x08) { de = 0x586F; bc = 0x5876; }
+    else {
+        if (dir & 0x01) gb_native_SetObjectFlipFlag();
+        de = 0x587D; bc = 0x5884;
+    }
+    SET_BC(bc);
+    set_anim((rd(hEnemyTick) & 0x08) ? bc : de);
+    return 0;
+}

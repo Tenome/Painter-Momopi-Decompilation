@@ -158,3 +158,13 @@ EnemyPaintUnderB0M
 EnemyShootIfReady
 CheckEnemyTouchesPlayer
 CheckPaintHitsEnemy
+SetObjectAnimation
+SetObjectAnimationStub
+SetAnimationVariant
+SetObjectFlipFlag
+SelectEnemyAnimation
+EnemySelectAnimByKind
+SelectKind3Animation
+SelectKind4Animation
+SelectKind2Animation
+SelectKind9Animation
