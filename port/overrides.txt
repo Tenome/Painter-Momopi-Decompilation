@@ -115,3 +115,12 @@ EndMagicPaint
 MagicPaintEndUnlessBit2
 MagicTimerCountdown
 SpawnBombBlob
+SoundSilenceChannel1
+SoundSilenceChannel2
+SoundSilenceChannel3
+SoundSilenceChannel4
+SoundWriteChannel1
+SoundWriteChannel2
+SoundWriteChannel3
+SoundWriteChannel4
+SoundUpdateChannel

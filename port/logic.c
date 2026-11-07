@@ -5,6 +5,10 @@
 #include "game_symbols.h"      /* generated: wPlayerX, hEnemyKind ... (from src/constants.inc) */
 #include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
 
+/* A `call` inside a lifted routine. Like CALL of the generated code, but when the callee discards its return address (pop hl before a return: the sound command
+ * routines do) the whole chain has already returned past this routine, so the routine returns and gives back the slot the stub of the override releases again. */
+#define NCALL(fn) do { uint16_t sp0_ = r.sp; r.sp -= 2; gb_run((fn_t)(fn)); if (r.sp > sp0_) { r.sp -= 2; return 0; } } while (0)
+
 /* LookupByte: A = byte at HL + C (table lookup). */
 void *gb_native_LookupByte(void) {
     r.b = 0;
@@ -733,23 +737,23 @@ void *gb_native_PlayFrame(void) {
     uint8_t link = rd(hSerialByte);
     if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
     if (rd(wPlayerDir) & 0x20) return (void *)GAME_PlayerDeath;
-    CALL(GAME_PlayerAction);
+    NCALL(GAME_PlayerAction);
     if (!(rd(wActiveMagic) == 0x02 && (rd(wMagicState) & 0x01))) {
         gb_native_PlayerCheckOffPath();
         gb_native_LoadPlayerXY();
         gb_native_PlayerComputeBlockedDirs();
     }
-    CALL(GAME_HoldDirectionUntilAligned);
-    CALL(GAME_PlayerSetDirection);
+    NCALL(GAME_HoldDirectionUntilAligned);
+    NCALL(GAME_PlayerSetDirection);
     gb_native_ClampPlayerPosition();
-    CALL(GAME_PaintUnderPlayer);
-    CALL(GAME_SelectPlayerAnimation);
-    CALL(GAME_ProjectileFrame);
+    NCALL(GAME_PaintUnderPlayer);
+    NCALL(GAME_SelectPlayerAnimation);
+    NCALL(GAME_ProjectileFrame);
     if (rd(wActiveMagic) != 0 && (rd(wMagicState) & 0x01)) {
         wr(0xC4D3, rd(0xC4D3) + 1);
         if (!(rd(0xC4D3) & 0x02)) return 0;
     }
-    CALL(GAME_AnimatePlayerWalk);
+    NCALL(GAME_AnimatePlayerWalk);
     SET_HL(wPlayer);
     gb_native_SetObjPtr();
     gb_native_DrawObject();
@@ -766,15 +770,15 @@ void *gb_native_EnemyKindIdle(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyInitMoveAnim;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyComputeBlockedDirs);
-    CALL(GAME_EnemyGridStep);
-    CALL(GAME_EnemyChooseDirection);
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_EnemyPaintStep);
-    CALL(GAME_EnemyPaintUnderB0M);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_CheckPaintHitsEnemy);
-    CALL(GAME_EnemySelectAnimByKind);
+    NCALL(GAME_EnemyComputeBlockedDirs);
+    NCALL(GAME_EnemyGridStep);
+    NCALL(GAME_EnemyChooseDirection);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_CheckPaintHitsEnemy);
+    NCALL(GAME_EnemySelectAnimByKind);
     gb_native_SelectObject2();
     gb_native_DrawObject();
     return 0;
@@ -787,21 +791,21 @@ void *gb_native_EnemyKind1(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyInitAnim3bbe;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyComputeBlockedDirs);
-    CALL(GAME_EnemyGridStep);
+    NCALL(GAME_EnemyComputeBlockedDirs);
+    NCALL(GAME_EnemyGridStep);
     gb_native_EnemyEdgeBlockedDirs();
-    CALL(GAME_EnemyChooseDirection);
-    CALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyChooseDirection);
+    NCALL(GAME_EnemyFlagOnPaintedTile);
     if (rd(hEnemyFlags) & 0x02) {
         wr(hEnemyCounter, rd(hEnemyCounter) + 1);
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
     }
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_EnemyPaintStep);
-    CALL(GAME_EnemyPaintUnderB0M);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_CheckPaintHitsEnemy);
-    CALL(GAME_SetEnemyAnimation);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_CheckPaintHitsEnemy);
+    NCALL(GAME_SetEnemyAnimation);
     gb_native_DrawObject();
     return 0;
 }
@@ -811,17 +815,17 @@ void *gb_native_EnemyKind2(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind2Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyComputeBlockedDirs);
-    CALL(GAME_EnemyGridStep);
-    CALL(GAME_EnemyChooseDirection);
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_EnemyShootIfReady);
-    CALL(GAME_EnemyShooterAI);
-    CALL(GAME_ProjectileFrame);
-    CALL(GAME_EnemyPaintUnderB0M);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_CheckPaintHitsEnemy);
-    CALL(GAME_SelectKind2Animation);
+    NCALL(GAME_EnemyComputeBlockedDirs);
+    NCALL(GAME_EnemyGridStep);
+    NCALL(GAME_EnemyChooseDirection);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyShootIfReady);
+    NCALL(GAME_EnemyShooterAI);
+    NCALL(GAME_ProjectileFrame);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_CheckPaintHitsEnemy);
+    NCALL(GAME_SelectKind2Animation);
     gb_native_SelectObject2();
     gb_native_DrawObject();
     return 0;
@@ -833,13 +837,13 @@ void *gb_native_EnemyKind3(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind3Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyAimAtPlayer);
-    CALL(GAME_EnemyFlagOnPaintedTile);
-    CALL(GAME_EnemyTurnIfBlocked);
-    CALL(GAME_MoveAndApplyObject);
-    CALL(GAME_EnemyPaintUnderB0M);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_SelectKind3Animation);
+    NCALL(GAME_EnemyAimAtPlayer);
+    NCALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyTurnIfBlocked);
+    NCALL(GAME_MoveAndApplyObject);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_SelectKind3Animation);
     gb_native_DrawObject();
     return 0;
 }
@@ -849,10 +853,10 @@ void *gb_native_EnemyKind4(void) {
     gb_native_SelectObject2();
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind4Init;
-    CALL(GAME_EnemyAimAtPlayer);
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_SelectKind4Animation);
+    NCALL(GAME_EnemyAimAtPlayer);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_SelectKind4Animation);
     gb_native_DrawObject();
     return 0;
 }
@@ -863,10 +867,10 @@ void *gb_native_EnemyKind5(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyBuildTeleportTable;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_CheckPaintHitsEnemy);
-    CALL(GAME_EnemyIdleAnimate);
-    CALL(GAME_EnemyKind7Teleport);
+    if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_CheckPaintHitsEnemy);
+    NCALL(GAME_EnemyIdleAnimate);
+    NCALL(GAME_EnemyKind7Teleport);
     gb_native_DrawObject();
     return 0;
 }
@@ -877,11 +881,11 @@ void *gb_native_EnemyKind7(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind7Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyKind7NextStep);
-    CALL(GAME_MoveAndApplyObject);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_CheckPaintHitsEnemy);
-    CALL(GAME_EnemyKind7Update);
+    NCALL(GAME_EnemyKind7NextStep);
+    NCALL(GAME_MoveAndApplyObject);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_CheckPaintHitsEnemy);
+    NCALL(GAME_EnemyKind7Update);
     gb_native_DrawObject();
     return 0;
 }
@@ -892,12 +896,12 @@ void *gb_native_EnemyKind9(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind9Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyComputeBlockedDirs);
-    CALL(GAME_EnemyAimAtPlayer);
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_EnemyPaintUnderB0M);
-    CALL(GAME_CheckEnemyTouchesPlayer);
-    CALL(GAME_SelectKind9Animation);
+    NCALL(GAME_EnemyComputeBlockedDirs);
+    NCALL(GAME_EnemyAimAtPlayer);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    NCALL(GAME_SelectKind9Animation);
     gb_native_DrawObject();
     return 0;
 }
@@ -907,12 +911,12 @@ void *gb_native_EnemyKind10(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_InitProjectile;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    CALL(GAME_EnemyTurnOrAnimate);
-    CALL(GAME_EnemyKind10Move);
-    CALL(GAME_UpdateProjectile);
-    CALL(GAME_ProjectileCheckPlayerHit);
-    CALL(GAME_ProjectileRemoveIfHit);
-    CALL(GAME_ProjectileSelectFrame);
+    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyKind10Move);
+    NCALL(GAME_UpdateProjectile);
+    NCALL(GAME_ProjectileCheckPlayerHit);
+    NCALL(GAME_ProjectileRemoveIfHit);
+    NCALL(GAME_ProjectileSelectFrame);
     gb_native_SelectObject2();
     gb_native_DrawObject();
     return 0;
@@ -927,11 +931,11 @@ void *gb_native_EnemyKind11(void) {
         uint8_t dir = rd(hEnemyDir);
         if (dir & 0x02) return (void *)GAME_EnemyDefeated;
         wr(hEnemyDir, dir | 0x02);
-        CALL(GAME_EnemyStoreAuxToTile);
+        NCALL(GAME_EnemyStoreAuxToTile);
         return (void *)GAME_EnemyDefeated;
     }
     if (!(rd(hEnemyDir) & 0x01)) {
-        CALL(GAME_EnemyClearTileSaveStep);
+        NCALL(GAME_EnemyClearTileSaveStep);
         wr(hEnemyDir, rd(hEnemyDir) | 0x01);
     }
     uint8_t timer = rd(hEnemyTimer);
@@ -946,9 +950,9 @@ void *gb_native_EnemyKind11(void) {
         gb_native_EnemyMapTile();
         wr(HL(), rd(hEnemyAux));
     } else {
-        CALL(GAME_EnemyClearTileSaveStep);
+        NCALL(GAME_EnemyClearTileSaveStep);
     }
-    CALL(GAME_EnemyKind7SetAnimation);
+    NCALL(GAME_EnemyKind7SetAnimation);
     gb_native_SelectObject2();
     gb_native_DrawObject();
     return 0;
@@ -961,59 +965,59 @@ void *gb_native_EnemyKind11(void) {
  * enemy spawning and updates, the time-up enemy and the extra life check; hBlinkTick counts frames. */
 void *gb_native_Mode1_Play(void) {
     r.sp = wStackTop;
-    CALL(GAME_LcdOff);
+    NCALL(GAME_LcdOff);
     ime = 0;
     SET_HL(vBGMapLast);
     gb_native_FillBackwardsFF();
-    CALL(GAME_LoadGfxBank2);
-    CALL(GAME_ClearOamShadow);
+    NCALL(GAME_LoadGfxBank2);
+    NCALL(GAME_ClearOamShadow);
     SET_HL(DATA_RoomMapTable);
     r.a = rd(wRound);
-    CALL(GAME_TableIndexFromRoundDec);
-    CALL(GAME_UnpackRoomMap);
+    NCALL(GAME_TableIndexFromRoundDec);
+    NCALL(GAME_UnpackRoomMap);
     wr(hScratch01, 0x10);
     wr(hScratch00, 0x10);
     r.a = rd(wRoomIndex);
     SET_HL(DATA_RoomMetatileTable);
-    CALL(GAME_TableIndexFromRound);
+    NCALL(GAME_TableIndexFromRound);
     SET_HL(vBGMap0);
     SET_DE(wRoomMap);
     wr(wMapCellMask, 0x0F);
-    CALL(GAME_DrawMetatileMap);
+    NCALL(GAME_DrawMetatileMap);
     r.a = rd(wRoomIndex);
     SET_HL(DATA_RoomVramJobTable);
-    CALL(GAME_TableIndexFromRound);
-    CALL(GAME_RunVramCopyList);
+    NCALL(GAME_TableIndexFromRound);
+    NCALL(GAME_RunVramCopyList);
     r.c = 0x10;
     r.a = (uint8_t)(rd(wRound) - 1);
     if (r.a != 0x20) r.c = r.a & 0x0F;
     SET_HL(DATA_PaintCellCountTable);
     gb_native_LookupByte();
     wr(wPaintRemaining, r.a);
-    CALL(GAME_RequestOamDma);
-    CALL(GAME_ClearOamShadowY);
-    CALL(GAME_InitMagicScreenState);
-    CALL(GAME_InitMagicPoints);
-    CALL(GAME_ResetCamera);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
+    NCALL(GAME_InitMagicScreenState);
+    NCALL(GAME_InitMagicPoints);
+    NCALL(GAME_ResetCamera);
     if (!(rd(wRoundFlags) & 0x04)) {
         wr(wRoundFlags, rd(wRoundFlags) | 0x04);
-        CALL(GAME_ClearRoundVariables);
+        NCALL(GAME_ClearRoundVariables);
     }
     if (!(rd(wGameFlags) & 0x80)) {
         wr(wGameFlags, rd(wGameFlags) | 0x80);
-        CALL(GAME_InitPlayer);
+        NCALL(GAME_InitPlayer);
     }
-    CALL(GAME_ClearAllEnemies);
+    NCALL(GAME_ClearAllEnemies);
     SET_HL(wProjectile);
     gb_native_Clear32Bytes();
-    CALL(GAME_SerialStartTransfer);
+    NCALL(GAME_SerialStartTransfer);
     wr(wScrollX, 0);
     wr(wScrollY, 0);
     wr(rIF, 0);
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
-    CALL(GAME_StartRoundMusic);
+    NCALL(GAME_StartRoundMusic);
     wr(wGameFlags, rd(wGameFlags) & ~0x20);
     wr(hTimeFrames, 0x3C);
     r.a = rd(wRound);
@@ -1028,15 +1032,15 @@ void *gb_native_Mode1_Play(void) {
     wr(hRoundSeconds, r.a);
     wr(hVBlankTasks, rd(hVBlankTasks) | 0x10);
     for (;;) {
-        CALL(GAME_WaitFrameAndSyncOam);
-        CALL(GAME_ReadJoypad);
-        CALL(GAME_PlayFrame);
-        CALL(GAME_ShowMagicScreen);
-        CALL(GAME_UpdateCamera);
-        CALL(GAME_StepEnemySpawnScript);
-        CALL(GAME_UpdateAllEnemies);
-        CALL(GAME_TimeUpSpawnEnemy);
-        CALL(GAME_CheckExtraLife);
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_ReadJoypad);
+        NCALL(GAME_PlayFrame);
+        NCALL(GAME_ShowMagicScreen);
+        NCALL(GAME_UpdateCamera);
+        NCALL(GAME_StepEnemySpawnScript);
+        NCALL(GAME_UpdateAllEnemies);
+        NCALL(GAME_TimeUpSpawnEnemy);
+        NCALL(GAME_CheckExtraLife);
         wr(hBlinkTick, rd(hBlinkTick) + 1);
     }
 }
@@ -1128,7 +1132,7 @@ void *gb_native_ProjectileFrame(void) {
  * the status bits 3 and 4 are cleared and the enemy is removed. */
 void *gb_native_EnemyDefeated(void) {
     r.a = SND_SFX_8E;
-    CALL(GAME_PlaySound);
+    NCALL(GAME_PlaySound);
     wr(hEnemyCounter2, rd(hEnemyCounter2) + 1);
     int combo = (rd(wPlayerStatus) & 0x10) != 0;
     if (combo) wr(wComboCounter, rd(wComboCounter) + 1);
@@ -1147,7 +1151,7 @@ void *gb_native_EnemyDefeated(void) {
         gb_native_LookupByte();
         r.e = r.a;
         r.d = 0;
-        CALL(GAME_AddScore);
+        NCALL(GAME_AddScore);
         wr(wProjectile, rd(wProjectile) & 0x7F);
         gb_native_RemoveEnemy();
         return 0;
@@ -1196,14 +1200,14 @@ void *gb_native_AddScore(void) {
     alu_add(rd(HL()), carry);
     wr(HL(), r.a);
     for (int i = 0; i < 3; i++) {
-        CALL(GAME_DrawDecimalDigits);
+        NCALL(GAME_DrawDecimalDigits);
         if (i < 2) SET_HL(HL() - 1);
     }
     wr(wScoreStream, 0x06);
     wr(wScoreStream + 1, 0x01);
     for (int i = 0; i < 6; i++) {
         r.a = rd(wScoreDecimal + i);
-        CALL(GAME_LowNibbleToDigitTile);
+        NCALL(GAME_LowNibbleToDigitTile);
         wr(wScoreStream + 2 + i, r.a);
     }
     return (void *)GAME_CheckExtraLife;
@@ -1260,7 +1264,7 @@ void *gb_native_TimeUpSpawnEnemy(void) {
     wr(hScratch00 + 7, 0x04);
     wr(hScratch00 + 8, 0xA0);
     wr(hScratch00 + 10, 0x98);
-    CALL(GAME_FindFreeEnemySlot);
+    NCALL(GAME_FindFreeEnemySlot);
     return (void *)GAME_SerialStartTransfer;
 }
 
@@ -1312,13 +1316,13 @@ void *gb_native_PaintCell(void) {
     wr(HL(), (tile & 0x0F) | 0x10);
     wr(hSpriteX, r.b);
     wr(hSpriteY, (uint8_t)(r.c - 8));
-    CALL(GAME_PixelToTilemapAddr);
+    NCALL(GAME_PixelToTilemapAddr);
     r.l = rd(hTilemapAddrLo);
     r.l--;
     r.h = rd(hTilemapAddrHi);
     SET_DE((tile & 0x0F) == 0x01 ? 0x4921 : 0x491B);
-    CALL(GAME_QueueVramCopyRows);
-    CALL(GAME_WaitVramCopyDone);
+    NCALL(GAME_QueueVramCopyRows);
+    NCALL(GAME_WaitVramCopyDone);
     wr(wPaintRemaining, rd(wPaintRemaining) - 1);
     if (rd(wPaintRemaining)) return 0;
     return (void *)GAME_RoundCleared;
@@ -1388,32 +1392,32 @@ void *gb_native_DrawTwoDigitNumber(void) {
 /* Mode3_RoundIntro: the "ROUND nn / room name / lives / READY !!" screen. Shown for $97 frames, then mode 1 (play) is started. */
 void *gb_native_Mode3_RoundIntro(void) {
     r.sp = wStackTop;
-    CALL(GAME_LcdOff);
+    NCALL(GAME_LcdOff);
     ime = 0;
     r.a = 0xFF;
-    CALL(GAME_PlaySound);
+    NCALL(GAME_PlaySound);
     SET_HL(vBGMapLast);
     gb_native_FillBackwardsFF();
     wr(0xC7C2, 0);
-    CALL(GAME_LoadTilesBank3A);
-    CALL(GAME_ClearOamShadow);
+    NCALL(GAME_LoadTilesBank3A);
+    NCALL(GAME_ClearOamShadow);
     SET_BC(DATA_RoundIntroText);
-    CALL(GAME_RunVramCopyList);
+    NCALL(GAME_RunVramCopyList);
     r.b = rd(wRound);
     SET_HL(0x986C);
-    CALL(GAME_DrawTwoDigitNumber);
+    NCALL(GAME_DrawTwoDigitNumber);
     r.b = (rd(hLinkFlags) & 0x01) ? 1 : rd(wLives);
     SET_HL(0x992C);
-    CALL(GAME_DrawTwoDigitNumber);
+    NCALL(GAME_DrawTwoDigitNumber);
     r.a = rd(wRound);
     SET_HL(DATA_RoomNameJobTable);
-    CALL(GAME_TableIndexFromRoundDec);
+    NCALL(GAME_TableIndexFromRoundDec);
     SET_HL(0x98C3);
-    CALL(GAME_VramCopyStream);
-    CALL(GAME_RequestOamDma);
-    CALL(GAME_ClearOamShadowY);
+    NCALL(GAME_VramCopyStream);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
     gb_native_ClearRoomState();
-    CALL(GAME_ClearBonusFlags);
+    NCALL(GAME_ClearBonusFlags);
     wr(wScrollX, 0);
     wr(wScrollY, 0);
     wr(rBGP, PAL_NORMAL);
@@ -1425,8 +1429,8 @@ void *gb_native_Mode3_RoundIntro(void) {
     ime = 1;
     wr(hScratch00, 0x97);
     do {
-        CALL(GAME_WaitVBlankFlag);
-        CALL(GAME_ReadJoypad);
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
         wr(hScratch00, rd(hScratch00) - 1);
     } while (rd(hScratch00));
     r.a = 1;
@@ -1436,21 +1440,21 @@ void *gb_native_Mode3_RoundIntro(void) {
 /* Mode4_GameOver: the GAME OVER screen: tiles, the text, the game over music; shown for 3 x 256 frames, then back to the title (mode 0) or, in a link game, a restart. */
 void *gb_native_Mode4_GameOver(void) {
     r.sp = wStackTop;
-    CALL(GAME_LcdOff);
+    NCALL(GAME_LcdOff);
     ime = 0;
     SET_HL(vBGMapLast);
     gb_native_FillBackwardsFF();
-    CALL(GAME_LoadTilesBank3A);
-    CALL(GAME_ClearOamShadow);
+    NCALL(GAME_LoadTilesBank3A);
+    NCALL(GAME_ClearOamShadow);
     r.a = SND_MUSIC_GAME_OVER;
-    CALL(GAME_PlaySound);
+    NCALL(GAME_PlaySound);
     SET_HL(0x9905);
     SET_DE(DATA_GameOverText);
-    CALL(GAME_VramCopyStream);
+    NCALL(GAME_VramCopyStream);
     wr(wScrollX, 0);
     wr(wScrollY, 0);
-    CALL(GAME_RequestOamDma);
-    CALL(GAME_ClearOamShadowY);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
@@ -1460,8 +1464,8 @@ void *gb_native_Mode4_GameOver(void) {
     wr(hScratch00 + 1, 0x02);
     for (;;) {
         do {
-            CALL(GAME_WaitVBlankFlag);
-            CALL(GAME_ReadJoypad);
+            NCALL(GAME_WaitVBlankFlag);
+            NCALL(GAME_ReadJoypad);
             wr(hScratch00, rd(hScratch00) - 1);
         } while (rd(hScratch00));
         uint8_t left = (uint8_t)(rd(hScratch00 + 1) - 1);
@@ -1487,14 +1491,14 @@ void *gb_native_SoundDequeue(void) {
  * start the current command, hand out channels, then update each of the 8 channel records of $20 bytes (those with bit 7 of their first byte set). */
 void *gb_native_SoundUpdate(void) {
     if (!rd(wSoundBusy)) gb_native_SoundDequeue();
-    CALL(GAME_SoundStartCommand);
-    CALL(GAME_SoundAssignChannels);
+    NCALL(GAME_SoundStartCommand);
+    NCALL(GAME_SoundAssignChannels);
     wr(wSoundChanLeft, 8);
     uint16_t record = wSoundChannels;
     for (;;) {
         SET_BC(record);
         SET_HL(record);
-        if (rd(record) & 0x80) CALL(GAME_SoundUpdateChannel);
+        if (rd(record) & 0x80) NCALL(GAME_SoundUpdateChannel);
         uint8_t left = rd(wSoundChanLeft) - 1;
         wr(wSoundChanLeft, left);
         if (!left) return 0;
@@ -1510,21 +1514,21 @@ void *gb_native_ShowMagicScreen(void) {
     if (rd(wPlayerDir) & 0x20) return 0;
     if (rd(wMagicState) & 0x02) return 0;
     if (!(rd(hJoyNew) & 0x02)) return 0;
-    CALL(GAME_LcdOff);
+    NCALL(GAME_LcdOff);
     ime = 0;
-    CALL(GAME_LoadTilesBank3B);
+    NCALL(GAME_LoadTilesBank3B);
     SET_HL(0x9FFF);
     gb_native_FillBackwardsFF();
     wr(wScrollX, 0);
     wr(wScrollY, 0);
     wr(hVBlankTasks, rd(hVBlankTasks) & ~0x10);
     SET_BC(DATA_MagicScreenJobsA);
-    CALL(GAME_RunVramCopyList);
+    NCALL(GAME_RunVramCopyList);
     SET_BC(DATA_MagicScreenJobsB);
-    CALL(GAME_RunVramCopyList);
+    NCALL(GAME_RunVramCopyList);
     SET_BC(0x0010);
     SET_HL(0x9CD0);
-    CALL(GAME_FillBackwardsFFBC);
+    NCALL(GAME_FillBackwardsFFBC);
     wr(wMpStreamIdx, 0);
     SET_BC(0x0010);
     SET_HL(0xC462);
@@ -1533,57 +1537,57 @@ void *gb_native_ShowMagicScreen(void) {
         SET_HL(HL() - 1);
         SET_BC(BC() - 1);
     } while (BC());
-    CALL(GAME_InitMagicScreenState);
+    NCALL(GAME_InitMagicScreenState);
     SET_HL(0x9C66);
     SET_DE(wScoreStream);
-    CALL(GAME_VramCopyStream);
+    NCALL(GAME_VramCopyStream);
     r.c = rd(wMagicPointsHi);
     r.a = rd(wMagicPoints);
     gb_native_ByteToBCD();
     r.a = rd(hScratch00 + 2) & 0x0F;
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xC450, r.a);
     r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xC44F, r.a);
     r.a = rd(hScratch00 + 3);
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xC44E, r.a);
     wr(wTextBuf, 0x03);
     wr(wTextBuf + 1, 0x01);
     SET_HL(0x9CA5);
     SET_DE(wTextBuf);
-    CALL(GAME_VramCopyStream);
+    NCALL(GAME_VramCopyStream);
     r.a = rd(hTimeSeconds);
     r.c = 0;
     gb_native_ByteToBCD();
     r.a = rd(hScratch00 + 2) & 0x0F;
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xFFE8, r.a);
     r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xFFE7, r.a);
     r.a = rd(hScratch00 + 3);
-    CALL(GAME_NumberToTile);
+    NCALL(GAME_NumberToTile);
     wr(0xFFE6, r.a);
     wr(0xFFE4, 0x03);
     wr(0xFFE5, 0x01);
     SET_HL(0x9CB0);
     SET_DE(0xFFE4);
-    CALL(GAME_VramCopyStream);
+    NCALL(GAME_VramCopyStream);
     r.b = rd(wRound);
     SET_HL(0x9C71);
-    CALL(GAME_DrawTwoDigitNumber);
+    NCALL(GAME_DrawTwoDigitNumber);
     wr(rBGP, PAL_NORMAL);
     wr(rOBP0, PAL_NORMAL);
     wr(rOBP1, PAL_NORMAL);
-    CALL(GAME_ClearOamShadowY);
-    CALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
+    NCALL(GAME_RequestOamDma);
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, 0x9B);
     ime = 1;
     wr(hScratch00, 0);
-    CALL(GAME_DrawMagicPage);
+    NCALL(GAME_DrawMagicPage);
     /* the magic points gauge */
     SET_BC(0x0002);
     r.e = rd(wMagicPointsHi) ? 1 : 0;
@@ -1619,32 +1623,32 @@ gauge_done:
     wr(wMpStream + 1, 0x01);
     SET_HL(0x9CC2);
     SET_DE(wMpStream);
-    CALL(GAME_QueueVramCopyRows);
-    CALL(GAME_WaitVramCopyDone);
-    CALL(GAME_WaitVBlankFlag);
+    NCALL(GAME_QueueVramCopyRows);
+    NCALL(GAME_WaitVramCopyDone);
+    NCALL(GAME_WaitVBlankFlag);
     r.a = 0xFF;
-    CALL(GAME_PlaySound);
+    NCALL(GAME_PlaySound);
     wr(wScrollX, 0);
     wr(wScrollY, 0);
     do {
-        CALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_WaitFrameAndSyncOam);
         uint8_t link = rd(hSerialByte);
         if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
-        CALL(GAME_ReadJoypad);
+        NCALL(GAME_ReadJoypad);
         wr(0xC769, rd(0xC769) + 1);
-        CALL(GAME_MagicScreenInput);
-        CALL(GAME_CursorBlinkStep);
+        NCALL(GAME_MagicScreenInput);
+        NCALL(GAME_CursorBlinkStep);
     } while (!(rd(hJoyNew) & 0x02));
     wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x02);
-    CALL(GAME_LcdOff);
+    NCALL(GAME_LcdOff);
     ime = 0;
-    CALL(GAME_LoadGfxBank2);
+    NCALL(GAME_LoadGfxBank2);
     wr(rBGP, PAL_NORMAL);
     wr(rOBP0, PAL_NORMAL);
     wr(rOBP1, PAL_NORMAL);
-    CALL(GAME_ClearOamShadow);
-    CALL(GAME_RequestOamDma);
-    CALL(GAME_ClearOamShadowY);
+    NCALL(GAME_ClearOamShadow);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
@@ -1701,8 +1705,8 @@ void *gb_native_DrawMagicPage(void) {
             gb_native_LookupWord();
             SET_DE(HL());
             SET_HL(base[t] + 6 * i);
-            CALL(GAME_QueueVramCopyRows);
-            if (i < 2 || t < 2) CALL(GAME_WaitVramCopyDone); else return (void *)GAME_WaitVramCopyDone;
+            NCALL(GAME_QueueVramCopyRows);
+            if (i < 2 || t < 2) NCALL(GAME_WaitVramCopyDone); else return (void *)GAME_WaitVramCopyDone;
         }
     }
     return 0;
@@ -1780,14 +1784,14 @@ void *gb_native_MagicScreenInput(void) {
                     return 0;
                 }
                 r.a = SND_SFX_90;
-                CALL(GAME_PlaySound);
+                NCALL(GAME_PlaySound);
                 card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
                 wr(wActiveMagic, card);
                 wr(wMagicScreenFlags, rd(wMagicScreenFlags) | 0x06);
                 wr(hJoyNew, rd(hJoyNew) & ~0x80);
             } else {
                 r.a = SND_SFX_CURSOR;
-                CALL(GAME_PlaySound);
+                NCALL(GAME_PlaySound);
                 r.a = rd(hJoyNew);
                 if (r.a & 0x10) gb_native_MagicCursorRight();
                 if (r.a & 0x20) gb_native_MagicCursorLeft();
@@ -1812,7 +1816,7 @@ void *gb_native_MagicScreenInput(void) {
 static void *magic_timed(uint8_t frames, int remove_projectile, int clear_blocked) {
     if (!(rd(wMagicState) & 0x02)) {
         wr(hMagicTimer, frames);
-        CALL(GAME_BeginMagicCast);
+        NCALL(GAME_BeginMagicCast);
         if (remove_projectile) wr(wProjectile, rd(wProjectile) & 0x7F);
     }
     if (clear_blocked) wr(wPlayerBlocked, 0);
@@ -1836,11 +1840,11 @@ void *gb_native_SelectBlobAnimation(void) {
 /* MagicEffectPyon: card 9 PYON: a paint blob object is created at the player (SpawnPaintBlob) and then, every frame, it is moved (MoveObject, ApplyObjectStep),
  * painted by MagicPaintEndUnlessBit2, drawn, and removed when it leaves the screen (EnemyScreenPosition of the player is checked: not of the blob). */
 void *gb_native_MagicEffectPyon(void) {
-    if (!(rd(wMagicState) & 0x02)) CALL(GAME_SpawnPaintBlob);
+    if (!(rd(wMagicState) & 0x02)) NCALL(GAME_SpawnPaintBlob);
     SET_HL(wPaintObject);
     gb_native_SetObjPtr();
     wr(wBlobPhase, rd(wBlobPhase) + 1);
-    CALL(GAME_MagicPaintEndUnlessBit2);
+    NCALL(GAME_MagicPaintEndUnlessBit2);
     r.c = rd(wPlayerX);
     r.b = rd(wPlayerY);
     gb_native_EnemyScreenPosition();
@@ -1856,23 +1860,23 @@ void *gb_native_MagicEffectPyon(void) {
  * moved, drawn and stored back; at the end of the frame the timer counts down (MagicTimerCountdown). */
 void *gb_native_MagicEffectBom(void) {
     if (!(rd(wMagicState) & 0x02)) {
-        CALL(GAME_SpawnBombBlob);
-        CALL(GAME_BombHitAllEnemies);
+        NCALL(GAME_SpawnBombBlob);
+        NCALL(GAME_BombHitAllEnemies);
     }
     for (;;) {
-        CALL(GAME_LoadTrailSegment);
+        NCALL(GAME_LoadTrailSegment);
         SET_HL(wPaintObject);
         gb_native_SetObjPtr();
         gb_native_MoveObject();
         gb_native_ApplyObjectStep();
         gb_native_DrawObject();
-        CALL(GAME_StoreTrailSegment);
-        CALL(GAME_SetPaintBlobAnimation);
+        NCALL(GAME_StoreTrailSegment);
+        NCALL(GAME_SetPaintBlobAnimation);
         wr(0xC449, rd(0xC449) - 1);
         if (rd(0xC449) == 0) break;
         wr(wTrailIdx, rd(wTrailIdx) + 1);
     }
-    CALL(GAME_MagicTimerCountdown);
+    NCALL(GAME_MagicTimerCountdown);
     wr(0xC449, 0x08);
     wr(wTrailIdx, 0);
     return 0;
@@ -1909,7 +1913,7 @@ void *gb_native_SpawnPaintBlob(void) {
     wr(wPaintObject + 11, rd(wPlayer + 11));
     wr(wPaintObject + 4, 0x01);
     r.a = SND_SFX_8D;
-    CALL(GAME_PlaySound);
+    NCALL(GAME_PlaySound);
     wr(hMagicTimer, 0xD0);
     SET_HL(wMagicState);
     wr(wMagicState, rd(wMagicState) | 0x12);
@@ -1921,7 +1925,7 @@ void *gb_native_SpawnPaintBlob(void) {
 void *gb_native_MagicEffectClear(void) {
     if (!(rd(wMagicState) & 0x02)) {
         wr(0xC1F8, 0);
-        CALL(GAME_BeginMagicCast);
+        NCALL(GAME_BeginMagicCast);
     }
     wr(wBlobPhase, rd(wBlobPhase) + 1);
     uint8_t step = rd(0xC1F8);
@@ -1942,8 +1946,8 @@ void *gb_native_MagicEffectClear(void) {
         wr(wRoomMap + cell, tile);
         wr(hScratch00 + 2, tile);
         SET_BC(cell);
-        CALL(GAME_MapCellToVramAddr);
-        CALL(GAME_QueueCellTileRows);
+        NCALL(GAME_MapCellToVramAddr);
+        NCALL(GAME_QueueCellTileRows);
         wr(wPaintRemaining, rd(wPaintRemaining) - 1);
         if (rd(wPaintRemaining) == 0) return (void *)GAME_RoundCleared;
     }
@@ -2063,4 +2067,107 @@ void *gb_native_SpawnBombBlob(void) {
     wr(wPaintObject, 0x82);
     gb_native_InitTrailSegments();
     return (void *)GAME_BeginMagicCast;
+}
+
+/* ---- the sound engine ----
+ * A channel record is $20 bytes (wSoundChannels, 8 records): +0 flags (bit 7 in use, 4 paused, 2 effect has the channel, bit 0 restart note), +1 hardware channel
+ * (0 pulse 1, 1 pulse 2, 2 wave, 3 noise), +2 pan mask for NR51, +3/+4 stream pointer, +7 envelope, +8..+$d note timing, +$12/+$13 frequency, +$15 duty.
+ * The writers send a register only when its value changed (the shadows wShadowNR..) except for the restart of a note (flags bit 0). */
+
+static uint16_t rec_of_bc(void) { return BC(); }
+
+void *gb_native_SoundSilenceChannel1(void) { wr(rNR13, 0xFF); wr(wShadowNR13, 0xFF); wr(rNR14, 0x87); wr(wShadowNR14, 0x87); return 0; }
+void *gb_native_SoundSilenceChannel2(void) { wr(rNR23, 0xFF); wr(wShadowNR23, 0xFF); wr(rNR24, 0x87); wr(wShadowNR24, 0x87); return 0; }
+void *gb_native_SoundSilenceChannel3(void) { wr(rNR33, 0xFF); wr(wShadowNR33, 0xFF); wr(rNR34, 0x07); wr(wShadowNR34, 0x07); return 0; }
+void *gb_native_SoundSilenceChannel4(void) { wr(rNR43, 0xFF); wr(wShadowNR43, 0xFF); wr(rNR44, 0x80); return 0; }
+
+/* the two pulse channels differ only in their registers */
+static void *write_pulse(uint16_t rec, uint16_t nr1, uint16_t nr2, uint16_t nr3, uint16_t nr4,
+                         uint16_t sh2, uint16_t sh3, uint16_t sh4, uint8_t pan, void *(*silence)(void)) {
+    wr(nr1, rd(rec + 0x15) & 0xC0);
+    uint8_t env = rd(rec + 7);
+    if (rd(sh2) != env) { wr(sh2, env); wr(nr2, env); }
+    uint8_t lo = rd(rec + 0x12), hi = rd(rec + 0x13);
+    if (!(lo | hi)) return silence();
+    wr(rNR51, (rd(rNR51) | pan) & rd(rec + 2));
+    int restart = rd(rec) & 0x01;
+    if (!restart && rd(sh3) == lo && rd(sh4) == hi) return 0;
+    wr(nr3, lo);
+    wr(sh3, lo);
+    wr(sh4, hi);
+    uint8_t arg = (hi & 0x07) | 0x80;
+    if (!restart) arg &= 0x7F;
+    wr(wSoundArg, arg);
+    wr(rec, rd(rec) & 0xFE);
+    wr(nr4, arg);
+    return 0;
+}
+void *gb_native_SoundWriteChannel1(void) {
+    return write_pulse(rec_of_bc(), rNR11, rNR12, rNR13, rNR14, wShadowNR12, wShadowNR13, wShadowNR14, 0x11, gb_native_SoundSilenceChannel1);
+}
+void *gb_native_SoundWriteChannel2(void) {
+    return write_pulse(rec_of_bc(), rNR21, rNR22, rNR23, rNR24, wShadowNR22, wShadowNR23, wShadowNR24, 0x22, gb_native_SoundSilenceChannel2);
+}
+
+void *gb_native_SoundWriteChannel3(void) {
+    uint16_t rec = rec_of_bc();
+    uint8_t lo = rd(rec + 0x12), hi = rd(rec + 0x13);
+    if (!(lo | hi)) return gb_native_SoundSilenceChannel3();
+    uint8_t level = rd(rec + 7);
+    if (rd(wShadowNR32) != level) { wr(wShadowNR32, level); wr(rNR32, level & 0x60); }
+    wr(rNR51, (rd(rNR51) | 0x44) & rd(rec + 2));
+    if (rd(wShadowNR33) == lo && rd(wShadowNR34) == hi) return 0;
+    wr(rNR33, lo);
+    wr(wShadowNR33, lo);
+    wr(wShadowNR34, hi);
+    uint8_t arg = hi & 0x07;
+    wr(wSoundArg, arg);
+    wr(rNR34, arg);
+    return 0;
+}
+
+void *gb_native_SoundWriteChannel4(void) {
+    uint16_t rec = rec_of_bc();
+    uint8_t env = rd(rec + 7);
+    if (rd(wShadowNR42) != env) { wr(wShadowNR42, env); wr(rNR42, env); }
+    uint8_t poly = rd(rec + 0x12);
+    if (!poly) return gb_native_SoundSilenceChannel4();
+    wr(rNR51, (rd(rNR51) | 0x88) & rd(rec + 2));
+    if (rd(wShadowNR43) == poly) return 0;
+    wr(rNR43, poly);
+    wr(wShadowNR43, poly);
+    uint8_t arg = (rd(rec) & 0x01) ? 0x00 : 0x80;       /* the noise channel is retriggered when the restart bit is clear */
+    wr(wSoundArg, arg);
+    wr(rec, rd(rec) & 0xFE);
+    wr(rNR44, arg);
+    return 0;
+}
+
+/* SoundUpdateChannel: one record. Paused (bit 4): nothing. The note timer adds +9 to +8; on overflow the length counter +$c counts up and when it reaches +$b
+ * the next note is read (SoundReadNextNote; with bit 0 set the vibrato counter +$d restarts). Unless an effect has taken the channel (bit 2) the pitch slide runs
+ * and the registers of the record's hardware channel are written. */
+void *gb_native_SoundUpdateChannel(void) {
+    uint16_t rec = rec_of_bc();
+    if (rd(rec) & 0x10) return 0;
+    unsigned sum = rd(rec + 8) + rd(rec + 9);
+    wr(rec + 9, sum);
+    if (sum > 0xFF) {
+        uint8_t length = rd(rec + 0x0C) + 1;
+        wr(rec + 0x0C, length);
+        if (rd(rec + 0x0B) == length) {
+            SET_BC(rec);
+            NCALL(GAME_SoundReadNextNote);
+            if (rd(rec) & 0x01) wr(rec + 0x0D, 0);
+        }
+    }
+    if (rd(rec) & 0x04) return 0;
+    SET_BC(rec);
+    NCALL(GAME_SoundApplyPitchSlide);
+    switch (rd(rec + 1)) {
+    case 3: return gb_native_SoundWriteChannel4();
+    case 2: return gb_native_SoundWriteChannel3();
+    case 1: return gb_native_SoundWriteChannel2();
+    case 0: return gb_native_SoundWriteChannel1();
+    }
+    return 0;
 }
