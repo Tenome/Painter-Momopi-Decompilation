@@ -279,3 +279,4 @@ DEF hEnemyYFrac     EQU $ffbe   ; +9: fraction of the Y position
 DEF hEnemyField13   EQU $ffc8   ; +$13: only copied (provisional)
 DEF hEnemyField18   EQU $ffcd   ; +$18: only copied (provisional)
 DEF hEnemyField19   EQU $ffce   ; +$19: only copied (provisional)
+DEF hBlinkTick      EQU $ffde   ; incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames (provisional)

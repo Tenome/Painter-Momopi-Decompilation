@@ -2,6 +2,8 @@
  * Most keep the register and flag results of the original routine so that its callers behave the same (the ones that do not say so in their comment); the generated code and these
  * versions are compared with `python tools/lift_check.py` (frame hashes of random play) before a routine is added here. */
 #include "gb_rt.h"
+#include "game_symbols.h"      /* generated: wPlayerX, hEnemyKind ... (from src/constants.inc) */
+#include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
 
 /* LookupByte: A = byte at HL + C (table lookup). */
 void *gb_native_LookupByte(void) {
@@ -73,7 +75,6 @@ void *gb_native_Clear32Bytes(void) {
     return 0;
 }
 
-#define wRoomMap 0xC0A7
 
 /* PixelXToColumn: E = (X + 8) / 16 - 1 (A is the pixel X); A ends equal to E. */
 void *gb_native_PixelXToColumn(void) {
@@ -97,13 +98,6 @@ void *gb_native_LookupMapTile(void) {
     return 0;
 }
 
-#define hScratch00 0xFF96
-#define hScratch01 0xFF97
-#define hEnemyBlocked 0xFFC7
-#define hEnemyX 0xFFBC
-#define hEnemyY 0xFFBF
-#define wCameraX 0xC1AC
-#define wCameraY 0xC1AE
 
 /* EnemyEdgeBlockedDirs: hEnemyBlocked = the directions the screen edges forbid (bit 0 right, 1 left, 2 up, 3 down; limits X $20-$ef, Y $28-$f7). */
 void *gb_native_EnemyEdgeBlockedDirs(void) {
@@ -143,10 +137,6 @@ void *gb_native_EnemyScreenPosition(void) {
     return 0;
 }
 
-#define hOamCount 0xFFD9
-#define hObjPtrLo 0xFFD5
-#define hObjPtrHi 0xFFD6
-#define hObject2  0xFFB5
 
 /* SetObjPtr: hObjPtr = HL (the object record the next routines work on); A ends as L. */
 void *gb_native_SetObjPtr(void) {
@@ -312,8 +302,6 @@ void *gb_native_ApplyObjectStep(void) {
     return 0;
 }
 
-#define hOtherObjLo 0xFFA4
-#define hOtherObjHi 0xFFA5
 
 /* CompareObjectCoordinate: E = offset of a coordinate byte. Takes |obj[E] - other[E]| (the object at hObjPtr against the one at hOtherObj) and compares it with
  * the sum of the two box sizes taken from the table at $0a3f (indexes hScratch02 and hScratch03). Carry set = closer than the sum (the boxes touch on this axis).
@@ -363,7 +351,6 @@ no:
 static uint8_t map_tile(uint8_t y, uint8_t column) { return rd(0xC0A7 + (uint8_t)(y - 0x18 + column)); }
 
 void *gb_native_PlayerComputeBlockedDirs(void) {
-    const uint16_t wPlayerBlocked = 0xC43B;
     wr(wPlayerBlocked, 0);
     gb_native_IsOnTileGrid();
     if (!ZF()) return 0;
@@ -377,10 +364,6 @@ void *gb_native_PlayerComputeBlockedDirs(void) {
     return 0;
 }
 
-#define hEnemyTick 0xFFD0
-#define wEnemyCount 0xC47E
-#define wPlayerX 0xC4C5
-#define wPlayerY 0xC4C8
 
 /* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
 void *gb_native_TickObjectTimer(void) {
@@ -570,8 +553,6 @@ void *gb_native_LoadEnemySlot(void) {
     return 0;
 }
 
-#define wCameraXHi 0xC1AD
-#define wCameraYHi 0xC1AF
 
 /* DrawObject: turns the object record at hObjPtr into OAM sprites (through AddOamSprite).
  * Record: +0 flags (bit 7 active, bit 1 position is in the world so the camera is subtracted, bit 2 set here when a part was drawn,
@@ -625,5 +606,350 @@ void *gb_native_DrawObject(void) {
     wr(hOtherObjLo, (uint8_t)(cursor - 1));
     wr(obj, s00);
     wr(obj + 5, (uint8_t)(cursor - 1));
+    return 0;
+}
+
+/* CounterToFrame: A = number of frames in the animation, hScratch06 = mask, hScratch07 = shift count (ends 0), hScratch08 = running counter.
+ * frame = (counter & mask) >> shift; when the frame is above the last one (A - 1) the counter is reset to 0.
+ * hScratch05 = A - 1. Returns B = C = frame * 2 (a table offset) and A = the last frame number (0 after a reset); HL = hScratch07. */
+void *gb_native_CounterToFrame(void) {
+    uint8_t last = (uint8_t)(r.a - 1);
+    wr(0xFF9B, last);
+    uint8_t frame = rd(0xFF9E) & rd(0xFF9C);
+    uint8_t shifts = rd(0xFF9D), carry;
+    do {
+        carry = frame & 1;
+        frame >>= 1;
+        shifts--;
+    } while (shifts);
+    wr(0xFF9D, 0);
+    r.f = 0xC0 | (carry ? 0x10 : 0);              /* flags of the final `dec [hl]` (the carry is that of the last shift) */
+    r.a = last;
+    alu_cp(frame);
+    if (last < frame) {
+        r.a = 0;
+        wr(0xFF9E, 0);
+    }
+    r.f = ((uint8_t)(frame << 1) ? 0 : 0x80) | ((frame & 0x80) ? 0x10 : 0);     /* flags of `sla b` */
+    r.b = (uint8_t)(frame << 1);
+    r.c = r.b;
+    SET_HL(0xFF9D);
+    return 0;
+}
+
+/* PlayerCheckOffPath: when the player stands exactly on a grid cell whose map cell is not a path (low nibble 0) wPlayerDir bit 5 (death) is set. */
+void *gb_native_PlayerCheckOffPath(void) {
+    r.b = rd(wPlayerX);
+    r.c = rd(wPlayerY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = rd(wPlayerY);
+    gb_native_LookupMapTile();
+    alu_and(0x0F);
+    if (!ZF()) return 0;
+    SET_HL(wPlayerDir);
+    wr(wPlayerDir, rd(wPlayerDir) | 0x20);
+    return 0;
+}
+
+fn_t gb_dispatch(uint16_t addr);
+
+/* UpdateEnemy: one step of the enemy record held in hObject2. While hEnemyDir bit 4 is set the enemy only blinks: it is drawn on the frames where the global
+ * tick $ffde has bit 2 set, hEnemyCounter counts down and when it goes below zero the bit is cleared. Otherwise the routine of the enemy's kind (hEnemyKind,
+ * EnemyBehaviorTable at $3782) runs (as a tail jump). */
+void *gb_native_UpdateEnemy(void) {
+    uint8_t dir = rd(0xFFD1);
+    if (dir & 0x10) {
+        r.a = rd(0xFFDE);
+        r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);       /* bit 2, a */
+        if (!(r.a & 4)) return 0;
+        SET_HL(0xFFB5);
+        wr(0xFFD5, 0xB5);
+        wr(0xFFD6, 0xFF);
+        gb_native_DrawObject();
+        r.a = rd(0xFFC9);
+        alu_sub(1, 0);
+        wr(0xFFC9, r.a);
+        r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);   /* bit 7, a */
+        if (!(r.a & 0x80)) return 0;
+        SET_HL(0xFFD1);
+        wr(0xFFD1, rd(0xFFD1) & 0xEF);
+        r.a = 0;
+        r.f = 0x80;
+        wr(0xFFC9, 0);
+        return 0;
+    }
+    r.a = rd(0xFFD2);
+    uint8_t carry = r.a >> 7;
+    r.a <<= 1;
+    r.f = (r.a ? 0 : 0x80) | (carry ? 0x10 : 0);
+    r.c = r.a;
+    r.b = 0;
+    SET_HL(0x3782);
+    add_hl(BC());
+    uint16_t entry = HL();
+    r.e = rd(entry);
+    r.d = rd(entry + 1);
+    r.a = r.d;
+    SET_HL(DE());
+    return (void *)gb_dispatch(HL());
+}
+
+/* UpdateEnemyLoop: runs every active enemy slot once. The slots are visited from index wEnemyLoopIdx (15) down to 0, offset by wEnemyLoopStart (which rises by one
+ * every frame, so the order in which enemies update rotates). Each active slot (bit 7 of its first byte) is copied into hObject2, updated and copied back. */
+void *gb_native_UpdateEnemyLoop(void) {
+    const uint16_t idx = 0xC53E, start = 0xC53F;
+    do {
+        r.a = (uint8_t)((rd(idx) + rd(start)) & 0x0F);
+        SET_HL(0x37AF);                          /* EnemySlotTable */
+        gb_native_SelectEnemySlot();
+        if (rd(HL()) & 0x80) {
+            gb_native_LoadEnemySlot();
+            r.sp -= 2;                           /* like `call UpdateEnemy`: the routine, or its tail jump, ends with a return */
+            void *next = gb_native_UpdateEnemy();
+            if (next) gb_run((fn_t)next); else r.sp += 2;
+            gb_native_StoreEnemySlot();
+        }
+        wr(idx, (uint8_t)(rd(idx) - 1));
+    } while (!(rd(idx) & 0x80));
+    return 0;
+}
+
+/* UpdateAllEnemies: advances the rotation (wEnemyLoopStart + 1), sets the loop index to 15 and runs UpdateEnemyLoop. */
+void *gb_native_UpdateAllEnemies(void) {
+    wr(0xC53F, rd(0xC53F) + 1);
+    wr(0xC53E, 0x0F);
+    return gb_native_UpdateEnemyLoop();
+}
+
+/* PlayFrame: one frame of play mode (Mode1_Play calls it every frame). Order of the original: round cleared and link game checks, player death,
+ * the A button / the running card effect (PlayerAction), wall check and blocked directions (skipped while card 2, W.IN, runs: it lets the player walk through walls), direction
+ * and position handling, painting the floor, animation selection, the enemy projectile, then the player is drawn (while a card effect runs the
+ * player is only drawn every other frame). */
+void *gb_native_PlayFrame(void) {
+    if (rd(wGameFlags) & 0x01) return (void *)GAME_RoundCleared;
+    uint8_t link = rd(hSerialByte);
+    if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
+    if (rd(wPlayerDir) & 0x20) return (void *)GAME_PlayerDeath;
+    CALL(GAME_PlayerAction);
+    if (!(rd(wActiveMagic) == 0x02 && (rd(wMagicState) & 0x01))) {
+        gb_native_PlayerCheckOffPath();
+        gb_native_LoadPlayerXY();
+        gb_native_PlayerComputeBlockedDirs();
+    }
+    CALL(GAME_HoldDirectionUntilAligned);
+    CALL(GAME_PlayerSetDirection);
+    gb_native_ClampPlayerPosition();
+    CALL(GAME_PaintUnderPlayer);
+    CALL(GAME_SelectPlayerAnimation);
+    CALL(GAME_ProjectileFrame);
+    if (rd(wActiveMagic) != 0 && (rd(wMagicState) & 0x01)) {
+        wr(0xC4D3, rd(0xC4D3) + 1);
+        if (!(rd(0xC4D3) & 0x02)) return 0;
+    }
+    CALL(GAME_AnimatePlayerWalk);
+    SET_HL(wPlayer);
+    gb_native_SetObjPtr();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* The behaviour routines of the enemy kinds are chains of the same steps (the record of the enemy is in hObject2):
+ * ticking its timer (TickObjectTimer: Z while the enemy is just spawning, when it only plays its first animation), being hit by paint (EnemyDefeated),
+ * the blocked directions, the grid step, direction choice, painting the floor (EnemyPaintStep, and with the B.O.M card), touching the player, being hit,
+ * the animation, drawing. */
+
+/* EnemyKindIdle: kinds 0, 6 and 8: stationary enemies (kind 0 = the armoured guards standing in the corridor rooms 13-15 and 29-31). */
+void *gb_native_EnemyKindIdle(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyInitMoveAnim;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintStep);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemySelectAnimByKind);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind1: an enemy that walks on the tile grid, turning at walls and the screen edges; while hEnemyFlags bit 1 is set the rest of its update only runs
+ * every eighth tick of hEnemyCounter (provisional reading). */
+void *gb_native_EnemyKind1(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyInitAnim3bbe;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    gb_native_EnemyEdgeBlockedDirs();
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyFlagOnPaintedTile);
+    if (rd(hEnemyFlags) & 0x02) {
+        wr(hEnemyCounter, rd(hEnemyCounter) + 1);
+        if (!(rd(hEnemyCounter) & 0x08)) return 0;
+    }
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintStep);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_SetEnemyAnimation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind2: an enemy that shoots (EnemyShooterAI decides, ProjectileFrame moves the shot). */
+void *gb_native_EnemyKind2(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind2Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyShootIfReady);
+    CALL(GAME_EnemyShooterAI);
+    CALL(GAME_ProjectileFrame);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_SelectKind2Animation);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind3: an enemy that flies straight at the player (EnemyAimAtPlayer), not bound to the grid. */
+void *gb_native_EnemyKind3(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind3Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyFlagOnPaintedTile);
+    CALL(GAME_EnemyTurnIfBlocked);
+    CALL(GAME_MoveAndApplyObject);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind3Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind4: aims at the player and turns; it cannot be hurt by paint (no defeat check). */
+void *gb_native_EnemyKind4(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind4Init;
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind4Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind5: a teleporting enemy (EnemyKind7Teleport moves it along its position table). It does not touch the player while the SEALED card (6) runs. */
+void *gb_native_EnemyKind5(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyBuildTeleportTable;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemyIdleAnimate);
+    CALL(GAME_EnemyKind7Teleport);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind7 (rounds 5-7 and 21-23): follows a scripted path (EnemyKind7NextStep reads the path table at wEnemyPathPtr). */
+void *gb_native_EnemyKind7(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind7Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyKind7NextStep);
+    CALL(GAME_MoveAndApplyObject);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemyKind7Update);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind9: aims at the player like kind 3 but is bound by the blocked directions of the grid. */
+void *gb_native_EnemyKind9(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind9Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind9Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind10 (rounds 14 and 30): the enemy that fires a projectile object (InitProjectile at first; the projectile is updated and drawn here). */
+void *gb_native_EnemyKind10(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_InitProjectile;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyKind10Move);
+    CALL(GAME_UpdateProjectile);
+    CALL(GAME_ProjectileCheckPlayerHit);
+    CALL(GAME_ProjectileRemoveIfHit);
+    CALL(GAME_ProjectileSelectFrame);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind11 (rounds 5 6 9 11 and the same +16): an enemy that sits in a map cell; it hides the cell's tile (EnemyClearTileSaveStep keeps the tile it replaced in
+ * hEnemyAux) and writes the tile back when it is hit, when its timer (hEnemyTimer) runs out, or while the GHOST or SEALED card runs. */
+void *gb_native_EnemyKind11(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind7Start;
+    if (rd(hEnemyFlags) & 0x04) {
+        uint8_t dir = rd(hEnemyDir);
+        if (dir & 0x02) return (void *)GAME_EnemyDefeated;
+        wr(hEnemyDir, dir | 0x02);
+        CALL(GAME_EnemyStoreAuxToTile);
+        return (void *)GAME_EnemyDefeated;
+    }
+    if (!(rd(hEnemyDir) & 0x01)) {
+        CALL(GAME_EnemyClearTileSaveStep);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x01);
+    }
+    uint8_t timer = rd(hEnemyTimer);
+    wr(hEnemyTimer, timer - 1);
+    if (timer == 0) {
+        gb_native_EnemyMapTile();
+        wr(HL(), rd(hEnemyAux));
+        return (void *)GAME_RemoveEnemy;
+    }
+    uint8_t card = rd(wActiveMagic);
+    if ((card == 0x04 || card == 0x06) && (rd(wMagicState) & 0x01)) {
+        gb_native_EnemyMapTile();
+        wr(HL(), rd(hEnemyAux));
+    } else {
+        CALL(GAME_EnemyClearTileSaveStep);
+    }
+    CALL(GAME_EnemyKind7SetAnimation);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
     return 0;
 }

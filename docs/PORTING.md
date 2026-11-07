@@ -38,7 +38,8 @@ Next: save-less options (scaling filters, key mapping file), the HAL clean-up be
 
 `port/logic.c` holds readable C versions of routines (memory fills and copies, table lookups, the pixel to map column and tile lookups,
 the enemy edge and screen position checks). Each keeps the registers and flags the original leaves, because callers may use them. A label is
-replaced by adding it to `port/overrides.txt` and writing `gb_native_<Label>` in `port/logic.c`. `python tools/lift_check.py --cc <clang> --rgbds E:/rgbds`
+replaced by adding it to `port/overrides.txt` and writing `gb_native_<Label>` in `port/logic.c`. A routine that ends in a tail jump returns the routine to continue with
+(`gb_dispatch(address)`), like the generated code does; a routine that just returns gives 0. `python tools/lift_check.py --cc <clang> --rgbds E:/rgbds`
 builds the runner with and without the hand written routines and compares a hash of work RAM, high RAM, video RAM and OAM after every frame of
 random play (several seeds); a routine is accepted only when every frame matches. The check only covers paths the random play reaches (a deliberate change in the main path of `ByteToBCD`
 is caught; the branch for a nonzero C is never taken in play and is not verified).

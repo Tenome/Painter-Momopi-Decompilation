@@ -51,7 +51,7 @@ exe = ".exe" if os.name == "nt" else ""
 
 
 def compile_(main, out, extra=()):
-    cmd = [cc, "-O2", "-w", "-I", P("port")] + [P("port", main)] + common + ["-o", out] + list(extra)
+    cmd = [cc, "-O2", "-w", "-I", P("port"), "-I", P("build", "recomp")] + [P("port", main)] + common + ["-o", out] + list(extra)
     print(" ".join(cmd))
     subprocess.run(cmd, check=True)
     print("built", out)
