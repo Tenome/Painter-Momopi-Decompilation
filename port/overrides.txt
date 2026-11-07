@@ -17,3 +17,6 @@ PixelXToColumn
 LookupMapTile
 EnemyEdgeBlockedDirs
 EnemyScreenPosition
+SetObjPtr
+SelectObject2
+AddOamSprite

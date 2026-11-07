@@ -142,3 +142,44 @@ void *gb_native_EnemyScreenPosition(void) {
     r.f = 0x80;
     return 0;
 }
+
+#define hOamCount 0xFFD9
+#define hObjPtrLo 0xFFD5
+#define hObjPtrHi 0xFFD6
+#define hObject2  0xFFB5
+
+/* SetObjPtr: hObjPtr = HL (the object record the next routines work on); A ends as L. */
+void *gb_native_SetObjPtr(void) {
+    wr(hObjPtrHi, r.h);
+    wr(hObjPtrLo, r.l);
+    r.a = r.l;
+    return 0;
+}
+
+/* SelectObject2: hObjPtr = hObject2 (the enemy record held in high RAM); HL = $ffb5. */
+void *gb_native_SelectObject2(void) {
+    SET_HL(hObject2);
+    wr(hObjPtrLo, r.l);
+    wr(hObjPtrHi, 0xFF);
+    r.a = 0xFF;
+    return 0;
+}
+
+/* AddOamSprite: appends one sprite (Y hScratch0B, X hScratch0A, tile hScratch0C, attributes hScratch0D) to the OAM shadow at $c000;
+ * the 40 entry slot counter hOamCount wraps back to 0 after slot 38. */
+void *gb_native_AddOamSprite(void) {
+    uint8_t slot = rd(hOamCount);
+    if (slot >= 0x27) slot = 0;
+    uint16_t at = 0xC000 + slot * 4;
+    wr(at, rd(0xFFA1));
+    wr(at + 1, rd(0xFFA0));
+    wr(at + 2, rd(0xFFA2));
+    wr(at + 3, rd(0xFFA3));
+    wr(hOamCount, slot + 1);
+    SET_HL(at + 3);
+    r.b = 0;
+    r.c = slot * 4;
+    r.a = slot + 1;
+    r.f = (slot & 15) == 15 ? 0x20 : 0;      /* flags of `inc a` (the carry was cleared by the shifts) */
+    return 0;
+}
