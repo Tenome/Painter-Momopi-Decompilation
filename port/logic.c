@@ -3092,3 +3092,50 @@ void *gb_native_EnemyKind7Init(void) {
     wr(wEnemyPathPtrHi, r.h);
     return 0;
 }
+
+/* EnemyKind7Update (the path walking enemy): once its path is finished (hEnemyDir bit 0) it blinks for hEnemyAux frames and is removed; while walking, the animation pair
+ * depends on the heading in hEnemyCounter (0 up, 8 right (not mirrored), $10 down, $18 left (mirrored)). */
+void *gb_native_EnemyKind7Update(void) {
+    if (rd(hEnemyDir) & 0x01) {
+        uint8_t aux = rd(hEnemyAux);
+        if (aux == 0) return gb_native_RemoveEnemy();
+        wr(hEnemyAux, aux - 1);
+        anim_variant(0x3ACA, 0x3E4D);
+        return 0;
+    }
+    wr(hObject2, rd(hObject2) | 0x60);
+    switch (rd(hEnemyCounter)) {
+    case 0x08: wr(hObject2, rd(hObject2) & ~0x20); anim_variant(0x3E57, 0x3E5C); break;
+    case 0x10: anim_variant(0x3E4D, 0x3E52); break;
+    case 0x18: anim_variant(0x3E57, 0x3E5C); break;
+    default:   wr(hObject2, rd(hObject2) & ~0x40); anim_variant(0x3E4D, 0x3E52); break;
+    }
+    return 0;
+}
+
+void *gb_native_EnemyKind7SetAnimation(void) { anim_variant(0x3C87, 0x3C8C); return 0; }
+
+/* EnemyKind7Start (kind 11): counter $20, hEnemyAux = the map tile under the enemy, hEnemyTimer = $fe, hEnemyDir = $90, animation $3c87. */
+void *gb_native_EnemyKind7Start(void) {
+    wr(hEnemyCounter, 0x20);
+    gb_native_EnemyMapTile();
+    wr(hEnemyAux, r.a);
+    wr(hEnemyTimer, 0xFE);
+    wr(hEnemyDir, 0x90);
+    set_anim(0x3C87);
+    return 0;
+}
+
+/* EnemyStoreAuxToTile: writes hEnemyAux back into the map cell under the enemy. EnemyClearTileSaveStep: keeps that cell in hEnemyStep and clears it. */
+void *gb_native_EnemyStoreAuxToTile(void) {
+    gb_native_EnemyMapTile();
+    wr(HL(), rd(hEnemyAux));
+    return 0;
+}
+void *gb_native_EnemyClearTileSaveStep(void) {
+    gb_native_EnemyMapTile();
+    wr(hEnemyStep, r.a);
+    wr(HL(), 0);
+    r.a = 0;
+    return 0;
+}

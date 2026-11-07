@@ -178,3 +178,8 @@ EnemyTeleportNext
 EnemySnapToGrid
 EnemyKind7NextStep
 EnemyKind7Init
+EnemyKind7Update
+EnemyKind7SetAnimation
+EnemyKind7Start
+EnemyStoreAuxToTile
+EnemyClearTileSaveStep
