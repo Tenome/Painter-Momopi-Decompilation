@@ -29,3 +29,11 @@ ApplyObjectStep
 CompareObjectCoordinate
 ObjectsOverlap
 PlayerComputeBlockedDirs
+TickObjectTimer
+LoadPlayerXY
+GetEnemyPos
+GetPlayerPos
+RememberEnemyPosition
+DigitToTile
+EnemyTileUnder
+EnemyMapTile

@@ -376,3 +376,71 @@ void *gb_native_PlayerComputeBlockedDirs(void) {
     if ((map_tile(y, column + 1) & 0x0F) == 0) { blocked |= 0x01; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
     return 0;
 }
+
+#define hEnemyTick 0xFFD0
+
+/* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
+void *gb_native_TickObjectTimer(void) {
+    wr(hEnemyTick, rd(hEnemyTick) + 1);
+    r.a = rd(hEnemyTick + 1);
+    SET_HL(hEnemyTick + 1);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);
+    return 0;
+}
+
+/* LoadPlayerXY: B = wPlayerX, C = wPlayerY; HL = the address of wPlayerY. */
+void *gb_native_LoadPlayerXY(void) {
+    r.b = rd(0xC4C5);
+    r.c = rd(0xC4C8);
+    SET_HL(0xC4C8);
+    return 0;
+}
+
+/* GetEnemyPos: C = hEnemyX, B = hEnemyY; HL = the address of hEnemyY. */
+void *gb_native_GetEnemyPos(void) {
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    SET_HL(hEnemyY);
+    return 0;
+}
+
+/* GetPlayerPos: L = wPlayerX and H = wPlayerY (A = wPlayerY). */
+void *gb_native_GetPlayerPos(void) {
+    r.l = rd(0xC4C5);
+    r.h = rd(0xC4C8);
+    r.a = r.h;
+    return 0;
+}
+
+/* RememberEnemyPosition: copies hEnemyX and hEnemyY to $c525 and $c526 (A ends as Y). */
+void *gb_native_RememberEnemyPosition(void) {
+    wr(0xC525, rd(hEnemyX));
+    r.a = rd(hEnemyY);
+    wr(0xC526, r.a);
+    return 0;
+}
+
+/* DigitToTile: A = tile id of digit A from the table at $1d2f; HL and BC are kept, only Z of the flags survives. */
+void *gb_native_DigitToTile(void) {
+    r.a = rd(0x1D2F + r.a);
+    r.f &= 0x80;
+    return 0;
+}
+
+/* EnemyTileUnder: A = room map tile under the enemy, with its Y rounded to the grid row (Y and $f0, plus 8). */
+void *gb_native_EnemyTileUnder(void) {
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = rd(hEnemyY);
+    alu_and(0xF0);
+    alu_add(0x08, 0);
+    return gb_native_LookupMapTile();
+}
+
+/* EnemyMapTile: A = room map tile at the enemy position (column from X, row from Y as it is). */
+void *gb_native_EnemyMapTile(void) {
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = rd(hEnemyY);
+    return gb_native_LookupMapTile();
+}
