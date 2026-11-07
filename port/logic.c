@@ -238,3 +238,21 @@ void *gb_native_ByteToBCD(void) {
     wr(0xFF99, hundreds);
     return 0;
 }
+
+/* IsOnTileGrid: B = X and C = Y; Z set when X is a multiple of 16 and Y is 8 more than one. A ends as the compared Y remainder. */
+void *gb_native_IsOnTileGrid(void) {
+    r.a = r.b;
+    alu_and(0x0F);
+    if (r.a) return 0;                  /* NZ: X is off the grid (flags of the AND) */
+    r.a = r.c;
+    alu_and(0x0F);
+    alu_cp(0x08);
+    return 0;
+}
+
+/* EnemyOnTileGrid: Z when the enemy is aligned to the grid; B = hEnemyX and C = hEnemyY on return. */
+void *gb_native_EnemyOnTileGrid(void) {
+    r.b = rd(hEnemyX);
+    r.c = rd(hEnemyY);
+    return gb_native_IsOnTileGrid();
+}

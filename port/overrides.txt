@@ -22,3 +22,5 @@ SelectObject2
 AddOamSprite
 MultiplyByDE
 ByteToBCD
+IsOnTileGrid
+EnemyOnTileGrid
