@@ -58,7 +58,7 @@ SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     call SoundStartCommand
     call SoundAssignChannels
     ld a, $08
-    ld [$c30d], a
+    ld [wSoundChanLeft], a
     ld bc, wSoundChannels
     ld h, b
     ld l, c
@@ -68,9 +68,9 @@ SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     jr z, .L_01_4178
     call SoundUpdateChannel
 .L_01_4178:
-    ld a, [$c30d]
+    ld a, [wSoundChanLeft]
     dec a
-    ld [$c30d], a
+    ld [wSoundChanLeft], a
     jr z, .L_01_418b
     ld de, $0020
     ld h, b
@@ -145,7 +145,7 @@ SoundClearChannels::  ; clears the first byte of all 8 channel records and sets 
     ld [wSoundChan6], a
     ld [wSoundChan7], a
     ld a, $77
-    ld [$c315], a
+    ld [wSoundMasterVol], a
 SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13 NR23 NR33
     ld a, $00
     ld [rNR30], a
@@ -163,7 +163,7 @@ SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13
     ld [rNR23], a
     ld [rNR33], a
     ld [rNR43], a
-    ld a, [$c315]
+    ld a, [wSoundMasterVol]
     ld [rNR50], a
     ld a, $87
     ld [rNR14], a
@@ -172,17 +172,17 @@ SoundInit::  ; initialises the APU registers: NR30 NR51 NR10 NR12 NR22 NR42 NR13
     ld [rNR44], a
 SoundClearRegisterShadow::  ; zeroes the register shadow bytes at $c427-$c431
     ld a, $00
-    ld [$c427], a
-    ld [$c428], a
-    ld [$c429], a
-    ld [$c42a], a
-    ld [$c42b], a
-    ld [$c42c], a
-    ld [$c42d], a
-    ld [$c42e], a
-    ld [$c42f], a
-    ld [$c430], a
-    ld [$c431], a
+    ld [wShadowNR12], a
+    ld [wShadowNR13], a
+    ld [wShadowNR14], a
+    ld [wShadowNR22], a
+    ld [wShadowNR23], a
+    ld [wShadowNR24], a
+    ld [wShadowNR32], a
+    ld [wShadowNR33], a
+    ld [wShadowNR34], a
+    ld [wShadowNR42], a
+    ld [wShadowNR43], a
     ld [$c432], a
     ret
 SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces lower priority music)
@@ -432,11 +432,11 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
     ld [rNR11], a
     ld hl, $0007
     add hl, bc
-    ld a, [$c427]
+    ld a, [wShadowNR12]
     cp a, [hl]
     jr z, .L_01_441f
     ld a, [hl]
-    ld [$c427], a
+    ld [wShadowNR12], a
     ld [rNR12], a
 .L_01_441f:
     ld hl, $0012
@@ -456,20 +456,20 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
     ld a, [bc]
     bit 0, a
     jr nz, .L_01_4449
-    ld a, [$c428]
+    ld a, [wShadowNR13]
     cp a, [hl]
     jr nz, .L_01_4449
     inc hl
-    ld a, [$c429]
+    ld a, [wShadowNR14]
     cp a, [hl]
     ret z
     dec hl
 .L_01_4449:
     ld a, [hl+]
     ld [rNR13], a
-    ld [$c428], a
+    ld [wShadowNR13], a
     ld a, [hl]
-    ld [$c429], a
+    ld [wShadowNR14], a
     and a, $07
     or a, $80
     ld [wSoundArg], a
@@ -489,10 +489,10 @@ SoundWriteChannel1::  ; writes pulse channel 1 registers (NR11 NR12 NR13/NR14) f
 SoundSilenceChannel1::  ; writes NR13=$ff NR14=$87 to retrigger channel 1 at the end of a note
     ld a, $ff
     ld [rNR13], a
-    ld [$c428], a
+    ld [wShadowNR13], a
     ld a, $87
     ld [rNR14], a
-    ld [$c429], a
+    ld [wShadowNR14], a
     ret
 SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     ld hl, $0015
@@ -502,11 +502,11 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     ld [rNR21], a
     ld hl, $0007
     add hl, bc
-    ld a, [$c42a]
+    ld a, [wShadowNR22]
     cp a, [hl]
     jr z, .L_01_449f
     ld a, [hl]
-    ld [$c42a], a
+    ld [wShadowNR22], a
     ld [rNR22], a
 .L_01_449f:
     ld hl, $0012
@@ -526,20 +526,20 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
     ld a, [bc]
     bit 0, a
     jr nz, .L_01_44c9
-    ld a, [$c42b]
+    ld a, [wShadowNR23]
     cp a, [hl]
     jr nz, .L_01_44c9
     inc hl
-    ld a, [$c42c]
+    ld a, [wShadowNR24]
     cp a, [hl]
     ret z
     dec hl
 .L_01_44c9:
     ld a, [hl+]
     ld [rNR23], a
-    ld [$c42b], a
+    ld [wShadowNR23], a
     ld a, [hl]
-    ld [$c42c], a
+    ld [wShadowNR24], a
     and a, $07
     or a, $80
     ld [wSoundArg], a
@@ -559,10 +559,10 @@ SoundWriteChannel2::  ; writes pulse channel 2 registers (NR21 NR22 NR23/NR24)
 SoundSilenceChannel2::  ; writes NR23=$ff NR24=$87 to retrigger channel 2
     ld a, $ff
     ld [rNR23], a
-    ld [$c42b], a
+    ld [wShadowNR23], a
     ld a, $87
     ld [rNR24], a
-    ld [$c42c], a
+    ld [wShadowNR24], a
     ret
 SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     ld hl, $0012
@@ -572,11 +572,11 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     jr z, SoundSilenceChannel3
     ld hl, $0007
     add hl, bc
-    ld a, [$c42d]
+    ld a, [wShadowNR32]
     cp a, [hl]
     jr z, .L_01_451f
     ld a, [hl]
-    ld [$c42d], a
+    ld [wShadowNR32], a
     and a, $60
     ld [rNR32], a
 .L_01_451f:
@@ -588,20 +588,20 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
     ld [rNR51], a
     ld hl, $0012
     add hl, bc
-    ld a, [$c42e]
+    ld a, [wShadowNR33]
     cp a, [hl]
     jr nz, .L_01_453d
     inc hl
-    ld a, [$c42f]
+    ld a, [wShadowNR34]
     cp a, [hl]
     ret z
     dec hl
 .L_01_453d:
     ld a, [hl+]
     ld [rNR33], a
-    ld [$c42e], a
+    ld [wShadowNR33], a
     ld a, [hl]
-    ld [$c42f], a
+    ld [wShadowNR34], a
     and a, $07
     ld [wSoundArg], a
     ld a, [bc]
@@ -617,19 +617,19 @@ SoundWriteChannel3::  ; writes wave channel 3 registers (NR32 NR33/NR34)
 SoundSilenceChannel3::  ; writes NR33=$ff NR34=$07 to channel 3
     ld a, $ff
     ld [rNR33], a
-    ld [$c42e], a
+    ld [wShadowNR33], a
     ld a, $07
     ld [rNR34], a
-    ld [$c42f], a
+    ld [wShadowNR34], a
     ret
 SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     ld hl, $0007
     add hl, bc
-    ld a, [$c430]
+    ld a, [wShadowNR42]
     cp a, [hl]
     jr z, .L_01_4583
     ld a, [hl]
-    ld [$c430], a
+    ld [wShadowNR42], a
     ld [rNR42], a
 .L_01_4583:
     ld hl, $0012
@@ -645,12 +645,12 @@ SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
     and a, [hl]
     ld [rNR51], a
     pop hl
-    ld a, [$c431]
+    ld a, [wShadowNR43]
     cp a, [hl]
     ret z
     ld a, [hl]
     ld [rNR43], a
-    ld [$c431], a
+    ld [wShadowNR43], a
     ld a, $80
     ld [wSoundArg], a
     ld a, [bc]
@@ -669,7 +669,7 @@ SoundWriteChannel4::  ; writes noise channel 4 registers (NR42 NR43 NR44)
 SoundSilenceChannel4::  ; writes NR43=$ff NR44=$80 to channel 4
     ld a, $ff
     ld [rNR43], a
-    ld [$c431], a
+    ld [wShadowNR43], a
     ld a, $80
     ld [rNR44], a
     ret
@@ -927,7 +927,7 @@ SoundCmdSetPitch::  ; command $f1: record +$e = next byte (pitch)
 SoundSetPendingWave::  ; stores the next stream byte at $c312 (pending wave pattern index)
     ld a, [de]
     inc de
-    ld [$c312], a
+    ld [wWavePending], a
     ret
 SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the wave channel
     ld a, [bc]
@@ -935,21 +935,21 @@ SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the 
     jr nz, SoundSetPendingWave
     ld a, [de]
     inc de
-    ld hl, $c314
+    ld hl, wWaveCurrent
     cp a, [hl]
-    jr z, L_01_4775
+    jr z, SoundReturn
     ld [hl], a
     ld hl, wSoundChannels
     ld a, c
     sub a, l
     cp a, $60
     jr nc, .L_01_4747
-    ld a, [$c314]
-    ld [$c312], a
+    ld a, [wWaveCurrent]
+    ld [wWavePending], a
     jr SoundLoadWave
 .L_01_4747:
-    ld a, [$c314]
-    ld [$c313], a
+    ld a, [wWaveCurrent]
+    ld [wWaveEffect], a
 SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wave RAM
     push bc
     ld bc, D_00_3fb8
@@ -978,13 +978,13 @@ SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wa
     ld a, $80
     ld [rNR30], a
     call SoundInit
-L_01_4775::
+SoundReturn::  ; ret shared by the sound command that precedes SoundCmdEnd (name provisional)
     ret
 SoundCmdEnd::  ; sound command $eb: discards the caller's return address and ends the stream
     ld a, $00
     ld [wEffectPriority], a
-    ld a, [$c312]
-    ld hl, $c314
+    ld a, [wWavePending]
+    ld hl, wWaveCurrent
     cp a, [hl]
     jr z, .L_01_4788
     ld [hl], a
@@ -1012,7 +1012,7 @@ SoundCmdSetMasterVolume::  ; command $ef: NR50 = next byte (also saved at $c315)
     ld a, [de]
     inc de
     ld [rNR50], a
-    ld [$c315], a
+    ld [wSoundMasterVol], a
     ret
 SoundApplyPitchSlide::  ; copies the pitch word at +$e into +$12 (frequency) for the channel writers
     ld hl, $000e
@@ -1291,20 +1291,20 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     ld [wPaintAnimHi], a
     ld a, $20
     ld [$c50f], a
-    ld a, [$c4ce]
+    ld a, [wPlayerAngle]
     ld [$c50e], a
     ld a, $86
     ld [wPaintObject], a
     ld a, [$c4c4]
     ld [$c504], a
     ld a, [wPlayerX]
-    ld [$c505], a
+    ld [wPaintX], a
     ld a, [$c4c6]
     ld [$c506], a
     ld a, [$c4c7]
     ld [$c507], a
     ld a, [wPlayerY]
-    ld [$c508], a
+    ld [wPaintY], a
     ld a, [$c4c9]
     ld [$c509], a
     ld a, $01
@@ -1342,13 +1342,13 @@ LoadTrailSegment::  ; copies the 7 byte trail segment $c1b6 of $c1b7.. into the 
     ld a, [hl+]
     ld [$c504], a
     ld a, [hl+]
-    ld [$c505], a
+    ld [wPaintX], a
     ld a, [hl+]
     ld [$c506], a
     ld a, [hl+]
     ld [$c507], a
     ld a, [hl+]
-    ld [$c508], a
+    ld [wPaintY], a
     ld a, [hl+]
     ld [$c509], a
     ld a, [hl]
@@ -1364,13 +1364,13 @@ StoreTrailSegment::  ; copies the paint blob object back into trail segment $c1b
     add hl, bc
     ld a, [$c504]
     ld [hl+], a
-    ld a, [$c505]
+    ld a, [wPaintX]
     ld [hl+], a
     ld a, [$c506]
     ld [hl+], a
     ld a, [$c507]
     ld [hl+], a
-    ld a, [$c508]
+    ld a, [wPaintY]
     ld [hl+], a
     ld a, [$c509]
     ld [hl], a
@@ -1802,7 +1802,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
 .L_01_4de2:
     call SelectBlobAnimation
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     jp DrawObject
 SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
     ld a, [wBlobPhase]
@@ -1830,7 +1830,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld hl, wPaintObject
     call SetObjPtr
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     call DrawObject
     call StoreTrailSegment
     call SetPaintBlobAnimation
@@ -2004,18 +2004,18 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     ld a, [hJoyHeld]
     and a, $f0
     ret z
-    ld hl, $c4d9
+    ld hl, wWalkAnimCount
     inc [hl]
     ld a, $0c
     ldh [hScratch06], a
     ld a, $02
     ldh [hScratch07], a
-    ld a, [$c4d9]
+    ld a, [wWalkAnimCount]
     ldh [hScratch08], a
     ld a, $04
     call CounterToFrame
     ldh a, [hScratch08]
-    ld [$c4d9], a
+    ld [wWalkAnimCount], a
     ld a, [$c4e3]
     ld e, a
     ld a, [$c4e4]
@@ -2025,9 +2025,9 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ret
 HoldDirectionUntilAligned::  ; keeps hJoyHeld direction until the player reaches the next tile
     ld hl, wPlayerX
@@ -2244,7 +2244,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld c, a
     ld hl, DirectionToAnimIndex
     call LookupByte
-    ld [$c4ce], a
+    ld [wPlayerAngle], a
     srl a
     ld c, a
     ld b, $00
@@ -2267,10 +2267,10 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld a, [hl]
     ld [wPlayerVelX], a
     ld a, $09
-    ld [$c4cf], a
+    ld [wPlayerSpeed], a
     ld hl, wPlayer
     call SetObjPtr
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ld hl, wPlayerStatus
     res 0, [hl]
     ret
@@ -2280,7 +2280,7 @@ SetPlayerStatusBit0::  ; sets wPlayerStatus bit 0 and clears $c4cf
     ld hl, wPlayerStatus
     set 0, [hl]
     xor a, a
-    ld [$c4cf], a
+    ld [wPlayerSpeed], a
     ret
 D_01_518d::
     INCBIN "assets/bank_01/518d.bin"
@@ -2290,7 +2290,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld hl, wPlayer
     call Clear32Bytes
     ld a, $10
-    ld [$c4ce], a
+    ld [wPlayerAngle], a
     ld a, $a2
     ld [wPlayer], a
     ld a, $80
@@ -2307,9 +2307,9 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ldh [hMagicTimer], a
     ld hl, PlayerAnimPtrs
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_01_5207
@@ -2376,9 +2376,9 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ld hl, wPlayer
     call SetObjPtr
     jp DrawObject
@@ -2539,9 +2539,9 @@ SelectKind4Animation::  ; animation pointers of enemy kind 4 by hEnemyDir
     jp SetObjectAnimationStub
 EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
     ld a, $08
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $01
-    ldh [$ffcf], a
+    ldh [hEnemySpawnFlag], a
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_01_53d6
@@ -2628,11 +2628,11 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyStep
     dec [hl]
     ret nz
-    call L_01_570c
+    call EnemyAimAtPlayerWide
     ldh a, [hEnemyX]
-    ld [$c4a5], a
+    ld [wProjectileX], a
     ldh a, [hEnemyY]
-    ld [$c4a8], a
+    ld [wProjectileY], a
     ld a, $86
     ld [wProjectile], a
     ldh a, [hEnemyKind]
@@ -2656,11 +2656,11 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
-    ld a, [$c4a5]
+    ld a, [wProjectileX]
     ldh [hScratch00], a
     ld a, [$c4a6]
     ldh [hScratch01], a
-    ld a, [$c4a8]
+    ld a, [wProjectileY]
     ldh [hScratch02], a
     ld a, [$c4a9]
     ldh [hScratch03], a
@@ -2670,7 +2670,7 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ld hl, hEnemyDir
     set 5, [hl]
     ld a, $0b
-    ld [$c4af], a
+    ld [wProjectileSpeed], a
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_55fb
@@ -2678,15 +2678,15 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     bit 0, a
     jp z, .L_01_55fb
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     xor a, a
-    ld [$c4af], a
+    ld [wProjectileSpeed], a
 .L_01_55fb:
     call EnemyKind10Animate
     ld hl, wProjectile
     call SetObjPtr
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     jp DrawObject
 .L_01_560d:
     ld hl, wProjectile
@@ -2720,10 +2720,10 @@ EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 ind
     ld hl, D_01_5782
     add hl, bc
     ld a, [hl]
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     call SelectObject2
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ldh a, [hEnemyX]
     ldh [hScratch00], a
     ldh a, [hEnemyXHi]
@@ -2779,7 +2779,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld hl, wProjectile
     call Clear32Bytes
     ld a, $01
-    ld [$c4a2], a
+    ld [wProjectileBox], a
     xor a, a
     ld [hEnemyFlags], a
     ld a, $20
@@ -2833,7 +2833,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld a, h
     ld [$c49a], a
     jp ProjectileSelectFrame
-L_01_570c::
+EnemyAimAtPlayerWide::  ; sets hEnemyDir towards the player from the X and Y differences (name provisional)
     ld a, [wPlayerY]
     ld e, a
     ld a, [hEnemyY]
@@ -2936,11 +2936,11 @@ EnemyKind9::  ; enemy kind 9
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
-EnemyKind9Move::  ; sets hEnemyAnimState 6 then moves and clamps (name provisional)
+EnemyKind9Move::  ; sets hEnemySpeed 6 then moves and clamps (name provisional)
     ld a, $06
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     call EnemyTurnIfBlocked
-    jp MoveAndClampObject
+    jp MoveAndApplyObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
     res 5, [hl]
@@ -2975,7 +2975,7 @@ SetObjectFlipFlag::  ; sets hObject2 bit 5 (horizontal flip; name provisional)
     ret
 EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ld a, $06
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld de, D_01_586f
@@ -3006,7 +3006,7 @@ EnemyKind2::  ; enemy kind 2
     call EnemyChooseDirection
     call EnemyTurnOrAnimate
     call EnemyShootIfReady
-    call L_01_58ee
+    call EnemyShooterAI
     call ProjectileFrame
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
@@ -3032,7 +3032,7 @@ EnemyShootIfReady::  ; counts hEnemyStep down; when it hits 0 and no projectile 
     and a, a
     ret nz
     jp SpawnEnemyProjectile
-L_01_58ee::
+EnemyShooterAI::  ; decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_58fc
@@ -3080,17 +3080,17 @@ SpawnEnemyProjectile::  ; creates the projectile at wProjectile in front of the 
     ld hl, wProjectile
     call Clear32Bytes
     ld a, $04
-    ld [$c4a2], a
+    ld [wProjectileBox], a
     ld a, $a0
     ld [$c4b4], a
     ldh a, [hEnemyX]
     add a, $08
     and a, $f0
-    ld [$c4a5], a
+    ld [wProjectileX], a
     ldh a, [hEnemyY]
     and a, $f0
     add a, $08
-    ld [$c4a8], a
+    ld [wProjectileY], a
     ld a, $82
     ld [wProjectile], a
     ret
@@ -3134,7 +3134,7 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     jp SetObjectAnimationStub
 EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $05
@@ -3170,7 +3170,7 @@ EnemyKind3::  ; enemy kind 3
     call EnemyAimAtPlayer
     call EnemyFlagOnPaintedTile
     call EnemyTurnIfBlocked
-    call MoveAndClampObject
+    call MoveAndApplyObject
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind3Animation
@@ -3206,7 +3206,7 @@ EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ld de, D_01_5a76
     call SetObjectAnimation
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     jp EnemySnapToGrid

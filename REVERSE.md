@@ -244,3 +244,17 @@ The bytes after each song's last read byte (for example `$5ef3` onward after the
 ### Documentation
 
 - [x] `docs/architecture_exe.md`, `docs/CALLGRAPH.md`, `docs/RAM_MAP.md`
+
+## More findings (naming pass)
+
+- **Movement**: every object record has a heading (+$10, index 0-31) and a speed (+$11). `MoveObject` adds `MoveVectorTable[heading] * speed` (via `MultiplyByDE`, signed)
+  to the 16 bit position; the table at $0bb6 holds 32 (dx, dy) pairs on a circle of radius about 50. Enemies pick their heading from the four direction bits (`hEnemyAngle` from the 6 byte table at $363d: heading 0 = up, 8 = right, 16 = down, 24 = left);
+  `hEnemySpeed` (+$11) is 5 or 6 for the enemy behaviours.
+- **Spawn entries** are `kind, x, y, delay`: the position is `y & $f8`; the low 3 bits of `y` are a flag copied to the enemy (`hEnemySpawnFlag`: bit 1 from round 17, else bit 0).
+- **Score** is stored as three bytes (base 100 digits) at `wScoreDigits`; `ByteToBCD` splits a byte into decimal digits, `DrawDecimalDigits` produces the six digit display buffer.
+- **Sound engine**: the register shadows `$c427-$c431` make the engine write an APU register only when its value changed; `wSoundChan1-7` are the channel records after `wSoundChannels`.
+- **Table jumps**: `$253b` (bonus mode) is a jump table of three entry points chosen by `wPlayerBlocked`.
+- All routines now have names. Names marked "provisional" in `labels.csv` and `src/constants.inc` are guesses from reading the code.
+- **Object record layout** (32 bytes, used by the player, enemies, projectile, paint blob, cursor and ending objects): +0 flags (bit 7 active), +1/+2 animation pointer, +4 half size of the hit box,
+  +5 animation frame, +6 X fraction, +7/+8 X pixel, +9 Y fraction, +$a/+$b Y pixel, +$c/+$d X step (set by `MoveObject`), +$e/+$f Y step, +$10 heading (0-31), +$11 speed.
+  `ApplyObjectStep` adds the step to the fixed point position (it does not clamp anything; the older name `ClampObjectToRoom` was a guess).

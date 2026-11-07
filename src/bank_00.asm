@@ -93,13 +93,13 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     ret
 LoadTilesBank3A::  ; bank 3 $4000 0x1000 bytes to $8000 via LoadTilesBank3
     ld hl, TilesTitle
-    jr L_00_01f4
+    jr LoadTilesBank3Full
 LoadTilesBank3B::  ; bank 3 $5000 0x1000 bytes to $8000
     ld hl, TilesIcons
-    jr L_00_01f4
+    jr LoadTilesBank3Full
 LoadTilesBank3D::  ; bank 3 $6e10 0x1000 bytes to $8000
     ld hl, TilesFont2
-L_00_01f4::
+LoadTilesBank3Full::  ; BC = $1000 then LoadTilesBank3 (copies a full $1000 byte tile set from bank 3)
     ld bc, $1000
     jr LoadTilesBank3
 LoadTilesBank3C::  ; bank 3 $6000 0xe10 bytes to $8000
@@ -462,9 +462,9 @@ OamDmaRoutine::  ; source of the HRAM routine: DMA from $c000 then waits 40 cycl
     ld a, $c0
     ldh [rDMA], a
     ld a, $28
-L_00_0498::
+DelayLoopA::  ; counts A down to 0 (busy wait)
     dec a
-    jr nz, L_00_0498
+    jr nz, DelayLoopA
     ret
 PixelToTilemapAddr::  ; hSpriteY/X pixel to BG map address $9800+
     ldh a, [hSpriteY]
@@ -530,13 +530,13 @@ ClearMemory::  ; zero fill HL for BC bytes
     ret
 FillBackwardsFF::  ; fills $400 bytes with $ff going down from HL
     ld bc, $0400
-L_00_04fc::
+FillBackwardsFFBC::  ; fills BC bytes with $ff going down from HL
     ld a, $ff
     ld [hl-], a
     dec bc
     ld a, b
     or a, c
-    jr nz, L_00_04fc
+    jr nz, FillBackwardsFFBC
     ret
 CopyMemory::  ; copy BC bytes from HL to DE
     ld a, [hl+]
@@ -561,7 +561,7 @@ SetObjPtr::  ; hObjPtr = HL
     ld a, l
     ldh [hObjPtrLo], a
     ret
-L_00_051d::
+DrawBonusMetatileMap::  ; hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
     ld a, $09
     ld [hScratch01], a
     ld a, $0a
@@ -637,7 +637,7 @@ DrawMetatileMap::  ; draws a map of 2x2 tile metatiles: HL VRAM dest; BC metatil
 .L_00_058a:
     ld a, [de]
     push hl
-    ld hl, $c7c0
+    ld hl, wMapCellMask
     and a, [hl]
     pop hl
     ld [hl], a
@@ -862,7 +862,7 @@ DrawObjectBytePos::  ; variant of DrawObject for records with 8 bit positions (+
     ld c, a
     ld a, [hl]
     bit 7, a
-    jp z, L_00_09aa
+    jp z, ReturnOnly
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -895,7 +895,7 @@ DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its ani
     ld c, a
     ld a, [hl]
     bit 7, a
-    jp z, L_00_09aa
+    jp z, ReturnOnly
     ld d, $00
     ld e, $07
     add hl, de
@@ -1118,7 +1118,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     add hl, de
     ldh a, [hOtherObjLo]
     ld [hl], a
-L_00_09aa::
+ReturnOnly::  ; a bare ret (jump target of DrawObject for inactive objects)
     ret
 AddOamSprite::  ; appends one OAM entry from hScratch values to the shadow at $c000 (hOamCount wraps at 39)
     ldh a, [hOamCount]
@@ -1154,15 +1154,15 @@ MoveObjectHalfStep::  ; adds the X and Y deltas at offsets 6 and 8 to the positi
     ldh [hScratch01], a
     call AddObjectField
     jr AddObjectField
-ClampObjectToRoom::  ; keeps the object inside the room limits after MoveObject (offsets $06 and $0c)
+ApplyObjectStep::  ; adds the horizontal step (+$0c/+$0d) to the 24 bit fixed point X (+6 fraction
     ld e, $06
     ld a, e
     ldh [hScratch00], a
     ld e, $0c
     ld a, e
     ldh [hScratch01], a
-    call AddObjectFieldSigned
-AddObjectFieldSigned::  ; two AddObjectField steps then sign-extends the delta into the next byte (name provisional)
+    call AddStepSigned
+AddStepSigned::  ; adds one step to a fixed point coordinate: two AddObjectField bytes then the sign extension of the step into the top byte
     and a, a
     call AddObjectField
     call AddObjectField
@@ -1404,7 +1404,7 @@ NextRandomDirection::  ; derives a pseudo random direction nibble from hFrameSpi
     add a, b
     ldh [hRngCounter], a
     ret
-MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00_0bb6 to its position with MultiplyByDE
+MoveObject::  ; moves the object by its heading (+$10
     ldh a, [hObjPtrLo]
     ld l, a
     ldh a, [hObjPtrHi]
@@ -1424,7 +1424,7 @@ MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00
     sla a
     ld b, $00
     ld c, a
-    ld hl, D_00_0bb6
+    ld hl, MoveVectorTable
     add hl, bc
     ld a, [hl]
     push af
@@ -1459,8 +1459,8 @@ MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00
     ldh a, [hScratch01]
     ld [hl], a
     ret
-D_00_0bb6::
-    INCBIN "assets/bank_00/0bb6.bin"
+MoveVectorTable::  ; 32 headings (index 0-31) x (dx dy) signed bytes: points on a circle of radius about 50; MoveObject multiplies them by the speed
+    INCBIN "assets/bank_00/0bb6_MoveVectorTable.bin"
 MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     push af
     bit 7, a
@@ -1554,73 +1554,73 @@ UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked 
     jr nz, .L_00_0d15
     ret
 RoundDataTable::  ; 33 pointers indexed by wRound-1
-    dw D_00_0d7f
-    dw D_00_0da5
-    dw D_00_0dd0
-    dw D_00_0dff
-    dw D_00_0e25
-    dw D_00_0e4b
-    dw D_00_0e75
-    dw D_00_0ea8
-    dw D_00_0ec1
-    dw D_00_0eee
-    dw D_00_0f0b
-    dw D_00_0f30
-    dw D_00_0f56
-    dw D_00_0f73
-    dw D_00_0f94
-    dw D_00_0fbd
-    dw D_00_0d7f
-    dw D_00_0da5
-    dw D_00_0dd0
-    dw D_00_0dff
-    dw D_00_0e25
-    dw D_00_0e4b
-    dw D_00_0e75
-    dw D_00_0ea8
-    dw D_00_0ec1
-    dw D_00_0eee
-    dw D_00_0f0b
-    dw D_00_0f30
-    dw D_00_0f56
-    dw D_00_0f73
-    dw D_00_0f94
-    dw D_00_0fbd
-    dw D_00_0fda
-D_00_0d7f::
-    INCBIN "assets/bank_00/0d7f.bin"
-D_00_0da5::
-    INCBIN "assets/bank_00/0da5.bin"
-D_00_0dd0::
-    INCBIN "assets/bank_00/0dd0.bin"
-D_00_0dff::
-    INCBIN "assets/bank_00/0dff.bin"
-D_00_0e25::
-    INCBIN "assets/bank_00/0e25.bin"
-D_00_0e4b::
-    INCBIN "assets/bank_00/0e4b.bin"
-D_00_0e75::
-    INCBIN "assets/bank_00/0e75.bin"
-D_00_0ea8::
-    INCBIN "assets/bank_00/0ea8.bin"
-D_00_0ec1::
-    INCBIN "assets/bank_00/0ec1.bin"
-D_00_0eee::
-    INCBIN "assets/bank_00/0eee.bin"
-D_00_0f0b::
-    INCBIN "assets/bank_00/0f0b.bin"
-D_00_0f30::
-    INCBIN "assets/bank_00/0f30.bin"
-D_00_0f56::
-    INCBIN "assets/bank_00/0f56.bin"
-D_00_0f73::
-    INCBIN "assets/bank_00/0f73.bin"
-D_00_0f94::
-    INCBIN "assets/bank_00/0f94.bin"
-D_00_0fbd::
-    INCBIN "assets/bank_00/0fbd.bin"
-D_00_0fda::
-    INCBIN "assets/bank_00/0fda.bin"
+    dw SpawnRound01
+    dw SpawnRound02
+    dw SpawnRound03
+    dw SpawnRound04
+    dw SpawnRound05
+    dw SpawnRound06
+    dw SpawnRound07
+    dw SpawnRound08
+    dw SpawnRound09
+    dw SpawnRound10
+    dw SpawnRound11
+    dw SpawnRound12
+    dw SpawnRound13
+    dw SpawnRound14
+    dw SpawnRound15
+    dw SpawnRound16
+    dw SpawnRound01
+    dw SpawnRound02
+    dw SpawnRound03
+    dw SpawnRound04
+    dw SpawnRound05
+    dw SpawnRound06
+    dw SpawnRound07
+    dw SpawnRound08
+    dw SpawnRound09
+    dw SpawnRound10
+    dw SpawnRound11
+    dw SpawnRound12
+    dw SpawnRound13
+    dw SpawnRound14
+    dw SpawnRound15
+    dw SpawnRound16
+    dw SpawnRound33
+SpawnRound01::  ; data (table entry)
+    INCBIN "assets/bank_00/0d7f_SpawnRound01.bin"
+SpawnRound02::  ; data (table entry)
+    INCBIN "assets/bank_00/0da5_SpawnRound02.bin"
+SpawnRound03::  ; data (table entry)
+    INCBIN "assets/bank_00/0dd0_SpawnRound03.bin"
+SpawnRound04::  ; data (table entry)
+    INCBIN "assets/bank_00/0dff_SpawnRound04.bin"
+SpawnRound05::  ; data (table entry)
+    INCBIN "assets/bank_00/0e25_SpawnRound05.bin"
+SpawnRound06::  ; data (table entry)
+    INCBIN "assets/bank_00/0e4b_SpawnRound06.bin"
+SpawnRound07::  ; data (table entry)
+    INCBIN "assets/bank_00/0e75_SpawnRound07.bin"
+SpawnRound08::  ; data (table entry)
+    INCBIN "assets/bank_00/0ea8_SpawnRound08.bin"
+SpawnRound09::  ; data (table entry)
+    INCBIN "assets/bank_00/0ec1_SpawnRound09.bin"
+SpawnRound10::  ; data (table entry)
+    INCBIN "assets/bank_00/0eee_SpawnRound10.bin"
+SpawnRound11::  ; data (table entry)
+    INCBIN "assets/bank_00/0f0b_SpawnRound11.bin"
+SpawnRound12::  ; data (table entry)
+    INCBIN "assets/bank_00/0f30_SpawnRound12.bin"
+SpawnRound13::  ; data (table entry)
+    INCBIN "assets/bank_00/0f56_SpawnRound13.bin"
+SpawnRound14::  ; data (table entry)
+    INCBIN "assets/bank_00/0f73_SpawnRound14.bin"
+SpawnRound15::  ; data (table entry)
+    INCBIN "assets/bank_00/0f94_SpawnRound15.bin"
+SpawnRound16::  ; data (table entry)
+    INCBIN "assets/bank_00/0fbd_SpawnRound16.bin"
+SpawnRound33::  ; data (table entry)
+    INCBIN "assets/bank_00/0fda_SpawnRound33.bin"
 AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld bc, $0000
     ld hl, wScoreDigits
@@ -1653,10 +1653,10 @@ AddScore::  ; adds to the BCD score digits at wScoreDigits
     dec hl
     call DrawDecimalDigits
     ld a, $06
-    ld [$c46d], a
+    ld [wScoreStream], a
     ld a, $01
     ld [$c46e], a
-    ld a, [$c467]
+    ld a, [wScoreDecimal]
     call LowNibbleToDigitTile
     ld [$c46f], a
     ld a, [$c468]
@@ -1686,7 +1686,7 @@ DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     ld d, a
     swap a
     and a, $0f
-    ld hl, $c467
+    ld hl, wScoreDecimal
     add hl, bc
     ld [hl], a
     inc bc
@@ -1727,7 +1727,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld hl, vBGMap0
     ld de, wRoomMap
     ld a, $0f
-    ld [$c7c0], a
+    ld [wMapCellMask], a
     call DrawMetatileMap
     ld a, [wRoomIndex]
     ld hl, RoomVramJobTable
@@ -1797,7 +1797,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call LookupByte
 .L_00_118a:
     ldh [hTimeSeconds], a
-    ldh [$ffe3], a
+    ldh [hRoundSeconds], a
     ld hl, hVBlankTasks
     set 4, [hl]
 .L_00_1193:
@@ -1896,9 +1896,9 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call RunVramCopyList
     ld bc, $0010
     ld hl, $9cd0
-    call L_00_04fc
+    call FillBackwardsFFBC
     xor a, a
-    ld [$c463], a
+    ld [wMpStreamIdx], a
     ld bc, $0010
     ld hl, $c462
 .L_00_1265:
@@ -1911,7 +1911,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     jr nz, .L_00_1265
     call InitMagicScreenState
     ld hl, $9c66
-    ld de, $c46d
+    ld de, wScoreStream
     call VramCopyStream
     ld a, [wMagicPointsHi]
     ld c, a
@@ -1987,13 +1987,13 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
 .L_00_1327:
     ld a, [wMagicPoints]
     ldh [hScratch00], a
-L_00_132c::
+DrawMagicPointsDigits::  ; loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
     ldh a, [hScratch00]
     sub a, $64
     ld d, a
     jr c, .L_00_1338
     ldh [hScratch00], a
-    jp L_00_1409
+    jp StoreMagicPointsDigit
 .L_00_1338:
     ld a, e
     and a, a
@@ -2001,7 +2001,7 @@ L_00_132c::
     ld a, d
     ldh [hScratch00], a
     ld e, $00
-    jp L_00_1409
+    jp StoreMagicPointsDigit
 .L_00_1344:
     ldh a, [hScratch00]
     and a, a
@@ -2010,18 +2010,18 @@ L_00_132c::
     jr z, .L_00_1364
     sub a, $14
     ldh [hScratch00], a
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
     add hl, bc
     ld a, $b8
     ld [hl], a
-    ld hl, $c463
+    ld hl, wMpStreamIdx
     inc [hl]
     jr .L_00_1344
 .L_00_1364:
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
@@ -2030,11 +2030,11 @@ L_00_132c::
     ld [hl], a
 .L_00_1371:
     ld a, $10
-    ld [$c451], a
+    ld [wMpStream], a
     ld a, $01
     ld [$c452], a
     ld hl, $9cc2
-    ld de, $c451
+    ld de, wMpStream
     call QueueVramCopyRows
     call WaitVramCopyDone
     call WaitVBlankFlag
@@ -2092,8 +2092,8 @@ StartRoundMusic::  ; plays the song for the current round (id from a table index
     ret
 D_00_1400::
     INCBIN "assets/bank_00/1400.bin"
-L_00_1409::
-    ld a, [$c463]
+StoreMagicPointsDigit::  ; writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)
+    ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
     ld hl, $c453
@@ -2108,10 +2108,10 @@ L_00_1409::
     ld [hl], a
     inc hl
     ld [hl], a
-    ld a, [$c463]
+    ld a, [wMpStreamIdx]
     add a, $05
-    ld [$c463], a
-    jp L_00_132c
+    ld [wMpStreamIdx], a
+    jp DrawMagicPointsDigits
 TableIndexFromRoundDec::  ; dec a then falls into TableIndexFromRound
     dec a
 TableIndexFromRound::  ; A = (A-1)&15 or 16 for 32; then LookupWord
@@ -2156,14 +2156,14 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     ld [wScoreDigits], a
     ld [$c465], a
     ld [$c466], a
-    ld [$c467], a
+    ld [wScoreDecimal], a
     ld [$c468], a
     ld [$c469], a
     ld [$c46a], a
     ld [$c46b], a
     ld [$c46c], a
     ld a, $06
-    ld [$c46d], a
+    ld [wScoreStream], a
     ld a, $01
     ld [$c46e], a
     ld a, $ab
@@ -2178,71 +2178,71 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
 RoundTimeTable::  ; seconds per round block (index wRound/4): initial hTimeSeconds
     INCBIN "assets/bank_00/14f0_RoundTimeTable.bin"
 RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
-    dw D_00_151b
-    dw D_00_1538
-    dw D_00_1551
-    dw D_00_1637
-    dw D_00_156a
-    dw D_00_1583
-    dw D_00_1598
-    dw D_00_1640
-    dw D_00_15b1
-    dw D_00_15d7
-    dw D_00_15c2
-    dw D_00_1637
-    dw D_00_15f0
-    dw D_00_1609
-    dw D_00_161e
-    dw D_00_1640
-    dw D_00_1649
-D_00_151b::
-    INCBIN "assets/bank_00/151b.bin"
-D_00_1538::
-    INCBIN "assets/bank_00/1538.bin"
-D_00_1551::
-    INCBIN "assets/bank_00/1551.bin"
-D_00_156a::
-    INCBIN "assets/bank_00/156a.bin"
-D_00_1583::
-    INCBIN "assets/bank_00/1583.bin"
-D_00_1598::
-    INCBIN "assets/bank_00/1598.bin"
-D_00_15b1::
-    INCBIN "assets/bank_00/15b1.bin"
-D_00_15c2::
-    INCBIN "assets/bank_00/15c2.bin"
-D_00_15d7::
-    INCBIN "assets/bank_00/15d7.bin"
-D_00_15f0::
-    INCBIN "assets/bank_00/15f0.bin"
-D_00_1609::
-    INCBIN "assets/bank_00/1609.bin"
-D_00_161e::
-    INCBIN "assets/bank_00/161e.bin"
-D_00_1637::
-    INCBIN "assets/bank_00/1637.bin"
-D_00_1640::
-    INCBIN "assets/bank_00/1640.bin"
-D_00_1649::
-    INCBIN "assets/bank_00/1649.bin"
+    dw RoomVramJob0
+    dw RoomVramJob1
+    dw RoomVramJob2
+    dw RoomVramJob3
+    dw RoomVramJob4
+    dw RoomVramJob5
+    dw RoomVramJob6
+    dw RoomVramJob7
+    dw RoomVramJob8
+    dw RoomVramJob9
+    dw RoomVramJob10
+    dw RoomVramJob3
+    dw RoomVramJob12
+    dw RoomVramJob13
+    dw RoomVramJob14
+    dw RoomVramJob7
+    dw RoomVramJob16
+RoomVramJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/151b_RoomVramJob0.bin"
+RoomVramJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1538_RoomVramJob1.bin"
+RoomVramJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1551_RoomVramJob2.bin"
+RoomVramJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/156a_RoomVramJob4.bin"
+RoomVramJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1583_RoomVramJob5.bin"
+RoomVramJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1598_RoomVramJob6.bin"
+RoomVramJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/15b1_RoomVramJob8.bin"
+RoomVramJob10::  ; data (table entry)
+    INCBIN "assets/bank_00/15c2_RoomVramJob10.bin"
+RoomVramJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/15d7_RoomVramJob9.bin"
+RoomVramJob12::  ; data (table entry)
+    INCBIN "assets/bank_00/15f0_RoomVramJob12.bin"
+RoomVramJob13::  ; data (table entry)
+    INCBIN "assets/bank_00/1609_RoomVramJob13.bin"
+RoomVramJob14::  ; data (table entry)
+    INCBIN "assets/bank_00/161e_RoomVramJob14.bin"
+RoomVramJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1637_RoomVramJob3.bin"
+RoomVramJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1640_RoomVramJob7.bin"
+RoomVramJob16::  ; data (table entry)
+    INCBIN "assets/bank_00/1649_RoomVramJob16.bin"
 RoomMetatileTable::  ; 17 pointers to metatile definitions per room theme
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20b7
-    dw D_00_20b7
-    dw D_00_20b7
-    dw D_00_20a7
-    dw D_00_20c7
-    dw D_00_20c7
-    dw D_00_20c7
-    dw D_00_20a7
-    dw D_00_20c7
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles8
+    dw RoomMetatiles8
+    dw RoomMetatiles8
+    dw RoomMetatiles0
+    dw RoomMetatiles12
+    dw RoomMetatiles12
+    dw RoomMetatiles12
+    dw RoomMetatiles0
+    dw RoomMetatiles12
 RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
     dw SpriteSet0
     dw SpriteSet0
@@ -2262,32 +2262,32 @@ RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to
     dw SpriteSet4
     dw SpriteSet1
 RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
-    dw D_00_20d7
-    dw D_00_2117
-    dw D_00_2157
-    dw D_00_2197
-    dw D_00_21d7
-    dw D_00_2217
-    dw D_00_2257
-    dw D_00_2297
-    dw D_00_22d7
-    dw D_00_2317
-    dw D_00_2357
-    dw D_00_2197
-    dw D_00_2397
-    dw D_00_23d7
-    dw D_00_2417
-    dw D_00_2297
-    dw D_00_2457
+    dw RoomMap0
+    dw RoomMap1
+    dw RoomMap2
+    dw RoomMap3
+    dw RoomMap4
+    dw RoomMap5
+    dw RoomMap6
+    dw RoomMap7
+    dw RoomMap8
+    dw RoomMap9
+    dw RoomMap10
+    dw RoomMap3
+    dw RoomMap12
+    dw RoomMap13
+    dw RoomMap14
+    dw RoomMap7
+    dw RoomMap16
 CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
     ld a, [wMagicScreenFlags]
     bit 2, a
     ret z
-    ld a, [$c47d]
+    ld a, [wCursorBlink]
     cp a, $50
     jr nc, ResetMagicCursorAnimation
     inc a
-    ld [$c47d], a
+    ld [wCursorBlink], a
     ld a, [$c769]
     and a, $04
     jr nz, SetCursorDefaultAnimation
@@ -2557,7 +2557,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     xor a, a
     ld [wMagicCol], a
     ld [wMagicRow], a
-    ld [$c47d], a
+    ld [wCursorBlink], a
     ld [wMagicScreenFlags], a
     ld hl, wCursorObject
     call Clear32Bytes
@@ -2572,56 +2572,56 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
 MagicCostTable::  ; MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
     INCBIN "assets/bank_00/199b_MagicCostTable.bin"
 MagicCardTitleJobs::  ; 10 pointers to the card name VRAM jobs (index = card id)
-    dw D_00_1c1b
-    dw D_00_1c21
-    dw D_00_1c27
-    dw D_00_1c2d
-    dw D_00_1c33
-    dw D_00_1c3f
-    dw D_00_1c39
-    dw D_00_1c4b
-    dw D_00_1c51
-    dw D_00_1c45
+    dw MagicTitleJob0
+    dw MagicTitleJob1
+    dw MagicTitleJob2
+    dw MagicTitleJob3
+    dw MagicTitleJob4
+    dw MagicTitleJob5
+    dw MagicTitleJob6
+    dw MagicTitleJob7
+    dw MagicTitleJob8
+    dw MagicTitleJob9
 MagicCardPictureJobs::  ; 10 pointers to the card picture VRAM jobs
-    dw D_00_1b67
-    dw D_00_1b9d
-    dw D_00_1bc1
-    dw D_00_1b8b
-    dw D_00_1c09
-    dw D_00_1be5
-    dw D_00_1baf
-    dw D_00_1b79
-    dw D_00_1bf7
-    dw D_00_1bd3
+    dw MagicPictureJob0
+    dw MagicPictureJob1
+    dw MagicPictureJob2
+    dw MagicPictureJob3
+    dw MagicPictureJob4
+    dw MagicPictureJob5
+    dw MagicPictureJob6
+    dw MagicPictureJob7
+    dw MagicPictureJob8
+    dw MagicPictureJob9
 MagicCardCostJobs::  ; 10 pointers to the MP cost VRAM jobs
-    dw D_00_1c1b
-    dw D_00_19e1
-    dw D_00_19e7
-    dw D_00_19ed
-    dw D_00_19f3
-    dw D_00_19f9
-    dw D_00_19ff
-    dw D_00_1a05
-    dw D_00_1a0b
-    dw D_00_1a11
-D_00_19e1::
-    INCBIN "assets/bank_00/19e1.bin"
-D_00_19e7::
-    INCBIN "assets/bank_00/19e7.bin"
-D_00_19ed::
-    INCBIN "assets/bank_00/19ed.bin"
-D_00_19f3::
-    INCBIN "assets/bank_00/19f3.bin"
-D_00_19f9::
-    INCBIN "assets/bank_00/19f9.bin"
-D_00_19ff::
-    INCBIN "assets/bank_00/19ff.bin"
-D_00_1a05::
-    INCBIN "assets/bank_00/1a05.bin"
-D_00_1a0b::
-    INCBIN "assets/bank_00/1a0b.bin"
-D_00_1a11::
-    INCBIN "assets/bank_00/1a11.bin"
+    dw MagicTitleJob0
+    dw MagicCostJob1
+    dw MagicCostJob2
+    dw MagicCostJob3
+    dw MagicCostJob4
+    dw MagicCostJob5
+    dw MagicCostJob6
+    dw MagicCostJob7
+    dw MagicCostJob8
+    dw MagicCostJob9
+MagicCostJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/19e1_MagicCostJob1.bin"
+MagicCostJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/19e7_MagicCostJob2.bin"
+MagicCostJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/19ed_MagicCostJob3.bin"
+MagicCostJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/19f3_MagicCostJob4.bin"
+MagicCostJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/19f9_MagicCostJob5.bin"
+MagicCostJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/19ff_MagicCostJob6.bin"
+MagicCostJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1a05_MagicCostJob7.bin"
+MagicCostJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1a0b_MagicCostJob8.bin"
+MagicCostJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1a11_MagicCostJob9.bin"
 D_00_1a17::
     INCBIN "assets/bank_00/1a17.bin"
 D_00_1a30::
@@ -2630,46 +2630,46 @@ D_00_1a57::
     INCBIN "assets/bank_00/1a57.bin"
 D_00_1a94::
     INCBIN "assets/bank_00/1a94.bin"
-D_00_1b67::
-    INCBIN "assets/bank_00/1b67.bin"
-D_00_1b79::
-    INCBIN "assets/bank_00/1b79.bin"
-D_00_1b8b::
-    INCBIN "assets/bank_00/1b8b.bin"
-D_00_1b9d::
-    INCBIN "assets/bank_00/1b9d.bin"
-D_00_1baf::
-    INCBIN "assets/bank_00/1baf.bin"
-D_00_1bc1::
-    INCBIN "assets/bank_00/1bc1.bin"
-D_00_1bd3::
-    INCBIN "assets/bank_00/1bd3.bin"
-D_00_1be5::
-    INCBIN "assets/bank_00/1be5.bin"
-D_00_1bf7::
-    INCBIN "assets/bank_00/1bf7.bin"
-D_00_1c09::
-    INCBIN "assets/bank_00/1c09.bin"
-D_00_1c1b::
-    INCBIN "assets/bank_00/1c1b.bin"
-D_00_1c21::
-    INCBIN "assets/bank_00/1c21.bin"
-D_00_1c27::
-    INCBIN "assets/bank_00/1c27.bin"
-D_00_1c2d::
-    INCBIN "assets/bank_00/1c2d.bin"
-D_00_1c33::
-    INCBIN "assets/bank_00/1c33.bin"
-D_00_1c39::
-    INCBIN "assets/bank_00/1c39.bin"
-D_00_1c3f::
-    INCBIN "assets/bank_00/1c3f.bin"
-D_00_1c45::
-    INCBIN "assets/bank_00/1c45.bin"
-D_00_1c4b::
-    INCBIN "assets/bank_00/1c4b.bin"
-D_00_1c51::
-    INCBIN "assets/bank_00/1c51.bin"
+MagicPictureJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1b67_MagicPictureJob0.bin"
+MagicPictureJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1b79_MagicPictureJob7.bin"
+MagicPictureJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1b8b_MagicPictureJob3.bin"
+MagicPictureJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1b9d_MagicPictureJob1.bin"
+MagicPictureJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1baf_MagicPictureJob6.bin"
+MagicPictureJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1bc1_MagicPictureJob2.bin"
+MagicPictureJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1bd3_MagicPictureJob9.bin"
+MagicPictureJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1be5_MagicPictureJob5.bin"
+MagicPictureJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1bf7_MagicPictureJob8.bin"
+MagicPictureJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1c09_MagicPictureJob4.bin"
+MagicTitleJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1c1b_MagicTitleJob0.bin"
+MagicTitleJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1c21_MagicTitleJob1.bin"
+MagicTitleJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1c27_MagicTitleJob2.bin"
+MagicTitleJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1c2d_MagicTitleJob3.bin"
+MagicTitleJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1c33_MagicTitleJob4.bin"
+MagicTitleJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1c39_MagicTitleJob6.bin"
+MagicTitleJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1c3f_MagicTitleJob5.bin"
+MagicTitleJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1c45_MagicTitleJob9.bin"
+MagicTitleJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1c4b_MagicTitleJob7.bin"
+MagicTitleJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1c51_MagicTitleJob8.bin"
 Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld sp, wStackTop
     call LcdOff
@@ -2737,7 +2737,7 @@ ClearRoomState::  ; zeroes wActiveMagic wMagicState and the room script variable
     ld [wActiveMagic], a
     ld [wMagicState], a
     ld [wEnemyCount], a
-    ld [$c486], a
+    ld [wWaveEnded], a
     ld [wSpawnWave], a
     ld a, $01
     ld [wSpawnIndex], a
@@ -2772,35 +2772,35 @@ DigitToTile::  ; A = BCD digit; returns the digit tile id from D_00_1d2f
 D_00_1d2f::
     INCBIN "assets/bank_00/1d2f.bin"
 RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
-    dw D_00_1d5b
-    dw D_00_1d5b
-    dw D_00_1d5b
-    dw D_00_1d7e
-    dw D_00_1d64
-    dw D_00_1d64
-    dw D_00_1d64
-    dw D_00_1d7e
-    dw D_00_1d6c
-    dw D_00_1d6c
-    dw D_00_1d6c
-    dw D_00_1d7e
-    dw D_00_1d75
-    dw D_00_1d75
-    dw D_00_1d75
-    dw D_00_1d7e
-    dw D_00_1d87
-D_00_1d5b::
-    INCBIN "assets/bank_00/1d5b.bin"
-D_00_1d64::
-    INCBIN "assets/bank_00/1d64.bin"
-D_00_1d6c::
-    INCBIN "assets/bank_00/1d6c.bin"
-D_00_1d75::
-    INCBIN "assets/bank_00/1d75.bin"
-D_00_1d7e::
-    INCBIN "assets/bank_00/1d7e.bin"
-D_00_1d87::
-    INCBIN "assets/bank_00/1d87.bin"
+    dw RoomNameJob0
+    dw RoomNameJob0
+    dw RoomNameJob0
+    dw RoomNameJob3
+    dw RoomNameJob4
+    dw RoomNameJob4
+    dw RoomNameJob4
+    dw RoomNameJob3
+    dw RoomNameJob8
+    dw RoomNameJob8
+    dw RoomNameJob8
+    dw RoomNameJob3
+    dw RoomNameJob12
+    dw RoomNameJob12
+    dw RoomNameJob12
+    dw RoomNameJob3
+    dw RoomNameJob16
+RoomNameJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1d5b_RoomNameJob0.bin"
+RoomNameJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1d64_RoomNameJob4.bin"
+RoomNameJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1d6c_RoomNameJob8.bin"
+RoomNameJob12::  ; data (table entry)
+    INCBIN "assets/bank_00/1d75_RoomNameJob12.bin"
+RoomNameJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1d7e_RoomNameJob3.bin"
+RoomNameJob16::  ; data (table entry)
+    INCBIN "assets/bank_00/1d87_RoomNameJob16.bin"
 D_00_1d90::
     INCBIN "assets/bank_00/1d90.bin"
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
@@ -3073,42 +3073,42 @@ D_00_2083::
     INCBIN "assets/bank_00/2083.bin"
 D_00_2085::
     INCBIN "assets/bank_00/2085.bin"
-D_00_20a7::
-    INCBIN "assets/bank_00/20a7.bin"
-D_00_20b7::
-    INCBIN "assets/bank_00/20b7.bin"
-D_00_20c7::
-    INCBIN "assets/bank_00/20c7.bin"
-D_00_20d7::
-    INCBIN "assets/bank_00/20d7.bin"
-D_00_2117::
-    INCBIN "assets/bank_00/2117.bin"
-D_00_2157::
-    INCBIN "assets/bank_00/2157.bin"
-D_00_2197::
-    INCBIN "assets/bank_00/2197.bin"
-D_00_21d7::
-    INCBIN "assets/bank_00/21d7.bin"
-D_00_2217::
-    INCBIN "assets/bank_00/2217.bin"
-D_00_2257::
-    INCBIN "assets/bank_00/2257.bin"
-D_00_2297::
-    INCBIN "assets/bank_00/2297.bin"
-D_00_22d7::
-    INCBIN "assets/bank_00/22d7.bin"
-D_00_2317::
-    INCBIN "assets/bank_00/2317.bin"
-D_00_2357::
-    INCBIN "assets/bank_00/2357.bin"
-D_00_2397::
-    INCBIN "assets/bank_00/2397.bin"
-D_00_23d7::
-    INCBIN "assets/bank_00/23d7.bin"
-D_00_2417::
-    INCBIN "assets/bank_00/2417.bin"
-D_00_2457::
-    INCBIN "assets/bank_00/2457.bin"
+RoomMetatiles0::  ; data (table entry)
+    INCBIN "assets/bank_00/20a7_RoomMetatiles0.bin"
+RoomMetatiles8::  ; data (table entry)
+    INCBIN "assets/bank_00/20b7_RoomMetatiles8.bin"
+RoomMetatiles12::  ; data (table entry)
+    INCBIN "assets/bank_00/20c7_RoomMetatiles12.bin"
+RoomMap0::  ; data (table entry)
+    INCBIN "assets/bank_00/20d7_RoomMap0.bin"
+RoomMap1::  ; data (table entry)
+    INCBIN "assets/bank_00/2117_RoomMap1.bin"
+RoomMap2::  ; data (table entry)
+    INCBIN "assets/bank_00/2157_RoomMap2.bin"
+RoomMap3::  ; data (table entry)
+    INCBIN "assets/bank_00/2197_RoomMap3.bin"
+RoomMap4::  ; data (table entry)
+    INCBIN "assets/bank_00/21d7_RoomMap4.bin"
+RoomMap5::  ; data (table entry)
+    INCBIN "assets/bank_00/2217_RoomMap5.bin"
+RoomMap6::  ; data (table entry)
+    INCBIN "assets/bank_00/2257_RoomMap6.bin"
+RoomMap7::  ; data (table entry)
+    INCBIN "assets/bank_00/2297_RoomMap7.bin"
+RoomMap8::  ; data (table entry)
+    INCBIN "assets/bank_00/22d7_RoomMap8.bin"
+RoomMap9::  ; data (table entry)
+    INCBIN "assets/bank_00/2317_RoomMap9.bin"
+RoomMap10::  ; data (table entry)
+    INCBIN "assets/bank_00/2357_RoomMap10.bin"
+RoomMap12::  ; data (table entry)
+    INCBIN "assets/bank_00/2397_RoomMap12.bin"
+RoomMap13::  ; data (table entry)
+    INCBIN "assets/bank_00/23d7_RoomMap13.bin"
+RoomMap14::  ; data (table entry)
+    INCBIN "assets/bank_00/2417_RoomMap14.bin"
+RoomMap16::  ; data (table entry)
+    INCBIN "assets/bank_00/2457_RoomMap16.bin"
 Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld sp, wStackTop
     ld hl, $c487
@@ -3135,8 +3135,8 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld bc, D_00_270f
     ld hl, vBGMap0
     ld a, $ff
-    ld [$c7c0], a
-    call L_00_051d
+    ld [wMapCellMask], a
+    call DrawBonusMetatileMap
     ld bc, D_00_29b1
     call RunVramCopyList
     ld a, [wPlayerBlocked]
@@ -3323,17 +3323,17 @@ D_00_269b::
 D_00_2704::
     INCBIN "assets/bank_00/2704.bin"
 BonusSelectJobTable::  ; 3 pointers to VRAM job lists
-    dw D_00_28a3
-    dw D_00_28fd
-    dw D_00_2957
+    dw BonusSelectJob0
+    dw BonusSelectJob1
+    dw BonusSelectJob2
 D_00_270f::
     INCBIN "assets/bank_00/270f.bin"
-D_00_28a3::
-    INCBIN "assets/bank_00/28a3.bin"
-D_00_28fd::
-    INCBIN "assets/bank_00/28fd.bin"
-D_00_2957::
-    INCBIN "assets/bank_00/2957.bin"
+BonusSelectJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/28a3_BonusSelectJob0.bin"
+BonusSelectJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/28fd_BonusSelectJob1.bin"
+BonusSelectJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/2957_BonusSelectJob2.bin"
 D_00_29b1::
     INCBIN "assets/bank_00/29b1.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
@@ -3345,7 +3345,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call PlaySound
     ld hl, vBGMapLast
     call FillBackwardsFF
-    ld bc, $2b86
+    ld bc, D_00_2b86
     call RunVramCopyList
     call RequestOamDma
     ld hl, wCursorObject
@@ -3529,20 +3529,8 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     jp SetCursorAnimation
 AnimFrames0_2b84::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/2b84_AnimFrames0_2b84.bin"
-L_00_2b86::
-    ld c, $04
-    sbc a, b
-    cp a, a
-    dec hl
-    ld h, a
-    sbc a, b
-    ldh [c], a
-    dec hl
-    add a, e
-    sbc a, b
-    add sp, 43
-    jp L_00_0498
-    INCBIN "assets/bank_00/2b96.bin"
+D_00_2b86::
+    INCBIN "assets/bank_00/2b86.bin"
 Mode6_Ending::  ; castle scene after the last round
     ld sp, wStackTop
     call LcdOff
@@ -3562,7 +3550,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld bc, D_00_3156
     ld de, D_00_31a6
     ld a, $ff
-    ld [$c7c0], a
+    ld [wMapCellMask], a
     call DrawMetatileMap
     ld hl, wEndingObject
     ld bc, $0041
@@ -3576,17 +3564,17 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, l
     ld [$c76f], a
     ld a, $80
-    ld [$c775], a
+    ld [wEndingX], a
     ld a, $68
-    ld [$c778], a
+    ld [wEndingY], a
     ld a, $04
-    ld [$c77f], a
+    ld [wEndingSpeed], a
     ld a, $18
-    ld [$c77e], a
+    ld [wEndingAngle], a
     ld a, $70
-    ld [$c795], a
+    ld [wEnding2X], a
     ld a, $68
-    ld [$c798], a
+    ld [wEnding2Y], a
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
@@ -3726,33 +3714,33 @@ RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until
 D_00_2dff::
     INCBIN "assets/bank_00/2dff.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
-    dw D_00_2e21
-    dw D_00_2e2d
-    dw D_00_2e88
-    dw D_00_2ea7
-    dw D_00_2ec6
-    dw D_00_2e4c
-    dw D_00_2e6c
-    dw D_00_2ee5
-    dw D_00_2eff
-D_00_2e21::
-    INCBIN "assets/bank_00/2e21.bin"
-D_00_2e2d::
-    INCBIN "assets/bank_00/2e2d.bin"
-D_00_2e4c::
-    INCBIN "assets/bank_00/2e4c.bin"
-D_00_2e6c::
-    INCBIN "assets/bank_00/2e6c.bin"
-D_00_2e88::
-    INCBIN "assets/bank_00/2e88.bin"
-D_00_2ea7::
-    INCBIN "assets/bank_00/2ea7.bin"
-D_00_2ec6::
-    INCBIN "assets/bank_00/2ec6.bin"
-D_00_2ee5::
-    INCBIN "assets/bank_00/2ee5.bin"
-D_00_2eff::
-    INCBIN "assets/bank_00/2eff.bin"
+    dw CreditsPage0
+    dw CreditsPage1
+    dw CreditsPage2
+    dw CreditsPage3
+    dw CreditsPage4
+    dw CreditsPage5
+    dw CreditsPage6
+    dw CreditsPage7
+    dw CreditsPage8
+CreditsPage0::  ; data (table entry)
+    INCBIN "assets/bank_00/2e21_CreditsPage0.bin"
+CreditsPage1::  ; data (table entry)
+    INCBIN "assets/bank_00/2e2d_CreditsPage1.bin"
+CreditsPage5::  ; data (table entry)
+    INCBIN "assets/bank_00/2e4c_CreditsPage5.bin"
+CreditsPage6::  ; data (table entry)
+    INCBIN "assets/bank_00/2e6c_CreditsPage6.bin"
+CreditsPage2::  ; data (table entry)
+    INCBIN "assets/bank_00/2e88_CreditsPage2.bin"
+CreditsPage3::  ; data (table entry)
+    INCBIN "assets/bank_00/2ea7_CreditsPage3.bin"
+CreditsPage4::  ; data (table entry)
+    INCBIN "assets/bank_00/2ec6_CreditsPage4.bin"
+CreditsPage7::  ; data (table entry)
+    INCBIN "assets/bank_00/2ee5_CreditsPage7.bin"
+CreditsPage8::  ; data (table entry)
+    INCBIN "assets/bank_00/2eff_CreditsPage8.bin"
 EndingTick::  ; one step of the ending scene: hero movement then the object animation
     call EndingMoveHero
     jp EndingAnimateObject
@@ -3761,11 +3749,11 @@ EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = 
     ld a, [wEndingEvents]
     bit 2, a
     ret nz
-    ld a, [$c775]
+    ld a, [wEndingX]
     cp a, $50
     jr z, .L_00_2f41
     dec a
-    ld [$c775], a
+    ld [wEndingX], a
     ret
 .L_00_2f41:
     ld hl, wEndingEvents
@@ -3773,20 +3761,20 @@ EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = 
     ret
 EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld a, $02
-    ld [$c77f], a
+    ld [wEndingSpeed], a
     ld a, [wEndingPhase]
     bit 0, a
     jr nz, .L_00_2f59
     xor a, a
-    ld [$c77e], a
+    ld [wEndingAngle], a
     jr .L_00_2f5e
 .L_00_2f59:
     ld a, $10
-    ld [$c77e], a
+    ld [wEndingAngle], a
 .L_00_2f5e:
     call SelectEndingObject
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ld hl, wEndingStep
     dec [hl]
     ret nz
@@ -3820,9 +3808,9 @@ EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_
     call SetObjPtr
     jp DrawObject
 EndingScrollStep::  ; scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
-    ld a, [$c798]
+    ld a, [wEnding2Y]
     sub a, $5a
-    ld [$c798], a
+    ld [wEnding2Y], a
     ld a, [$c799]
     sbc a, $00
     ld [$c799], a
@@ -3846,9 +3834,9 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld a, $80
     ld [wEndingObject], a
     ld a, $c8
-    ld [$c775], a
+    ld [wEndingX], a
     ld a, $50
-    ld [$c778], a
+    ld [wEndingY], a
     ld a, $0a
     ld [wEndingStep], a
     ld bc, D_00_3009
@@ -3864,7 +3852,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
 D_00_3009::
     INCBIN "assets/bank_00/3009.bin"
 EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
-    ld a, [$c778]
+    ld a, [wEndingY]
     cp a, $08
     jr c, EndingAdvance
     ld hl, $c780
@@ -3872,16 +3860,16 @@ EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [hl]
     and a, $10
     jr z, .L_00_3070
-    ld hl, $c77f
+    ld hl, wEndingSpeed
     inc [hl]
-    ld hl, $c77e
+    ld hl, wEndingAngle
     inc [hl]
     xor a, a
     ld [$c780], a
 .L_00_3070:
     call SelectEndingObject
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     call SelectEndingObject
     jp DrawObject
 SelectEndingObject::  ; hObjPtr = wEndingObject
@@ -3961,11 +3949,11 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
 .L_00_3206:
     call LookupWord
     ld a, l
-    ld [$c481], a
+    ld [wSpawnListPtr], a
     ld a, h
     ld [$c482], a
     ld a, [hl]
-    ld [$c485], a
+    ld [wSpawnCount], a
     ld d, a
     ld a, [wSpawnIndex]
     dec a
@@ -3975,12 +3963,12 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     inc [hl]
     ld a, $01
     ld [wSpawnIndex], a
-    ld [$c486], a
+    ld [wWaveEnded], a
 .L_00_3229:
     ld a, [wPlayerStatus]
     bit 5, a
     jr nz, .L_00_324a
-    ld hl, $c481
+    ld hl, wSpawnListPtr
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -3991,22 +3979,22 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     sla a
     ld c, a
     call LookupByte
-    ldh [$ffe9], a
+    ldh [hSpawnDelay], a
     ld hl, wPlayerStatus
     set 5, [hl]
 .L_00_324a:
-    ldh a, [$ffe9]
+    ldh a, [hSpawnDelay]
     ld e, a
     ldh a, [hTimeSeconds]
     ld d, a
-    ldh a, [$ffe3]
+    ldh a, [hRoundSeconds]
     sub a, e
     cp a, d
     ret c
     ld a, [wEnemyCount]
     cp a, $03
     ret nc
-    ld hl, $c481
+    ld hl, wSpawnListPtr
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -4031,16 +4019,16 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     jr c, .L_00_3289
     ld a, [hl]
     and a, $02
-    ldh [$ffee], a
+    ldh [hSpawnFlag], a
     jr .L_00_328e
 .L_00_3289:
     ld a, [hl]
     and a, $01
-    ldh [$ffee], a
+    ldh [hSpawnFlag], a
 .L_00_328e:
     ld hl, wSpawnIndex
     inc [hl]
-    ld hl, $c486
+    ld hl, wWaveEnded
     inc [hl]
     ld hl, wEnemyCount
     inc [hl]
@@ -4089,7 +4077,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_32f3
-    ld hl, $c4bc
+    ld hl, wComboCounter
     inc [hl]
 .L_00_32f3:
     ld a, $0c
@@ -4101,7 +4089,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_330b
-    ld a, [$c4bc]
+    ld a, [wComboCounter]
     ldh [hScratch08], a
 .L_00_330b:
     ld a, $03
@@ -4112,7 +4100,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     bit 4, a
     jr z, .L_00_3320
     ldh a, [hScratch08]
-    ld [$c4bc], a
+    ld [wComboCounter], a
 .L_00_3320:
     ld a, $06
     cp a, c
@@ -4532,7 +4520,7 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     bit 0, a
     jp nz, EnemyRequestTurn
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
 .L_00_3620:
     ldh a, [hEnemyBlocked]
     and a, $0f
@@ -4547,13 +4535,13 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     ld c, a
     ld hl, D_00_363d
     call LookupByte
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     ret
 D_00_363d::
     INCBIN "assets/bank_00/363d.bin"
-MoveAndClampObject::  ; MoveObject then ClampObjectToRoom
+MoveAndApplyObject::  ; MoveObject then ApplyObjectStep
     call MoveObject
-    jp ClampObjectToRoom
+    jp ApplyObjectStep
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [hEnemyTick]
     and a, $08
@@ -4579,9 +4567,9 @@ EnemyRequestTurn::  ; sets hEnemyDir bit 6 and clears the movement variables
     ld hl, hEnemyDir
     set 6, [hl]
     xor a, a
-    ldh [hEnemyAnimState], a
-    ldh [$ffc2], a
-    ldh [$ffc4], a
+    ldh [hEnemySpeed], a
+    ldh [hEnemyDXHi], a
+    ldh [hEnemyDYHi], a
     ret
 EnemyTileUnder::  ; A = room map tile under the enemy (Y aligned to the grid)
     ldh a, [hEnemyX]
@@ -4808,8 +4796,8 @@ FindFreeEnemySlot::  ; scans slots 15 down to 0 for one whose bit 7 is clear
     ldh [hEnemyX], a
     ldh a, [hScratch0A]
     ldh [hEnemyY], a
-    ldh a, [$ffee]
-    ldh [$ffcf], a
+    ldh a, [hSpawnFlag]
+    ldh [hEnemySpawnFlag], a
     jp StoreEnemySlot
 ClearEnemySlot::  ; zero fills hObject2
     ld hl, hObject2
@@ -4829,7 +4817,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyBoxHalf]
     ld [hl+], a
-    ldh a, [$ffba]
+    ldh a, [hEnemyFrame]
     ld [hl+], a
     ldh a, [$ffbb]
     ld [hl+], a
@@ -4843,17 +4831,17 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyYHi]
     ld [hl+], a
-    ldh a, [$ffc1]
+    ldh a, [hEnemyDXLo]
     ld [hl+], a
-    ldh a, [$ffc2]
+    ldh a, [hEnemyDXHi]
     ld [hl+], a
-    ldh a, [$ffc3]
+    ldh a, [hEnemyDYLo]
     ld [hl+], a
-    ldh a, [$ffc4]
+    ldh a, [hEnemyDYHi]
     ld [hl+], a
-    ldh a, [$ffc5]
+    ldh a, [hEnemyAngle]
     ld [hl+], a
-    ldh a, [hEnemyAnimState]
+    ldh a, [hEnemySpeed]
     ld [hl+], a
     ldh a, [hEnemyBlocked]
     ld [hl+], a
@@ -4863,7 +4851,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyStep]
     ld [hl+], a
-    ldh a, [$ffcb]
+    ldh a, [hEnemyTimer]
     ld [hl+], a
     ldh a, [hEnemyAux]
     ld [hl+], a
@@ -4871,7 +4859,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffce]
     ld [hl+], a
-    ldh a, [$ffcf]
+    ldh a, [hEnemySpawnFlag]
     ld [hl+], a
     ldh a, [hEnemyTick]
     ld [hl+], a
@@ -4900,7 +4888,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyBoxHalf], a
     ld a, [hl+]
-    ldh [$ffba], a
+    ldh [hEnemyFrame], a
     ld a, [hl+]
     ldh [$ffbb], a
     ld a, [hl+]
@@ -4914,17 +4902,17 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyYHi], a
     ld a, [hl+]
-    ldh [$ffc1], a
+    ldh [hEnemyDXLo], a
     ld a, [hl+]
-    ldh [$ffc2], a
+    ldh [hEnemyDXHi], a
     ld a, [hl+]
-    ldh [$ffc3], a
+    ldh [hEnemyDYLo], a
     ld a, [hl+]
-    ldh [$ffc4], a
+    ldh [hEnemyDYHi], a
     ld a, [hl+]
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     ld a, [hl+]
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, [hl+]
     ldh [hEnemyBlocked], a
     ld a, [hl+]
@@ -4934,7 +4922,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyStep], a
     ld a, [hl+]
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     ld a, [hl+]
     ldh [hEnemyAux], a
     ld a, [hl+]
@@ -4942,7 +4930,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffce], a
     ld a, [hl+]
-    ldh [$ffcf], a
+    ldh [hEnemySpawnFlag], a
     ld a, [hl+]
     ldh [hEnemyTick], a
     ld a, [hl+]
@@ -5066,18 +5054,18 @@ EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation tab
     ld hl, D_00_3aed
     jr .L_00_39ec
 .L_00_39e4:
-    ldh a, [$ffcf]
+    ldh a, [hEnemySpawnFlag]
     and a, a
     jr z, .L_00_39ec
     ld hl, D_00_3aed
 .L_00_39ec:
     add hl, bc
     ld a, [hl+]
-    ldh [$ffc2], a
+    ldh [hEnemyDXHi], a
     ld a, [hl]
-    ldh [$ffc4], a
+    ldh [hEnemyDYHi], a
     call SelectObject2
-    jp ClampObjectToRoom
+    jp ApplyObjectStep
 EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
     call EnemyOnTileGrid
     jr z, .L_00_3a04
@@ -5296,9 +5284,9 @@ EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy
     ld hl, hEnemyFlags
     res 1, [hl]
     ret
-EnemyInitAnim3bbe::  ; hEnemyAnimState 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
+EnemyInitAnim3bbe::  ; hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld de, D_00_3bbe
@@ -5339,9 +5327,9 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     ld hl, hEnemyDir
     set 0, [hl]
 .L_00_3c09:
-    ldh a, [$ffcb]
+    ldh a, [hEnemyTimer]
     sub a, $01
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     jr nc, .L_00_3c1a
     call EnemyMapTile
     ldh a, [hEnemyAux]
@@ -5383,7 +5371,7 @@ EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = 
     call EnemyMapTile
     ldh [hEnemyAux], a
     ld a, $fe
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     ld a, $90
     ldh [hEnemyDir], a
     ld de, AnimFrames0_3c87
@@ -5418,7 +5406,7 @@ EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyKind7NextStep
-    call MoveAndClampObject
+    call MoveAndApplyObject
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call EnemyKind7Update
@@ -5483,7 +5471,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     jr nz, .L_00_3d54
 .L_00_3d2b:
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
 .L_00_3d2f:
     ld a, [wEnemyPathPtr]
     ld l, a
@@ -5493,7 +5481,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     cp a, $01
     jp z, .L_00_3d4b
     ldh [hEnemyCounter], a
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     inc hl
     ld a, l
     ld [wEnemyPathPtr], a
@@ -5504,11 +5492,11 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     ld hl, hEnemyDir
     set 0, [hl]
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ret
 .L_00_3d54:
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, [wEnemyPathPtr]
     ld l, a
     ld a, [wEnemyPathPtrHi]
@@ -5526,9 +5514,9 @@ D_00_3d6e::
     INCBIN "assets/bank_00/3d6e.bin"
 D_00_3dc7::
     INCBIN "assets/bank_00/3dc7.bin"
-EnemyKind7Init::  ; sets hEnemyAnimState 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
+EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ldh [hEnemyAux], a

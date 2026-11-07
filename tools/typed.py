@@ -15,6 +15,7 @@ Types:
   song   a sound data region: header and token stream, see tools/song_fmt.py (notes, lengths, commands; the size must stay the same)
   rounddata  the enemy spawn waves of a round: 6 pointers then the wave lists. Text: `wave N` then one line per spawn `kind x y delay`
          (`kind` indexes the enemy kinds, `delay` is compared with the seconds counter). The number of spawns in each wave must stay the same.
+         The position is `y` with its low 3 bits cleared; those bits are a flag for the enemy (bit 1 from round 17, else bit 0).
 """
 import csv, glob, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

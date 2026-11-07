@@ -1,18 +1,18 @@
 {
  "measures": {
   "fuzzy_match_percent": 100.0,
-  "total_code": "15099",
-  "matched_code": "15099",
+  "total_code": "15083",
+  "matched_code": "15083",
   "matched_code_percent": 100.0,
-  "total_data": "50437",
-  "matched_data": "50437",
+  "total_data": "50453",
+  "matched_data": "50453",
   "matched_data_percent": 100.0,
-  "total_functions": 338,
-  "matched_functions": 338,
+  "total_functions": 337,
+  "matched_functions": 337,
   "matched_functions_percent": 100.0,
-  "complete_code": "15099",
+  "complete_code": "15083",
   "complete_code_percent": 100.0,
-  "complete_data": "50437",
+  "complete_data": "50453",
   "complete_data_percent": 100.0,
   "total_units": 4,
   "complete_units": 4
@@ -22,18 +22,18 @@
    "name": "main/bank_00",
    "measures": {
     "fuzzy_match_percent": 100.0,
-    "total_code": "9534",
-    "matched_code": "9534",
+    "total_code": "9518",
+    "matched_code": "9518",
     "matched_code_percent": 100.0,
-    "total_data": "6850",
-    "matched_data": "6850",
+    "total_data": "6866",
+    "matched_data": "6866",
     "matched_data_percent": 100.0,
-    "total_functions": 196,
-    "matched_functions": 196,
+    "total_functions": 195,
+    "matched_functions": 195,
     "matched_functions_percent": 100.0,
-    "complete_code": "9534",
+    "complete_code": "9518",
     "complete_code_percent": 100.0,
-    "complete_data": "6850",
+    "complete_data": "6866",
     "complete_data_percent": 100.0,
     "total_units": 1,
     "complete_units": 1
@@ -41,12 +41,12 @@
    "sections": [
     {
      "name": ".text",
-     "size": "9534",
+     "size": "9518",
      "fuzzy_match_percent": 100.0
     },
     {
      "name": ".data",
-     "size": "6850",
+     "size": "6866",
      "fuzzy_match_percent": 100.0
     }
    ],
@@ -156,7 +156,7 @@
      }
     },
     {
-     "name": "L_00_01f4",
+     "name": "LoadTilesBank3Full",
      "size": "5",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -276,7 +276,7 @@
      }
     },
     {
-     "name": "L_00_0498",
+     "name": "DelayLoopA",
      "size": "4",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -324,7 +324,7 @@
      }
     },
     {
-     "name": "L_00_04fc",
+     "name": "FillBackwardsFFBC",
      "size": "9",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -356,7 +356,7 @@
      }
     },
     {
-     "name": "L_00_051d",
+     "name": "DrawBonusMetatileMap",
      "size": "10",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -476,7 +476,7 @@
      }
     },
     {
-     "name": "L_00_09aa",
+     "name": "ReturnOnly",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -500,7 +500,7 @@
      }
     },
     {
-     "name": "ClampObjectToRoom",
+     "name": "ApplyObjectStep",
      "size": "13",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -508,7 +508,7 @@
      }
     },
     {
-     "name": "AddObjectFieldSigned",
+     "name": "AddStepSigned",
      "size": "38",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -676,7 +676,7 @@
      }
     },
     {
-     "name": "L_00_132c",
+     "name": "DrawMagicPointsDigits",
      "size": "186",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -692,7 +692,7 @@
      }
     },
     {
-     "name": "L_00_1409",
+     "name": "StoreMagicPointsDigit",
      "size": "32",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -996,14 +996,6 @@
      }
     },
     {
-     "name": "L_00_2b86",
-     "size": "16",
-     "fuzzy_match_percent": 100.0,
-     "metadata": {
-      "virtual_address": "11142"
-     }
-    },
-    {
      "name": "Mode6_Ending",
      "size": "237",
      "fuzzy_match_percent": 100.0,
@@ -1236,7 +1228,7 @@
      }
     },
     {
-     "name": "MoveAndClampObject",
+     "name": "MoveAndApplyObject",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2007,7 +1999,7 @@
      }
     },
     {
-     "name": "L_01_4775",
+     "name": "SoundReturn",
      "size": "1",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2671,7 +2663,7 @@
      }
     },
     {
-     "name": "L_01_570c",
+     "name": "EnemyAimAtPlayerWide",
      "size": "118",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2735,7 +2727,7 @@
      }
     },
     {
-     "name": "L_01_58ee",
+     "name": "EnemyShooterAI",
      "size": "89",
      "fuzzy_match_percent": 100.0,
      "metadata": {

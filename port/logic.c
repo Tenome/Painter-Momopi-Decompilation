@@ -1,6 +1,6 @@
 /* Hand written C versions of game routines (replacing the generated code for the labels listed in port/overrides.txt).
- * Each one keeps the register and flag results of the original routine so that its callers behave the same; the generated code and these
- * versions are compared with `python tools/verify_all.py` (frame hashes of random play) before a routine is added here. */
+ * Most keep the register and flag results of the original routine so that its callers behave the same (the ones that do not say so in their comment); the generated code and these
+ * versions are compared with `python tools/lift_check.py` (frame hashes of random play) before a routine is added here. */
 #include "gb_rt.h"
 
 /* LookupByte: A = byte at HL + C (table lookup). */
@@ -255,4 +255,237 @@ void *gb_native_EnemyOnTileGrid(void) {
     r.b = rd(hEnemyX);
     r.c = rd(hEnemyY);
     return gb_native_IsOnTileGrid();
+}
+
+/* MoveObject: the object record at hObjPtr moves by its heading (+$10, 0-31) and speed (+$11): the vector from MoveVectorTable (pairs dx dy) is
+ * multiplied by the speed; the 16 bit results are stored as the horizontal step at +$0c/+$0d and the vertical step at +$0e/+$0f. */
+void *gb_native_MoveObject(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t speed = rd(obj + 0x11), heading = rd(obj + 0x10);
+    uint8_t d0 = r.d;
+    uint16_t vec = 0x0BB6 + (uint8_t)(heading << 1);
+    int8_t dx = (int8_t)rd(vec), dy = (int8_t)rd(vec + 1);
+
+    r.e = speed;                       /* vertical step */
+    r.a = (uint8_t)dy;
+    r.f = 0;
+    gb_native_MultiplyByDE();
+    wr(obj + 0x0E, rd(hScratch00));
+    wr(obj + 0x0F, rd(hScratch01));
+
+    r.d = d0;                          /* horizontal step (the original pops DE and the flags it pushed) */
+    r.e = speed;
+    r.a = (uint8_t)dx;
+    r.f = 0;
+    gb_native_MultiplyByDE();
+    r.b = 0;
+    r.c = 0x0C;
+    SET_HL(obj);
+    add_hl(BC());
+    wr(HL(), rd(hScratch00));
+    SET_HL(HL() + 1);
+    r.a = rd(hScratch01);
+    wr(HL(), r.a);
+    return 0;
+}
+
+/* ApplyObjectStep: adds the movement step of the object record at hObjPtr to its fixed point position.
+ * X: fraction +6, pixel +7/+8 gets step +$0c/+$0d; Y: fraction +9, pixel +$a/+$b gets step +$0e/+$0f. The pixel part is a 16 bit value and the step
+ * is a signed 8.8 number (its high byte is sign extended). The hScratch variables are left as the original leaves them; the registers are not kept. */
+void *gb_native_ApplyObjectStep(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t last_step_hi = 0;
+    for (int axis = 0; axis < 2; axis++) {
+        uint16_t pos = obj + 6 + 3 * axis, step = obj + 0x0C + 2 * axis;
+        unsigned frac = rd(pos) + rd(step);
+        wr(pos, frac);
+        unsigned lo = rd(pos + 1) + rd(step + 1) + (frac >> 8);
+        wr(pos + 1, lo);
+        uint8_t step_hi = rd(step + 1);
+        unsigned hi = rd(pos + 2) + (step_hi & 0x80 ? 0xFF : 0) + (lo >> 8);
+        wr(pos + 2, hi);
+        last_step_hi = step_hi;
+    }
+    wr(hScratch00, 0x0C);
+    wr(hScratch01, 0x10);
+    wr(0xFF98, last_step_hi);
+    return 0;
+}
+
+#define hOtherObjLo 0xFFA4
+#define hOtherObjHi 0xFFA5
+
+/* CompareObjectCoordinate: E = offset of a coordinate byte. Takes |obj[E] - other[E]| (the object at hObjPtr against the one at hOtherObj) and compares it with
+ * the sum of the two box sizes taken from the table at $0a3f (indexes hScratch02 and hScratch03). Carry set = closer than the sum (the boxes touch on this axis).
+ * hScratch04 = the distance and hScratch06 = the sum afterwards. Registers other than A and the flags are not kept. */
+void *gb_native_CompareObjectCoordinate(void) {
+    uint16_t a = rd(hObjPtrLo) | rd(hObjPtrHi) << 8, b = rd(hOtherObjLo) | rd(hOtherObjHi) << 8;
+    uint8_t dist = (uint8_t)(rd(a + r.e) - rd(b + r.e));
+    if (rd(a + r.e) < rd(b + r.e)) dist = (uint8_t)(0 - dist);
+    wr(0xFF9A, dist);
+    uint8_t sum = (uint8_t)(rd(0x0A3F + rd(hScratch00 + 2)) + rd(0x0A3F + rd(hScratch00 + 3)));
+    wr(0xFF9C, sum);
+    r.a = dist;
+    alu_cp(sum);
+    return 0;
+}
+
+/* ObjectsOverlap: do the boxes of the object at hObjPtr and the one at hOtherObj overlap? A and C = $80 when they do, else 0.
+ * Both X and Y must be within the summed box sizes; an object whose X is beyond 255 (high byte not 0) never overlaps. */
+void *gb_native_ObjectsOverlap(void) {
+    uint16_t other = rd(hOtherObjLo) | rd(hOtherObjHi) << 8;
+    wr(hScratch00 + 2, (uint8_t)(rd(0xFFB9) << 1));
+    wr(hScratch00 + 3, (uint8_t)(rd(other + 4) << 1));
+    if (rd(0xFFBD) == 0 && rd(other + 8) == 0) {
+        r.d = 0; r.e = 7;
+        gb_native_CompareObjectCoordinate();
+        if (CF()) {
+            wr(hScratch00 + 2, rd(hScratch00 + 2) + 1);
+            wr(hScratch00 + 3, rd(hScratch00 + 3) + 1);
+            r.e = 0x0A;
+            gb_native_CompareObjectCoordinate();
+            if (!CF()) goto no;
+            r.a = 0x80;
+            r.c = 0x80;
+            return 0;
+        }
+    }
+no:
+    r.a = 0;
+    r.c = 0;
+    r.f = 0x80;
+    return 0;
+}
+
+/* PlayerComputeBlockedDirs: B = X and C = Y of the player. When the player stands on the tile grid, wPlayerBlocked gets a bit for every neighbouring map cell
+ * that is a wall (low nibble 0): 4 up, 8 down, 2 left, 1 right. hEnemyBlocked receives the same value each time a bit is set (a side effect of the original).
+ * Registers are not kept except for the flags of IsOnTileGrid when the player is off the grid. */
+static uint8_t map_tile(uint8_t y, uint8_t column) { return rd(0xC0A7 + (uint8_t)(y - 0x18 + column)); }
+
+void *gb_native_PlayerComputeBlockedDirs(void) {
+    const uint16_t wPlayerBlocked = 0xC43B;
+    wr(wPlayerBlocked, 0);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    uint8_t x = r.b, y = r.c;
+    uint8_t column = (uint8_t)((((uint8_t)(x + 8) & 0xF0) >> 4) - 1);
+    uint8_t blocked = 0;
+    if ((map_tile(y - 0x10, column) & 0x0F) == 0) { blocked = 0x04; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y + 0x10, column) & 0x0F) == 0) { blocked |= 0x08; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y, column - 1) & 0x0F) == 0) { blocked |= 0x02; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y, column + 1) & 0x0F) == 0) { blocked |= 0x01; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    return 0;
+}
+
+#define hEnemyTick 0xFFD0
+
+/* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
+void *gb_native_TickObjectTimer(void) {
+    wr(hEnemyTick, rd(hEnemyTick) + 1);
+    r.a = rd(hEnemyTick + 1);
+    SET_HL(hEnemyTick + 1);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);
+    return 0;
+}
+
+/* LoadPlayerXY: B = wPlayerX, C = wPlayerY; HL = the address of wPlayerY. */
+void *gb_native_LoadPlayerXY(void) {
+    r.b = rd(0xC4C5);
+    r.c = rd(0xC4C8);
+    SET_HL(0xC4C8);
+    return 0;
+}
+
+/* GetEnemyPos: C = hEnemyX, B = hEnemyY; HL = the address of hEnemyY. */
+void *gb_native_GetEnemyPos(void) {
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    SET_HL(hEnemyY);
+    return 0;
+}
+
+/* GetPlayerPos: L = wPlayerX and H = wPlayerY (A = wPlayerY). */
+void *gb_native_GetPlayerPos(void) {
+    r.l = rd(0xC4C5);
+    r.h = rd(0xC4C8);
+    r.a = r.h;
+    return 0;
+}
+
+/* RememberEnemyPosition: copies hEnemyX and hEnemyY to $c525 and $c526 (A ends as Y). */
+void *gb_native_RememberEnemyPosition(void) {
+    wr(0xC525, rd(hEnemyX));
+    r.a = rd(hEnemyY);
+    wr(0xC526, r.a);
+    return 0;
+}
+
+/* DigitToTile: A = tile id of digit A from the table at $1d2f; HL and BC are kept, only Z of the flags survives. */
+void *gb_native_DigitToTile(void) {
+    r.a = rd(0x1D2F + r.a);
+    r.f &= 0x80;
+    return 0;
+}
+
+/* EnemyTileUnder: A = room map tile under the enemy, with its Y rounded to the grid row (Y and $f0, plus 8). */
+void *gb_native_EnemyTileUnder(void) {
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = rd(hEnemyY);
+    alu_and(0xF0);
+    alu_add(0x08, 0);
+    return gb_native_LookupMapTile();
+}
+
+/* EnemyMapTile: A = room map tile at the enemy position (column from X, row from Y as it is). */
+void *gb_native_EnemyMapTile(void) {
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = rd(hEnemyY);
+    return gb_native_LookupMapTile();
+}
+
+/* ProjectileHitTest: hScratch00/01 = X distance (low, high byte) and hScratch02/03 = Y distance between the projectile and the player, as signed 16 bit
+ * numbers (high byte $ff = negative). A = 1 on a hit, else 0. A high byte of 1 only counts when the low byte is below 8 (X) or $20 (Y). */
+void *gb_native_ProjectileHitTest(void) {
+    r.a = rd(hScratch00 + 1);
+    alu_cp(0xFF);
+    if (ZF()) goto miss;
+    alu_cp(0x01);
+    if (ZF()) {
+        r.a = rd(hScratch00);
+        alu_cp(0x08);
+        if (!CF()) goto miss;
+        r.a = 1;
+        return 0;
+    }
+    r.a = rd(hScratch00 + 3);
+    alu_cp(0xFF);
+    if (ZF()) goto miss;
+    alu_cp(0x01);
+    if (ZF()) {
+        r.a = rd(hScratch00 + 2);
+        alu_cp(0x20);
+        if (!CF()) goto miss;
+        r.a = 1;
+        return 0;
+    }
+    r.a = 1;
+    return 0;
+miss:
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
+
+/* EnemyRequestTurn: sets hEnemyDir bit 6 and stops the enemy (speed and the high bytes of its step are cleared); A = 0, HL = hEnemyDir. */
+void *gb_native_EnemyRequestTurn(void) {
+    SET_HL(0xFFD1);
+    wr(0xFFD1, rd(0xFFD1) | 0x40);
+    wr(0xFFC6, 0);
+    wr(0xFFC2, 0);
+    wr(0xFFC4, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
 }

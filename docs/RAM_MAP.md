@@ -22,26 +22,57 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c1b6 | `wTrailIdx` | 5 | index of the trail segment (7 bytes each) copied by LoadTrailSegment |
 | $c30b | `wSoundTmp` | 6 | scratch byte used by SoundLoadStream and the stream commands |
 | $c30c | `wSoundArg` | 23 | command byte passed to PlaySound |
+| $c30d | `wSoundChanLeft` | 3 | channel records left to update in SoundUpdate (8 down to 0) |
 | $c30e | `wSoundCmd` | 6 | command being started (bit 7 set = music/effect id) |
 | $c30f | `wMusicPriority` | 3 | priority of the playing music (SoundStartMusic) |
 | $c310 | `wEffectPriority` | 7 | priority of the playing effect (SoundStartEffect) |
 | $c311 | `wSoundBusy` | 3 | 1 while the queue is being modified |
+| $c312 | `wWavePending` | 3 | wave pattern index waiting to be loaded (provisional) |
+| $c313 | `wWaveEffect` | 1 | wave pattern of the effect record (provisional) |
+| $c314 | `wWaveCurrent` | 4 | wave pattern index currently in wave RAM (provisional) |
+| $c315 | `wSoundMasterVol` | 3 | NR50 value ($77 at init, set by command $ef) |
 | $c316 | `wSoundQueueLen` | 5 |  |
 | $c317 | `wSoundQueue` | 3 |  |
 | $c327 | `wSoundChannels` | 11 | 8 records x $20 bytes |
+| $c347 | `wSoundChan1` | 2 |  |
+| $c367 | `wSoundChan2` | 2 |  |
+| $c387 | `wSoundChan3` | 2 |  |
+| $c3a7 | `wSoundChan4` | 4 | SoundStartEffect loads its stream here (records 5-7 provisional) |
+| $c3c7 | `wSoundChan5` | 2 |  |
+| $c3e7 | `wSoundChan6` | 2 |  |
+| $c407 | `wSoundChan7` | 2 |  |
+| $c427 | `wShadowNR12` | 3 | pulse 1 envelope |
+| $c428 | `wShadowNR13` | 4 | pulse 1 frequency low |
+| $c429 | `wShadowNR14` | 4 | pulse 1 frequency high |
+| $c42a | `wShadowNR22` | 3 | pulse 2 envelope |
+| $c42b | `wShadowNR23` | 4 | pulse 2 frequency low |
+| $c42c | `wShadowNR24` | 4 | pulse 2 frequency high |
+| $c42d | `wShadowNR32` | 3 | wave output level |
+| $c42e | `wShadowNR33` | 4 | wave frequency low |
+| $c42f | `wShadowNR34` | 4 | wave frequency high |
+| $c430 | `wShadowNR42` | 3 | noise envelope |
+| $c431 | `wShadowNR43` | 4 | noise polynomial |
 | $c43b | `wPlayerBlocked` | 23 | mask of directions the player cannot walk (set by PlayerComputeBlockedDirs); the bonus screens reuse it as a step counter |
 | $c43c | `wMagicCol` | 16 | magic screen cursor column (0-2) |
-| $c43d | `wMagicRow` | 13 | magic screen cursor row (0-2) |
+| $c43d | `wMagicRow` | 14 | magic screen cursor row (0-2) |
 | $c43e | `wMagicCards` | 13 | 9 bytes: card id per slot of the 3x3 inventory (0 = empty); round 1 starts with S. UP in slot 0 |
 | $c447 | `wActiveMagic` | 31 | card id of the magic being cast or in effect (0 = none); effects test it (3 = T.STOP freezes enemies ...) |
 | $c44a | `wMagicPoints` | 10 | 16 bit MP (MP 050 on the magic screen) |
 | $c44b | `wMagicPointsHi` | 8 | high byte of the 16 bit MP |
 | $c44c | `wTextBuf` | 5 | VramCopyStream buffer: count, rows, tiles (round intro and continue texts) |
+| $c451 | `wMpStream` | 2 | VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453 |
+| $c463 | `wMpStreamIdx` | 8 | number of tiles written so far into the magic points stream (provisional) |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
+| $c467 | `wScoreDecimal` | 3 | six decimal digits of the score |
+| $c46d | `wScoreStream` | 3 | VramCopyStream buffer: count, rows, then six digit tiles from $c46f |
 | $c47a | `wScoreTemp` | 4 | scratch byte of AddScore |
+| $c47d | `wCursorBlink` | 3 | counts to $50 and toggles the card cursor animation (CursorBlinkStep) |
 | $c47e | `wEnemyCount` | 5 | enemies alive (spawning stops at 3) |
+| $c481 | `wSpawnListPtr` | 3 | 16 bit pointer to the spawn list of the current wave (StepEnemySpawnScript) |
 | $c483 | `wSpawnWave` | 4 | index (0-5) of the current wave in the round's list |
 | $c484 | `wSpawnIndex` | 6 | next entry within the wave (1 based) |
+| $c485 | `wSpawnCount` | 1 | number of spawns in the current wave (first byte of the list) |
+| $c486 | `wWaveEnded` | 3 | set to 1 when a wave has finished spawning (provisional) |
 | $c488 | `wExtraLifeIdx` | 4 | index (0-4) of the next score threshold for an extra life (CheckExtraLife) |
 | $c49b | `wContinues` | 7 | continues left (5 in a normal game, $ff with the cheat) |
 | $c49c | `wCheatFlags` | 15 | bit 0 = title code Up+Select+A+B entered: unlimited continues |
@@ -49,17 +80,29 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c49e | `wProjectile` | 31 | object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it) |
 | $c49f | `wProjectileAnimLo` | 4 | wProjectile +1: animation pointer |
 | $c4a0 | `wProjectileAnimHi` | 4 |  |
+| $c4a2 | `wProjectileBox` | 2 | wProjectile +4 |
+| $c4a5 | `wProjectileX` | 3 | wProjectile +7 (16 bit with $c4a6) |
+| $c4a8 | `wProjectileY` | 3 | wProjectile +$a (16 bit with $c4a9) |
+| $c4af | `wProjectileSpeed` | 2 | wProjectile +$11 |
+| $c4bc | `wComboCounter` | 3 | chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional) |
 | $c4be | `wPlayer` | 14 | the player's object record |
+| $c4bf | `wPlayerAnimLo` | 3 | wPlayer +1 |
+| $c4c0 | `wPlayerAnimHi` | 3 | wPlayer +2 |
 | $c4c5 | `wPlayerX` | 27 |  |
 | $c4c8 | `wPlayerY` | 23 |  |
 | $c4cb | `wPlayerVelX` | 1 |  |
 | $c4cd | `wPlayerVelY` | 1 |  |
+| $c4ce | `wPlayerAngle` | 3 | wPlayer +$10 |
+| $c4cf | `wPlayerSpeed` | 2 | wPlayer +$11 |
 | $c4d2 | `wMagicCastTimer` | 5 | frame counter used while a card is being cast (provisional) |
+| $c4d9 | `wWalkAnimCount` | 3 | walk animation counter of the player (AnimatePlayerWalk) |
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
 | $c4fe | `wPaintObject` | 14 | the paint blob object record (tested by CheckPaintHitsEnemy) |
 | $c4ff | `wPaintAnimLo` | 4 | wPaintObject +1: animation pointer |
 | $c500 | `wPaintAnimHi` | 4 |  |
+| $c505 | `wPaintX` | 3 | wPaintObject +7 (16 bit with $c506) |
+| $c508 | `wPaintY` | 3 | wPaintObject +$a (16 bit with $c509) |
 | $c519 | `wBlobPhase` | 6 | counter of the paint blob; bit 1 picks one of two animations |
 | $c51e | `wGameFlags` | 15 | bit 0 = round cleared (PlayFrame jumps to RoundCleared), bit 6 = advance to the next mode after the clear |
 | $c51f | `wRoundFlags` | 8 | bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional) |
@@ -69,8 +112,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c524 | `wRoomIndex` | 9 | selects the room tile set / name (0 = kitchen room) |
 | $c533 | `wEnemyPathPtr` | 6 | 16 bit pointer into the scripted path of kind 7 enemies |
 | $c534 | `wEnemyPathPtrHi` | 5 | high byte of the enemy path pointer (wEnemyPathPtr is the low byte) |
-| $c53a | `wMagicState` | 50 | bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process |
-| $c53b | `wMagicScreenFlags` | 8 | bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling |
+| $c53a | `wMagicState` | 51 | bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process |
+| $c53b | `wMagicScreenFlags` | 9 | bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling |
 | $c53e | `wEnemyLoopIdx` | 7 | slot index of the running enemy loop (15 down to 0) |
 | $c53f | `wEnemyLoopStart` | 2 | incremented each frame so the update order rotates |
 | $c542 | `wEnemySlots` | 0 | 16 enemy records of $20 bytes (to $c741) |
@@ -81,13 +124,20 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c759 | `wCursorFlags` | 3 | bit 7 = a choice was confirmed |
 | $c75a | `wBonusChoice` | 4 | chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional) |
 | $c76e | `wEndingObject` | 7 | object record used by the ending scene |
+| $c775 | `wEndingX` | 4 | wEndingObject +7 |
+| $c778 | `wEndingY` | 3 | wEndingObject +$a |
+| $c77e | `wEndingAngle` | 4 | wEndingObject +$10 |
+| $c77f | `wEndingSpeed` | 3 | wEndingObject +$11 |
 | $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a (provisional) |
 | $c782 | `wEndingPhase` | 4 | ending scene step counter (provisional) |
 | $c78e | `wEndingObject2` | 9 | second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional) |
 | $c78f | `wEndingObject2Anim` | 4 | +1 of the second ending object (set to $ff when the credits start) |
 | $c790 | `wCreditsPage` | 5 | index into CreditsPageTable |
+| $c795 | `wEnding2X` | 1 | wEndingObject2 +7 |
+| $c798 | `wEnding2Y` | 3 | wEndingObject2 +$a |
 | $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished (provisional) |
 | $c7bf | `wRemoteRound` | 5 | round number received over the link cable (bit 7 stripped) |
+| $c7c0 | `wMapCellMask` | 4 | DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it) |
 | $dfff | `wStackTop` | 9 | SP is reset here at the start of every mode |
 | $ff80 | `hOamDma` | 1 | HRAM copy of OamDmaRoutine |
 | $ff8b | `hJoyHeld` | 14 | held buttons: bit7 down, 6 up, 5 left, 4 right, 3 start, 2 select, 1 B, 0 A ($0f = A+B+Select+Start = soft reset) |
@@ -98,8 +148,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ff90 | `hTilemapAddrLo` | 2 |  |
 | $ff91 | `hVBlankFlag` | 4 | bit 0 set by the VBlank handler each frame |
 | $ff92 | `hSavedIE` | 2 | IE saved by LcdOff |
-| $ff96 | `hScratch00` | 87 |  |
-| $ff97 | `hScratch01` | 38 |  |
+| $ff96 | `hScratch00` | 89 |  |
+| $ff97 | `hScratch01` | 39 |  |
 | $ff98 | `hScratch02` | 39 |  |
 | $ff99 | `hScratch03` | 24 |  |
 | $ff9a | `hScratch04` | 14 |  |
@@ -128,17 +178,25 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffb6 | `hEnemyAnimLo` | 5 | +1: animation pointer of the enemy record (SetObjectAnimation) |
 | $ffb7 | `hEnemyAnimHi` | 5 | +2 |
 | $ffb9 | `hEnemyBoxHalf` | 6 | +4: half size of the hit box used by ObjectsOverlap (2 or 4) |
+| $ffba | `hEnemyFrame` | 2 | +5: animation frame index of the enemy record |
 | $ffbc | `hEnemyX` | 35 | +7: pixel X (16 bit with $ffbd) |
 | $ffbd | `hEnemyXHi` | 5 |  |
 | $ffbf | `hEnemyY` | 29 | +$a: pixel Y (16 bit with $ffc0) |
 | $ffc0 | `hEnemyYHi` | 3 |  |
-| $ffc6 | `hEnemyAnimState` | 18 |  |
+| $ffc1 | `hEnemyDXLo` | 2 | +$0c: horizontal movement of the last MoveObject (16 bit with $ffc2) |
+| $ffc2 | `hEnemyDXHi` | 4 |  |
+| $ffc3 | `hEnemyDYLo` | 2 | +$0e: vertical movement of the last MoveObject (16 bit with $ffc4) |
+| $ffc4 | `hEnemyDYHi` | 4 |  |
+| $ffc5 | `hEnemyAngle` | 5 | +$10: heading 0-31 (index into the movement vector table at $0bb6) |
+| $ffc6 | `hEnemySpeed` | 18 | +$11: speed factor MoveObject multiplies the movement vector by (5 and 6 are used) |
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
-| $ffca | `hEnemyStep` | 15 | enemy step counter |
-| $ffcc | `hEnemyAux` | 13 | enemy auxiliary counter |
+| $ffca | `hEnemyStep` | 17 | enemy step counter |
+| $ffcb | `hEnemyTimer` | 5 | per-enemy countdown (kind 7 follows its path when it runs out; provisional) |
+| $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
+| $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional) |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
-| $ffd1 | `hEnemyDir` | 60 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
+| $ffd1 | `hEnemyDir` | 64 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
 | $ffd2 | `hEnemyKind` | 13 | index into EnemyBehaviorTable |
 | $ffd3 | `hEnemyCounter2` | 7 | +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional) |
 | $ffd4 | `hEnemyFlags` | 38 | bit 1/2 = frozen / hit by the player |
@@ -149,53 +207,56 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffd9 | `hOamCount` | 7 |  |
 | $ffda | `hRngCounter` | 10 | incremented while the game waits for VBlank: cheap random source |
 | $ffdb | `hFrameSpin` | 7 |  |
-| $ffdf | `hMagicTimer` | 12 | frames left of the running magic effect (MagicTimerTick) |
+| $ffdf | `hMagicTimer` | 13 | frames left of the running magic effect (MagicTimerTick) |
 | $ffe0 | `hTimeFrames` | 4 | frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds) |
 | $ffe1 | `hTimeSeconds` | 9 | seconds left in the round (shown as TIME) |
+| $ffe3 | `hRoundSeconds` | 2 | seconds the round started with (hTimeSeconds counts down from it) |
+| $ffe9 | `hSpawnDelay` | 2 | delay value (in seconds into the round) of the next spawn from the wave list |
 | $ffeb | `hSerialByte` | 29 | byte received over the link port |
 | $ffed | `hLinkFlags` | 23 | bit 0 = 2 player link game |
+| $ffee | `hSpawnFlag` | 3 | flag bit taken from the low 3 bits of the Y byte of a spawn entry (bit 1 in rounds 17 and later, else bit 0); the Y position itself is Y and $f8 |
 
 ## Most used addresses without a name
 
 | Address | References |
 |---|---|
 | $c000 | 7 |
-| $c463 | 7 |
 | $c1b7 | 6 |
-| $c7c0 | 5 |
-| $c775 | 5 |
-| $c77e | 5 |
-| $ffc5 | 5 |
-| $ffcf | 5 |
-| $ffcb | 5 |
-| $c431 | 5 |
-| $c47d | 4 |
-| $c798 | 4 |
+| $c453 | 4 |
 | $c780 | 4 |
-| $c481 | 4 |
-| $ffc2 | 4 |
-| $ffc4 | 4 |
 | $c489 | 4 |
-| $c3a7 | 4 |
-| $c315 | 4 |
-| $c427 | 4 |
-| $c428 | 4 |
-| $c429 | 4 |
-| $c42b | 4 |
-| $c42c | 4 |
-| $c42e | 4 |
-| $c42f | 4 |
-| $c312 | 4 |
-| $c314 | 4 |
-| $c4d9 | 4 |
 | $c499 | 4 |
 | $c49a | 4 |
-| $c4a5 | 4 |
-| $c46d | 3 |
-| $c467 | 3 |
 | $c46a | 3 |
 | $c46c | 3 |
 | $c44e | 3 |
 | $c44d | 3 |
-| $c453 | 3 |
-| $c486 | 3 |
+| $c487 | 3 |
+| $c43f | 3 |
+| $c440 | 3 |
+| $c799 | 3 |
+| $c449 | 3 |
+| $c504 | 3 |
+| $c506 | 3 |
+| $c507 | 3 |
+| $c509 | 3 |
+| $c1f8 | 3 |
+| $c4b4 | 3 |
+| $c1b5 | 2 |
+| $c46e | 2 |
+| $c46f | 2 |
+| $c468 | 2 |
+| $c470 | 2 |
+| $c469 | 2 |
+| $c471 | 2 |
+| $c472 | 2 |
+| $c46b | 2 |
+| $c473 | 2 |
+| $c474 | 2 |
+| $ffde | 2 |
+| $c465 | 2 |
+| $c44f | 2 |
+| $ffe4 | 2 |
+| $c769 | 2 |
+| $c74f | 2 |
+| $c750 | 2 |
