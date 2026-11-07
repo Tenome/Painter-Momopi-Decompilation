@@ -262,3 +262,18 @@ The bytes after each song's last read byte (for example `$5ef3` onward after the
   was drawn (so other code can tell that the object is visible); bit 3 becomes OAM attribute bit 7 (behind the background); bits 4-6 become OAM attribute bits 4-6 (palette, X flip, Y flip).
   A mirrored object has its part offsets negated and is moved 8 pixels. `DrawObject` draws the parts starting at a cursor (record +5) that moves on by one every frame, so when the OAM
   overflows (40 sprites) different parts drop out each frame: the flicker technique of the game. A part whose position is outside 0-255 is skipped.
+
+## Gameplay rules read from the hand written code (`port/logic.c`)
+
+- **Goal**: paint every path cell (map low nibble 1 or 2). The player paints the cell it stands on when exactly on the grid (`PaintCell` sets bit 4 and redraws two tile rows, `wPaintRemaining` counts down;
+  at 0 `RoundCleared`). Cells with low nibble 0 are walls; touching one while on the grid kills the player (`PlayerCheckOffPath`) unless the W.IN card runs.
+- **Enemies undo paint**: `EnemyErasePaint` turns a painted cell under an on-screen enemy back into an unpainted one (`$80` set) and raises `wPaintRemaining`. Kinds 0, 6 and 8 stand still; kind 4 cannot be hurt by paint.
+  Enemies move on the grid with `EnemyMoveStep` (tables at $3ae3 and $3aed give the pixels per frame, the second for fast enemies), choose a free direction at random when blocked (`EnemyChooseDirection`) and
+  turn towards the player when aligned (`EnemyAimAtPlayer`). At most three enemies are alive at once; the spawn list gives kind, X, Y and the second at which each appears; when the clock reaches 0 one extra enemy (kind 4) appears.
+- **Paint hits**: the paint blob (cards PYON and B.O.M) defeats an enemy it overlaps (`CheckPaintHitsEnemy`); `EnemyDefeated` shows a four way burst and adds the points of the kind (`EnemyScoreTable`: 5, 5, 15, 15, 0, 5, 5, 5, 10, 15, 15, 5).
+  The B.O.M card marks every active enemy as hit at once (`BombHitAllEnemies`).
+- **Cards** (ids 1-9, cost from `MagicCostTable`): S.UP faster for $f0 frames, W.IN walk through walls $d0, T.STOP freezes enemies and removes the shot $d0, GHOST enemies do not hurt $b0, FRIEND removes the shot $b0,
+  SEALED $a0, B.O.M eight paint blobs, CLEAR paints every remaining cell after a flashing countdown, PYON a paint blob thrown ahead. The timed cards share one routine shape (`magic_timed`).
+- **Frame order of play** (`Mode1_Play`): wait, joypad, `PlayFrame` (player), magic screen when B is pressed, camera, spawn script, enemies, time-up enemy, extra life check.
+- **Sound engine** (`SoundUpdate`, once per VBlank): the queue gives one command per frame; eight channel records (music 0-3, effects 4-7); an effect that takes a hardware channel marks the music record of that channel
+  (flag bit 2) so only the effect writes registers; the stream interpreter runs when a note's length counter ends.

@@ -776,7 +776,7 @@ void *gb_native_EnemyKindIdle(void) {
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
     NCALL(GAME_EnemyMoveStep);
-    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyErasePaint);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
@@ -797,13 +797,13 @@ void *gb_native_EnemyKind1(void) {
     NCALL(GAME_EnemyGridStep);
     gb_native_EnemyEdgeBlockedDirs();
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyFlagOffPath);
     if (rd(hEnemyFlags) & 0x02) {
         wr(hEnemyCounter, rd(hEnemyCounter) + 1);
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
     }
     NCALL(GAME_EnemyMoveStep);
-    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyErasePaint);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
@@ -840,7 +840,7 @@ void *gb_native_EnemyKind3(void) {
     if (ZF()) return (void *)GAME_EnemyKind3Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyFlagOffPath);
     NCALL(GAME_EnemyTurnIfBlocked);
     NCALL(GAME_MoveAndApplyObject);
     NCALL(GAME_EnemyPaintUnderB0M);
@@ -872,7 +872,7 @@ void *gb_native_EnemyKind5(void) {
     if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
     NCALL(GAME_EnemyIdleAnimate);
-    NCALL(GAME_EnemyKind7Teleport);
+    NCALL(GAME_EnemyTeleportNext);
     gb_native_DrawObject();
     return 0;
 }
@@ -2907,4 +2907,310 @@ void *gb_native_SelectKind9Animation(void) {
     SET_BC(bc);
     set_anim((rd(hEnemyTick) & 0x08) ? bc : de);
     return 0;
+}
+
+/* EnemyErasePaint: enemies undo the player's work. When hEnemyDir bit 5 asks for it (set by EnemyGridStep), the map cell under the enemy is a painted cell (bit 4)
+ * and the enemy is on the screen, the cell becomes unpainted again (its low nibble with bit 7) and its two tile rows are redrawn from D_00_3ac4; wPaintRemaining goes up by 1.
+ * Not for kind 8, and not while the B.O.M card (5) runs. */
+void *gb_native_EnemyErasePaint(void) {
+    if (rd(hEnemyKind) == 0x08) return 0;
+    if (rd(wActiveMagic) == 0x05 && (rd(wMagicState) & 0x01)) return 0;
+    if (!(rd(hEnemyDir) & 0x20)) return 0;
+    wr(hEnemyDir, rd(hEnemyDir) & ~0x20);
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = (uint8_t)((rd(hEnemyY) & 0xF0) + 8);
+    gb_native_LookupMapTile();
+    uint16_t cell = HL();
+    uint8_t tile = r.a;
+    r.e = tile;
+    if (tile & 0x80) return 0;
+    if (!(tile & 0x10)) return 0;
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) return 0;
+    wr(cell, (tile & 0x0F) | 0x80);
+    wr(hSpriteX, (uint8_t)((rd(hEnemyX) + 8) & 0xF0));
+    wr(hSpriteY, (uint8_t)(rd(hEnemyY) & 0xF0));
+    NCALL(GAME_PixelToTilemapAddr);
+    r.l = r.a - 1;
+    r.h = rd(hTilemapAddrHi);
+    SET_DE(0x3AC4);
+    NCALL(GAME_QueueVramCopyRows);
+    NCALL(GAME_WaitVramCopyDone);
+    wr(wPaintRemaining, rd(wPaintRemaining) + 1);
+    return 0;
+}
+
+/* EnemyFlagOffPath: hEnemyFlags bit 1 = the map cell under the enemy is not a path (low nibble 0). */
+void *gb_native_EnemyFlagOffPath(void) {
+    gb_native_EnemyTileUnder();
+    SET_HL(hEnemyFlags);
+    if ((r.a & 0x0F) == 0) wr(hEnemyFlags, rd(hEnemyFlags) | 0x02);
+    else wr(hEnemyFlags, rd(hEnemyFlags) & ~0x02);
+    return 0;
+}
+
+/* EnemyTurnIfBlocked (kinds 3 and 4): a turn is requested when the way is blocked, and also for kind 3 while T.STOP (3) runs, otherwise the heading hEnemyAngle comes from the table at $363d
+ * (direction bits to a heading: up 0, right 8, down $10, left $18). For kind 3 the speed is set to 5 first. */
+void *gb_native_EnemyTurnIfBlocked(void) {
+    uint8_t kind = rd(hEnemyKind);
+    if (kind != 0x04 && kind == 0x03 && rd(wActiveMagic) == 0x03) {
+        if (rd(wMagicState) & 0x01) return gb_native_EnemyRequestTurn();
+        wr(hEnemySpeed, 0x05);
+    }
+    if ((rd(hEnemyBlocked) & 0x0F) & (rd(hEnemyDir) & 0x0F)) return gb_native_EnemyRequestTurn();
+    r.c = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x363D);
+    gb_native_LookupByte();
+    wr(hEnemyAngle, r.a);
+    return 0;
+}
+
+/* EnemyKind10Move: kind 10 flies: its heading comes from the table at $5782 by direction; it moves and applies the step, then ProjectileHitTest compares its position
+ * (hScratch00-03) and hEnemyFlags bit 3 is set when that test says no hit. */
+void *gb_native_EnemyKind10Move(void) {
+    r.c = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x5782);
+    gb_native_LookupByte();
+    wr(hEnemyAngle, r.a);
+    gb_native_SelectObject2();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    wr(hScratch00, rd(hEnemyX));
+    wr(hScratch00 + 1, rd(hEnemyXHi));
+    wr(hScratch00 + 2, rd(hEnemyY));
+    wr(hScratch00 + 3, rd(hEnemyYHi));
+    gb_native_ProjectileHitTest();
+    if (r.a) return 0;
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x08);
+    return 0;
+}
+
+/* EnemyIdleAnimate (kind 5): the enemy first shows an animation pair for $a0 counts (hEnemyCounter), then sets hEnemyDir bit 1; then a blink between two animations for
+ * $50 counts, after which hEnemyDir bit 0 lets EnemyTeleportNext move it. */
+void *gb_native_EnemyIdleAnimate(void) {
+    if (!(rd(hEnemyDir) & 0x02)) {
+        uint8_t count = rd(hEnemyCounter);
+        if (count != 0xA0) {
+            wr(hEnemyCounter, count + 1);
+            anim_variant(0x3F3A, 0x3F3F);
+            return 0;
+        }
+        wr(hEnemyCounter, 0);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x02);
+    }
+    uint8_t count = rd(hEnemyCounter);
+    if (count == 0x50) { SET_HL(hEnemyDir); wr(hEnemyDir, rd(hEnemyDir) | 0x01); return 0; }
+    wr(hEnemyCounter, count + 1);
+    set_anim((rd(hEnemyTick) & 0x04) ? 0x3F3A : 0x3ACA);
+    return 0;
+}
+
+/* EnemyBuildTeleportTable (kind 5 at its start): counter $20 and the table at $c489 of the places the enemy visits: left, up, right, down of where it stands and its own
+ * place, ended by a zero; animation $3f3a and hEnemyDir = $90. */
+void *gb_native_EnemyBuildTeleportTable(void) {
+    wr(hEnemyCounter, 0x20);
+    uint8_t x = rd(hEnemyX), y = rd(hEnemyY);
+    wr(0xC48B, x); wr(0xC48F, x); wr(0xC491, x);
+    wr(0xC489, (uint8_t)(x - 0x10));
+    wr(0xC48D, (uint8_t)(x + 0x10));
+    wr(0xC48A, y); wr(0xC48E, y); wr(0xC492, y);
+    wr(0xC48C, (uint8_t)(y - 0x10));
+    wr(0xC490, (uint8_t)(y + 0x10));
+    wr(0xC493, 0);
+    set_anim(0x3F3A);
+    wr(hEnemyDir, 0x90);
+    r.a = 0x90;
+    return 0;
+}
+
+/* EnemyTeleportNext: once hEnemyDir bit 0 is set the enemy jumps to the next place of its table (box size 2, hEnemyStep indexes the pairs); a zero X ends it (RemoveEnemy). */
+void *gb_native_EnemyTeleportNext(void) {
+    if (!(rd(hEnemyDir) & 0x01)) return 0;
+    wr(hEnemyBoxHalf, 0x02);
+    uint16_t at = 0xC489 + (uint8_t)(rd(hEnemyStep) << 1);
+    uint8_t x = rd(at);
+    if (x == 0) return gb_native_RemoveEnemy();
+    wr(hEnemyX, x);
+    wr(hEnemyY, rd(at + 1));
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) + 1);
+    set_anim(0x3F44);
+    return 0;
+}
+
+/* EnemySnapToGrid: box size 4; the low nibble of the enemy's X becomes the low nibble of hEnemyDir (with bits 4 and 7 set: $90) and X is rounded down to a multiple of 16. */
+void *gb_native_EnemySnapToGrid(void) {
+    wr(hEnemyBoxHalf, 0x04);
+    uint8_t x = rd(hEnemyX);
+    wr(hEnemyX, x & 0xF0);
+    wr(hEnemyDir, (x & 0x0F) | 0x90);
+    r.a = (x & 0x0F) | 0x90;
+    return 0;
+}
+
+/* EnemyKind7NextStep (the path walking enemy): reads the next heading from the path script at wEnemyPathPtr (a byte per frame, 1 ends it and sets hEnemyDir bit 0 and speed 0).
+ * While the T.STOP card runs the speed is 0 and the script steps back one byte so nothing is lost. */
+void *gb_native_EnemyKind7NextStep(void) {
+    if (rd(hEnemyDir) & 0x01) return 0;
+    uint16_t at = rd(wEnemyPathPtr) | rd(wEnemyPathPtrHi) << 8;
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) { wr(hEnemySpeed, 0); at--; }
+    else wr(hEnemySpeed, 0x05);
+    uint8_t heading = rd(at);
+    if (heading == 0x01) {
+        SET_HL(hEnemyDir);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x01);
+        wr(hEnemySpeed, 0);
+        wr(wEnemyPathPtr, (uint8_t)at);
+        wr(wEnemyPathPtrHi, at >> 8);
+        return 0;
+    }
+    wr(hEnemyCounter, heading);
+    wr(hEnemyAngle, heading);
+    at++;
+    wr(wEnemyPathPtr, (uint8_t)at);
+    wr(wEnemyPathPtrHi, at >> 8);
+    return 0;
+}
+
+/* EnemyKind7Init: speed 5, counters $20, animation $3e4d, snapped to the grid, and the path script chosen by the direction (table at $3d6a). */
+void *gb_native_EnemyKind7Init(void) {
+    wr(hEnemySpeed, 0x05);
+    wr(hEnemyCounter, 0x20);
+    wr(hEnemyAux, 0x20);
+    SET_HL(hObject2);
+    wr(hObject2, rd(hObject2) | 0x40);
+    set_anim(0x3E4D);
+    gb_native_EnemySnapToGrid();
+    r.a = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x3D6A);
+    gb_native_LookupWord();
+    wr(wEnemyPathPtr, r.l);
+    wr(wEnemyPathPtrHi, r.h);
+    return 0;
+}
+
+/* EnemyKind7Update (the path walking enemy): once its path is finished (hEnemyDir bit 0) it blinks for hEnemyAux frames and is removed; while walking, the animation pair
+ * depends on the heading in hEnemyCounter (0 up, 8 right (not mirrored), $10 down, $18 left (mirrored)). */
+void *gb_native_EnemyKind7Update(void) {
+    if (rd(hEnemyDir) & 0x01) {
+        uint8_t aux = rd(hEnemyAux);
+        if (aux == 0) return gb_native_RemoveEnemy();
+        wr(hEnemyAux, aux - 1);
+        anim_variant(0x3ACA, 0x3E4D);
+        return 0;
+    }
+    wr(hObject2, rd(hObject2) | 0x60);
+    switch (rd(hEnemyCounter)) {
+    case 0x08: wr(hObject2, rd(hObject2) & ~0x20); anim_variant(0x3E57, 0x3E5C); break;
+    case 0x10: anim_variant(0x3E4D, 0x3E52); break;
+    case 0x18: anim_variant(0x3E57, 0x3E5C); break;
+    default:   wr(hObject2, rd(hObject2) & ~0x40); anim_variant(0x3E4D, 0x3E52); break;
+    }
+    return 0;
+}
+
+void *gb_native_EnemyKind7SetAnimation(void) { anim_variant(0x3C87, 0x3C8C); return 0; }
+
+/* EnemyKind7Start (kind 11): counter $20, hEnemyAux = the map tile under the enemy, hEnemyTimer = $fe, hEnemyDir = $90, animation $3c87. */
+void *gb_native_EnemyKind7Start(void) {
+    wr(hEnemyCounter, 0x20);
+    gb_native_EnemyMapTile();
+    wr(hEnemyAux, r.a);
+    wr(hEnemyTimer, 0xFE);
+    wr(hEnemyDir, 0x90);
+    set_anim(0x3C87);
+    return 0;
+}
+
+/* EnemyStoreAuxToTile: writes hEnemyAux back into the map cell under the enemy. EnemyClearTileSaveStep: keeps that cell in hEnemyStep and clears it. */
+void *gb_native_EnemyStoreAuxToTile(void) {
+    gb_native_EnemyMapTile();
+    wr(HL(), rd(hEnemyAux));
+    return 0;
+}
+void *gb_native_EnemyClearTileSaveStep(void) {
+    gb_native_EnemyMapTile();
+    wr(hEnemyStep, r.a);
+    wr(HL(), 0);
+    r.a = 0;
+    return 0;
+}
+
+/* SpawnEnemyProjectile: the shot of a shooting enemy appears in the cell of the enemy (flags $82, box size 4, a timer of $a0 in $c4b4). */
+void *gb_native_SpawnEnemyProjectile(void) {
+    SET_HL(wProjectile);
+    gb_native_Clear32Bytes();
+    wr(wProjectileBox, 0x04);
+    wr(0xC4B4, 0xA0);
+    wr(wProjectileX, (uint8_t)((rd(hEnemyX) + 8) & 0xF0));
+    wr(wProjectileY, (uint8_t)((rd(hEnemyY) & 0xF0) + 8));
+    wr(wProjectile, 0x82);
+    r.a = 0x82;
+    return 0;
+}
+
+/* UpdateProjectile (kind 10): the shooter fires every $50 steps while on the screen and not already firing: the shot is aimed at the player, placed at the shooter and
+ * switched on (flags $86; hEnemyFlags bit 0 says a shot is live). When the shooter is hit (bit 3) the shot is removed. */
+void *gb_native_UpdateProjectile(void) {
+    if (rd(hEnemyFlags) & 0x01) return 0;
+    if (rd(hEnemyFlags) & 0x08) { wr(wProjectile, rd(wProjectile) & 0x7F); return 0; }
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (!ZF()) return 0;                           /* the original tests the flags the routine leaves, not A */
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) - 1);
+    if (rd(hEnemyStep)) return 0;
+    gb_native_ProjectileAimAtPlayer();
+    wr(wProjectileX, rd(hEnemyX));
+    wr(wProjectileY, rd(hEnemyY));
+    wr(wProjectile, 0x86);
+    uint16_t anim = rd(hEnemyKind) == 0x0A ? 0x57EC : 0x57C9;
+    wr(wProjectileAnimLo, (uint8_t)anim);
+    wr(wProjectileAnimHi, anim >> 8);
+    wr(hEnemyStep, 0x50);
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x01);
+    return 0;
+}
+
+/* ProjectileCheckPlayerHit (kind 10): while a shot is live (hEnemyFlags bit 0) its position is tested against the player (ProjectileHitTest on hScratch00-03). On a hit
+ * hEnemyDir bit 5 is set, the shot speeds up to $0b (stopped while T.STOP runs), it animates, moves and is drawn; with no hit the shot is switched off and hEnemyFlags bit 1 is set. */
+void *gb_native_ProjectileCheckPlayerHit(void) {
+    if (!(rd(hEnemyFlags) & 0x01)) return 0;
+    wr(hScratch00, rd(wProjectileX));
+    wr(hScratch00 + 1, rd(wProjectileX + 1));
+    wr(hScratch00 + 2, rd(wProjectileY));
+    wr(hScratch00 + 3, rd(wProjectileY + 1));
+    gb_native_ProjectileHitTest();
+    if (!r.a) {
+        SET_HL(hEnemyFlags);
+        wr(wProjectile, rd(wProjectile) & 0x7F);
+        wr(hEnemyFlags, rd(hEnemyFlags) | 0x02);
+        return 0;
+    }
+    SET_HL(hEnemyDir);
+    wr(hEnemyDir, rd(hEnemyDir) | 0x20);
+    wr(wProjectileSpeed, 0x0B);
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) {
+        wr(hEnemySpeed, 0);
+        wr(wProjectileSpeed, 0);
+    }
+    NCALL(GAME_EnemyKind10Animate);
+    SET_HL(wProjectile);
+    gb_native_SetObjPtr();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    return gb_native_DrawObject();
+}
+
+/* ProjectileRemoveIfHit (kind 10): when the enemy has both bits 1 and 3 set the shot and the enemy are removed. */
+void *gb_native_ProjectileRemoveIfHit(void) {
+    if ((rd(hEnemyFlags) & 0x0A) != 0x0A) return 0;
+    wr(wProjectile, rd(wProjectile) & 0x7F);
+    return gb_native_RemoveEnemy();
 }

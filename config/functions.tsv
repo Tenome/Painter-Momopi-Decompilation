@@ -142,7 +142,7 @@ bank	addr	size	name
 0	3478	9	EnemyOnTileGrid
 0	3481	164	EnemyComputeBlockedDirs
 0	3525	10	RemoveEnemy
-0	352f	106	EnemyPaintStep
+0	352f	106	EnemyErasePaint
 0	3599	95	EnemyAimAtPlayer
 0	35f8	11	RememberEnemyPosition
 0	3603	58	EnemyTurnIfBlocked
@@ -178,7 +178,7 @@ bank	addr	size	name
 0	3b3b	28	EnemyAuxCounterStep
 0	3b57	6	SetEnemyAnimation
 0	3b5d	60	SelectEnemyAnimation
-0	3b99	20	EnemyFlagOnPaintedTile
+0	3b99	20	EnemyFlagOffPath
 0	3bad	17	EnemyInitAnim3bbe
 0	3bdc	114	EnemyKind11
 0	3c4e	9	EnemyKind7SetAnimation
@@ -192,7 +192,7 @@ bank	addr	size	name
 0	3e20	45	EnemyKind7Init
 0	3e61	47	EnemyKind5
 0	3e90	65	EnemyIdleAnimate
-0	3ed1	40	EnemyKind7Teleport
+0	3ed1	40	EnemyTeleportNext
 0	3ef9	65	EnemyBuildTeleportTable
 1	4157	53	SoundUpdate
 1	418c	33	SoundDequeue

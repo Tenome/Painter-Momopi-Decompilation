@@ -4379,7 +4379,7 @@ RemoveEnemy::  ; clears the active bit of hObject2 and decrements wEnemyCount
     ld hl, wEnemyCount
     dec [hl]
     ret
-EnemyPaintStep::  ; paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
+EnemyErasePaint::  ; an enemy standing on a painted cell (hEnemyDir bit 5 asks for the check) on the screen turns it back to unpainted ($80 set) and raises wPaintRemaining; not for kind 8 or while the B.O.M card runs
     ldh a, [hEnemyKind]
     cp a, $08
     ret z
@@ -4954,7 +4954,7 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call EnemyGridStep
     call EnemyChooseDirection
     call EnemyMoveStep
-    call EnemyPaintStep
+    call EnemyErasePaint
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
@@ -5207,7 +5207,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call EnemyGridStep
     call EnemyEdgeBlockedDirs
     call EnemyChooseDirection
-    call EnemyFlagOnPaintedTile
+    call EnemyFlagOffPath
     ldh a, [hEnemyFlags]
     bit 1, a
     jr z, .L_00_3b26
@@ -5218,7 +5218,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     ret z
 .L_00_3b26:
     call EnemyMoveStep
-    call EnemyPaintStep
+    call EnemyErasePaint
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
@@ -5272,7 +5272,7 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     ld de, D_00_3bd2
     ld bc, D_00_3bd7
     jp SetAnimationVariant
-EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
+EnemyFlagOffPath::  ; sets hEnemyFlags bit 1 when the map cell under the enemy is not a path (low nibble 0) else clears it
     call EnemyTileUnder
     and a, $0f
     or a, a
@@ -5563,7 +5563,7 @@ EnemyKind5::  ; enemy kind 5
 .L_00_3e84:
     call CheckPaintHitsEnemy
     call EnemyIdleAnimate
-    call EnemyKind7Teleport
+    call EnemyTeleportNext
     jp DrawObject
 EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
     ldh a, [hEnemyDir]
@@ -5600,7 +5600,7 @@ EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then 
     ld hl, hEnemyDir
     set 0, [hl]
     ret
-EnemyKind7Teleport::  ; moves the enemy to the next position in the table at $c489 or removes it (name provisional)
+EnemyTeleportNext::  ; moves the enemy to the next position of the table at $c489 (pairs X Y
     ldh a, [hEnemyDir]
     bit 0, a
     ret z
