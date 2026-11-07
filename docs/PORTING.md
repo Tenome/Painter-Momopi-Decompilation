@@ -36,8 +36,10 @@ Next: save-less options (scaling filters, key mapping file), the HAL clean-up be
 
 ## Hand written C (stage 4 under way)
 
-`port/logic.c` holds readable C versions of routines (memory fills and copies, table lookups, the pixel to map column and tile lookups,
-the enemy edge and screen position checks). Each keeps the registers and flags the original leaves, because callers may use them. A label is
+`port/logic.c` holds readable C versions of about 70 routines: the memory and table helpers, the object movement, drawing and collision code, the player's
+direction and painting code, the enemy loop and eleven enemy behaviours, the spawn script, scoring, the magic cast and the whole play mode (`Mode1_Play`, `PlayFrame`).
+It includes two generated headers: `game_symbols.h` (the names of `src/constants.inc`, such as `wPlayerX`) and `game_labels.h` (`GAME_<Label>` for the generated routine of a
+label and `DATA_<Label>` for the ROM address of a data label), so hand written code reads like the source. Each routine keeps the registers and flags the original leaves, because callers may use them. A label is
 replaced by adding it to `port/overrides.txt` and writing `gb_native_<Label>` in `port/logic.c`. A routine that ends in a tail jump returns the routine to continue with
 (`gb_dispatch(address)`), like the generated code does; a routine that just returns gives 0. `python tools/lift_check.py --cc <clang> --rgbds E:/rgbds`
 builds the runner with and without the hand written routines and compares a hash of work RAM, high RAM, video RAM and OAM after every frame of
