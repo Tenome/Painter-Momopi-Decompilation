@@ -183,3 +183,32 @@ void *gb_native_AddOamSprite(void) {
     r.f = (slot & 15) == 15 ? 0x20 : 0;      /* flags of `inc a` (the carry was cleared by the shifts) */
     return 0;
 }
+
+/* MultiplyByDE: signed multiply of A by the low byte of E, shifted left like the original (D starts at 0, DE doubles every step).
+ * Result in hScratch00 (low) and hScratch01 (high); HL holds the magnitude; D and E end as E shifted into D. */
+void *gb_native_MultiplyByDE(void) {
+    uint8_t a0 = r.a, f0 = r.f;
+    uint8_t m = (a0 & 0x80) ? (uint8_t)(~a0 + 1) : a0;
+    uint16_t hl = 0, de = r.e;
+    for (int i = 0; i < 8; i++) {
+        if (m & 1) hl += de;
+        m >>= 1;
+        de <<= 1;
+    }
+    SET_HL(hl);
+    SET_DE(de);
+    r.c = 0;
+    r.a = a0;
+    r.f = (f0 & 0x10) | 0x20 | ((a0 & 0x80) ? 0 : 0x80);        /* pop af, then bit 7, a */
+    if (!(a0 & 0x80)) {
+        wr(hScratch01, r.h);
+        wr(hScratch00, r.l);
+        r.a = r.l;
+        return 0;
+    }
+    r.a = 0; alu_sub(r.l, 0);
+    wr(hScratch00, r.a);
+    r.a = 0; alu_sub(r.h, CF() ? 1 : 0);
+    wr(hScratch01, r.a);
+    return 0;
+}

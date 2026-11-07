@@ -20,3 +20,4 @@ EnemyScreenPosition
 SetObjPtr
 SelectObject2
 AddOamSprite
+MultiplyByDE
