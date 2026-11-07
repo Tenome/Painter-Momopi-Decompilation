@@ -627,3 +627,49 @@ void *gb_native_DrawObject(void) {
     wr(obj + 5, (uint8_t)(cursor - 1));
     return 0;
 }
+
+/* CounterToFrame: A = number of frames in the animation, hScratch06 = mask, hScratch07 = shift count (ends 0), hScratch08 = running counter.
+ * frame = (counter & mask) >> shift; when the frame is above the last one (A - 1) the counter is reset to 0.
+ * hScratch05 = A - 1. Returns B = C = frame * 2 (a table offset) and A = the last frame number (0 after a reset); HL = hScratch07. */
+void *gb_native_CounterToFrame(void) {
+    uint8_t last = (uint8_t)(r.a - 1);
+    wr(0xFF9B, last);
+    uint8_t frame = rd(0xFF9E) & rd(0xFF9C);
+    uint8_t shifts = rd(0xFF9D), carry;
+    do {
+        carry = frame & 1;
+        frame >>= 1;
+        shifts--;
+    } while (shifts);
+    wr(0xFF9D, 0);
+    r.f = 0xC0 | (carry ? 0x10 : 0);              /* flags of the final `dec [hl]` (the carry is that of the last shift) */
+    r.a = last;
+    alu_cp(frame);
+    if (last < frame) {
+        r.a = 0;
+        wr(0xFF9E, 0);
+    }
+    r.f = ((uint8_t)(frame << 1) ? 0 : 0x80) | ((frame & 0x80) ? 0x10 : 0);     /* flags of `sla b` */
+    r.b = (uint8_t)(frame << 1);
+    r.c = r.b;
+    SET_HL(0xFF9D);
+    return 0;
+}
+
+/* PlayerCheckOffPath: when the player stands exactly on a grid cell whose map cell is not a path (low nibble 0) wPlayerDir bit 5 (death) is set. */
+void *gb_native_PlayerCheckOffPath(void) {
+    const uint16_t wPlayerDir = 0xC4DE;
+    r.b = rd(wPlayerX);
+    r.c = rd(wPlayerY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = rd(wPlayerY);
+    gb_native_LookupMapTile();
+    alu_and(0x0F);
+    if (!ZF()) return 0;
+    SET_HL(wPlayerDir);
+    wr(wPlayerDir, rd(wPlayerDir) | 0x20);
+    return 0;
+}
