@@ -2509,3 +2509,47 @@ void *gb_native_SoundStartCommand(void) {
     uint16_t handler = rd(DATA_SoundCommandHandlerTable + 2 * id) | rd(DATA_SoundCommandHandlerTable + 2 * id + 1) << 8;
     return (void *)gb_dispatch(handler);
 }
+
+/* VBlankHandler: runs at the start of every frame (gb_host_vblank calls it through the vector): the soft reset when all four direction keys are held (hJoyHeld = $0f);
+ * the OAM DMA (hVBlankTasks bit 1), queued VRAM copies (bit 0: list, bit 2: rows), the scroll registers, clearing of the OAM shadow Y values after a DMA, the sound engine,
+ * the round clock (bit 4: hTimeFrames counts 60 per second, hTimeSeconds counts down) and the frame flag and counter the waiting loops use. All registers are kept. */
+void *gb_native_VBlankHandler(void) {
+    Regs saved = r;
+    if (rd(hJoyHeld) == 0x0F) {
+        wr(rLCDC, rd(rLCDC) | 0x80);
+        wr(rIF, 0);
+        wr(rIE, 0);
+        wr(rSC, 0);
+        ime = 0;
+        return (void *)GAME_Entry;
+    }
+    if (rd(hVBlankTasks) & 0x02) gb_dma_routine();
+    if (rd(hVBlankTasks) & 0x01) {
+        NCALL(GAME_VramCopyList);
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x01);
+    }
+    if (rd(hVBlankTasks) & 0x04) {
+        NCALL(GAME_VramCopyRows);
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x04);
+    }
+    wr(rSCX, rd(wScrollX));
+    wr(rSCY, rd(wScrollY));
+    if (rd(hVBlankTasks) & 0x02) {
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x02);
+        NCALL(GAME_ClearOamShadowY);
+    }
+    NCALL(GAME_SoundUpdate);
+    if ((rd(hVBlankTasks) & 0x10) && rd(hTimeSeconds)) {
+        uint8_t frames = rd(hTimeFrames);
+        wr(hTimeFrames, frames - 1);
+        if (frames == 0) {                       /* a second has passed */
+            wr(hTimeSeconds, rd(hTimeSeconds) - 1);
+            wr(hTimeFrames, 0x3C);
+        }
+    }
+    wr(hVBlankFlag, rd(hVBlankFlag) | 0x01);
+    wr(hFrameCounter, rd(hFrameCounter) + 1);
+    r = saved;
+    ime = 1;
+    return 0;
+}

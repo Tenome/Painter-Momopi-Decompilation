@@ -141,3 +141,4 @@ SoundPauseMusicChannels
 SoundResumeMusicChannels
 SoundAssignChannels
 SoundStartCommand
+VBlankHandler
