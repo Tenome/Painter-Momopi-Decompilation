@@ -47,7 +47,7 @@ python tools/report.py            # write progress/jp/report.json
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
 | `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), static recompiler to C (`recomp.py`), report generator, ROM checker |
-| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress); `port/logic.c` holds hand written C versions of about 70 routines (play mode, enemies, scoring), checked frame by frame with `tools/lift_check.py` |
+| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress); `port/logic.c` holds hand written C versions of about 180 routines (play mode, enemies, scoring), checked frame by frame with `tools/lift_check.py` |
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 
