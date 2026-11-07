@@ -1554,73 +1554,73 @@ UnpackRoomMap::  ; HL = packed map (2 bits per cell; 4 cells per byte) unpacked 
     jr nz, .L_00_0d15
     ret
 RoundDataTable::  ; 33 pointers indexed by wRound-1
-    dw D_00_0d7f
-    dw D_00_0da5
-    dw D_00_0dd0
-    dw D_00_0dff
-    dw D_00_0e25
-    dw D_00_0e4b
-    dw D_00_0e75
-    dw D_00_0ea8
-    dw D_00_0ec1
-    dw D_00_0eee
-    dw D_00_0f0b
-    dw D_00_0f30
-    dw D_00_0f56
-    dw D_00_0f73
-    dw D_00_0f94
-    dw D_00_0fbd
-    dw D_00_0d7f
-    dw D_00_0da5
-    dw D_00_0dd0
-    dw D_00_0dff
-    dw D_00_0e25
-    dw D_00_0e4b
-    dw D_00_0e75
-    dw D_00_0ea8
-    dw D_00_0ec1
-    dw D_00_0eee
-    dw D_00_0f0b
-    dw D_00_0f30
-    dw D_00_0f56
-    dw D_00_0f73
-    dw D_00_0f94
-    dw D_00_0fbd
-    dw D_00_0fda
-D_00_0d7f::
-    INCBIN "assets/bank_00/0d7f.bin"
-D_00_0da5::
-    INCBIN "assets/bank_00/0da5.bin"
-D_00_0dd0::
-    INCBIN "assets/bank_00/0dd0.bin"
-D_00_0dff::
-    INCBIN "assets/bank_00/0dff.bin"
-D_00_0e25::
-    INCBIN "assets/bank_00/0e25.bin"
-D_00_0e4b::
-    INCBIN "assets/bank_00/0e4b.bin"
-D_00_0e75::
-    INCBIN "assets/bank_00/0e75.bin"
-D_00_0ea8::
-    INCBIN "assets/bank_00/0ea8.bin"
-D_00_0ec1::
-    INCBIN "assets/bank_00/0ec1.bin"
-D_00_0eee::
-    INCBIN "assets/bank_00/0eee.bin"
-D_00_0f0b::
-    INCBIN "assets/bank_00/0f0b.bin"
-D_00_0f30::
-    INCBIN "assets/bank_00/0f30.bin"
-D_00_0f56::
-    INCBIN "assets/bank_00/0f56.bin"
-D_00_0f73::
-    INCBIN "assets/bank_00/0f73.bin"
-D_00_0f94::
-    INCBIN "assets/bank_00/0f94.bin"
-D_00_0fbd::
-    INCBIN "assets/bank_00/0fbd.bin"
-D_00_0fda::
-    INCBIN "assets/bank_00/0fda.bin"
+    dw SpawnRound01
+    dw SpawnRound02
+    dw SpawnRound03
+    dw SpawnRound04
+    dw SpawnRound05
+    dw SpawnRound06
+    dw SpawnRound07
+    dw SpawnRound08
+    dw SpawnRound09
+    dw SpawnRound10
+    dw SpawnRound11
+    dw SpawnRound12
+    dw SpawnRound13
+    dw SpawnRound14
+    dw SpawnRound15
+    dw SpawnRound16
+    dw SpawnRound01
+    dw SpawnRound02
+    dw SpawnRound03
+    dw SpawnRound04
+    dw SpawnRound05
+    dw SpawnRound06
+    dw SpawnRound07
+    dw SpawnRound08
+    dw SpawnRound09
+    dw SpawnRound10
+    dw SpawnRound11
+    dw SpawnRound12
+    dw SpawnRound13
+    dw SpawnRound14
+    dw SpawnRound15
+    dw SpawnRound16
+    dw SpawnRound33
+SpawnRound01::  ; data (table entry)
+    INCBIN "assets/bank_00/0d7f_SpawnRound01.bin"
+SpawnRound02::  ; data (table entry)
+    INCBIN "assets/bank_00/0da5_SpawnRound02.bin"
+SpawnRound03::  ; data (table entry)
+    INCBIN "assets/bank_00/0dd0_SpawnRound03.bin"
+SpawnRound04::  ; data (table entry)
+    INCBIN "assets/bank_00/0dff_SpawnRound04.bin"
+SpawnRound05::  ; data (table entry)
+    INCBIN "assets/bank_00/0e25_SpawnRound05.bin"
+SpawnRound06::  ; data (table entry)
+    INCBIN "assets/bank_00/0e4b_SpawnRound06.bin"
+SpawnRound07::  ; data (table entry)
+    INCBIN "assets/bank_00/0e75_SpawnRound07.bin"
+SpawnRound08::  ; data (table entry)
+    INCBIN "assets/bank_00/0ea8_SpawnRound08.bin"
+SpawnRound09::  ; data (table entry)
+    INCBIN "assets/bank_00/0ec1_SpawnRound09.bin"
+SpawnRound10::  ; data (table entry)
+    INCBIN "assets/bank_00/0eee_SpawnRound10.bin"
+SpawnRound11::  ; data (table entry)
+    INCBIN "assets/bank_00/0f0b_SpawnRound11.bin"
+SpawnRound12::  ; data (table entry)
+    INCBIN "assets/bank_00/0f30_SpawnRound12.bin"
+SpawnRound13::  ; data (table entry)
+    INCBIN "assets/bank_00/0f56_SpawnRound13.bin"
+SpawnRound14::  ; data (table entry)
+    INCBIN "assets/bank_00/0f73_SpawnRound14.bin"
+SpawnRound15::  ; data (table entry)
+    INCBIN "assets/bank_00/0f94_SpawnRound15.bin"
+SpawnRound16::  ; data (table entry)
+    INCBIN "assets/bank_00/0fbd_SpawnRound16.bin"
+SpawnRound33::  ; data (table entry)
+    INCBIN "assets/bank_00/0fda_SpawnRound33.bin"
 AddScore::  ; adds to the BCD score digits at wScoreDigits
     ld bc, $0000
     ld hl, wScoreDigits
@@ -2178,71 +2178,71 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
 RoundTimeTable::  ; seconds per round block (index wRound/4): initial hTimeSeconds
     INCBIN "assets/bank_00/14f0_RoundTimeTable.bin"
 RoomVramJobTable::  ; 17 pointers to VRAM copy job lists
-    dw D_00_151b
-    dw D_00_1538
-    dw D_00_1551
-    dw D_00_1637
-    dw D_00_156a
-    dw D_00_1583
-    dw D_00_1598
-    dw D_00_1640
-    dw D_00_15b1
-    dw D_00_15d7
-    dw D_00_15c2
-    dw D_00_1637
-    dw D_00_15f0
-    dw D_00_1609
-    dw D_00_161e
-    dw D_00_1640
-    dw D_00_1649
-D_00_151b::
-    INCBIN "assets/bank_00/151b.bin"
-D_00_1538::
-    INCBIN "assets/bank_00/1538.bin"
-D_00_1551::
-    INCBIN "assets/bank_00/1551.bin"
-D_00_156a::
-    INCBIN "assets/bank_00/156a.bin"
-D_00_1583::
-    INCBIN "assets/bank_00/1583.bin"
-D_00_1598::
-    INCBIN "assets/bank_00/1598.bin"
-D_00_15b1::
-    INCBIN "assets/bank_00/15b1.bin"
-D_00_15c2::
-    INCBIN "assets/bank_00/15c2.bin"
-D_00_15d7::
-    INCBIN "assets/bank_00/15d7.bin"
-D_00_15f0::
-    INCBIN "assets/bank_00/15f0.bin"
-D_00_1609::
-    INCBIN "assets/bank_00/1609.bin"
-D_00_161e::
-    INCBIN "assets/bank_00/161e.bin"
-D_00_1637::
-    INCBIN "assets/bank_00/1637.bin"
-D_00_1640::
-    INCBIN "assets/bank_00/1640.bin"
-D_00_1649::
-    INCBIN "assets/bank_00/1649.bin"
+    dw RoomVramJob0
+    dw RoomVramJob1
+    dw RoomVramJob2
+    dw RoomVramJob3
+    dw RoomVramJob4
+    dw RoomVramJob5
+    dw RoomVramJob6
+    dw RoomVramJob7
+    dw RoomVramJob8
+    dw RoomVramJob9
+    dw RoomVramJob10
+    dw RoomVramJob3
+    dw RoomVramJob12
+    dw RoomVramJob13
+    dw RoomVramJob14
+    dw RoomVramJob7
+    dw RoomVramJob16
+RoomVramJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/151b_RoomVramJob0.bin"
+RoomVramJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1538_RoomVramJob1.bin"
+RoomVramJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1551_RoomVramJob2.bin"
+RoomVramJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/156a_RoomVramJob4.bin"
+RoomVramJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1583_RoomVramJob5.bin"
+RoomVramJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1598_RoomVramJob6.bin"
+RoomVramJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/15b1_RoomVramJob8.bin"
+RoomVramJob10::  ; data (table entry)
+    INCBIN "assets/bank_00/15c2_RoomVramJob10.bin"
+RoomVramJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/15d7_RoomVramJob9.bin"
+RoomVramJob12::  ; data (table entry)
+    INCBIN "assets/bank_00/15f0_RoomVramJob12.bin"
+RoomVramJob13::  ; data (table entry)
+    INCBIN "assets/bank_00/1609_RoomVramJob13.bin"
+RoomVramJob14::  ; data (table entry)
+    INCBIN "assets/bank_00/161e_RoomVramJob14.bin"
+RoomVramJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1637_RoomVramJob3.bin"
+RoomVramJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1640_RoomVramJob7.bin"
+RoomVramJob16::  ; data (table entry)
+    INCBIN "assets/bank_00/1649_RoomVramJob16.bin"
 RoomMetatileTable::  ; 17 pointers to metatile definitions per room theme
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20a7
-    dw D_00_20b7
-    dw D_00_20b7
-    dw D_00_20b7
-    dw D_00_20a7
-    dw D_00_20c7
-    dw D_00_20c7
-    dw D_00_20c7
-    dw D_00_20a7
-    dw D_00_20c7
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles0
+    dw RoomMetatiles8
+    dw RoomMetatiles8
+    dw RoomMetatiles8
+    dw RoomMetatiles0
+    dw RoomMetatiles12
+    dw RoomMetatiles12
+    dw RoomMetatiles12
+    dw RoomMetatiles0
+    dw RoomMetatiles12
 RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to $8700 (0x900 bytes)
     dw SpriteSet0
     dw SpriteSet0
@@ -2262,23 +2262,23 @@ RoomSpriteSetTable::  ; 17 pointers into bank 2 to the sprite tile set copied to
     dw SpriteSet4
     dw SpriteSet1
 RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 16 = bonus)
-    dw D_00_20d7
-    dw D_00_2117
-    dw D_00_2157
-    dw D_00_2197
-    dw D_00_21d7
-    dw D_00_2217
-    dw D_00_2257
-    dw D_00_2297
-    dw D_00_22d7
-    dw D_00_2317
-    dw D_00_2357
-    dw D_00_2197
-    dw D_00_2397
-    dw D_00_23d7
-    dw D_00_2417
-    dw D_00_2297
-    dw D_00_2457
+    dw RoomMap0
+    dw RoomMap1
+    dw RoomMap2
+    dw RoomMap3
+    dw RoomMap4
+    dw RoomMap5
+    dw RoomMap6
+    dw RoomMap7
+    dw RoomMap8
+    dw RoomMap9
+    dw RoomMap10
+    dw RoomMap3
+    dw RoomMap12
+    dw RoomMap13
+    dw RoomMap14
+    dw RoomMap7
+    dw RoomMap16
 CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
     ld a, [wMagicScreenFlags]
     bit 2, a
@@ -2572,56 +2572,56 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
 MagicCostTable::  ; MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
     INCBIN "assets/bank_00/199b_MagicCostTable.bin"
 MagicCardTitleJobs::  ; 10 pointers to the card name VRAM jobs (index = card id)
-    dw D_00_1c1b
-    dw D_00_1c21
-    dw D_00_1c27
-    dw D_00_1c2d
-    dw D_00_1c33
-    dw D_00_1c3f
-    dw D_00_1c39
-    dw D_00_1c4b
-    dw D_00_1c51
-    dw D_00_1c45
+    dw MagicTitleJob0
+    dw MagicTitleJob1
+    dw MagicTitleJob2
+    dw MagicTitleJob3
+    dw MagicTitleJob4
+    dw MagicTitleJob5
+    dw MagicTitleJob6
+    dw MagicTitleJob7
+    dw MagicTitleJob8
+    dw MagicTitleJob9
 MagicCardPictureJobs::  ; 10 pointers to the card picture VRAM jobs
-    dw D_00_1b67
-    dw D_00_1b9d
-    dw D_00_1bc1
-    dw D_00_1b8b
-    dw D_00_1c09
-    dw D_00_1be5
-    dw D_00_1baf
-    dw D_00_1b79
-    dw D_00_1bf7
-    dw D_00_1bd3
+    dw MagicPictureJob0
+    dw MagicPictureJob1
+    dw MagicPictureJob2
+    dw MagicPictureJob3
+    dw MagicPictureJob4
+    dw MagicPictureJob5
+    dw MagicPictureJob6
+    dw MagicPictureJob7
+    dw MagicPictureJob8
+    dw MagicPictureJob9
 MagicCardCostJobs::  ; 10 pointers to the MP cost VRAM jobs
-    dw D_00_1c1b
-    dw D_00_19e1
-    dw D_00_19e7
-    dw D_00_19ed
-    dw D_00_19f3
-    dw D_00_19f9
-    dw D_00_19ff
-    dw D_00_1a05
-    dw D_00_1a0b
-    dw D_00_1a11
-D_00_19e1::
-    INCBIN "assets/bank_00/19e1.bin"
-D_00_19e7::
-    INCBIN "assets/bank_00/19e7.bin"
-D_00_19ed::
-    INCBIN "assets/bank_00/19ed.bin"
-D_00_19f3::
-    INCBIN "assets/bank_00/19f3.bin"
-D_00_19f9::
-    INCBIN "assets/bank_00/19f9.bin"
-D_00_19ff::
-    INCBIN "assets/bank_00/19ff.bin"
-D_00_1a05::
-    INCBIN "assets/bank_00/1a05.bin"
-D_00_1a0b::
-    INCBIN "assets/bank_00/1a0b.bin"
-D_00_1a11::
-    INCBIN "assets/bank_00/1a11.bin"
+    dw MagicTitleJob0
+    dw MagicCostJob1
+    dw MagicCostJob2
+    dw MagicCostJob3
+    dw MagicCostJob4
+    dw MagicCostJob5
+    dw MagicCostJob6
+    dw MagicCostJob7
+    dw MagicCostJob8
+    dw MagicCostJob9
+MagicCostJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/19e1_MagicCostJob1.bin"
+MagicCostJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/19e7_MagicCostJob2.bin"
+MagicCostJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/19ed_MagicCostJob3.bin"
+MagicCostJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/19f3_MagicCostJob4.bin"
+MagicCostJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/19f9_MagicCostJob5.bin"
+MagicCostJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/19ff_MagicCostJob6.bin"
+MagicCostJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1a05_MagicCostJob7.bin"
+MagicCostJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1a0b_MagicCostJob8.bin"
+MagicCostJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1a11_MagicCostJob9.bin"
 D_00_1a17::
     INCBIN "assets/bank_00/1a17.bin"
 D_00_1a30::
@@ -2630,46 +2630,46 @@ D_00_1a57::
     INCBIN "assets/bank_00/1a57.bin"
 D_00_1a94::
     INCBIN "assets/bank_00/1a94.bin"
-D_00_1b67::
-    INCBIN "assets/bank_00/1b67.bin"
-D_00_1b79::
-    INCBIN "assets/bank_00/1b79.bin"
-D_00_1b8b::
-    INCBIN "assets/bank_00/1b8b.bin"
-D_00_1b9d::
-    INCBIN "assets/bank_00/1b9d.bin"
-D_00_1baf::
-    INCBIN "assets/bank_00/1baf.bin"
-D_00_1bc1::
-    INCBIN "assets/bank_00/1bc1.bin"
-D_00_1bd3::
-    INCBIN "assets/bank_00/1bd3.bin"
-D_00_1be5::
-    INCBIN "assets/bank_00/1be5.bin"
-D_00_1bf7::
-    INCBIN "assets/bank_00/1bf7.bin"
-D_00_1c09::
-    INCBIN "assets/bank_00/1c09.bin"
-D_00_1c1b::
-    INCBIN "assets/bank_00/1c1b.bin"
-D_00_1c21::
-    INCBIN "assets/bank_00/1c21.bin"
-D_00_1c27::
-    INCBIN "assets/bank_00/1c27.bin"
-D_00_1c2d::
-    INCBIN "assets/bank_00/1c2d.bin"
-D_00_1c33::
-    INCBIN "assets/bank_00/1c33.bin"
-D_00_1c39::
-    INCBIN "assets/bank_00/1c39.bin"
-D_00_1c3f::
-    INCBIN "assets/bank_00/1c3f.bin"
-D_00_1c45::
-    INCBIN "assets/bank_00/1c45.bin"
-D_00_1c4b::
-    INCBIN "assets/bank_00/1c4b.bin"
-D_00_1c51::
-    INCBIN "assets/bank_00/1c51.bin"
+MagicPictureJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1b67_MagicPictureJob0.bin"
+MagicPictureJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1b79_MagicPictureJob7.bin"
+MagicPictureJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1b8b_MagicPictureJob3.bin"
+MagicPictureJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1b9d_MagicPictureJob1.bin"
+MagicPictureJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1baf_MagicPictureJob6.bin"
+MagicPictureJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1bc1_MagicPictureJob2.bin"
+MagicPictureJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1bd3_MagicPictureJob9.bin"
+MagicPictureJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1be5_MagicPictureJob5.bin"
+MagicPictureJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1bf7_MagicPictureJob8.bin"
+MagicPictureJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1c09_MagicPictureJob4.bin"
+MagicTitleJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1c1b_MagicTitleJob0.bin"
+MagicTitleJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/1c21_MagicTitleJob1.bin"
+MagicTitleJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/1c27_MagicTitleJob2.bin"
+MagicTitleJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1c2d_MagicTitleJob3.bin"
+MagicTitleJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1c33_MagicTitleJob4.bin"
+MagicTitleJob6::  ; data (table entry)
+    INCBIN "assets/bank_00/1c39_MagicTitleJob6.bin"
+MagicTitleJob5::  ; data (table entry)
+    INCBIN "assets/bank_00/1c3f_MagicTitleJob5.bin"
+MagicTitleJob9::  ; data (table entry)
+    INCBIN "assets/bank_00/1c45_MagicTitleJob9.bin"
+MagicTitleJob7::  ; data (table entry)
+    INCBIN "assets/bank_00/1c4b_MagicTitleJob7.bin"
+MagicTitleJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1c51_MagicTitleJob8.bin"
 Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld sp, wStackTop
     call LcdOff
@@ -2772,35 +2772,35 @@ DigitToTile::  ; A = BCD digit; returns the digit tile id from D_00_1d2f
 D_00_1d2f::
     INCBIN "assets/bank_00/1d2f.bin"
 RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
-    dw D_00_1d5b
-    dw D_00_1d5b
-    dw D_00_1d5b
-    dw D_00_1d7e
-    dw D_00_1d64
-    dw D_00_1d64
-    dw D_00_1d64
-    dw D_00_1d7e
-    dw D_00_1d6c
-    dw D_00_1d6c
-    dw D_00_1d6c
-    dw D_00_1d7e
-    dw D_00_1d75
-    dw D_00_1d75
-    dw D_00_1d75
-    dw D_00_1d7e
-    dw D_00_1d87
-D_00_1d5b::
-    INCBIN "assets/bank_00/1d5b.bin"
-D_00_1d64::
-    INCBIN "assets/bank_00/1d64.bin"
-D_00_1d6c::
-    INCBIN "assets/bank_00/1d6c.bin"
-D_00_1d75::
-    INCBIN "assets/bank_00/1d75.bin"
-D_00_1d7e::
-    INCBIN "assets/bank_00/1d7e.bin"
-D_00_1d87::
-    INCBIN "assets/bank_00/1d87.bin"
+    dw RoomNameJob0
+    dw RoomNameJob0
+    dw RoomNameJob0
+    dw RoomNameJob3
+    dw RoomNameJob4
+    dw RoomNameJob4
+    dw RoomNameJob4
+    dw RoomNameJob3
+    dw RoomNameJob8
+    dw RoomNameJob8
+    dw RoomNameJob8
+    dw RoomNameJob3
+    dw RoomNameJob12
+    dw RoomNameJob12
+    dw RoomNameJob12
+    dw RoomNameJob3
+    dw RoomNameJob16
+RoomNameJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/1d5b_RoomNameJob0.bin"
+RoomNameJob4::  ; data (table entry)
+    INCBIN "assets/bank_00/1d64_RoomNameJob4.bin"
+RoomNameJob8::  ; data (table entry)
+    INCBIN "assets/bank_00/1d6c_RoomNameJob8.bin"
+RoomNameJob12::  ; data (table entry)
+    INCBIN "assets/bank_00/1d75_RoomNameJob12.bin"
+RoomNameJob3::  ; data (table entry)
+    INCBIN "assets/bank_00/1d7e_RoomNameJob3.bin"
+RoomNameJob16::  ; data (table entry)
+    INCBIN "assets/bank_00/1d87_RoomNameJob16.bin"
 D_00_1d90::
     INCBIN "assets/bank_00/1d90.bin"
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
@@ -3073,42 +3073,42 @@ D_00_2083::
     INCBIN "assets/bank_00/2083.bin"
 D_00_2085::
     INCBIN "assets/bank_00/2085.bin"
-D_00_20a7::
-    INCBIN "assets/bank_00/20a7.bin"
-D_00_20b7::
-    INCBIN "assets/bank_00/20b7.bin"
-D_00_20c7::
-    INCBIN "assets/bank_00/20c7.bin"
-D_00_20d7::
-    INCBIN "assets/bank_00/20d7.bin"
-D_00_2117::
-    INCBIN "assets/bank_00/2117.bin"
-D_00_2157::
-    INCBIN "assets/bank_00/2157.bin"
-D_00_2197::
-    INCBIN "assets/bank_00/2197.bin"
-D_00_21d7::
-    INCBIN "assets/bank_00/21d7.bin"
-D_00_2217::
-    INCBIN "assets/bank_00/2217.bin"
-D_00_2257::
-    INCBIN "assets/bank_00/2257.bin"
-D_00_2297::
-    INCBIN "assets/bank_00/2297.bin"
-D_00_22d7::
-    INCBIN "assets/bank_00/22d7.bin"
-D_00_2317::
-    INCBIN "assets/bank_00/2317.bin"
-D_00_2357::
-    INCBIN "assets/bank_00/2357.bin"
-D_00_2397::
-    INCBIN "assets/bank_00/2397.bin"
-D_00_23d7::
-    INCBIN "assets/bank_00/23d7.bin"
-D_00_2417::
-    INCBIN "assets/bank_00/2417.bin"
-D_00_2457::
-    INCBIN "assets/bank_00/2457.bin"
+RoomMetatiles0::  ; data (table entry)
+    INCBIN "assets/bank_00/20a7_RoomMetatiles0.bin"
+RoomMetatiles8::  ; data (table entry)
+    INCBIN "assets/bank_00/20b7_RoomMetatiles8.bin"
+RoomMetatiles12::  ; data (table entry)
+    INCBIN "assets/bank_00/20c7_RoomMetatiles12.bin"
+RoomMap0::  ; data (table entry)
+    INCBIN "assets/bank_00/20d7_RoomMap0.bin"
+RoomMap1::  ; data (table entry)
+    INCBIN "assets/bank_00/2117_RoomMap1.bin"
+RoomMap2::  ; data (table entry)
+    INCBIN "assets/bank_00/2157_RoomMap2.bin"
+RoomMap3::  ; data (table entry)
+    INCBIN "assets/bank_00/2197_RoomMap3.bin"
+RoomMap4::  ; data (table entry)
+    INCBIN "assets/bank_00/21d7_RoomMap4.bin"
+RoomMap5::  ; data (table entry)
+    INCBIN "assets/bank_00/2217_RoomMap5.bin"
+RoomMap6::  ; data (table entry)
+    INCBIN "assets/bank_00/2257_RoomMap6.bin"
+RoomMap7::  ; data (table entry)
+    INCBIN "assets/bank_00/2297_RoomMap7.bin"
+RoomMap8::  ; data (table entry)
+    INCBIN "assets/bank_00/22d7_RoomMap8.bin"
+RoomMap9::  ; data (table entry)
+    INCBIN "assets/bank_00/2317_RoomMap9.bin"
+RoomMap10::  ; data (table entry)
+    INCBIN "assets/bank_00/2357_RoomMap10.bin"
+RoomMap12::  ; data (table entry)
+    INCBIN "assets/bank_00/2397_RoomMap12.bin"
+RoomMap13::  ; data (table entry)
+    INCBIN "assets/bank_00/23d7_RoomMap13.bin"
+RoomMap14::  ; data (table entry)
+    INCBIN "assets/bank_00/2417_RoomMap14.bin"
+RoomMap16::  ; data (table entry)
+    INCBIN "assets/bank_00/2457_RoomMap16.bin"
 Mode2_BonusSelect::  ; SELECT JUST ONE! choose A/B/C
     ld sp, wStackTop
     ld hl, $c487
@@ -3323,17 +3323,17 @@ D_00_269b::
 D_00_2704::
     INCBIN "assets/bank_00/2704.bin"
 BonusSelectJobTable::  ; 3 pointers to VRAM job lists
-    dw D_00_28a3
-    dw D_00_28fd
-    dw D_00_2957
+    dw BonusSelectJob0
+    dw BonusSelectJob1
+    dw BonusSelectJob2
 D_00_270f::
     INCBIN "assets/bank_00/270f.bin"
-D_00_28a3::
-    INCBIN "assets/bank_00/28a3.bin"
-D_00_28fd::
-    INCBIN "assets/bank_00/28fd.bin"
-D_00_2957::
-    INCBIN "assets/bank_00/2957.bin"
+BonusSelectJob0::  ; data (table entry)
+    INCBIN "assets/bank_00/28a3_BonusSelectJob0.bin"
+BonusSelectJob1::  ; data (table entry)
+    INCBIN "assets/bank_00/28fd_BonusSelectJob1.bin"
+BonusSelectJob2::  ; data (table entry)
+    INCBIN "assets/bank_00/2957_BonusSelectJob2.bin"
 D_00_29b1::
     INCBIN "assets/bank_00/29b1.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
@@ -3714,33 +3714,33 @@ RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until
 D_00_2dff::
     INCBIN "assets/bank_00/2dff.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
-    dw D_00_2e21
-    dw D_00_2e2d
-    dw D_00_2e88
-    dw D_00_2ea7
-    dw D_00_2ec6
-    dw D_00_2e4c
-    dw D_00_2e6c
-    dw D_00_2ee5
-    dw D_00_2eff
-D_00_2e21::
-    INCBIN "assets/bank_00/2e21.bin"
-D_00_2e2d::
-    INCBIN "assets/bank_00/2e2d.bin"
-D_00_2e4c::
-    INCBIN "assets/bank_00/2e4c.bin"
-D_00_2e6c::
-    INCBIN "assets/bank_00/2e6c.bin"
-D_00_2e88::
-    INCBIN "assets/bank_00/2e88.bin"
-D_00_2ea7::
-    INCBIN "assets/bank_00/2ea7.bin"
-D_00_2ec6::
-    INCBIN "assets/bank_00/2ec6.bin"
-D_00_2ee5::
-    INCBIN "assets/bank_00/2ee5.bin"
-D_00_2eff::
-    INCBIN "assets/bank_00/2eff.bin"
+    dw CreditsPage0
+    dw CreditsPage1
+    dw CreditsPage2
+    dw CreditsPage3
+    dw CreditsPage4
+    dw CreditsPage5
+    dw CreditsPage6
+    dw CreditsPage7
+    dw CreditsPage8
+CreditsPage0::  ; data (table entry)
+    INCBIN "assets/bank_00/2e21_CreditsPage0.bin"
+CreditsPage1::  ; data (table entry)
+    INCBIN "assets/bank_00/2e2d_CreditsPage1.bin"
+CreditsPage5::  ; data (table entry)
+    INCBIN "assets/bank_00/2e4c_CreditsPage5.bin"
+CreditsPage6::  ; data (table entry)
+    INCBIN "assets/bank_00/2e6c_CreditsPage6.bin"
+CreditsPage2::  ; data (table entry)
+    INCBIN "assets/bank_00/2e88_CreditsPage2.bin"
+CreditsPage3::  ; data (table entry)
+    INCBIN "assets/bank_00/2ea7_CreditsPage3.bin"
+CreditsPage4::  ; data (table entry)
+    INCBIN "assets/bank_00/2ec6_CreditsPage4.bin"
+CreditsPage7::  ; data (table entry)
+    INCBIN "assets/bank_00/2ee5_CreditsPage7.bin"
+CreditsPage8::  ; data (table entry)
+    INCBIN "assets/bank_00/2eff_CreditsPage8.bin"
 EndingTick::  ; one step of the ending scene: hero movement then the object animation
     call EndingMoveHero
     jp EndingAnimateObject
