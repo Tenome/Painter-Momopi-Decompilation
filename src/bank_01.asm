@@ -2510,7 +2510,7 @@ EnemyKind4::  ; enemy kind 4
     jp EnemyKind4Init
 .L_01_5385:
     call EnemyAimAtPlayer
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call CheckEnemyTouchesPlayer
     call SelectKind4Animation
     jp DrawObject
@@ -2570,7 +2570,7 @@ EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     ldh a, [hEnemyFlags]
     bit 2, a
     jp nz, EnemyDefeated
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call EnemyKind10Move
     call UpdateProjectile
     call ProjectileCheckPlayerHit
@@ -2628,7 +2628,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyStep
     dec [hl]
     ret nz
-    call EnemyAimAtPlayerWide
+    call ProjectileAimAtPlayer
     ldh a, [hEnemyX]
     ld [wProjectileX], a
     ldh a, [hEnemyY]
@@ -2833,7 +2833,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld a, h
     ld [$c49a], a
     jp ProjectileSelectFrame
-EnemyAimAtPlayerWide::  ; sets hEnemyDir towards the player from the X and Y differences (name provisional)
+ProjectileAimAtPlayer::  ; sets the heading of the projectile (wProjectile +$10) towards the player in eight directions from the position differences (a difference below 16 counts as the same row or column)
     ld a, [wPlayerY]
     ld e, a
     ld a, [hEnemyY]
@@ -2931,7 +2931,7 @@ EnemyKind9::  ; enemy kind 9
     jp nz, EnemyDefeated
     call EnemyComputeBlockedDirs
     call EnemyAimAtPlayer
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
@@ -3004,7 +3004,7 @@ EnemyKind2::  ; enemy kind 2
     call EnemyComputeBlockedDirs
     call EnemyGridStep
     call EnemyChooseDirection
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call EnemyShootIfReady
     call EnemyShooterAI
     call ProjectileFrame

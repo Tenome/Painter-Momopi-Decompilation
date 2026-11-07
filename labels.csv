@@ -385,7 +385,7 @@ bank,addr,name,comment
 0,3ef9,EnemyBuildTeleportTable,fills the position table at $c489 around the enemy (+-$10) (name provisional)
 0,352f,EnemyPaintStep,paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
 0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
-0,39b1,EnemyTurnOrAnimate,like EnemyTurnIfBlocked and then picks the animation table D_00_3ae3 or D_00_3aed (name provisional)
+0,39b1,EnemyMoveStep,moves the enemy one step: asks for a turn when the way is blocked (or while T.STOP runs), else takes the step from the table at $3ae3 (slow) or $3aed (fast: flags bit 7 or the spawn flag) and applies it
 0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
 0,10a2,LowNibbleToDigitTile,A and $0f then falls into NumberToTile
 0,175d,SetCursorDefaultAnimation,cursor object animation = D_00_1a30
@@ -410,7 +410,7 @@ bank,addr,name,comment
 0,051d,DrawBonusMetatileMap,hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
 0,09aa,ReturnOnly,a bare ret (jump target of DrawObject for inactive objects)
 1,4775,SoundReturn,ret shared by the sound command that precedes SoundCmdEnd (name provisional)
-1,570c,EnemyAimAtPlayerWide,sets hEnemyDir towards the player from the X and Y differences (name provisional)
+1,570c,ProjectileAimAtPlayer,sets the heading of the projectile (wProjectile +$10) towards the player in eight directions from the position differences (a difference below 16 counts as the same row or column)
 1,58ee,EnemyShooterAI,decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)
 0,151b,RoomVramJob0,data (table entry)
 0,1538,RoomVramJob1,data (table entry)

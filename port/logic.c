@@ -775,7 +775,7 @@ void *gb_native_EnemyKindIdle(void) {
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
@@ -802,7 +802,7 @@ void *gb_native_EnemyKind1(void) {
         wr(hEnemyCounter, rd(hEnemyCounter) + 1);
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
     }
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
@@ -820,7 +820,7 @@ void *gb_native_EnemyKind2(void) {
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyShootIfReady);
     NCALL(GAME_EnemyShooterAI);
     NCALL(GAME_ProjectileFrame);
@@ -856,7 +856,7 @@ void *gb_native_EnemyKind4(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind4Init;
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_SelectKind4Animation);
     gb_native_DrawObject();
@@ -900,7 +900,7 @@ void *gb_native_EnemyKind9(void) {
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_SelectKind9Animation);
@@ -913,7 +913,7 @@ void *gb_native_EnemyKind10(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_InitProjectile;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyKind10Move);
     NCALL(GAME_UpdateProjectile);
     NCALL(GAME_ProjectileCheckPlayerHit);
@@ -2508,4 +2508,403 @@ void *gb_native_SoundStartCommand(void) {
     SET_DE(rd(DATA_SoundCommandDataTable + 2 * id) | rd(DATA_SoundCommandDataTable + 2 * id + 1) << 8);
     uint16_t handler = rd(DATA_SoundCommandHandlerTable + 2 * id) | rd(DATA_SoundCommandHandlerTable + 2 * id + 1) << 8;
     return (void *)gb_dispatch(handler);
+}
+
+/* VBlankHandler: runs at the start of every frame (gb_host_vblank calls it through the vector): the soft reset when all four direction keys are held (hJoyHeld = $0f);
+ * the OAM DMA (hVBlankTasks bit 1), queued VRAM copies (bit 0: list, bit 2: rows), the scroll registers, clearing of the OAM shadow Y values after a DMA, the sound engine,
+ * the round clock (bit 4: hTimeFrames counts 60 per second, hTimeSeconds counts down) and the frame flag and counter the waiting loops use. All registers are kept. */
+void *gb_native_VBlankHandler(void) {
+    Regs saved = r;
+    if (rd(hJoyHeld) == 0x0F) {
+        wr(rLCDC, rd(rLCDC) | 0x80);
+        wr(rIF, 0);
+        wr(rIE, 0);
+        wr(rSC, 0);
+        ime = 0;
+        return (void *)GAME_Entry;
+    }
+    if (rd(hVBlankTasks) & 0x02) gb_dma_routine();
+    if (rd(hVBlankTasks) & 0x01) {
+        NCALL(GAME_VramCopyList);
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x01);
+    }
+    if (rd(hVBlankTasks) & 0x04) {
+        NCALL(GAME_VramCopyRows);
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x04);
+    }
+    wr(rSCX, rd(wScrollX));
+    wr(rSCY, rd(wScrollY));
+    if (rd(hVBlankTasks) & 0x02) {
+        wr(hVBlankTasks, rd(hVBlankTasks) & ~0x02);
+        NCALL(GAME_ClearOamShadowY);
+    }
+    NCALL(GAME_SoundUpdate);
+    if ((rd(hVBlankTasks) & 0x10) && rd(hTimeSeconds)) {
+        uint8_t frames = rd(hTimeFrames);
+        wr(hTimeFrames, frames - 1);
+        if (frames == 0) {                       /* a second has passed */
+            wr(hTimeSeconds, rd(hTimeSeconds) - 1);
+            wr(hTimeFrames, 0x3C);
+        }
+    }
+    wr(hVBlankFlag, rd(hVBlankFlag) | 0x01);
+    wr(hFrameCounter, rd(hFrameCounter) + 1);
+    r = saved;
+    ime = 1;
+    return 0;
+}
+
+/* ---- the VRAM copy queue ----
+ * A copy stream is `count, rows, tiles...`: for every row `count` tiles (a count with bit 7 set repeats the one tile that follows) are written at the destination and the
+ * destination moves to the next row of the 32 tile wide background map. The queue entries (wVramDst/wVramSrc for one stream, wVramListPtr for a list of `count,
+ * then 4 byte jobs of destination and source`) are carried out by the VBlank handler. */
+
+/* VramCopyStream: HL = destination in VRAM, DE = the stream. The queue flag bit 0 is cleared at the end unless bit 7 (list mode) is set. */
+void *gb_native_VramCopyStream(void) {
+    uint16_t to = HL(), from = DE();
+    uint8_t spec = rd(from++);
+    uint8_t rows = rd(from++);
+    wr(hScratch12, spec);
+    uint8_t width = spec & 0x7F;
+    for (;;) {
+        for (uint8_t i = 0; i < width; i++) {
+            wr(to++, rd(from));
+            if (!(spec & 0x80)) from++;
+        }
+        if (--rows == 0) break;
+        to = (uint16_t)(to + 0x20 - width);
+    }
+    SET_HL(to);
+    SET_DE(from);
+    r.b = 0;
+    r.c = 0;
+    r.a = rd(wVramCopyFlags);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);
+    if (r.a & 0x80) return 0;
+    SET_HL(wVramCopyFlags);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) & ~0x01);
+    return 0;
+}
+
+/* VramCopyRows: the queued single stream (destination wVramDst, source wVramSrc). */
+void *gb_native_VramCopyRows(void) {
+    SET_HL(rd(wVramDstHi) << 8 | rd(wVramDstLo));
+    SET_DE(rd(wVramSrcHi) << 8 | rd(wVramSrcLo));
+    return gb_native_VramCopyStream();
+}
+
+/* RunVramCopyList: BC = a list: a job count, then per job the destination (2 bytes) and the stream address (2 bytes). All jobs run at once; the queue flag bit 0 is cleared. */
+void *gb_native_RunVramCopyList(void) {
+    uint16_t list = BC();
+    uint8_t jobs = rd(list++);
+    wr(hScratch15, jobs);
+    for (;;) {
+        wr(hScratch14, list >> 8);
+        wr(hScratch13, (uint8_t)list);
+        SET_HL(rd(list) | rd(list + 1) << 8);
+        SET_DE(rd(list + 2) | rd(list + 3) << 8);
+        gb_native_VramCopyStream();
+        jobs--;
+        if (jobs == 0) break;
+        wr(hScratch15, jobs);
+        list += 4;
+    }
+    SET_HL(wVramCopyFlags);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) & ~0x01);
+    return 0;
+}
+
+/* VramCopyList: the queued list (wVramListPtr). */
+void *gb_native_VramCopyList(void) {
+    SET_BC(rd(wVramListPtrHi) << 8 | rd(wVramListPtrLo));
+    return gb_native_RunVramCopyList();
+}
+
+/* QueueVramCopyList: BC = a list for the next VBlank (bits 0 and 7 of wVramCopyFlags, hVBlankTasks bit 0). */
+void *gb_native_QueueVramCopyList(void) {
+    wr(wVramListPtrLo, r.c);
+    wr(wVramListPtrHi, r.b);
+    SET_HL(hVBlankTasks);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) | 0x81);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x01);
+    return 0;
+}
+
+/* QueueVramCopyRows: HL = destination, DE = stream, queued for the next VBlank (bit 0 of wVramCopyFlags, hVBlankTasks bit 2). */
+void *gb_native_QueueVramCopyRows(void) {
+    wr(wVramDstHi, r.h);
+    wr(wVramDstLo, r.l);
+    wr(wVramSrcHi, r.d);
+    wr(wVramSrcLo, r.e);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) | 0x01);
+    SET_HL(hVBlankTasks);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x04);
+    return 0;
+}
+
+/* EnemyComputeBlockedDirs: hEnemyBlocked = the directions in which the map cell next to the enemy is a wall (low nibble 0): 4 up, 8 down, 2 left, 1 right.
+ * The enemy is on the cell whose centre is nearest (column from X rounded to 16, row centre = (Y and $f0) + 8); a direction is only tested when the enemy has
+ * reached or passed the centre of its cell in that direction. */
+void *gb_native_EnemyComputeBlockedDirs(void) {
+    uint8_t x = rd(hEnemyX), y = rd(hEnemyY);
+    uint8_t blocked = 0;
+    uint8_t nearest = (uint8_t)(x + 8) & 0xF0;
+    uint8_t col = (uint8_t)((nearest >> 4) - 1);
+    uint8_t centre = (uint8_t)((y & 0xF0) + 8);
+    wr(hEnemyBlocked, 0);
+    if (centre >= y && (map_tile(centre - 0x10, col) & 0x0F) == 0) { blocked = 0x04; wr(hEnemyBlocked, blocked); }
+    if (y >= centre && (map_tile(centre + 0x10, col) & 0x0F) == 0) { blocked |= 0x08; wr(hEnemyBlocked, blocked); }
+    if (nearest >= x && (map_tile(centre, col - 1) & 0x0F) == 0) { blocked |= 0x02; wr(hEnemyBlocked, blocked); }
+    if (x >= nearest && (map_tile(centre, col + 1) & 0x0F) == 0) { blocked |= 0x01; wr(hEnemyBlocked, blocked); }
+    return 0;
+}
+
+/* ProjectileAimAtPlayer: the heading of the enemy projectile (wProjectile +$10) becomes the one of the eight directions that points from the enemy at the player:
+ * 0 up, 4 up-right, 8 right, $c down-right, $10 down, $14 down-left, $1c up-left (a difference of less than 16 pixels counts as the same row or column).
+ * (Same row and the enemy to the right of the player gives $10, not left ($18): that is what the original does.) */
+void *gb_native_ProjectileAimAtPlayer(void) {
+    uint8_t px = rd(wPlayerX), py = rd(wPlayerY), ex = rd(hEnemyX), ey = rd(hEnemyY);
+    uint8_t heading;
+    int left = (uint8_t)(ex - 0x10) >= px, right = (uint8_t)(ex + 0x10) < px;
+    if ((uint8_t)(ey - 0x10) >= py) heading = left ? 0x1C : (right ? 0x04 : 0x00);
+    else if ((uint8_t)(ey + 0x10) < py) heading = left ? 0x14 : (right ? 0x0C : 0x10);
+    else heading = ex < px ? 0x08 : 0x10;
+    wr(wProjectile + 0x10, heading);
+    r.a = heading;
+    return 0;
+}
+
+/* EnemyAimAtPlayer: when the enemy stands on the tile grid it turns towards the player: horizontally first (right 1, left 2; also left when its X is beyond 255),
+ * and when the X agrees vertically (up 4, down 8). If that direction is blocked (hEnemyBlocked) bit 6 of hEnemyDir is set and EnemyChooseDirection picks another.
+ * When both coordinates agree the low nibble of hEnemyDir becomes the low bits of the enemy's Y (as in the original). */
+void *gb_native_EnemyAimAtPlayer(void) {
+    r.b = rd(hEnemyX);
+    r.c = rd(hEnemyY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    uint8_t bits;
+    uint8_t want = 0;
+    if (rd(hEnemyXHi) == 1) {
+        want = 0x02;
+    } else {
+        uint8_t ex = rd(hEnemyX), px = rd(wPlayerX);
+        if (px != ex) want = px < ex ? 0x02 : 0x01;
+    }
+    if (want) {
+        if (rd(hEnemyBlocked) & want) goto blocked;
+        bits = want;
+    } else {
+        uint8_t ey = rd(hEnemyY), py = rd(wPlayerY);
+        if (py == ey) {
+            bits = ey;
+        } else {
+            uint8_t vertical = py < ey ? 0x04 : 0x08;
+            if (rd(hEnemyBlocked) & vertical) goto blocked;
+            bits = vertical;
+        }
+    }
+    wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | bits);
+    return 0;
+blocked:
+    SET_HL(hEnemyDir);
+    wr(hEnemyDir, rd(hEnemyDir) | 0x40);
+    return (void *)GAME_EnemyChooseDirection;
+}
+
+/* EnemyChooseDirection: when bit 6 of hEnemyDir asks for a new direction the low nibble of hEnemyDir becomes one free direction (bits 1 right, 2 left, 4 up, 8 down):
+ * random numbers from NextRandomDirection are tried until exactly one bit of (not blocked) and (random nibble) is left. If every direction except the one the table at $3aa2
+ * gives for the current heading is blocked, all free directions are set at once. */
+void *gb_native_EnemyChooseDirection(void) {
+    if (!(rd(hEnemyDir) & 0x40)) return 0;
+    wr(hEnemyDir, rd(hEnemyDir) & ~0x40);
+    uint8_t blocked = rd(hEnemyBlocked);
+    uint8_t opposite = rd(0x3AA2 + ((rd(hEnemyDir) & 0x0F) >> 1));
+    uint8_t free_dirs = (uint8_t)~blocked & 0x0F;
+    if ((uint8_t)(opposite | blocked) == 0x0F) {
+        wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | free_dirs);
+        return 0;
+    }
+    for (;;) {
+        gb_native_NextRandomDirection();
+        uint8_t pick = free_dirs & (rd(hRngCounter) & 0x0F);
+        if (pick == 0x08 || pick == 0x04 || pick == 0x02 || pick == 0x01) {
+            wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | pick);
+            return 0;
+        }
+    }
+}
+
+/* EnemyMoveStep: one movement step of an enemy on the grid. While the T.STOP card (3) runs, or when the direction in hEnemyDir is blocked, a turn is requested.
+ * Otherwise the step (X and Y pixel parts, hEnemyDXHi and hEnemyDYHi) comes from a table indexed by the direction: $3ae3 for normal enemies and $3aed for fast ones
+ * (hEnemyFlags bit 7 or a spawn flag), and is applied to the position. */
+void *gb_native_EnemyMoveStep(void) {
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) return gb_native_EnemyRequestTurn();
+    uint8_t blocked = rd(hEnemyBlocked) & 0x0F, dir = rd(hEnemyDir) & 0x0F;
+    if (dir & blocked) return gb_native_EnemyRequestTurn();
+    uint16_t table = ((rd(hEnemyFlags) & 0x80) || rd(hEnemySpawnFlag)) ? 0x3AED : 0x3AE3;
+    uint8_t index = (uint8_t)((dir >> 1) << 1);
+    wr(hEnemyDXHi, rd(table + index));
+    wr(hEnemyDYHi, rd(table + index + 1));
+    gb_native_SelectObject2();
+    return gb_native_ApplyObjectStep();
+}
+
+/* EnemyGridStep: off the grid it only drops the turn request (bit 6 of hEnemyDir); on the grid hEnemyStep counts to $0b and then restarts with the bits 5 and 6 of hEnemyDir set. */
+void *gb_native_EnemyGridStep(void) {
+    gb_native_EnemyOnTileGrid();
+    if (!ZF()) { wr(hEnemyDir, rd(hEnemyDir) & ~0x40); return 0; }
+    uint8_t step = rd(hEnemyStep);
+    if (step == 0x0B) {
+        wr(hEnemyStep, 0);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x60);
+    } else {
+        wr(hEnemyStep, step + 1);
+    }
+    return 0;
+}
+
+/* EnemyPaintUnderB0M: while the B.O.M card (5) runs an enemy that is not frozen (flags bit 1) paints the cell it stands on when it is exactly on the grid. */
+void *gb_native_EnemyPaintUnderB0M(void) {
+    if (rd(wActiveMagic) != 0x05) return 0;
+    if (!(rd(wMagicState) & 0x01)) return 0;
+    if (rd(hEnemyFlags) & 0x02) return 0;
+    r.b = rd(hEnemyX);
+    r.c = rd(hEnemyY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    return gb_native_PaintCell();
+}
+
+/* EnemyShootIfReady: an enemy that shoots counts hEnemyStep down while no projectile is live; at 0, when it is on the screen, it shoots (SpawnEnemyProjectile). */
+void *gb_native_EnemyShootIfReady(void) {
+    if (rd(wProjectile) & 0x80) return 0;
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) - 1);
+    if (rd(hEnemyStep)) return 0;
+    if (rd(wProjectile) & 0x80) return 0;
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) return 0;
+    return (void *)GAME_SpawnEnemyProjectile;
+}
+
+/* CheckEnemyTouchesPlayer: when the enemy in hObject2 overlaps the player, wPlayerDir bit 5 is set (PlayFrame then runs PlayerDeath). Not while the GHOST card (4) runs, except for kind 4. */
+void *gb_native_CheckEnemyTouchesPlayer(void) {
+    if (rd(hEnemyKind) != 0x04 && rd(wActiveMagic) == 0x04 && (rd(wMagicState) & 0x01)) return 0;
+    wr(hOtherObjLo, (uint8_t)wPlayer);
+    wr(hOtherObjHi, wPlayer >> 8);
+    gb_native_SelectObject2();
+    gb_native_ObjectsOverlap();
+    if (!r.a) return 0;
+    SET_HL(wPlayerDir);
+    wr(wPlayerDir, rd(wPlayerDir) | 0x20);
+    return 0;
+}
+
+/* CheckPaintHitsEnemy: when the paint blob (wPaintObject) overlaps the enemy in hObject2 the blob is removed, the enemy is marked hit (hEnemyFlags bit 2),
+ * the card state is cleared and wPlayerStatus bit 3 is set. */
+void *gb_native_CheckPaintHitsEnemy(void) {
+    if (!(rd(wPaintObject) & 0x80)) return 0;
+    wr(hOtherObjLo, (uint8_t)wPaintObject);
+    wr(hOtherObjHi, wPaintObject >> 8);
+    gb_native_SelectObject2();
+    gb_native_ObjectsOverlap();
+    if (!r.a) return 0;
+    wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x04);
+    wr(wMagicState, 0);
+    wr(wPlayerStatus, rd(wPlayerStatus) | 0x08);
+    return 0;
+}
+
+/* ---- enemy animation selection ----
+ * An animation is a pointer to frame data (hEnemyAnimLo/Hi, record +1/+2). Most enemies have two pointers per direction ("variants") that are swapped with
+ * bit 3 of hEnemyTick (bit 2 for kind 2) to make the walk cycle; the sprite is mirrored with bit 5 of hObject2 for the right/left directions. */
+static void set_anim(uint16_t pointer) {
+    wr(hEnemyAnimLo, (uint8_t)pointer);
+    wr(hEnemyAnimHi, pointer >> 8);
+    SET_DE(pointer);
+    r.a = pointer >> 8;
+}
+static void set_flip(int on) { SET_HL(hObject2); wr(hObject2, on ? (rd(hObject2) | 0x20) : (rd(hObject2) & ~0x20)); }
+static void anim_variant(uint16_t a, uint16_t b) { SET_BC(b); set_anim((rd(hEnemyTick) & 0x08) ? b : a); }
+
+void *gb_native_SetObjectAnimation(void) { set_anim(DE()); return 0; }
+void *gb_native_SetObjectAnimationStub(void) { return gb_native_SetObjectAnimation(); }
+void *gb_native_SetAnimationVariant(void) {
+    if (rd(hEnemyTick) & 0x08) SET_DE(BC());
+    return gb_native_SetObjectAnimation();
+}
+void *gb_native_SetObjectFlipFlag(void) { SET_HL(hObject2); wr(hObject2, rd(hObject2) | 0x20); return 0; }
+
+/* SelectEnemyAnimation (kind 1): by direction bits 0 right (mirrored), 1 left, 2 up, else down. */
+void *gb_native_SelectEnemyAnimation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); anim_variant(0x3BC8, 0x3BCD); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x3BC8, 0x3BCD); }
+    else if (dir & 0x04) anim_variant(0x3BD2, 0x3BD7);
+    else anim_variant(0x3BBE, 0x3BC3);
+    return 0;
+}
+
+/* EnemySelectAnimByKind: kinds 6 and 8 have their own animations, the others choose like kind 1 with the tables at $3aa6-$3abf. */
+void *gb_native_EnemySelectAnimByKind(void) {
+    uint8_t kind = rd(hEnemyKind), dir = rd(hEnemyDir);
+    if (kind == 0x06) anim_variant(0x3ACF, 0x3AD4);
+    else if (kind == 0x08) anim_variant(0x3AD9, 0x3ADE);
+    else if (dir & 0x01) { set_flip(1); anim_variant(0x3AB0, 0x3AB5); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x3AB0, 0x3AB5); }
+    else if (dir & 0x04) anim_variant(0x3ABA, 0x3ABF);
+    else anim_variant(0x3AA6, 0x3AAB);
+    return 0;
+}
+
+void *gb_native_SelectKind3Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); anim_variant(0x5A84, 0x5A8B); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x5A84, 0x5A8B); }
+    else if (dir & 0x04) anim_variant(0x5A92, 0x5A99);
+    else anim_variant(0x5A76, 0x5A7D);
+    return 0;
+}
+
+void *gb_native_SelectKind4Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); set_anim(0x53EC); }
+    else if (dir & 0x02) { set_flip(0); set_anim(0x53EC); }
+    else if (dir & 0x04) set_anim(0x53F3);
+    else set_anim(0x53E5);
+    return 0;
+}
+
+/* SelectKind2Animation: four directions (bit 3 down), the animations of a pair alternate with bit 2 of hEnemyTick. */
+void *gb_native_SelectKind2Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    uint16_t de, bc;
+    if (dir & 0x01) { set_flip(1); de = 0x59D9; bc = 0x59E0; }
+    else if (dir & 0x02) { set_flip(0); de = 0x59D9; bc = 0x59E0; }
+    else if (dir & 0x04) { bc = 0x59E7; de = 0x59EE; }
+    else if (dir & 0x08) { bc = 0x59CB; de = 0x59D2; }
+    else return 0;
+    SET_BC(bc);
+    set_anim((rd(hEnemyTick) & 0x04) ? bc : de);
+    return 0;
+}
+
+/* SelectKind9Animation: up and down have their own pair; sideways uses a mirrored pair when bit 0 (right) is set. */
+void *gb_native_SelectKind9Animation(void) {
+    set_flip(0);
+    uint8_t dir = rd(hEnemyDir);
+    uint16_t de, bc;
+    if (dir & 0x04) { de = 0x588B; bc = 0x5892; }
+    else if (dir & 0x08) { de = 0x586F; bc = 0x5876; }
+    else {
+        if (dir & 0x01) gb_native_SetObjectFlipFlag();
+        de = 0x587D; bc = 0x5884;
+    }
+    SET_BC(bc);
+    set_anim((rd(hEnemyTick) & 0x08) ? bc : de);
+    return 0;
 }
