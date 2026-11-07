@@ -356,3 +356,23 @@ no:
     r.f = 0x80;
     return 0;
 }
+
+/* PlayerComputeBlockedDirs: B = X and C = Y of the player. When the player stands on the tile grid, wPlayerBlocked gets a bit for every neighbouring map cell
+ * that is a wall (low nibble 0): 4 up, 8 down, 2 left, 1 right. hEnemyBlocked receives the same value each time a bit is set (a side effect of the original).
+ * Registers are not kept except for the flags of IsOnTileGrid when the player is off the grid. */
+static uint8_t map_tile(uint8_t y, uint8_t column) { return rd(0xC0A7 + (uint8_t)(y - 0x18 + column)); }
+
+void *gb_native_PlayerComputeBlockedDirs(void) {
+    const uint16_t wPlayerBlocked = 0xC43B;
+    wr(wPlayerBlocked, 0);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    uint8_t x = r.b, y = r.c;
+    uint8_t column = (uint8_t)((((uint8_t)(x + 8) & 0xF0) >> 4) - 1);
+    uint8_t blocked = 0;
+    if ((map_tile(y - 0x10, column) & 0x0F) == 0) { blocked = 0x04; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y + 0x10, column) & 0x0F) == 0) { blocked |= 0x08; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y, column - 1) & 0x0F) == 0) { blocked |= 0x02; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    if ((map_tile(y, column + 1) & 0x0F) == 0) { blocked |= 0x01; wr(wPlayerBlocked, blocked); wr(hEnemyBlocked, blocked); }
+    return 0;
+}

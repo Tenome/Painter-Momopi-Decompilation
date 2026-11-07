@@ -28,3 +28,4 @@ MoveObject
 ApplyObjectStep
 CompareObjectCoordinate
 ObjectsOverlap
+PlayerComputeBlockedDirs
