@@ -155,7 +155,12 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffbd | `hEnemyXHi` | 5 |  |
 | $ffbf | `hEnemyY` | 29 | +$a: pixel Y (16 bit with $ffc0) |
 | $ffc0 | `hEnemyYHi` | 3 |  |
-| $ffc6 | `hEnemyAnimState` | 18 |  |
+| $ffc1 | `hEnemyDXLo` | 2 | +$0c: horizontal movement of the last MoveObject (16 bit with $ffc2) |
+| $ffc2 | `hEnemyDXHi` | 4 |  |
+| $ffc3 | `hEnemyDYLo` | 2 | +$0e: vertical movement of the last MoveObject (16 bit with $ffc4) |
+| $ffc4 | `hEnemyDYHi` | 4 |  |
+| $ffc5 | `hEnemyAngle` | 5 | +$10: heading 0-31 (index into the movement vector table at $0bb6) |
+| $ffc6 | `hEnemySpeed` | 18 | +$11: speed factor MoveObject multiplies the movement vector by (5 and 6 are used) |
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
 | $ffca | `hEnemyStep` | 17 | enemy step counter |
@@ -189,14 +194,11 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c7c0 | 5 |
 | $c775 | 5 |
 | $c77e | 5 |
-| $ffc5 | 5 |
 | $ffcf | 5 |
 | $c47d | 4 |
 | $c798 | 4 |
 | $c780 | 4 |
 | $c481 | 4 |
-| $ffc2 | 4 |
-| $ffc4 | 4 |
 | $c489 | 4 |
 | $c4d9 | 4 |
 | $c499 | 4 |
@@ -222,3 +224,6 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4ce | 3 |
 | $c504 | 3 |
 | $c505 | 3 |
+| $c506 | 3 |
+| $c507 | 3 |
+| $c508 | 3 |

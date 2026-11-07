@@ -1404,7 +1404,7 @@ NextRandomDirection::  ; derives a pseudo random direction nibble from hFrameSpi
     add a, b
     ldh [hRngCounter], a
     ret
-MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00_0bb6 to its position with MultiplyByDE
+MoveObject::  ; moves the object by its heading (+$10
     ldh a, [hObjPtrLo]
     ld l, a
     ldh a, [hObjPtrHi]
@@ -1424,7 +1424,7 @@ MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00
     sla a
     ld b, $00
     ld c, a
-    ld hl, D_00_0bb6
+    ld hl, MoveVectorTable
     add hl, bc
     ld a, [hl]
     push af
@@ -1459,8 +1459,8 @@ MoveObject::  ; applies the object's direction (+$10) and speed (+$11) from D_00
     ldh a, [hScratch01]
     ld [hl], a
     ret
-D_00_0bb6::
-    INCBIN "assets/bank_00/0bb6.bin"
+MoveVectorTable::  ; 32 headings (index 0-31) x (dx dy) signed bytes: points on a circle of radius about 50; MoveObject multiplies them by the speed
+    INCBIN "assets/bank_00/0bb6_MoveVectorTable.bin"
 MultiplyByDE::  ; signed multiply of A by DE (shift and add)
     push af
     bit 7, a
@@ -4532,7 +4532,7 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     bit 0, a
     jp nz, EnemyRequestTurn
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
 .L_00_3620:
     ldh a, [hEnemyBlocked]
     and a, $0f
@@ -4547,7 +4547,7 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     ld c, a
     ld hl, D_00_363d
     call LookupByte
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     ret
 D_00_363d::
     INCBIN "assets/bank_00/363d.bin"
@@ -4579,9 +4579,9 @@ EnemyRequestTurn::  ; sets hEnemyDir bit 6 and clears the movement variables
     ld hl, hEnemyDir
     set 6, [hl]
     xor a, a
-    ldh [hEnemyAnimState], a
-    ldh [$ffc2], a
-    ldh [$ffc4], a
+    ldh [hEnemySpeed], a
+    ldh [hEnemyDXHi], a
+    ldh [hEnemyDYHi], a
     ret
 EnemyTileUnder::  ; A = room map tile under the enemy (Y aligned to the grid)
     ldh a, [hEnemyX]
@@ -4843,17 +4843,17 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyYHi]
     ld [hl+], a
-    ldh a, [$ffc1]
+    ldh a, [hEnemyDXLo]
     ld [hl+], a
-    ldh a, [$ffc2]
+    ldh a, [hEnemyDXHi]
     ld [hl+], a
-    ldh a, [$ffc3]
+    ldh a, [hEnemyDYLo]
     ld [hl+], a
-    ldh a, [$ffc4]
+    ldh a, [hEnemyDYHi]
     ld [hl+], a
-    ldh a, [$ffc5]
+    ldh a, [hEnemyAngle]
     ld [hl+], a
-    ldh a, [hEnemyAnimState]
+    ldh a, [hEnemySpeed]
     ld [hl+], a
     ldh a, [hEnemyBlocked]
     ld [hl+], a
@@ -4914,17 +4914,17 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyYHi], a
     ld a, [hl+]
-    ldh [$ffc1], a
+    ldh [hEnemyDXLo], a
     ld a, [hl+]
-    ldh [$ffc2], a
+    ldh [hEnemyDXHi], a
     ld a, [hl+]
-    ldh [$ffc3], a
+    ldh [hEnemyDYLo], a
     ld a, [hl+]
-    ldh [$ffc4], a
+    ldh [hEnemyDYHi], a
     ld a, [hl+]
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     ld a, [hl+]
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, [hl+]
     ldh [hEnemyBlocked], a
     ld a, [hl+]
@@ -5073,9 +5073,9 @@ EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation tab
 .L_00_39ec:
     add hl, bc
     ld a, [hl+]
-    ldh [$ffc2], a
+    ldh [hEnemyDXHi], a
     ld a, [hl]
-    ldh [$ffc4], a
+    ldh [hEnemyDYHi], a
     call SelectObject2
     jp ClampObjectToRoom
 EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
@@ -5296,9 +5296,9 @@ EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy
     ld hl, hEnemyFlags
     res 1, [hl]
     ret
-EnemyInitAnim3bbe::  ; hEnemyAnimState 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
+EnemyInitAnim3bbe::  ; hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld de, D_00_3bbe
@@ -5483,7 +5483,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     jr nz, .L_00_3d54
 .L_00_3d2b:
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
 .L_00_3d2f:
     ld a, [wEnemyPathPtr]
     ld l, a
@@ -5493,7 +5493,7 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     cp a, $01
     jp z, .L_00_3d4b
     ldh [hEnemyCounter], a
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     inc hl
     ld a, l
     ld [wEnemyPathPtr], a
@@ -5504,11 +5504,11 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     ld hl, hEnemyDir
     set 0, [hl]
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ret
 .L_00_3d54:
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, [wEnemyPathPtr]
     ld l, a
     ld a, [wEnemyPathPtrHi]
@@ -5526,9 +5526,9 @@ D_00_3d6e::
     INCBIN "assets/bank_00/3d6e.bin"
 D_00_3dc7::
     INCBIN "assets/bank_00/3dc7.bin"
-EnemyKind7Init::  ; sets hEnemyAnimState 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
+EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ldh [hEnemyAux], a

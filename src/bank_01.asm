@@ -2539,7 +2539,7 @@ SelectKind4Animation::  ; animation pointers of enemy kind 4 by hEnemyDir
     jp SetObjectAnimationStub
 EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
     ld a, $08
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $01
     ldh [$ffcf], a
     ldh a, [hLinkFlags]
@@ -2678,7 +2678,7 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     bit 0, a
     jp z, .L_01_55fb
     xor a, a
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     xor a, a
     ld [$c4af], a
 .L_01_55fb:
@@ -2720,7 +2720,7 @@ EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 ind
     ld hl, D_01_5782
     add hl, bc
     ld a, [hl]
-    ldh [$ffc5], a
+    ldh [hEnemyAngle], a
     call SelectObject2
     call MoveObject
     call ClampObjectToRoom
@@ -2936,9 +2936,9 @@ EnemyKind9::  ; enemy kind 9
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
-EnemyKind9Move::  ; sets hEnemyAnimState 6 then moves and clamps (name provisional)
+EnemyKind9Move::  ; sets hEnemySpeed 6 then moves and clamps (name provisional)
     ld a, $06
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     call EnemyTurnIfBlocked
     jp MoveAndClampObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
@@ -2975,7 +2975,7 @@ SetObjectFlipFlag::  ; sets hObject2 bit 5 (horizontal flip; name provisional)
     ret
 EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ld a, $06
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld de, D_01_586f
@@ -3134,7 +3134,7 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     jp SetObjectAnimationStub
 EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $05
@@ -3206,7 +3206,7 @@ EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ld de, D_01_5a76
     call SetObjectAnimation
     ld a, $05
-    ldh [hEnemyAnimState], a
+    ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     jp EnemySnapToGrid

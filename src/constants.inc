@@ -135,7 +135,7 @@ DEF hOtherObjLo     EQU $ffa4   ; pointer to the second object for ObjectsOverla
 DEF hOtherObjHi     EQU $ffa5
 DEF hEnemyBlocked   EQU $ffc7   ; bit mask of directions the enemy cannot walk (set from the room map and the screen edges)
 DEF hEnemyCounter   EQU $ffc9   ; frame counter used by the enemy behaviour routines
-DEF hEnemyAnimState EQU $ffc6
+DEF hEnemySpeed     EQU $ffc6   ; +$11: speed factor MoveObject multiplies the movement vector by (5 and 6 are used)
 DEF wPaintObject    EQU $c4fe   ; the paint blob object record (tested by CheckPaintHitsEnemy)
 DEF wCursorObject   EQU $c74e   ; menu cursor object record (8 bit position variant, drawn by DrawObjectBytePos)
 DEF wCursorX        EQU $c754
@@ -232,3 +232,8 @@ DEF wSoundMasterVol EQU $c315   ; NR50 value ($77 at init, set by command $ef)
 DEF wWavePending    EQU $c312   ; wave pattern index waiting to be loaded (provisional)
 DEF wWaveEffect     EQU $c313   ; wave pattern of the effect record (provisional)
 DEF wWaveCurrent    EQU $c314   ; wave pattern index currently in wave RAM (provisional)
+DEF hEnemyAngle     EQU $ffc5   ; +$10: heading 0-31 (index into the movement vector table at $0bb6)
+DEF hEnemyDXLo      EQU $ffc1   ; +$0c: horizontal movement of the last MoveObject (16 bit with $ffc2)
+DEF hEnemyDXHi      EQU $ffc2
+DEF hEnemyDYLo      EQU $ffc3   ; +$0e: vertical movement of the last MoveObject (16 bit with $ffc4)
+DEF hEnemyDYHi      EQU $ffc4
