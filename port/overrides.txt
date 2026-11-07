@@ -43,3 +43,5 @@ SelectEnemySlot
 RemoveEnemy
 ClampPlayerPosition
 NextRandomDirection
+StoreEnemySlot
+LoadEnemySlot

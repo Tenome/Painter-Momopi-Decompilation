@@ -273,3 +273,9 @@ DEF hSpawnFlag      EQU $ffee   ; flag bit taken from the low 3 bits of the Y by
 DEF hEnemySpawnFlag EQU $ffcf   ; per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional)
 DEF hEnemyTimer     EQU $ffcb   ; per-enemy countdown (kind 7 follows its path when it runs out; provisional)
 DEF hEnemyFrame     EQU $ffba   ; +5: animation frame index of the enemy record
+DEF hEnemyField3    EQU $ffb8   ; +3: unused by the code read so far
+DEF hEnemyXFrac     EQU $ffbb   ; +6: fraction of the X position
+DEF hEnemyYFrac     EQU $ffbe   ; +9: fraction of the Y position
+DEF hEnemyField13   EQU $ffc8   ; +$13: only copied (provisional)
+DEF hEnemyField18   EQU $ffcd   ; +$18: only copied (provisional)
+DEF hEnemyField19   EQU $ffce   ; +$19: only copied (provisional)

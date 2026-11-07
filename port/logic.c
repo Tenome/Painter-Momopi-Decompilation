@@ -551,3 +551,21 @@ void *gb_native_NextRandomDirection(void) {
     wr(0xFFDA, r.a);
     return 0;
 }
+
+/* StoreEnemySlot: copies the 32 byte enemy record in high RAM (hObject2, $ffb5-$ffd4) back to its slot (address in $ffd7/$ffd8). HL ends on the last byte, A = hEnemyFlags. */
+void *gb_native_StoreEnemySlot(void) {
+    uint16_t slot = rd(0xFFD7) | rd(0xFFD8) << 8;
+    for (int i = 0; i < 0x20; i++) wr(slot + i, rd(0xFFB5 + i));
+    SET_HL(slot + 0x1F);
+    r.a = rd(0xFFD4);
+    return 0;
+}
+
+/* LoadEnemySlot: copies the enemy slot (address in $ffd7/$ffd8) into the high RAM record hObject2. HL ends on the last byte, A = that byte (hEnemyFlags). */
+void *gb_native_LoadEnemySlot(void) {
+    uint16_t slot = rd(0xFFD7) | rd(0xFFD8) << 8;
+    for (int i = 0; i < 0x20; i++) wr(0xFFB5 + i, rd(slot + i));
+    SET_HL(slot + 0x1F);
+    r.a = rd(slot + 0x1F);
+    return 0;
+}

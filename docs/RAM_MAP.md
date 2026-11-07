@@ -177,10 +177,13 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffb5 | `hObject2` | 41 | the enemy being updated: a 32 byte object record copied into HRAM from its slot (flags +0, animation pointer $ffb6/$ffb7) |
 | $ffb6 | `hEnemyAnimLo` | 5 | +1: animation pointer of the enemy record (SetObjectAnimation) |
 | $ffb7 | `hEnemyAnimHi` | 5 | +2 |
+| $ffb8 | `hEnemyField3` | 2 | +3: unused by the code read so far |
 | $ffb9 | `hEnemyBoxHalf` | 6 | +4: half size of the hit box used by ObjectsOverlap (2 or 4) |
 | $ffba | `hEnemyFrame` | 2 | +5: animation frame index of the enemy record |
+| $ffbb | `hEnemyXFrac` | 2 | +6: fraction of the X position |
 | $ffbc | `hEnemyX` | 35 | +7: pixel X (16 bit with $ffbd) |
 | $ffbd | `hEnemyXHi` | 5 |  |
+| $ffbe | `hEnemyYFrac` | 2 | +9: fraction of the Y position |
 | $ffbf | `hEnemyY` | 29 | +$a: pixel Y (16 bit with $ffc0) |
 | $ffc0 | `hEnemyYHi` | 3 |  |
 | $ffc1 | `hEnemyDXLo` | 2 | +$0c: horizontal movement of the last MoveObject (16 bit with $ffc2) |
@@ -190,10 +193,13 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffc5 | `hEnemyAngle` | 5 | +$10: heading 0-31 (index into the movement vector table at $0bb6) |
 | $ffc6 | `hEnemySpeed` | 18 | +$11: speed factor MoveObject multiplies the movement vector by (5 and 6 are used) |
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
+| $ffc8 | `hEnemyField13` | 2 | +$13: only copied (provisional) |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
 | $ffca | `hEnemyStep` | 17 | enemy step counter |
 | $ffcb | `hEnemyTimer` | 5 | per-enemy countdown (kind 7 follows its path when it runs out; provisional) |
 | $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
+| $ffcd | `hEnemyField18` | 2 | +$18: only copied (provisional) |
+| $ffce | `hEnemyField19` | 2 | +$19: only copied (provisional) |
 | $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional) |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
 | $ffd1 | `hEnemyDir` | 64 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
