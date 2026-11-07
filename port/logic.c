@@ -2641,3 +2641,20 @@ void *gb_native_QueueVramCopyRows(void) {
     wr(hVBlankTasks, rd(hVBlankTasks) | 0x04);
     return 0;
 }
+
+/* EnemyComputeBlockedDirs: hEnemyBlocked = the directions in which the map cell next to the enemy is a wall (low nibble 0): 4 up, 8 down, 2 left, 1 right.
+ * The enemy is on the cell whose centre is nearest (column from X rounded to 16, row centre = (Y and $f0) + 8); a direction is only tested when the enemy has
+ * reached or passed the centre of its cell in that direction. */
+void *gb_native_EnemyComputeBlockedDirs(void) {
+    uint8_t x = rd(hEnemyX), y = rd(hEnemyY);
+    uint8_t blocked = 0;
+    uint8_t nearest = (uint8_t)(x + 8) & 0xF0;
+    uint8_t col = (uint8_t)((nearest >> 4) - 1);
+    uint8_t centre = (uint8_t)((y & 0xF0) + 8);
+    wr(hEnemyBlocked, 0);
+    if (centre >= y && (map_tile(centre - 0x10, col) & 0x0F) == 0) { blocked = 0x04; wr(hEnemyBlocked, blocked); }
+    if (y >= centre && (map_tile(centre + 0x10, col) & 0x0F) == 0) { blocked |= 0x08; wr(hEnemyBlocked, blocked); }
+    if (nearest >= x && (map_tile(centre, col - 1) & 0x0F) == 0) { blocked |= 0x02; wr(hEnemyBlocked, blocked); }
+    if (x >= nearest && (map_tile(centre, col + 1) & 0x0F) == 0) { blocked |= 0x01; wr(hEnemyBlocked, blocked); }
+    return 0;
+}

@@ -148,3 +148,4 @@ RunVramCopyList
 VramCopyList
 QueueVramCopyList
 QueueVramCopyRows
+EnemyComputeBlockedDirs
