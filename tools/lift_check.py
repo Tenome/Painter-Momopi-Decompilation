@@ -86,5 +86,19 @@ for rnd in ("1", "9", "17", "25"):
         bad += not ok
         first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
         print(f"cards, round {rnd}, seed {seed}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
+# every card selected from the start (wActiveMagic) with plenty of magic points: the random A presses cast it
+for card in range(1, 10):
+    for seed in ("5", "11"):
+        h = []
+        for name, prog in (("base", base), ("lifted", out)):
+            p = os.path.join(tmp, f"{name}_card{card}_{seed}.txt")
+            subprocess.run([prog, "-", "3000", "--press", "250:start:3", "--random", seed, "--round", str(card * 3), "--hashes", p,
+                            "--poke", f"254:{0xC447:x}:{card}", "--poke", f"254:{0xC44A:x}:250", "--poke", f"254:{0xC44B:x}:1"], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            h.append(open(p).read())
+        ok = h[0] == h[1]
+        bad += not ok
+        first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+        print(f"card {card} selected, seed {seed}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)
