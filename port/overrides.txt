@@ -68,3 +68,4 @@ PlayerSetDirection
 SelectPlayerAnimation
 ProjectileFrame
 EnemyDefeated
+AddScore

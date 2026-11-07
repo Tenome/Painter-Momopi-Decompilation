@@ -1170,3 +1170,41 @@ void *gb_native_EnemyDefeated(void) {
     if (combo) wr(wProjectile, rd(wProjectile) & 0x9F);
     return 0;
 }
+
+/* AddScore: adds D:E points (E mostly) to the score, which is three bytes of base 100 digits at wScoreDigits (low first). The digits are then redrawn
+ * (DrawDecimalDigits turns each byte into two decimal digits at wScoreDecimal) and queued as the tile stream at wScoreStream (count 6, rows 1, six tiles),
+ * and CheckExtraLife runs. */
+void *gb_native_AddScore(void) {
+    SET_BC(0);
+    SET_HL(wScoreDigits);
+    r.a = r.e;
+    alu_add(rd(HL()), 0);
+    wr(wScoreTemp, r.a);
+    gb_native_ByteToBCD();
+    if (rd(hScratch00 + 3)) {
+        r.d++;
+        wr(wScoreTemp, rd(wScoreTemp) - 100);
+    }
+    wr(HL(), rd(wScoreTemp));
+    SET_HL(HL() + 1);
+    r.a = r.d;
+    alu_add(rd(HL()), 0);                       /* the carry is 0 here (ByteToBCD found a hundred in that case) */
+    wr(HL(), r.a);
+    SET_HL(HL() + 1);
+    int carry = CF() ? 1 : 0;
+    r.a = 0;
+    alu_add(rd(HL()), carry);
+    wr(HL(), r.a);
+    for (int i = 0; i < 3; i++) {
+        CALL(GAME_DrawDecimalDigits);
+        if (i < 2) SET_HL(HL() - 1);
+    }
+    wr(wScoreStream, 0x06);
+    wr(wScoreStream + 1, 0x01);
+    for (int i = 0; i < 6; i++) {
+        r.a = rd(wScoreDecimal + i);
+        CALL(GAME_LowNibbleToDigitTile);
+        wr(wScoreStream + 2 + i, r.a);
+    }
+    return (void *)GAME_CheckExtraLife;
+}
