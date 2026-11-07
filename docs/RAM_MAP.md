@@ -148,8 +148,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ff90 | `hTilemapAddrLo` | 2 |  |
 | $ff91 | `hVBlankFlag` | 4 | bit 0 set by the VBlank handler each frame |
 | $ff92 | `hSavedIE` | 2 | IE saved by LcdOff |
-| $ff96 | `hScratch00` | 88 |  |
-| $ff97 | `hScratch01` | 38 |  |
+| $ff96 | `hScratch00` | 89 |  |
+| $ff97 | `hScratch01` | 39 |  |
 | $ff98 | `hScratch02` | 39 |  |
 | $ff99 | `hScratch03` | 24 |  |
 | $ff9a | `hScratch04` | 14 |  |
@@ -196,7 +196,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
 | $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional) |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
-| $ffd1 | `hEnemyDir` | 63 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
+| $ffd1 | `hEnemyDir` | 64 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
 | $ffd2 | `hEnemyKind` | 13 | index into EnemyBehaviorTable |
 | $ffd3 | `hEnemyCounter2` | 7 | +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional) |
 | $ffd4 | `hEnemyFlags` | 38 | bit 1/2 = frozen / hit by the player |

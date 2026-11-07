@@ -55,8 +55,8 @@ bank	addr	size	name
 0	09aa	1	ReturnOnly
 0	09ab	38	AddOamSprite
 0	09d1	15	MoveObjectHalfStep
-0	09e0	13	ClampObjectToRoom
-0	09ed	38	AddObjectFieldSigned
+0	09e0	13	ApplyObjectStep
+0	09ed	38	AddStepSigned
 0	0a13	44	AddObjectField
 0	0a49	34	SerialSendByte
 0	0a6b	63	ByteToBCD
@@ -146,7 +146,7 @@ bank	addr	size	name
 0	3599	95	EnemyAimAtPlayer
 0	35f8	11	RememberEnemyPosition
 0	3603	58	EnemyTurnIfBlocked
-0	3643	6	MoveAndClampObject
+0	3643	6	MoveAndApplyObject
 0	3649	8	SetAnimationVariant
 0	3651	3	SetObjectAnimationStub
 0	3654	11	SelectObject2

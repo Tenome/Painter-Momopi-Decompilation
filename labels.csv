@@ -308,7 +308,7 @@ bank,addr,name,comment
 0,0628,VramCopyStream,HL = VRAM destination; DE = stream of count/rows/tiles (count bit 7 = repeat one tile); copies the rows (shared by VramCopyRows)
 0,09ab,AddOamSprite,appends one OAM entry from hScratch values to the shadow at $c000 (hOamCount wraps at 39)
 0,0b66,MoveObject,moves the object by its heading (+$10, index 0-31) and speed (+$11): position += MoveVectorTable[heading] * speed via MultiplyByDE
-0,09e0,ClampObjectToRoom,keeps the object inside the room limits after MoveObject (offsets $06 and $0c)
+0,09e0,ApplyObjectStep,adds the horizontal step (+$0c/+$0d) to the 24 bit fixed point X (+6 fraction, +7/+8 pixels); the same for Y with +$0e/+$0f and +9/+$a/+$b after MoveObject
 0,0c2a,CounterToFrame,turns a running counter and a bit mask (hScratch06-08) into a frame index
 0,1d23,DigitToTile,A = BCD digit; returns the digit tile id from D_00_1d2f
 0,2633,InitBonusCursor,resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
@@ -322,7 +322,7 @@ bank,addr,name,comment
 0,3449,EnemyScreenPosition,converts enemy pixel position to screen coordinates (camera subtracted) in hScratch00/01
 0,3525,RemoveEnemy,clears the active bit of hObject2 and decrements wEnemyCount
 0,35f8,RememberEnemyPosition,stores hEnemyX/hEnemyY at $c525/$c526
-0,3643,MoveAndClampObject,MoveObject then ClampObjectToRoom
+0,3643,MoveAndApplyObject,MoveObject then ApplyObjectStep
 0,3673,EnemyTileUnder,A = room map tile under the enemy (Y aligned to the grid)
 1,5cca,UnusedSoundData0,bytes after the last effect stream ($93 ends at $5cc9); never read in play tests
 1,5ef3,UnusedSoundData1,bytes after the title song ($81 reads $5e72-$5ef2 only); never read in play tests
@@ -346,7 +346,7 @@ bank,addr,name,comment
 0,3681,GetEnemyPos,C = hEnemyX and B = hEnemyY
 0,368a,GetPlayerPos,L = wPlayerX and H = wPlayerY
 0,0a13,AddObjectField,object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance (name provisional)
-0,09ed,AddObjectFieldSigned,two AddObjectField steps then sign-extends the delta into the next byte (name provisional)
+0,09ed,AddStepSigned,adds one step to a fixed point coordinate: two AddObjectField bytes then the sign extension of the step into the top byte
 0,307f,SelectEndingObject,hObjPtr = wEndingObject
 0,31eb,SetEnemyHitFlag,sets hEnemyFlags bit 2 (paint hit)
 0,340c,EnemySnapToGrid,aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)

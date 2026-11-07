@@ -1154,15 +1154,15 @@ MoveObjectHalfStep::  ; adds the X and Y deltas at offsets 6 and 8 to the positi
     ldh [hScratch01], a
     call AddObjectField
     jr AddObjectField
-ClampObjectToRoom::  ; keeps the object inside the room limits after MoveObject (offsets $06 and $0c)
+ApplyObjectStep::  ; adds the horizontal step (+$0c/+$0d) to the 24 bit fixed point X (+6 fraction
     ld e, $06
     ld a, e
     ldh [hScratch00], a
     ld e, $0c
     ld a, e
     ldh [hScratch01], a
-    call AddObjectFieldSigned
-AddObjectFieldSigned::  ; two AddObjectField steps then sign-extends the delta into the next byte (name provisional)
+    call AddStepSigned
+AddStepSigned::  ; adds one step to a fixed point coordinate: two AddObjectField bytes then the sign extension of the step into the top byte
     and a, a
     call AddObjectField
     call AddObjectField
@@ -3774,7 +3774,7 @@ EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
 .L_00_2f5e:
     call SelectEndingObject
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ld hl, wEndingStep
     dec [hl]
     ret nz
@@ -3869,7 +3869,7 @@ EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
 .L_00_3070:
     call SelectEndingObject
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     call SelectEndingObject
     jp DrawObject
 SelectEndingObject::  ; hObjPtr = wEndingObject
@@ -4539,9 +4539,9 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     ret
 D_00_363d::
     INCBIN "assets/bank_00/363d.bin"
-MoveAndClampObject::  ; MoveObject then ClampObjectToRoom
+MoveAndApplyObject::  ; MoveObject then ApplyObjectStep
     call MoveObject
-    jp ClampObjectToRoom
+    jp ApplyObjectStep
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [hEnemyTick]
     and a, $08
@@ -5065,7 +5065,7 @@ EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation tab
     ld a, [hl]
     ldh [hEnemyDYHi], a
     call SelectObject2
-    jp ClampObjectToRoom
+    jp ApplyObjectStep
 EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
     call EnemyOnTileGrid
     jr z, .L_00_3a04
@@ -5406,7 +5406,7 @@ EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from
     bit 2, a
     jp nz, EnemyDefeated
     call EnemyKind7NextStep
-    call MoveAndClampObject
+    call MoveAndApplyObject
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
     call EnemyKind7Update

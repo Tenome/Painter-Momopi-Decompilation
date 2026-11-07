@@ -1802,7 +1802,7 @@ MagicEffectPyon::  ; card 9 PYON: creates the paint blob object at the player
 .L_01_4de2:
     call SelectBlobAnimation
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     jp DrawObject
 SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492d) from $c519
     ld a, [wBlobPhase]
@@ -1830,7 +1830,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     ld hl, wPaintObject
     call SetObjPtr
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     call DrawObject
     call StoreTrailSegment
     call SetPaintBlobAnimation
@@ -2270,7 +2270,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld [wPlayerSpeed], a
     ld hl, wPlayer
     call SetObjPtr
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ld hl, wPlayerStatus
     res 0, [hl]
     ret
@@ -2686,7 +2686,7 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ld hl, wProjectile
     call SetObjPtr
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     jp DrawObject
 .L_01_560d:
     ld hl, wProjectile
@@ -2723,7 +2723,7 @@ EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 ind
     ldh [hEnemyAngle], a
     call SelectObject2
     call MoveObject
-    call ClampObjectToRoom
+    call ApplyObjectStep
     ldh a, [hEnemyX]
     ldh [hScratch00], a
     ldh a, [hEnemyXHi]
@@ -2940,7 +2940,7 @@ EnemyKind9Move::  ; sets hEnemySpeed 6 then moves and clamps (name provisional)
     ld a, $06
     ldh [hEnemySpeed], a
     call EnemyTurnIfBlocked
-    jp MoveAndClampObject
+    jp MoveAndApplyObject
 SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     ld hl, hObject2
     res 5, [hl]
@@ -3170,7 +3170,7 @@ EnemyKind3::  ; enemy kind 3
     call EnemyAimAtPlayer
     call EnemyFlagOnPaintedTile
     call EnemyTurnIfBlocked
-    call MoveAndClampObject
+    call MoveAndApplyObject
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call SelectKind3Animation
