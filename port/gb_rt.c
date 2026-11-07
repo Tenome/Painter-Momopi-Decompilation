@@ -195,6 +195,7 @@ uint32_t gb_state_hash(void) {
     for (unsigned i = 0; i < sizeof hram; i++) h = (h ^ hram[i]) * 16777619u;
     for (unsigned i = 0; i < sizeof vram; i++) h = (h ^ vram[i]) * 16777619u;
     for (unsigned i = 0; i < sizeof oam; i++) h = (h ^ oam[i]) * 16777619u;
+    for (unsigned i = 0; i < sizeof io; i++) h = (h ^ io[i]) * 16777619u;     /* sound and video registers */
     return h;
 }
 
