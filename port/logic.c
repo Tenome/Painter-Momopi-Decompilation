@@ -3041,3 +3041,54 @@ void *gb_native_EnemyTeleportNext(void) {
     set_anim(0x3F44);
     return 0;
 }
+
+/* EnemySnapToGrid: box size 4; the low nibble of the enemy's X becomes the low nibble of hEnemyDir (with bits 4 and 7 set: $90) and X is rounded down to a multiple of 16. */
+void *gb_native_EnemySnapToGrid(void) {
+    wr(hEnemyBoxHalf, 0x04);
+    uint8_t x = rd(hEnemyX);
+    wr(hEnemyX, x & 0xF0);
+    wr(hEnemyDir, (x & 0x0F) | 0x90);
+    r.a = (x & 0x0F) | 0x90;
+    return 0;
+}
+
+/* EnemyKind7NextStep (the path walking enemy): reads the next heading from the path script at wEnemyPathPtr (a byte per frame, 1 ends it and sets hEnemyDir bit 0 and speed 0).
+ * While the T.STOP card runs the speed is 0 and the script steps back one byte so nothing is lost. */
+void *gb_native_EnemyKind7NextStep(void) {
+    if (rd(hEnemyDir) & 0x01) return 0;
+    uint16_t at = rd(wEnemyPathPtr) | rd(wEnemyPathPtrHi) << 8;
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) { wr(hEnemySpeed, 0); at--; }
+    else wr(hEnemySpeed, 0x05);
+    uint8_t heading = rd(at);
+    if (heading == 0x01) {
+        SET_HL(hEnemyDir);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x01);
+        wr(hEnemySpeed, 0);
+        wr(wEnemyPathPtr, (uint8_t)at);
+        wr(wEnemyPathPtrHi, at >> 8);
+        return 0;
+    }
+    wr(hEnemyCounter, heading);
+    wr(hEnemyAngle, heading);
+    at++;
+    wr(wEnemyPathPtr, (uint8_t)at);
+    wr(wEnemyPathPtrHi, at >> 8);
+    return 0;
+}
+
+/* EnemyKind7Init: speed 5, counters $20, animation $3e4d, snapped to the grid, and the path script chosen by the direction (table at $3d6a). */
+void *gb_native_EnemyKind7Init(void) {
+    wr(hEnemySpeed, 0x05);
+    wr(hEnemyCounter, 0x20);
+    wr(hEnemyAux, 0x20);
+    SET_HL(hObject2);
+    wr(hObject2, rd(hObject2) | 0x40);
+    set_anim(0x3E4D);
+    gb_native_EnemySnapToGrid();
+    r.a = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x3D6A);
+    gb_native_LookupWord();
+    wr(wEnemyPathPtr, r.l);
+    wr(wEnemyPathPtrHi, r.h);
+    return 0;
+}

@@ -175,3 +175,6 @@ EnemyKind10Move
 EnemyIdleAnimate
 EnemyBuildTeleportTable
 EnemyTeleportNext
+EnemySnapToGrid
+EnemyKind7NextStep
+EnemyKind7Init
