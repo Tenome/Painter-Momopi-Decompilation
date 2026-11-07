@@ -52,3 +52,5 @@ UpdateEnemy
 UpdateEnemyLoop
 UpdateAllEnemies
 PlayFrame
+EnemyKindIdle
+EnemyKind1

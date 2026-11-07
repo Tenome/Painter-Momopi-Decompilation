@@ -755,3 +755,53 @@ void *gb_native_PlayFrame(void) {
     gb_native_DrawObject();
     return 0;
 }
+
+/* The behaviour routines of the enemy kinds are chains of the same steps (the record of the enemy is in hObject2):
+ * ticking its timer (TickObjectTimer: Z while the enemy is just spawning, when it only plays its first animation), being hit by paint (EnemyDefeated),
+ * the blocked directions, the grid step, direction choice, painting the floor (EnemyPaintStep, and with the B.O.M card), touching the player, being hit,
+ * the animation, drawing. */
+
+/* EnemyKindIdle: kinds 0, 6 and 8: stationary enemies (kind 0 = the armoured guards standing in the corridor rooms 13-15 and 29-31). */
+void *gb_native_EnemyKindIdle(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyInitMoveAnim;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintStep);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemySelectAnimByKind);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind1: an enemy that walks on the tile grid, turning at walls and the screen edges; while hEnemyFlags bit 1 is set the rest of its update only runs
+ * every eighth tick of hEnemyCounter (provisional reading). */
+void *gb_native_EnemyKind1(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyInitAnim3bbe;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyGridStep);
+    gb_native_EnemyEdgeBlockedDirs();
+    CALL(GAME_EnemyChooseDirection);
+    CALL(GAME_EnemyFlagOnPaintedTile);
+    if (rd(hEnemyFlags) & 0x02) {
+        wr(hEnemyCounter, rd(hEnemyCounter) + 1);
+        if (!(rd(hEnemyCounter) & 0x08)) return 0;
+    }
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintStep);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_SetEnemyAnimation);
+    gb_native_DrawObject();
+    return 0;
+}
