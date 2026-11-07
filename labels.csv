@@ -513,3 +513,4 @@ bank,addr,name,comment
 0,36c1,PopFrames1,animation frames of the pop effect when an enemy is defeated (first stage; name provisional)
 0,36bc,PopFrames2,animation frames of the pop effect (second stage; name provisional)
 0,36c6,PopFrames3,animation frames of the pop effect (last stage; name provisional)
+0,1d90,RoundIntroText,VRAM copy list of the round intro screen (ROUND, ROOM, READY !!, x lives)

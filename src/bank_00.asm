@@ -2682,7 +2682,7 @@ Mode3_RoundIntro::  ; ROUND nn / room name / lives / READY !!
     ld [$c7c2], a
     call LoadTilesBank3A
     call ClearOamShadow
-    ld bc, D_00_1d90
+    ld bc, RoundIntroText
     call RunVramCopyList
     ld a, [wRound]
     ld b, a
@@ -2801,8 +2801,8 @@ RoomNameJob3::  ; data (table entry)
     INCBIN "assets/bank_00/1d7e_RoomNameJob3.bin"
 RoomNameJob16::  ; data (table entry)
     INCBIN "assets/bank_00/1d87_RoomNameJob16.bin"
-D_00_1d90::
-    INCBIN "assets/bank_00/1d90.bin"
+RoundIntroText::  ; VRAM copy list of the round intro screen (ROUND
+    INCBIN "assets/bank_00/1d90_RoundIntroText.bin"
 Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ld sp, wStackTop
     call LcdOff

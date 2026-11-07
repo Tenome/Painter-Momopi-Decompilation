@@ -77,3 +77,6 @@ PaintCell
 PaintUnderPlayerCell
 PaintUnderPlayerAligned
 PaintUnderPlayer
+ClearRoomState
+DrawTwoDigitNumber
+Mode3_RoundIntro
