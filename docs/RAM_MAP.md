@@ -178,6 +178,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffb6 | `hEnemyAnimLo` | 5 | +1: animation pointer of the enemy record (SetObjectAnimation) |
 | $ffb7 | `hEnemyAnimHi` | 5 | +2 |
 | $ffb9 | `hEnemyBoxHalf` | 6 | +4: half size of the hit box used by ObjectsOverlap (2 or 4) |
+| $ffba | `hEnemyFrame` | 2 | +5: animation frame index of the enemy record |
 | $ffbc | `hEnemyX` | 35 | +7: pixel X (16 bit with $ffbd) |
 | $ffbd | `hEnemyXHi` | 5 |  |
 | $ffbf | `hEnemyY` | 29 | +$a: pixel Y (16 bit with $ffc0) |
@@ -191,7 +192,9 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
 | $ffca | `hEnemyStep` | 17 | enemy step counter |
+| $ffcb | `hEnemyTimer` | 5 | per-enemy countdown (kind 7 follows its path when it runs out; provisional) |
 | $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
+| $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional) |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
 | $ffd1 | `hEnemyDir` | 63 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
 | $ffd2 | `hEnemyKind` | 13 | index into EnemyBehaviorTable |
@@ -207,17 +210,18 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffdf | `hMagicTimer` | 13 | frames left of the running magic effect (MagicTimerTick) |
 | $ffe0 | `hTimeFrames` | 4 | frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds) |
 | $ffe1 | `hTimeSeconds` | 9 | seconds left in the round (shown as TIME) |
+| $ffe3 | `hRoundSeconds` | 2 | seconds the round started with (hTimeSeconds counts down from it) |
+| $ffe9 | `hSpawnDelay` | 2 | delay value (in seconds into the round) of the next spawn from the wave list |
 | $ffeb | `hSerialByte` | 29 | byte received over the link port |
 | $ffed | `hLinkFlags` | 23 | bit 0 = 2 player link game |
+| $ffee | `hSpawnFlag` | 3 | flag bit taken from the low 3 bits of the Y byte of a spawn entry (bit 1 in rounds 17 and later, else bit 0); the Y position itself is Y and $f8 |
 
 ## Most used addresses without a name
 
 | Address | References |
 |---|---|
 | $c000 | 7 |
-| $ffcb | 6 |
 | $c1b7 | 6 |
-| $ffcf | 5 |
 | $c453 | 4 |
 | $c780 | 4 |
 | $c489 | 4 |
@@ -231,7 +235,6 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c43f | 3 |
 | $c440 | 3 |
 | $c799 | 3 |
-| $ffee | 3 |
 | $c449 | 3 |
 | $c504 | 3 |
 | $c506 | 3 |
@@ -250,7 +253,10 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c46b | 2 |
 | $c473 | 2 |
 | $c474 | 2 |
-| $ffe3 | 2 |
 | $ffde | 2 |
 | $c465 | 2 |
 | $c44f | 2 |
+| $ffe4 | 2 |
+| $c769 | 2 |
+| $c74f | 2 |
+| $c750 | 2 |

@@ -1797,7 +1797,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call LookupByte
 .L_00_118a:
     ldh [hTimeSeconds], a
-    ldh [$ffe3], a
+    ldh [hRoundSeconds], a
     ld hl, hVBlankTasks
     set 4, [hl]
 .L_00_1193:
@@ -3991,15 +3991,15 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     sla a
     ld c, a
     call LookupByte
-    ldh [$ffe9], a
+    ldh [hSpawnDelay], a
     ld hl, wPlayerStatus
     set 5, [hl]
 .L_00_324a:
-    ldh a, [$ffe9]
+    ldh a, [hSpawnDelay]
     ld e, a
     ldh a, [hTimeSeconds]
     ld d, a
-    ldh a, [$ffe3]
+    ldh a, [hRoundSeconds]
     sub a, e
     cp a, d
     ret c
@@ -4031,12 +4031,12 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     jr c, .L_00_3289
     ld a, [hl]
     and a, $02
-    ldh [$ffee], a
+    ldh [hSpawnFlag], a
     jr .L_00_328e
 .L_00_3289:
     ld a, [hl]
     and a, $01
-    ldh [$ffee], a
+    ldh [hSpawnFlag], a
 .L_00_328e:
     ld hl, wSpawnIndex
     inc [hl]
@@ -4808,8 +4808,8 @@ FindFreeEnemySlot::  ; scans slots 15 down to 0 for one whose bit 7 is clear
     ldh [hEnemyX], a
     ldh a, [hScratch0A]
     ldh [hEnemyY], a
-    ldh a, [$ffee]
-    ldh [$ffcf], a
+    ldh a, [hSpawnFlag]
+    ldh [hEnemySpawnFlag], a
     jp StoreEnemySlot
 ClearEnemySlot::  ; zero fills hObject2
     ld hl, hObject2
@@ -4829,7 +4829,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyBoxHalf]
     ld [hl+], a
-    ldh a, [$ffba]
+    ldh a, [hEnemyFrame]
     ld [hl+], a
     ldh a, [$ffbb]
     ld [hl+], a
@@ -4863,7 +4863,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyStep]
     ld [hl+], a
-    ldh a, [$ffcb]
+    ldh a, [hEnemyTimer]
     ld [hl+], a
     ldh a, [hEnemyAux]
     ld [hl+], a
@@ -4871,7 +4871,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [$ffce]
     ld [hl+], a
-    ldh a, [$ffcf]
+    ldh a, [hEnemySpawnFlag]
     ld [hl+], a
     ldh a, [hEnemyTick]
     ld [hl+], a
@@ -4900,7 +4900,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyBoxHalf], a
     ld a, [hl+]
-    ldh [$ffba], a
+    ldh [hEnemyFrame], a
     ld a, [hl+]
     ldh [$ffbb], a
     ld a, [hl+]
@@ -4934,7 +4934,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyStep], a
     ld a, [hl+]
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     ld a, [hl+]
     ldh [hEnemyAux], a
     ld a, [hl+]
@@ -4942,7 +4942,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [$ffce], a
     ld a, [hl+]
-    ldh [$ffcf], a
+    ldh [hEnemySpawnFlag], a
     ld a, [hl+]
     ldh [hEnemyTick], a
     ld a, [hl+]
@@ -5066,7 +5066,7 @@ EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation tab
     ld hl, D_00_3aed
     jr .L_00_39ec
 .L_00_39e4:
-    ldh a, [$ffcf]
+    ldh a, [hEnemySpawnFlag]
     and a, a
     jr z, .L_00_39ec
     ld hl, D_00_3aed
@@ -5339,9 +5339,9 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     ld hl, hEnemyDir
     set 0, [hl]
 .L_00_3c09:
-    ldh a, [$ffcb]
+    ldh a, [hEnemyTimer]
     sub a, $01
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     jr nc, .L_00_3c1a
     call EnemyMapTile
     ldh a, [hEnemyAux]
@@ -5383,7 +5383,7 @@ EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = 
     call EnemyMapTile
     ldh [hEnemyAux], a
     ld a, $fe
-    ldh [$ffcb], a
+    ldh [hEnemyTimer], a
     ld a, $90
     ldh [hEnemyDir], a
     ld de, AnimFrames0_3c87

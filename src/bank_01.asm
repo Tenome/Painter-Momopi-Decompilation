@@ -2541,7 +2541,7 @@ EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($
     ld a, $08
     ldh [hEnemySpeed], a
     ld a, $01
-    ldh [$ffcf], a
+    ldh [hEnemySpawnFlag], a
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_01_53d6

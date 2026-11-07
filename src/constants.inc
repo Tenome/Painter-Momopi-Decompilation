@@ -267,3 +267,9 @@ DEF wPaintY         EQU $c508   ; wPaintObject +$a (16 bit with $c509)
 ; score display: wScoreDigits holds the score as three bytes; DrawDecimalDigits turns them into six digits at $c467-$c46c, then tiles are streamed from $c46d
 DEF wScoreDecimal   EQU $c467   ; six decimal digits of the score
 DEF wScoreStream    EQU $c46d   ; VramCopyStream buffer: count, rows, then six digit tiles from $c46f
+DEF hRoundSeconds   EQU $ffe3   ; seconds the round started with (hTimeSeconds counts down from it)
+DEF hSpawnDelay     EQU $ffe9   ; delay value (in seconds into the round) of the next spawn from the wave list
+DEF hSpawnFlag      EQU $ffee   ; flag bit taken from the low 3 bits of the Y byte of a spawn entry (bit 1 in rounds 17 and later, else bit 0); the Y position itself is Y and $f8
+DEF hEnemySpawnFlag EQU $ffcf   ; per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional)
+DEF hEnemyTimer     EQU $ffcb   ; per-enemy countdown (kind 7 follows its path when it runs out; provisional)
+DEF hEnemyFrame     EQU $ffba   ; +5: animation frame index of the enemy record
