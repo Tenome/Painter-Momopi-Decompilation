@@ -40,7 +40,8 @@ Next: save-less options (scaling filters, key mapping file), the HAL clean-up be
 the enemy edge and screen position checks). Each keeps the registers and flags the original leaves, because callers may use them. A label is
 replaced by adding it to `port/overrides.txt` and writing `gb_native_<Label>` in `port/logic.c`. `python tools/lift_check.py --cc <clang> --rgbds E:/rgbds`
 builds the runner with and without the hand written routines and compares a hash of work RAM, high RAM, video RAM and OAM after every frame of
-random play (several seeds); a routine is accepted only when every frame matches.
+random play (several seeds); a routine is accepted only when every frame matches. The check only covers paths the random play reaches (a deliberate change in the main path of `ByteToBCD`
+is caught; the branch for a nonzero C is never taken in play and is not verified).
 
 ## Is a native exe with no emulation possible?
 
@@ -66,3 +67,12 @@ around it (memory map, picture unit, sound chip) and reads the ROM file for its 
    user's own ROM at build time (no game data in the repository).
 4. **Platform layer.** SDL2 window, input mapping, audio output, saves (the cartridge has no battery RAM).
 5. **Verification.** Frame-by-frame state comparison against an emulator running the original ROM.
+
+## Wishlist for the native Windows port (not started)
+
+- **No Game Boy limits in the port.** Data is read from files (maps, spawn lists, songs, text) instead of fixed ROM regions, so sizes and table lengths are free,
+  and rooms, rounds and cards could be added. The generated C still carries the original index and size assumptions (8 bit indexes, 16 rooms, 32 rounds, 10 cards),
+  so this needs the logic lifted to hand written C first (see the section above) and a data loader that replaces the ROM tables.
+- **Widescreen and larger views.** Needs the native renderer (stage 2): draw from object records and the room map instead of the 160x144 picture unit.
+- **Map editor** as a separate executable that reads and writes the same text forms (`assets/typed/`) and shows the room with the real tiles.
+- **README progress bar** like the one on the ByteMatch page of this project (badge or generated SVG from `progress/jp/report.json`).
