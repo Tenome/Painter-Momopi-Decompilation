@@ -110,3 +110,8 @@ LoadTrailSegment
 StoreTrailSegment
 InitTrailSegment
 InitTrailSegments
+BombHitAllEnemies
+EndMagicPaint
+MagicPaintEndUnlessBit2
+MagicTimerCountdown
+SpawnBombBlob

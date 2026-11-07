@@ -1857,7 +1857,7 @@ void *gb_native_MagicEffectPyon(void) {
 void *gb_native_MagicEffectBom(void) {
     if (!(rd(wMagicState) & 0x02)) {
         CALL(GAME_SpawnBombBlob);
-        CALL(GAME_ForEachEnemySlotInit);
+        CALL(GAME_BombHitAllEnemies);
     }
     for (;;) {
         CALL(GAME_LoadTrailSegment);
@@ -1999,4 +1999,68 @@ void *gb_native_InitTrailSegments(void) {
         gb_native_InitTrailSegment();
     }
     return 0;
+}
+
+/* BombHitAllEnemies (B.O.M card): every active enemy slot (16 slots through EnemySlotTable) gets bit 2 of its flags byte (+$1f: hit by paint) and its counter
+ * (+$14) cleared, so the enemies are all defeated by their own update. */
+void *gb_native_BombHitAllEnemies(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(hScratch00, i);
+        uint16_t slot = rd(DATA_EnemySlotTable + 2 * i) | rd(DATA_EnemySlotTable + 2 * i + 1) << 8;
+        if (rd(slot) & 0x80) {
+            wr(slot + 0x1F, rd(slot + 0x1F) | 0x04);
+            wr(slot + 0x14, 0);
+        }
+    }
+    wr(hScratch00, 0xFF);
+    return 0;
+}
+
+/* EndMagicPaint: removes the paint blob object and clears bits of wMagicState: bits 0-2 for the PYON card (9), all but bit 3 for the others. */
+void *gb_native_EndMagicPaint(void) {
+    SET_HL(wPaintObject);
+    wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    if (rd(wActiveMagic) == 0x09) wr(wMagicState, rd(wMagicState) & 0xF8);
+    else wr(wMagicState, rd(wMagicState) & 0x08);
+    r.a = rd(wMagicState);
+    r.f = 0;
+    r.f = (r.a ? 0 : 0x80) | 0x20;
+    return 0;
+}
+
+/* MagicPaintEndUnlessBit2: ends the paint (EndMagicPaint) unless the paint object has bit 2 (drawn this frame) set. */
+void *gb_native_MagicPaintEndUnlessBit2(void) {
+    r.a = rd(wPaintObject);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);
+    if (r.a & 4) return 0;
+    return gb_native_EndMagicPaint();
+}
+
+/* MagicTimerCountdown: counts hMagicTimer down; at zero wMagicState is cleared and the paint ended. */
+void *gb_native_MagicTimerCountdown(void) {
+    r.a = rd(hMagicTimer);
+    alu_sub(1, 0);
+    wr(hMagicTimer, r.a);
+    if (r.a) return 0;
+    wr(wMagicState, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return gb_native_EndMagicPaint();
+}
+
+/* SpawnBombBlob: creates the paint blob object for the B.O.M card (flags $82, animation $4929, speed $2a), the timer 7, wPlayerStatus bit 4, places the trail
+ * segments around the player and starts the cast. */
+void *gb_native_SpawnBombBlob(void) {
+    SET_HL(wPaintObject);
+    gb_native_Clear32Bytes();
+    wr(0xC1F7, 0x08);
+    wr(hMagicTimer, 0x07);
+    wr(wPlayerStatus, rd(wPlayerStatus) | 0x10);
+    wr(wPaintObject + 0x11, 0x2A);
+    wr(wPaintAnimLo, 0x29);
+    wr(wPaintAnimHi, 0x49);
+    wr(0xC449, 0x08);
+    wr(wPaintObject, 0x82);
+    gb_native_InitTrailSegments();
+    return (void *)GAME_BeginMagicCast;
 }

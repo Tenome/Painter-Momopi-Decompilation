@@ -372,7 +372,7 @@ bank,addr,name,comment
 0,3e20,EnemyKind7Init,sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
 0,3ed1,EnemyKind7Teleport,moves the enemy to the next position in the table at $c489 or removes it (name provisional)
 1,4e53,MagicPaintEndUnlessBit2,ends the magic paint unless wPaintObject bit 2 is set (name provisional)
-1,49a0,ForEachEnemySlotInit,loops the 16 entries of EnemySlotTable (name provisional)
+1,49a0,BombHitAllEnemies,B.O.M card: sets bit 2 of hEnemyFlags (hit by paint) in every active enemy slot and clears its counter
 1,5549,ProjectileSelectFrame,picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2 (name provisional)
 1,55bc,ProjectileCheckPlayerHit,when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9 (name provisional)
 1,5618,EnemyKind10Animate,toggles between two animations D_01_57ec and D_01_57ee every 4 ticks (kind $0a only; name provisional)

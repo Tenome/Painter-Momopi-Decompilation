@@ -1242,7 +1242,7 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     ld [wPaintObject], a
     call InitTrailSegments
     jp BeginMagicCast
-ForEachEnemySlotInit::  ; loops the 16 entries of EnemySlotTable (name provisional)
+BombHitAllEnemies::  ; B.O.M card: sets bit 2 of hEnemyFlags (hit by paint) in every active enemy slot and clears its counter
     ld a, $0f
     ldh [hScratch00], a
 .L_01_49a4:
@@ -1824,7 +1824,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     bit 1, a
     jr nz, .L_01_4e16
     call SpawnBombBlob
-    call ForEachEnemySlotInit
+    call BombHitAllEnemies
 .L_01_4e16:
     call LoadTrailSegment
     ld hl, wPaintObject

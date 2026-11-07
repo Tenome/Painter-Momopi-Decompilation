@@ -255,7 +255,7 @@ bank	addr	size	name
 1	4962	5	MagicTimerTick
 1	4967	5	EndMagic
 1	496c	52	SpawnBombBlob
-1	49a0	54	ForEachEnemySlotInit
+1	49a0	54	BombHitAllEnemies
 1	49d6	91	SpawnPaintBlob
 1	4a31	24	SetPaintBlobAnimation
 1	4a49	44	LoadTrailSegment
