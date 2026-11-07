@@ -716,3 +716,30 @@ void *gb_native_UpdateEnemy(void) {
     SET_HL(DE());
     return (void *)gb_dispatch(HL());
 }
+
+/* UpdateEnemyLoop: runs every active enemy slot once. The slots are visited from index wEnemyLoopIdx (15) down to 0, offset by wEnemyLoopStart (which rises by one
+ * every frame, so the order in which enemies update rotates). Each active slot (bit 7 of its first byte) is copied into hObject2, updated and copied back. */
+void *gb_native_UpdateEnemyLoop(void) {
+    const uint16_t idx = 0xC53E, start = 0xC53F;
+    do {
+        r.a = (uint8_t)((rd(idx) + rd(start)) & 0x0F);
+        SET_HL(0x37AF);                          /* EnemySlotTable */
+        gb_native_SelectEnemySlot();
+        if (rd(HL()) & 0x80) {
+            gb_native_LoadEnemySlot();
+            r.sp -= 2;                           /* like `call UpdateEnemy`: the routine, or its tail jump, ends with a return */
+            void *next = gb_native_UpdateEnemy();
+            if (next) gb_run((fn_t)next); else r.sp += 2;
+            gb_native_StoreEnemySlot();
+        }
+        wr(idx, (uint8_t)(rd(idx) - 1));
+    } while (!(rd(idx) & 0x80));
+    return 0;
+}
+
+/* UpdateAllEnemies: advances the rotation (wEnemyLoopStart + 1), sets the loop index to 15 and runs UpdateEnemyLoop. */
+void *gb_native_UpdateAllEnemies(void) {
+    wr(0xC53F, rd(0xC53F) + 1);
+    wr(0xC53E, 0x0F);
+    return gb_native_UpdateEnemyLoop();
+}

@@ -49,3 +49,5 @@ DrawObject
 CounterToFrame
 PlayerCheckOffPath
 UpdateEnemy
+UpdateEnemyLoop
+UpdateAllEnemies
