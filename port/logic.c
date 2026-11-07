@@ -378,6 +378,9 @@ void *gb_native_PlayerComputeBlockedDirs(void) {
 }
 
 #define hEnemyTick 0xFFD0
+#define wEnemyCount 0xC47E
+#define wPlayerX 0xC4C5
+#define wPlayerY 0xC4C8
 
 /* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
 void *gb_native_TickObjectTimer(void) {
@@ -487,5 +490,140 @@ void *gb_native_EnemyRequestTurn(void) {
     wr(0xFFC4, 0);
     r.a = 0;
     r.f = 0x80;
+    return 0;
+}
+
+/* SelectEnemySlot: HL = address of the table of slot pointers, A = slot index. HL ends as the slot address and also goes to hEnemySlotLo/Hi ($ffd7/$ffd8). */
+void *gb_native_SelectEnemySlot(void) {
+    uint8_t carry = r.a >> 7;
+    r.a <<= 1;
+    r.f = (r.a ? 0 : 0x80) | (carry ? 0x10 : 0);
+    r.c = r.a;
+    r.b = 0;
+    add_hl(BC());
+    uint16_t at = HL();
+    uint8_t lo = rd(at), hi = rd(at + 1);
+    wr(0xFFD7, lo);
+    wr(0xFFD8, hi);
+    r.h = hi;
+    r.l = lo;
+    r.a = lo;
+    return 0;
+}
+
+/* RemoveEnemy: clears the active bit of the enemy record in hObject2 and decrements the enemy count. */
+void *gb_native_RemoveEnemy(void) {
+    wr(0xFFB5, rd(0xFFB5) & 0x7F);
+    SET_HL(wEnemyCount);
+    wr(wEnemyCount, dec8(rd(wEnemyCount)));
+    return 0;
+}
+
+/* ClampPlayerPosition: keeps the player inside X $20-$f0 and Y $28-$f8. */
+void *gb_native_ClampPlayerPosition(void) {
+    uint8_t x = rd(wPlayerX), y;
+    if (x < 0x21) x = 0x20;
+    if (x >= 0xF0) x = 0xF0;
+    wr(wPlayerX, x);
+    y = rd(wPlayerY);
+    if (y < 0x29) y = 0x28;
+    wr(wPlayerY, y);
+    r.a = y;
+    alu_cp(0xF8);
+    if (y >= 0xF8) {
+        wr(wPlayerY, 0xF8);
+        r.a = 0xF8;
+    }
+    return 0;
+}
+
+/* NextRandomDirection: steps the shift register hFrameSpin ($ffdb): shifted left; the new low bit is bit 7 when bit 4 is set,
+ * else the complement of bit 7; then adds the result to hRngCounter ($ffda). A = the new hRngCounter, B = the new hFrameSpin. */
+void *gb_native_NextRandomDirection(void) {
+    uint8_t spin = rd(0xFFDB), bit7 = spin >> 7, bit4 = (spin >> 4) & 1;
+    uint8_t next = (uint8_t)(spin << 1);
+    int low = bit4 ? bit7 : !bit7;
+    next = low ? (next | 1) : (next & 0xFE);
+    wr(0xFFDB, next);
+    r.b = next;
+    r.a = rd(0xFFDA);
+    alu_add(next, 0);
+    wr(0xFFDA, r.a);
+    return 0;
+}
+
+/* StoreEnemySlot: copies the 32 byte enemy record in high RAM (hObject2, $ffb5-$ffd4) back to its slot (address in $ffd7/$ffd8). HL ends on the last byte, A = hEnemyFlags. */
+void *gb_native_StoreEnemySlot(void) {
+    uint16_t slot = rd(0xFFD7) | rd(0xFFD8) << 8;
+    for (int i = 0; i < 0x20; i++) wr(slot + i, rd(0xFFB5 + i));
+    SET_HL(slot + 0x1F);
+    r.a = rd(0xFFD4);
+    return 0;
+}
+
+/* LoadEnemySlot: copies the enemy slot (address in $ffd7/$ffd8) into the high RAM record hObject2. HL ends on the last byte, A = that byte (hEnemyFlags). */
+void *gb_native_LoadEnemySlot(void) {
+    uint16_t slot = rd(0xFFD7) | rd(0xFFD8) << 8;
+    for (int i = 0; i < 0x20; i++) wr(0xFFB5 + i, rd(slot + i));
+    SET_HL(slot + 0x1F);
+    r.a = rd(slot + 0x1F);
+    return 0;
+}
+
+#define wCameraXHi 0xC1AD
+#define wCameraYHi 0xC1AF
+
+/* DrawObject: turns the object record at hObjPtr into OAM sprites (through AddOamSprite).
+ * Record: +0 flags (bit 7 active, bit 1 position is in the world so the camera is subtracted, bit 2 set here when a part was drawn,
+ *         bit 3 -> OAM attribute bit 7, bits 4-6 -> OAM attribute bits 4-6 (palette, X flip, Y flip)), +1/+2 animation pointer, +5 part cursor, +7/+8 X, +$a/+$b Y.
+ * Animation data: shape id, then one tile id per part. Shape (ObjectShapeTable): part count, then x and y offset (signed bytes) of every part.
+ * The parts are drawn starting at the cursor, which moves on by one every frame, so when the OAM overflows different parts drop out each frame.
+ * Mirrored objects (X flip or Y flip) are moved 8 pixels and their part offsets are negated. A part is skipped when its position is off the screen
+ * (high byte not 0). The scratch variables hScratch00-0D, hOtherObjLo/Hi are left as the original leaves them. */
+void *gb_native_DrawObject(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t flags = rd(obj);
+    if (!(flags & 0x80)) return 0;
+    int x = rd(obj + 7) | rd(obj + 8) << 8, y = rd(obj + 0x0A) | rd(obj + 0x0B) << 8;
+    uint8_t s00 = flags & 0xFB;
+    if (s00 & 0x02) {
+        x = (x - (rd(0xC1AC) | rd(wCameraXHi) << 8)) & 0xFFFF;
+        y = (y - (rd(0xC1AE) | rd(wCameraYHi) << 8)) & 0xFFFF;
+    }
+    if (s00 & 0x20) x = (x - 8) & 0xFFFF;
+    if (s00 & 0x40) y = (y - 8) & 0xFFFF;
+    wr(hScratch00, s00);
+    wr(hScratch00 + 1, x);  wr(hScratch00 + 2, x >> 8);
+    wr(hScratch00 + 3, y);  wr(hScratch00 + 4, y >> 8);
+    uint16_t anim = rd(obj + 1) | rd(obj + 2) << 8;
+    wr(hScratch00 + 5, anim); wr(hScratch00 + 6, anim >> 8);
+    uint8_t cursor = rd(obj + 5);
+    uint16_t shape = rd(0x06A4 + 2 * rd(anim)) | rd(0x06A5 + 2 * rd(anim)) << 8;
+    wr(hScratch00 + 7, shape); wr(hScratch00 + 8, shape >> 8);
+    uint8_t count = rd(shape);
+    wr(hScratch00 + 9, count);
+    for (int left = count; left > 0; left--) {
+        if (cursor >= count) cursor = 0;
+        uint8_t part = cursor++;
+        int8_t ox = (int8_t)rd(shape + 2 * part + 1);
+        if (s00 & 0x20) ox = (int8_t)(0 - ox);
+        int sx = (x + ox) & 0xFFFF;
+        wr(hScratch00 + 10, (uint8_t)sx);
+        if (sx > 255) continue;
+        int8_t oy = (int8_t)rd(shape + 2 * part + 2);
+        if (s00 & 0x40) oy = (int8_t)(0 - oy);
+        int sy = (y + oy) & 0xFFFF;
+        wr(hScratch00 + 11, (uint8_t)sy);
+        if (sy > 255) continue;
+        wr(hScratch00 + 12, rd(anim + 1 + part));
+        s00 |= 0x04;
+        wr(hScratch00, s00);
+        wr(hScratch00 + 13, (uint8_t)(((s00 & 0x08) << 4) | (s00 & 0x70)));
+        gb_native_AddOamSprite();
+    }
+    wr(hOtherObjHi, 0);
+    wr(hOtherObjLo, (uint8_t)(cursor - 1));
+    wr(obj, s00);
+    wr(obj + 5, (uint8_t)(cursor - 1));
     return 0;
 }

@@ -39,3 +39,10 @@ EnemyTileUnder
 EnemyMapTile
 ProjectileHitTest
 EnemyRequestTurn
+SelectEnemySlot
+RemoveEnemy
+ClampPlayerPosition
+NextRandomDirection
+StoreEnemySlot
+LoadEnemySlot
+DrawObject

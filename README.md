@@ -18,6 +18,8 @@ The percentages in the ByteMatch report count **byte-exact assembly source**. De
 matching, so the numbers start high. The remaining work is readability: names, structured data, constants, commented routines.
 Open tasks are in `REVERSE.md`.
 
+![Progress](progress/jp/progress.svg)
+
 ## What "100%" means here
 
 The project is a disassembly in RGBDS assembly, not C. The ROM rebuilds byte for byte from `src/` plus the assets extracted from your own ROM,

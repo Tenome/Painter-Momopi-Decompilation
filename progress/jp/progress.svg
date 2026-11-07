@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="118" viewBox="0 0 560 118" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+<rect width="560" height="118" rx="6" fill="#161b22"/>
+<text x="14" y="20" fill="#e6edf3" font-weight="bold">Painter Momopie: byte matching</text>
+<text x="14" y="47" fill="#e6edf3">Functions</text>
+<rect x="90" y="34" width="300" height="18" rx="4" fill="#30363d"/>
+<rect x="90" y="34" width="300.0" height="18" rx="4" fill="#3fb950"/>
+<text x="240.0" y="47" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
+<text x="400" y="47" fill="#8b949e">337 / 337</text>
+<text x="14" y="77" fill="#e6edf3">Code</text>
+<rect x="90" y="64" width="300" height="18" rx="4" fill="#30363d"/>
+<rect x="90" y="64" width="300.0" height="18" rx="4" fill="#3fb950"/>
+<text x="240.0" y="77" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
+<text x="400" y="77" fill="#8b949e">15,083 / 15,083 bytes</text>
+<text x="14" y="107" fill="#e6edf3">Data</text>
+<rect x="90" y="94" width="300" height="18" rx="4" fill="#30363d"/>
+<rect x="90" y="94" width="300.0" height="18" rx="4" fill="#3fb950"/>
+<text x="240.0" y="107" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
+<text x="400" y="107" fill="#8b949e">50,453 / 50,453 bytes</text>
+</svg>

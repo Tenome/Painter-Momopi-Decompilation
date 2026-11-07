@@ -4813,19 +4813,19 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyAnimHi]
     ld [hl+], a
-    ldh a, [$ffb8]
+    ldh a, [hEnemyField3]
     ld [hl+], a
     ldh a, [hEnemyBoxHalf]
     ld [hl+], a
     ldh a, [hEnemyFrame]
     ld [hl+], a
-    ldh a, [$ffbb]
+    ldh a, [hEnemyXFrac]
     ld [hl+], a
     ldh a, [hEnemyX]
     ld [hl+], a
     ldh a, [hEnemyXHi]
     ld [hl+], a
-    ldh a, [$ffbe]
+    ldh a, [hEnemyYFrac]
     ld [hl+], a
     ldh a, [hEnemyY]
     ld [hl+], a
@@ -4845,7 +4845,7 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyBlocked]
     ld [hl+], a
-    ldh a, [$ffc8]
+    ldh a, [hEnemyField13]
     ld [hl+], a
     ldh a, [hEnemyCounter]
     ld [hl+], a
@@ -4855,9 +4855,9 @@ StoreEnemySlot::  ; copies the 32 byte HRAM object hObject2 back to its slot ($f
     ld [hl+], a
     ldh a, [hEnemyAux]
     ld [hl+], a
-    ldh a, [$ffcd]
+    ldh a, [hEnemyField18]
     ld [hl+], a
-    ldh a, [$ffce]
+    ldh a, [hEnemyField19]
     ld [hl+], a
     ldh a, [hEnemySpawnFlag]
     ld [hl+], a
@@ -4884,19 +4884,19 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyAnimHi], a
     ld a, [hl+]
-    ldh [$ffb8], a
+    ldh [hEnemyField3], a
     ld a, [hl+]
     ldh [hEnemyBoxHalf], a
     ld a, [hl+]
     ldh [hEnemyFrame], a
     ld a, [hl+]
-    ldh [$ffbb], a
+    ldh [hEnemyXFrac], a
     ld a, [hl+]
     ldh [hEnemyX], a
     ld a, [hl+]
     ldh [hEnemyXHi], a
     ld a, [hl+]
-    ldh [$ffbe], a
+    ldh [hEnemyYFrac], a
     ld a, [hl+]
     ldh [hEnemyY], a
     ld a, [hl+]
@@ -4916,7 +4916,7 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyBlocked], a
     ld a, [hl+]
-    ldh [$ffc8], a
+    ldh [hEnemyField13], a
     ld a, [hl+]
     ldh [hEnemyCounter], a
     ld a, [hl+]
@@ -4926,9 +4926,9 @@ LoadEnemySlot::  ; copies a slot ($ffd7/$ffd8) into the HRAM object hObject2
     ld a, [hl+]
     ldh [hEnemyAux], a
     ld a, [hl+]
-    ldh [$ffcd], a
+    ldh [hEnemyField18], a
     ld a, [hl+]
-    ldh [$ffce], a
+    ldh [hEnemyField19], a
     ld a, [hl+]
     ldh [hEnemySpawnFlag], a
     ld a, [hl+]

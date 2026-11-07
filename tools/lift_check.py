@@ -14,7 +14,8 @@ ap.add_argument("--rgbds", default=os.environ.get("RGBDS_DIR", ""))
 ap.add_argument("--cc", required=True)
 ap.add_argument("--frames", type=int, default=6000)
 ap.add_argument("--seeds", type=int, default=4)
-ap.add_argument("--rounds", default="1,5,9,13,17,21,25,29", help="rounds to force in extra runs of 2500 frames (empty for none)")
+ap.add_argument("--keep", action="store_true", help="keep the two runners in build/lift_check/ for debugging")
+ap.add_argument("--rounds", default=",".join(str(i) for i in range(1, 33)), help="rounds to force in extra runs of 2500 frames (empty for none)")
 a = ap.parse_args()
 exe = ".exe" if os.name == "nt" else ""
 ov = os.path.join(ROOT, "port", "overrides.txt")
@@ -37,6 +38,9 @@ try:
     build()
     base = os.path.join(tmp, "base" + exe)
     shutil.copy(out, base)
+    if a.keep:
+        os.makedirs(os.path.join(ROOT, "build", "lift_check"), exist_ok=True)
+        shutil.copy(out, os.path.join(ROOT, "build", "lift_check", "base" + exe))
 finally:
     open(ov, "w", newline="\n").write(full)
 build()
@@ -61,6 +65,9 @@ for rnd in [x for x in a.rounds.split(",") if x]:
         h.append(open(p).read())
     ok = h[0] == h[1]
     bad += not ok
-    print(f"round {rnd}: {'same' if ok else 'DIFFERENT'}")
+    first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+    print(f"round {rnd}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
+if a.keep:
+    shutil.copy(out, os.path.join(ROOT, "build", "lift_check", "lifted" + exe))
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)
