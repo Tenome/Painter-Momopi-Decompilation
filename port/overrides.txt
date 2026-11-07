@@ -48,3 +48,4 @@ LoadEnemySlot
 DrawObject
 CounterToFrame
 PlayerCheckOffPath
+UpdateEnemy

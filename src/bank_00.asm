@@ -1810,7 +1810,7 @@ Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     call UpdateAllEnemies
     call TimeUpSpawnEnemy
     call CheckExtraLife
-    ld hl, $ffde
+    ld hl, hBlinkTick
     inc [hl]
     jr .L_00_1193
 CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7): wLives += 1 (once per threshold)
@@ -4705,7 +4705,7 @@ UpdateEnemy::  ; one enemy step on the record held in hObject2
     pop hl
     jp hl
 .L_00_375e:
-    ldh a, [$ffde]
+    ldh a, [hBlinkTick]
     bit 2, a
     ret z
     ld hl, hObject2

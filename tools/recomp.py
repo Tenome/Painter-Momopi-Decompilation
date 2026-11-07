@@ -223,7 +223,7 @@ class Recomp:
         nm = rom.names.get((b, a))
         if nm in self.overrides:                 # hardware dependent routine: replaced by native code (port/gb_native.c)
             return (f"void *gb_native_{nm}(void);\n"
-                    f"void *{self.fname(b, a)}(void) {{ gb_native_{nm}(); r.sp += 2; return 0; }}")
+                    f"void *{self.fname(b, a)}(void) {{ void *next_ = gb_native_{nm}(); if (next_) return next_; r.sp += 2; return 0; }}")
         L = [f"void *{self.fname(b, a)}(void) {{"]
         pc = a
         end = a + sz

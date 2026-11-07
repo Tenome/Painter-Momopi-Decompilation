@@ -673,3 +673,46 @@ void *gb_native_PlayerCheckOffPath(void) {
     wr(wPlayerDir, rd(wPlayerDir) | 0x20);
     return 0;
 }
+
+fn_t gb_dispatch(uint16_t addr);
+
+/* UpdateEnemy: one step of the enemy record held in hObject2. While hEnemyDir bit 4 is set the enemy only blinks: it is drawn on the frames where the global
+ * tick $ffde has bit 2 set, hEnemyCounter counts down and when it goes below zero the bit is cleared. Otherwise the routine of the enemy's kind (hEnemyKind,
+ * EnemyBehaviorTable at $3782) runs (as a tail jump). */
+void *gb_native_UpdateEnemy(void) {
+    uint8_t dir = rd(0xFFD1);
+    if (dir & 0x10) {
+        r.a = rd(0xFFDE);
+        r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);       /* bit 2, a */
+        if (!(r.a & 4)) return 0;
+        SET_HL(0xFFB5);
+        wr(0xFFD5, 0xB5);
+        wr(0xFFD6, 0xFF);
+        gb_native_DrawObject();
+        r.a = rd(0xFFC9);
+        alu_sub(1, 0);
+        wr(0xFFC9, r.a);
+        r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);   /* bit 7, a */
+        if (!(r.a & 0x80)) return 0;
+        SET_HL(0xFFD1);
+        wr(0xFFD1, rd(0xFFD1) & 0xEF);
+        r.a = 0;
+        r.f = 0x80;
+        wr(0xFFC9, 0);
+        return 0;
+    }
+    r.a = rd(0xFFD2);
+    uint8_t carry = r.a >> 7;
+    r.a <<= 1;
+    r.f = (r.a ? 0 : 0x80) | (carry ? 0x10 : 0);
+    r.c = r.a;
+    r.b = 0;
+    SET_HL(0x3782);
+    add_hl(BC());
+    uint16_t entry = HL();
+    r.e = rd(entry);
+    r.d = rd(entry + 1);
+    r.a = r.d;
+    SET_HL(DE());
+    return (void *)gb_dispatch(HL());
+}
