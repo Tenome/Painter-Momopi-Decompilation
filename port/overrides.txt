@@ -25,3 +25,4 @@ ByteToBCD
 IsOnTileGrid
 EnemyOnTileGrid
 MoveObject
+ApplyObjectStep

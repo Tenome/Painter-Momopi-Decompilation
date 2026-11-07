@@ -1,5 +1,5 @@
 /* Hand written C versions of game routines (replacing the generated code for the labels listed in port/overrides.txt).
- * Each one keeps the register and flag results of the original routine so that its callers behave the same; the generated code and these
+ * Most keep the register and flag results of the original routine so that its callers behave the same (the ones that do not say so in their comment); the generated code and these
  * versions are compared with `python tools/verify_all.py` (frame hashes of random play) before a routine is added here. */
 #include "gb_rt.h"
 
@@ -286,5 +286,28 @@ void *gb_native_MoveObject(void) {
     SET_HL(HL() + 1);
     r.a = rd(hScratch01);
     wr(HL(), r.a);
+    return 0;
+}
+
+/* ApplyObjectStep: adds the movement step of the object record at hObjPtr to its fixed point position.
+ * X: fraction +6, pixel +7/+8 gets step +$0c/+$0d; Y: fraction +9, pixel +$a/+$b gets step +$0e/+$0f. The pixel part is a 16 bit value and the step
+ * is a signed 8.8 number (its high byte is sign extended). The hScratch variables are left as the original leaves them; the registers are not kept. */
+void *gb_native_ApplyObjectStep(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t last_step_hi = 0;
+    for (int axis = 0; axis < 2; axis++) {
+        uint16_t pos = obj + 6 + 3 * axis, step = obj + 0x0C + 2 * axis;
+        unsigned frac = rd(pos) + rd(step);
+        wr(pos, frac);
+        unsigned lo = rd(pos + 1) + rd(step + 1) + (frac >> 8);
+        wr(pos + 1, lo);
+        uint8_t step_hi = rd(step + 1);
+        unsigned hi = rd(pos + 2) + (step_hi & 0x80 ? 0xFF : 0) + (lo >> 8);
+        wr(pos + 2, hi);
+        last_step_hi = step_hi;
+    }
+    wr(hScratch00, 0x0C);
+    wr(hScratch01, 0x10);
+    wr(0xFF98, last_step_hi);
     return 0;
 }
