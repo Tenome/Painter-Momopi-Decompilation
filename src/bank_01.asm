@@ -1462,9 +1462,9 @@ SelectPlayerAnimation::  ; picks the animation table by direction
     ld hl, D_01_48d4
 .L_01_4b4f:
     ld a, l
-    ld [$c4e3], a
+    ld [wPlayerAnimPtrLo], a
     ld a, h
-    ld [$c4e4], a
+    ld [wPlayerAnimPtrHi], a
     ret
 PixelXToColumn::  ; E = (X+8)/16 - 1
     add a, $08
@@ -2016,9 +2016,9 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     call CounterToFrame
     ldh a, [hScratch08]
     ld [wWalkAnimCount], a
-    ld a, [$c4e3]
+    ld a, [wPlayerAnimPtrLo]
     ld e, a
-    ld a, [$c4e4]
+    ld a, [wPlayerAnimPtrHi]
     ld d, a
     push de
     pop hl
@@ -2259,11 +2259,11 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
 .L_01_5153:
     add hl, bc
     ld a, [hl+]
-    ld [$c4cc], a
+    ld [wPlayerStepYLo], a
     ld a, [hl+]
     ld [wPlayerVelY], a
     ld a, [hl+]
-    ld [$c4ca], a
+    ld [wPlayerStepXLo], a
     ld a, [hl]
     ld [wPlayerVelX], a
     ld a, $09

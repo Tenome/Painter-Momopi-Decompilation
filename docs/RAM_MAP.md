@@ -90,7 +90,9 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4c0 | `wPlayerAnimHi` | 3 | wPlayer +2 |
 | $c4c5 | `wPlayerX` | 27 |  |
 | $c4c8 | `wPlayerY` | 23 |  |
+| $c4ca | `wPlayerStepXLo` | 1 | wPlayer +$0c: horizontal step (fraction part; $c4cb = wPlayerVelX is the pixel part) |
 | $c4cb | `wPlayerVelX` | 1 |  |
+| $c4cc | `wPlayerStepYLo` | 1 | wPlayer +$0e: vertical step (fraction part; $c4cd = wPlayerVelY is the pixel part) |
 | $c4cd | `wPlayerVelY` | 1 |  |
 | $c4ce | `wPlayerAngle` | 3 | wPlayer +$10 |
 | $c4cf | `wPlayerSpeed` | 2 | wPlayer +$11 |
@@ -98,6 +100,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4d9 | `wWalkAnimCount` | 3 | walk animation counter of the player (AnimatePlayerWalk) |
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
+| $c4e3 | `wPlayerAnimPtrLo` | 2 | pointer to the table of animation pointers chosen by SelectPlayerAnimation (16 bit with $c4e4) |
+| $c4e4 | `wPlayerAnimPtrHi` | 2 |  |
 | $c4fe | `wPaintObject` | 14 | the paint blob object record (tested by CheckPaintHitsEnemy) |
 | $c4ff | `wPaintAnimLo` | 4 | wPaintObject +1: animation pointer |
 | $c500 | `wPaintAnimHi` | 4 |  |
@@ -213,6 +217,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffd9 | `hOamCount` | 7 |  |
 | $ffda | `hRngCounter` | 10 | incremented while the game waits for VBlank: cheap random source |
 | $ffdb | `hFrameSpin` | 7 |  |
+| $ffde | `hBlinkTick` | 2 | incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames (provisional) |
 | $ffdf | `hMagicTimer` | 13 | frames left of the running magic effect (MagicTimerTick) |
 | $ffe0 | `hTimeFrames` | 4 | frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds) |
 | $ffe1 | `hTimeSeconds` | 9 | seconds left in the round (shown as TIME) |
@@ -259,10 +264,10 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c46b | 2 |
 | $c473 | 2 |
 | $c474 | 2 |
-| $ffde | 2 |
 | $c465 | 2 |
 | $c44f | 2 |
 | $ffe4 | 2 |
 | $c769 | 2 |
 | $c74f | 2 |
 | $c750 | 2 |
+| $c441 | 2 |

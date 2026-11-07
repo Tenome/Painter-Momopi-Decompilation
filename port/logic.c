@@ -1040,3 +1040,57 @@ void *gb_native_Mode1_Play(void) {
         wr(hBlinkTick, rd(hBlinkTick) + 1);
     }
 }
+
+/* HoldDirectionUntilAligned: while the player is between two grid cells the pad is overridden: the direction bits of hJoyHeld (high nibble) are replaced by
+ * the direction the player already moves in (wPlayerDir), so a started step is finished. The buttons (low nibble) are kept unless a direction is pressed.
+ * Nothing is done when both opposite directions are combined (the value $30 or $c0), or when the player is exactly on the grid. */
+void *gb_native_HoldDirectionUntilAligned(void) {
+    r.b = rd(wPlayerX);
+    r.c = rd(wPlayerY);
+    gb_native_IsOnTileGrid();
+    if (ZF()) return 0;
+    uint8_t dir_high = (uint8_t)((rd(wPlayerDir) & 0x0F) << 4);
+    uint8_t held = rd(hJoyHeld);
+    if ((uint8_t)(held | dir_high) == 0x30 || (uint8_t)(held | dir_high) == 0xC0) return 0;
+    wr(hJoyHeld, ((held & 0xF0) ? 0 : (held & 0x0F)) | dir_high);
+    return 0;
+}
+
+/* PlayerSetDirection: turns the pad into the player's direction and step. Blocked directions (wPlayerBlocked, shifted into the pad nibble) or no direction
+ * stop the player (SetPlayerStatusBit0). Otherwise wPlayerDir gets the direction, the heading comes from DirectionToAnimIndex, the 16 bit steps from a table of
+ * 4 byte entries (x fraction, x pixels, y fraction, y pixels; a second table while the S.UP card runs), the speed is 9 and the step is applied. */
+void *gb_native_PlayerSetDirection(void) {
+    uint8_t held = rd(hJoyHeld);
+    if (((rd(wPlayerBlocked) << 4 | rd(wPlayerBlocked) >> 4) & 0xFF & held) != 0) return (void *)GAME_SetPlayerStatusBit0;
+    if (!(held & 0xF0)) return (void *)GAME_SetPlayerStatusBit0;
+    uint8_t dir = held >> 4;
+    wr(wPlayerDir, (rd(wPlayerDir) & 0xF0) | dir);
+    uint8_t angle = rd(DATA_DirectionToAnimIndex + dir);
+    wr(wPlayerAngle, angle);
+    uint16_t table = 0x518D;
+    if (rd(wActiveMagic) == 0x01 && (rd(wMagicState) & 0x01)) table = 0x519D;
+    table += angle >> 1;
+    wr(wPlayerStepYLo, rd(table));
+    wr(wPlayerVelY, rd(table + 1));
+    wr(wPlayerStepXLo, rd(table + 2));
+    wr(wPlayerVelX, rd(table + 3));
+    wr(wPlayerSpeed, 0x09);
+    SET_HL(wPlayer);
+    gb_native_SetObjPtr();
+    gb_native_ApplyObjectStep();
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x01);
+    return 0;
+}
+
+/* SelectPlayerAnimation: chooses the table of animation pointers by the direction in wPlayerDir (bit 0 = right: mirrored, bit 1 = left: not mirrored, bit 2 = up). */
+void *gb_native_SelectPlayerAnimation(void) {
+    uint8_t dir = rd(wPlayerDir);
+    uint16_t table;
+    if (dir & 0x01) { wr(wPlayer, rd(wPlayer) | 0x20); table = DATA_PlayerAnimPtrsFlipped; }
+    else if (dir & 0x02) { wr(wPlayer, rd(wPlayer) & ~0x20); table = DATA_PlayerAnimPtrsFlipped; }
+    else if (dir & 0x04) table = 0x48D4;
+    else table = DATA_PlayerAnimPtrs;
+    wr(wPlayerAnimPtrLo, table);
+    wr(wPlayerAnimPtrHi, table >> 8);
+    return 0;
+}
