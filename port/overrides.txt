@@ -84,3 +84,13 @@ Mode4_GameOver
 SoundDequeue
 SoundUpdate
 ShowMagicScreen
+SetCursorAnimation
+SetCursorDefaultAnimation
+ResetMagicCursorAnimation
+CursorBlinkStep
+DrawMagicPage
+MagicCursorRight
+MagicCursorLeft
+MagicScreenInput
+MagicCursorUp
+MagicCursorDown

@@ -1608,8 +1608,11 @@ void *gb_native_ShowMagicScreen(void) {
                 wr(wMpStreamIdx, rd(wMpStreamIdx) + 1);
             }
         }
-        for (int i = 0; i < 5; i++) wr(0xC453 + rd(wMpStreamIdx) + i, 0xB8);      /* StoreMagicPointsDigit */
-        wr(wMpStreamIdx, rd(wMpStreamIdx) + 5);
+        {                                   /* StoreMagicPointsDigit (the index is read once: the tiles may overwrite wMpStreamIdx itself) */
+            uint8_t at = rd(wMpStreamIdx);
+            for (int i = 0; i < 5; i++) wr(0xC453 + at + i, 0xB8);
+            wr(wMpStreamIdx, rd(wMpStreamIdx) + 5);
+        }
     }
 gauge_done:
     wr(wMpStream, 0x10);
@@ -1646,4 +1649,158 @@ gauge_done:
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
     return (void *)GAME_StartRoundMusic;
+}
+
+/* SetCursorAnimation: HL = animation pointer of the card cursor object (wCursorObject +1/+2). SetCursorDefaultAnimation uses D_00_1a30. */
+void *gb_native_SetCursorAnimation(void) {
+    wr(wCursorObject + 1, r.l);
+    wr(wCursorObject + 2, r.h);
+    r.a = r.h;
+    return 0;
+}
+void *gb_native_SetCursorDefaultAnimation(void) {
+    SET_HL(0x1A30);
+    return gb_native_SetCursorAnimation();
+}
+void *gb_native_ResetMagicCursorAnimation(void) {
+    SET_HL(wMagicScreenFlags);
+    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x04);
+    return gb_native_SetCursorDefaultAnimation();
+}
+
+/* CursorBlinkStep: while the cursor is active (wMagicScreenFlags bit 2) wCursorBlink counts to $50 (then the cursor is reset); in between the cursor
+ * animation toggles between D_00_1a17 and D_00_1a30 with bit 2 of the screen frame counter $c769. */
+void *gb_native_CursorBlinkStep(void) {
+    r.a = rd(wMagicScreenFlags);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);
+    if (!(r.a & 4)) return 0;
+    r.a = rd(wCursorBlink);
+    if (r.a >= 0x50) return gb_native_ResetMagicCursorAnimation();
+    r.a++;
+    wr(wCursorBlink, r.a);
+    r.a = rd(0xC769) & 0x04;
+    if (r.a) return gb_native_SetCursorDefaultAnimation();
+    SET_HL(0x1A17);
+    return gb_native_SetCursorAnimation();
+}
+
+/* DrawMagicPage: draws the three cards of a row. hScratch00 = index of the first card in wMagicCards; for each card its name strip, picture and cost label
+ * are queued as VRAM rows (columns 6 tiles apart) and waited for. */
+void *gb_native_DrawMagicPage(void) {
+    for (int i = 0; i < 3; i++) {
+        if (i) wr(hScratch00, rd(hScratch00) + 1);
+        r.c = rd(hScratch00);
+        SET_HL(wMagicCards);
+        gb_native_LookupByte();
+        wr(hScratch00 + 2, r.a);
+        static const uint16_t tables[3] = { DATA_MagicCardTitleJobs, DATA_MagicCardPictureJobs, DATA_MagicCardCostJobs };
+        static const uint16_t base[3] = { 0x9D02, 0x9D42, 0x9DE2 };
+        for (int t = 0; t < 3; t++) {
+            r.a = rd(hScratch00 + 2);
+            SET_HL(tables[t]);
+            gb_native_LookupWord();
+            SET_DE(HL());
+            SET_HL(base[t] + 6 * i);
+            CALL(GAME_QueueVramCopyRows);
+            if (i < 2 || t < 2) CALL(GAME_WaitVramCopyDone); else return (void *)GAME_WaitVramCopyDone;
+        }
+    }
+    return 0;
+}
+
+/* call a lifted routine that may end in a tail jump (it returns the routine to continue with) like a `call` would */
+static void call_native(void *(*fn)(void)) {
+    r.sp -= 2;
+    void *next = fn();
+    if (next) gb_run((fn_t)next); else r.sp += 2;
+}
+
+static uint8_t card_at(uint8_t index) { r.c = index; SET_HL(wMagicCards); gb_native_LookupByte(); return r.a; }
+static uint8_t row_start(uint8_t row) { r.a = row; r.e = 3; gb_native_MultiplyByDE(); return rd(hScratch00); }
+
+/* MagicCursorRight and MagicCursorLeft: move the card cursor (wMagicCol 0-2) when there is a card at the new place. */
+void *gb_native_MagicCursorRight(void) {
+    if (rd(wMagicCol) == 2) { wr(wMagicCol, 0); r.a = 0; return 0; }
+    uint8_t first = row_start(rd(wMagicRow));
+    uint8_t card = card_at((uint8_t)(rd(wMagicCol) + 1 + first));
+    r.a = card;
+    if (!card) return 0;
+    SET_HL(wMagicCol);
+    wr(wMagicCol, rd(wMagicCol) + 1);
+    return 0;
+}
+void *gb_native_MagicCursorLeft(void) {
+    uint8_t col = rd(wMagicCol);
+    r.a = col;
+    if (col) { SET_HL(wMagicCol); wr(wMagicCol, col - 1); return 0; }
+    uint8_t first = row_start(rd(wMagicRow));
+    uint8_t card = card_at(first + 2);
+    r.a = card;
+    if (!card) return 0;
+    wr(wMagicCol, 2);
+    r.a = 2;
+    return 0;
+}
+
+/* MagicCursorUp and MagicCursorDown: move the card cursor between rows (wMagicRow 0-2) when there is a card below, and redraw the page (DrawMagicPage). */
+void *gb_native_MagicCursorUp(void) {
+    uint8_t row = rd(wMagicRow);
+    if (!row) { wr(wMagicRow, 0); r.a = 0; return 0; }
+    SET_HL(wMagicRow);
+    wr(wMagicRow, row - 1);
+    row_start(row - 1);
+    return gb_native_DrawMagicPage();
+}
+void *gb_native_MagicCursorDown(void) {
+    uint8_t row = rd(wMagicRow);
+    r.a = row;
+    if (row == 2) { wr(wMagicRow, 2); return 0; }
+    uint8_t first = row_start(row + 1);
+    uint8_t card = card_at((uint8_t)(rd(wMagicCol) + first));
+    r.a = card;
+    if (!card) return 0;
+    SET_HL(wMagicRow);
+    wr(wMagicRow, row + 1);
+    row_start(rd(wMagicRow));
+    return gb_native_DrawMagicPage();
+}
+
+/* MagicScreenInput: the pad on the magic screen. D-pad: sound, move the cursor (right 4, left 5, up 6, down 7 of hJoyNew; each routine leaves A as the original does and
+ * the following tests read that A). A: the selected card is chosen when the magic points pay for it (cost in MagicCostTable): sound $90, wActiveMagic = the card,
+ * wMagicScreenFlags |= 6, and the A bit is removed from hJoyNew. Then the cursor object is placed at the column (D_00_2630) and drawn. */
+void *gb_native_MagicScreenInput(void) {
+    if (!(rd(wMagicScreenFlags) & 0x02)) {
+        uint8_t pad = rd(hJoyNew) & 0xF1;
+        if (pad) {
+            if (pad & 0x01) {
+                uint8_t card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
+                uint8_t cost = rd(DATA_MagicCostTable + card);
+                if (rd(wMagicPoints) < cost && rd(wMagicPointsHi) == 0) {
+                    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x04);
+                    return 0;
+                }
+                r.a = SND_SFX_90;
+                CALL(GAME_PlaySound);
+                card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
+                wr(wActiveMagic, card);
+                wr(wMagicScreenFlags, rd(wMagicScreenFlags) | 0x06);
+                wr(hJoyNew, rd(hJoyNew) & ~0x80);
+            } else {
+                r.a = SND_SFX_CURSOR;
+                CALL(GAME_PlaySound);
+                r.a = rd(hJoyNew);
+                if (r.a & 0x10) gb_native_MagicCursorRight();
+                if (r.a & 0x20) gb_native_MagicCursorLeft();
+                if (r.a & 0x40) call_native(gb_native_MagicCursorUp);
+                if (r.a & 0x80) call_native(gb_native_MagicCursorDown);
+            }
+        }
+        r.c = rd(wMagicCol);
+        SET_HL(0x2630);
+        gb_native_LookupByte();
+        wr(wCursorX, r.a);
+    }
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
 }

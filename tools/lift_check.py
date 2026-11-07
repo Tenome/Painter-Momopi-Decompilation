@@ -69,5 +69,22 @@ for rnd in [x for x in a.rounds.split(",") if x]:
     print(f"round {rnd}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 if a.keep:
     shutil.copy(out, os.path.join(ROOT, "build", "lift_check", "lifted" + exe))
+# the magic screen needs cards: a run with all nine cards and plenty of magic points, several rounds and seeds
+cards = []
+for k in range(9):
+    cards += ["--poke", f"254:{0xC43E + k:x}:{k + 1}"]
+cards += ["--poke", f"254:{0xC44A:x}:250", "--poke", f"254:{0xC44B:x}:1"]
+for rnd in ("1", "9", "17", "25"):
+    for seed in ("3", "7"):
+        h = []
+        for name, prog in (("base", base), ("lifted", out)):
+            p = os.path.join(tmp, f"{name}_cards{rnd}_{seed}.txt")
+            subprocess.run([prog, "-", "4000", "--press", "250:start:3", "--random", seed, "--round", rnd, "--hashes", p] + cards, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            h.append(open(p).read())
+        ok = h[0] == h[1]
+        bad += not ok
+        first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+        print(f"cards, round {rnd}, seed {seed}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)

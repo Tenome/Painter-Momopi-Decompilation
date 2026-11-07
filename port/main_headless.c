@@ -31,7 +31,12 @@ void gb_dump_state(const char *path);
 static unsigned dump_frame = 0xFFFFFFFFu;
 static const char *dump_path;
 
+static struct { unsigned frame; uint16_t addr; uint8_t value; } pokes[64];
+static int npokes;
+
 static void hook(unsigned frame) {
+    for (int i = 0; i < npokes; i++)
+        if (pokes[i].frame == frame) wr(pokes[i].addr, pokes[i].value);
     if (dump_path && frame == dump_frame) gb_dump_state(dump_path);
     if (hashes) fprintf(hashes, "%u %08x\n", frame, gb_state_hash());
     uint8_t j = 0;
@@ -85,6 +90,10 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
         else if (!strcmp(argv[i], "--dump") && i + 2 < argc) { dump_frame = (unsigned)atoi(argv[i + 1]); dump_path = argv[i + 2]; i += 2; }
+        else if (!strcmp(argv[i], "--poke") && i + 1 < argc && npokes < 64) {   /* FRAME:ADDRESS(hex):VALUE */
+            unsigned f, a, v;
+            if (sscanf(argv[++i], "%u:%x:%u", &f, &a, &v) == 3) { pokes[npokes].frame = f; pokes[npokes].addr = (uint16_t)a; pokes[npokes].value = (uint8_t)v; npokes++; }
+        }
         else if (!strcmp(argv[i], "--hashes") && i + 1 < argc) hashes = fopen(argv[++i], "w");
         else if (!strcmp(argv[i], "--random") && i + 1 < argc) { random_mode = 1; rnd_seed = (unsigned)atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--wav") && i + 1 < argc) { wav = fopen(argv[++i], "wb"); for (int k = 0; k < 44; k++) fputc(0, wav); }
