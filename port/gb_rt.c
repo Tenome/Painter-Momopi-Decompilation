@@ -83,7 +83,9 @@ uint8_t rd(uint16_t a) {
     return ie;
 }
 
+int gb_watch = -1;                 /* main_headless --watch ADDR: print the frame and value of every write there */
 void wr(uint16_t a, uint8_t v) {
+    if (a == gb_watch) fprintf(stderr, "write %04x = %02x (frame %u)\n", a, v, gb_frames);
     if (a < 0x8000) { if (a >= 0x2000 && a < 0x4000) bank = (v & 0x1F) ? (v & 0x1F) : 1; return; }
     if (a < 0xA000) vram[a - 0x8000] = v;
     else if (a < 0xC000) {}

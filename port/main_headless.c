@@ -26,6 +26,7 @@ static void audio(const int16_t *st, int n) {
 static const char *outdir = ".";
 
 uint32_t gb_state_hash(void);
+extern int gb_watch;
 static FILE *hashes;
 void gb_dump_state(const char *path);
 static unsigned dump_frame = 0xFFFFFFFFu;
@@ -94,6 +95,7 @@ int main(int argc, char **argv) {
             unsigned f, a, v;
             if (sscanf(argv[++i], "%u:%x:%u", &f, &a, &v) == 3) { pokes[npokes].frame = f; pokes[npokes].addr = (uint16_t)a; pokes[npokes].value = (uint8_t)v; npokes++; }
         }
+        else if (!strcmp(argv[i], "--watch") && i + 1 < argc) gb_watch = (int)strtol(argv[++i], 0, 16);
         else if (!strcmp(argv[i], "--hashes") && i + 1 < argc) hashes = fopen(argv[++i], "w");
         else if (!strcmp(argv[i], "--random") && i + 1 < argc) { random_mode = 1; rnd_seed = (unsigned)atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--wav") && i + 1 < argc) { wav = fopen(argv[++i], "wb"); for (int k = 0; k < 44; k++) fputc(0, wav); }

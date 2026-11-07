@@ -2172,7 +2172,7 @@ static void silence_record(uint16_t rec, uint8_t flags) {
  * a length byte after it sets +$b; the pointer is stored back and the length counter +$c restarts. Commands: $e0 $e1 call (small stack at +$a), $e2 return, $e3 stop,
  * $e4 counted repeat, $e5 jump, $e6 envelope (+7), $e7 transpose (+5), $e8 duty (+$15), $e9 pan (+2), $ea wave pattern, $eb end (also ends the update of the record),
  * $ec/$ed mute on/off (flag bit 5), $ee clear flag bit 0, $ef master volume (NR50), $f0 field +6, $f1 pitch (+$e).
- * Returns 1 when the command $eb ended the stream (the caller's update of the record is abandoned too). */
+ * Returns 1 when a command ended the stream ($e3 stop or $eb end: both silence the channel and abandon the update of the record). */
 static int sound_parse(uint16_t rec, uint16_t de) {
     for (;;) {
         uint8_t token = rd(de++);
@@ -2200,7 +2200,7 @@ static int sound_parse(uint16_t rec, uint16_t de) {
             case 0x03:                              /* stop */
                 wr(wMusicPriority, 0);
                 silence_record(rec, 0);
-                return 0;
+                return 1;
             case 0x04: {                            /* counted repeat: operands counter slot, count, jump target */
                 uint16_t counter = rec + 0x17 + rd(de++);
                 if (rd(counter) == 0) wr(counter, rd(de));
@@ -2364,4 +2364,148 @@ void *gb_native_PlaySound_Bank1(void) {
     r.a = 0;
     r.f = 0x80;
     return 0;
+}
+
+/* SoundClearRegisterShadow: zeroes the register shadows ($c427-$c432) so every register is written again. */
+void *gb_native_SoundClearRegisterShadow(void) {
+    for (int i = 0; i < 12; i++) wr(wShadowNR12 + i, 0);
+    r.a = 0;
+    return 0;
+}
+
+/* SoundInit: puts the sound registers in their starting state (wave channel off, no panning, envelopes $f0, frequencies $ff, master volume, retrigger); it continues
+ * into SoundClearRegisterShadow. */
+void *gb_native_SoundInit(void) {
+    wr(rNR30, 0x00);
+    wr(rNR51, 0x00);
+    wr(rNR10, 0x08);
+    wr(rNR12, 0xF0);
+    wr(rNR22, 0xF0);
+    wr(rNR42, 0xF0);
+    wr(rNR30, 0x80);
+    wr(rNR13, 0xFF);
+    wr(rNR23, 0xFF);
+    wr(rNR33, 0xFF);
+    wr(rNR43, 0xFF);
+    wr(rNR50, rd(wSoundMasterVol));
+    wr(rNR14, 0x87);
+    wr(rNR24, 0x87);
+    wr(rNR34, 0x87);
+    wr(rNR44, 0x87);
+    return gb_native_SoundClearRegisterShadow();
+}
+
+/* SoundClearChannels: all eight records are freed, the master volume is $77, then SoundInit. */
+void *gb_native_SoundClearChannels(void) {
+    for (int i = 0; i < 8; i++) wr(wSoundChannels + 0x20 * i, 0);
+    wr(wSoundMasterVol, 0x77);
+    return gb_native_SoundInit();
+}
+
+void *gb_native_SoundRequestStop(void) {
+    wr(wSoundCmd, 0x80);
+    r.a = 0x80;
+    return 0;
+}
+
+/* SoundLoadStream: HL = first record, DE = song data: a count of channels, then per channel a 10 byte header that becomes the start of a record; the rest of the record is
+ * set up ($20 in +$a: empty call stack, 1 in +$b, zeros after). Ends by setting wSoundCmd to $80. */
+static void load_stream(uint16_t rec, uint16_t de) {
+    uint8_t count = rd(de++);
+    wr(wSoundTmp, count);
+    do {
+        for (int i = 0; i < 10; i++) wr(rec + i, rd(de++));
+        wr(rec + 10, 0x20);
+        wr(rec + 11, 0x01);
+        for (int i = 12; i < 32; i++) wr(rec + i, 0);
+        rec += 0x20;
+        count--;
+        wr(wSoundTmp, count);
+    } while (count);
+    wr(wSoundCmd, 0x80);
+}
+void *gb_native_SoundLoadStream(void) {
+    load_stream(HL(), DE());
+    r.a = 0x80;
+    return 0;
+}
+
+/* SoundStartMusicNow: music accepted: B = its priority (wMusicPriority); all channels are cleared and the music records get the stream at DE. */
+static void start_music_now(uint8_t priority, uint16_t data) {
+    wr(wMusicPriority, priority);
+    gb_native_SoundClearChannels();
+    for (int i = 0; i < 4; i++) wr(wSoundChannels + 0x20 * i, 0);
+    load_stream(wSoundChannels, data);
+}
+void *gb_native_SoundStartMusicNow(void) {
+    start_music_now(r.b, DE());
+    return 0;
+}
+
+/* SoundStartMusic: BC = song id (index into the priority table at $4141): replaces the playing music when its priority is lower or equal, else the request is dropped. */
+void *gb_native_SoundStartMusic(void) {
+    uint8_t priority = rd(0x4141 + BC());
+    r.b = priority;
+    uint8_t playing = rd(wMusicPriority);
+    if (playing > priority) return gb_native_SoundRequestStop();
+    start_music_now(priority, DE());
+    return 0;
+}
+
+/* SoundStartEffect: BC = effect id: same rules with wEffectPriority; the effect uses the records 4-7. */
+void *gb_native_SoundStartEffect(void) {
+    uint8_t priority = rd(0x4141 + BC());
+    r.b = priority;
+    if (rd(wEffectPriority) > priority) return gb_native_SoundRequestStop();
+    wr(wEffectPriority, priority);
+    gb_native_SoundClearRegisterShadow();
+    for (int i = 4; i < 8; i++) wr(wSoundChannels + 0x20 * i, 0);
+    load_stream(wSoundChan4, DE());
+    return 0;
+}
+
+/* SoundPauseMusicChannels and SoundResumeMusicChannels: set or clear the pause flag (bit 4) of the music records 0-3 around an effect, then start the effect. */
+void *gb_native_SoundPauseMusicChannels(void) {
+    wr(wEffectPriority, rd(wEffectPriority) + 1);
+    for (int i = 0; i < 4; i++) wr(wSoundChannels + 0x20 * i, rd(wSoundChannels + 0x20 * i) | 0x10);
+    return gb_native_SoundStartEffect();
+}
+void *gb_native_SoundResumeMusicChannels(void) {
+    gb_native_SoundClearRegisterShadow();
+    wr(wEffectPriority, rd(wEffectPriority) + 1);
+    for (int i = 0; i < 4; i++) wr(wSoundChannels + 0x20 * i, rd(wSoundChannels + 0x20 * i) & 0xEF);
+    return gb_native_SoundStartEffect();
+}
+
+/* SoundAssignChannels: music records that an effect record (4-7, in use) has taken the hardware channel of get flag bit 2 (their registers are not written). */
+void *gb_native_SoundAssignChannels(void) {
+    for (int i = 0; i < 4; i++) wr(wSoundChannels + 0x20 * i, rd(wSoundChannels + 0x20 * i) & 0xFB);
+    wr(wSoundArg, 4);
+    for (int i = 0; i < 4; i++) {
+        uint16_t effect = wSoundChan4 + 0x20 * i;
+        if (rd(effect) & 0x80) {
+            uint16_t music = wSoundChannels + 0x20 * rd(effect + 1);
+            wr(music, rd(music) | 0x04);
+        }
+        if (i < 3) wr(wSoundArg, rd(wSoundArg) - 1);       /* the counter is not stored on the last pass (it stays 1) */
+    }
+    return 0;
+}
+
+/* SoundStartCommand: wSoundCmd $81-$93 start song or effect number cmd - $80: its data (SoundCommandDataTable) in DE, its handler (SoundCommandHandlerTable, one of
+ * SoundStartMusic, SoundStartEffect and the pause and resume variants) is run with BC = number. $80 and below do nothing; above $93 the default data $4332 is played as music. */
+void *gb_native_SoundStartCommand(void) {
+    uint8_t cmd = rd(wSoundCmd);
+    if (!(cmd & 0x80)) return 0;
+    if (cmd >= 0x94) {
+        SET_DE(0x4332);
+        r.b = 0;
+        return gb_native_SoundStartMusicNow();
+    }
+    uint8_t id = cmd - 0x80;
+    if (id == 0) return 0;
+    SET_BC(id);
+    SET_DE(rd(DATA_SoundCommandDataTable + 2 * id) | rd(DATA_SoundCommandDataTable + 2 * id + 1) << 8);
+    uint16_t handler = rd(DATA_SoundCommandHandlerTable + 2 * id) | rd(DATA_SoundCommandHandlerTable + 2 * id + 1) << 8;
+    return (void *)gb_dispatch(handler);
 }

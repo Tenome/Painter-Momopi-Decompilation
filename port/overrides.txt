@@ -129,3 +129,15 @@ SoundPitchSlideStep
 SoundSetFrequency
 SoundApplyPitchSlide
 PlaySound_Bank1
+SoundClearRegisterShadow
+SoundInit
+SoundClearChannels
+SoundRequestStop
+SoundLoadStream
+SoundStartMusicNow
+SoundStartMusic
+SoundStartEffect
+SoundPauseMusicChannels
+SoundResumeMusicChannels
+SoundAssignChannels
+SoundStartCommand
