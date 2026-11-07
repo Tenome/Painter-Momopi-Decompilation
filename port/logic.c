@@ -2,6 +2,8 @@
  * Most keep the register and flag results of the original routine so that its callers behave the same (the ones that do not say so in their comment); the generated code and these
  * versions are compared with `python tools/lift_check.py` (frame hashes of random play) before a routine is added here. */
 #include "gb_rt.h"
+#include "game_symbols.h"      /* generated: wPlayerX, hEnemyKind ... (from src/constants.inc) */
+#include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
 
 /* LookupByte: A = byte at HL + C (table lookup). */
 void *gb_native_LookupByte(void) {
@@ -73,7 +75,6 @@ void *gb_native_Clear32Bytes(void) {
     return 0;
 }
 
-#define wRoomMap 0xC0A7
 
 /* PixelXToColumn: E = (X + 8) / 16 - 1 (A is the pixel X); A ends equal to E. */
 void *gb_native_PixelXToColumn(void) {
@@ -97,13 +98,6 @@ void *gb_native_LookupMapTile(void) {
     return 0;
 }
 
-#define hScratch00 0xFF96
-#define hScratch01 0xFF97
-#define hEnemyBlocked 0xFFC7
-#define hEnemyX 0xFFBC
-#define hEnemyY 0xFFBF
-#define wCameraX 0xC1AC
-#define wCameraY 0xC1AE
 
 /* EnemyEdgeBlockedDirs: hEnemyBlocked = the directions the screen edges forbid (bit 0 right, 1 left, 2 up, 3 down; limits X $20-$ef, Y $28-$f7). */
 void *gb_native_EnemyEdgeBlockedDirs(void) {
@@ -143,10 +137,6 @@ void *gb_native_EnemyScreenPosition(void) {
     return 0;
 }
 
-#define hOamCount 0xFFD9
-#define hObjPtrLo 0xFFD5
-#define hObjPtrHi 0xFFD6
-#define hObject2  0xFFB5
 
 /* SetObjPtr: hObjPtr = HL (the object record the next routines work on); A ends as L. */
 void *gb_native_SetObjPtr(void) {
@@ -312,8 +302,6 @@ void *gb_native_ApplyObjectStep(void) {
     return 0;
 }
 
-#define hOtherObjLo 0xFFA4
-#define hOtherObjHi 0xFFA5
 
 /* CompareObjectCoordinate: E = offset of a coordinate byte. Takes |obj[E] - other[E]| (the object at hObjPtr against the one at hOtherObj) and compares it with
  * the sum of the two box sizes taken from the table at $0a3f (indexes hScratch02 and hScratch03). Carry set = closer than the sum (the boxes touch on this axis).
@@ -363,7 +351,6 @@ no:
 static uint8_t map_tile(uint8_t y, uint8_t column) { return rd(0xC0A7 + (uint8_t)(y - 0x18 + column)); }
 
 void *gb_native_PlayerComputeBlockedDirs(void) {
-    const uint16_t wPlayerBlocked = 0xC43B;
     wr(wPlayerBlocked, 0);
     gb_native_IsOnTileGrid();
     if (!ZF()) return 0;
@@ -377,10 +364,6 @@ void *gb_native_PlayerComputeBlockedDirs(void) {
     return 0;
 }
 
-#define hEnemyTick 0xFFD0
-#define wEnemyCount 0xC47E
-#define wPlayerX 0xC4C5
-#define wPlayerY 0xC4C8
 
 /* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
 void *gb_native_TickObjectTimer(void) {
@@ -570,8 +553,6 @@ void *gb_native_LoadEnemySlot(void) {
     return 0;
 }
 
-#define wCameraXHi 0xC1AD
-#define wCameraYHi 0xC1AF
 
 /* DrawObject: turns the object record at hObjPtr into OAM sprites (through AddOamSprite).
  * Record: +0 flags (bit 7 active, bit 1 position is in the world so the camera is subtracted, bit 2 set here when a part was drawn,
@@ -658,7 +639,6 @@ void *gb_native_CounterToFrame(void) {
 
 /* PlayerCheckOffPath: when the player stands exactly on a grid cell whose map cell is not a path (low nibble 0) wPlayerDir bit 5 (death) is set. */
 void *gb_native_PlayerCheckOffPath(void) {
-    const uint16_t wPlayerDir = 0xC4DE;
     r.b = rd(wPlayerX);
     r.c = rd(wPlayerY);
     gb_native_IsOnTileGrid();
@@ -742,4 +722,36 @@ void *gb_native_UpdateAllEnemies(void) {
     wr(0xC53F, rd(0xC53F) + 1);
     wr(0xC53E, 0x0F);
     return gb_native_UpdateEnemyLoop();
+}
+
+/* PlayFrame: one frame of play mode (Mode1_Play calls it every frame). Order of the original: round cleared and link game checks, player death,
+ * the A button / the running card effect (PlayerAction), wall check and blocked directions (skipped while card 2, W.IN, runs: it lets the player walk through walls), direction
+ * and position handling, painting the floor, animation selection, the enemy projectile, then the player is drawn (while a card effect runs the
+ * player is only drawn every other frame). */
+void *gb_native_PlayFrame(void) {
+    if (rd(wGameFlags) & 0x01) return (void *)GAME_RoundCleared;
+    uint8_t link = rd(hSerialByte);
+    if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
+    if (rd(wPlayerDir) & 0x20) return (void *)GAME_PlayerDeath;
+    CALL(GAME_PlayerAction);
+    if (!(rd(wActiveMagic) == 0x02 && (rd(wMagicState) & 0x01))) {
+        gb_native_PlayerCheckOffPath();
+        gb_native_LoadPlayerXY();
+        gb_native_PlayerComputeBlockedDirs();
+    }
+    CALL(GAME_HoldDirectionUntilAligned);
+    CALL(GAME_PlayerSetDirection);
+    gb_native_ClampPlayerPosition();
+    CALL(GAME_PaintUnderPlayer);
+    CALL(GAME_SelectPlayerAnimation);
+    CALL(GAME_ProjectileFrame);
+    if (rd(wActiveMagic) != 0 && (rd(wMagicState) & 0x01)) {
+        wr(0xC4D3, rd(0xC4D3) + 1);
+        if (!(rd(0xC4D3) & 0x02)) return 0;
+    }
+    CALL(GAME_AnimatePlayerWalk);
+    SET_HL(wPlayer);
+    gb_native_SetObjPtr();
+    gb_native_DrawObject();
+    return 0;
 }
