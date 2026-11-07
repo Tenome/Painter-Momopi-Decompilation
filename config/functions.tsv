@@ -192,7 +192,7 @@ bank	addr	size	name
 0	3e20	45	EnemyKind7Init
 0	3e61	47	EnemyKind5
 0	3e90	65	EnemyIdleAnimate
-0	3ed1	40	EnemyKind7Teleport
+0	3ed1	40	EnemyTeleportNext
 0	3ef9	65	EnemyBuildTeleportTable
 1	4157	53	SoundUpdate
 1	418c	33	SoundDequeue

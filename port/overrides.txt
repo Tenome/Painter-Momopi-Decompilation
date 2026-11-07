@@ -172,3 +172,6 @@ EnemyErasePaint
 EnemyFlagOffPath
 EnemyTurnIfBlocked
 EnemyKind10Move
+EnemyIdleAnimate
+EnemyBuildTeleportTable
+EnemyTeleportNext

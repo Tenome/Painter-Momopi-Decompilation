@@ -872,7 +872,7 @@ void *gb_native_EnemyKind5(void) {
     if (!(rd(wActiveMagic) == 0x06 && (rd(wMagicState) & 0x01))) NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
     NCALL(GAME_EnemyIdleAnimate);
-    NCALL(GAME_EnemyKind7Teleport);
+    NCALL(GAME_EnemyTeleportNext);
     gb_native_DrawObject();
     return 0;
 }
@@ -2986,5 +2986,58 @@ void *gb_native_EnemyKind10Move(void) {
     if (r.a) return 0;
     SET_HL(hEnemyFlags);
     wr(hEnemyFlags, rd(hEnemyFlags) | 0x08);
+    return 0;
+}
+
+/* EnemyIdleAnimate (kind 5): the enemy first shows an animation pair for $a0 counts (hEnemyCounter), then sets hEnemyDir bit 1; then a blink between two animations for
+ * $50 counts, after which hEnemyDir bit 0 lets EnemyTeleportNext move it. */
+void *gb_native_EnemyIdleAnimate(void) {
+    if (!(rd(hEnemyDir) & 0x02)) {
+        uint8_t count = rd(hEnemyCounter);
+        if (count != 0xA0) {
+            wr(hEnemyCounter, count + 1);
+            anim_variant(0x3F3A, 0x3F3F);
+            return 0;
+        }
+        wr(hEnemyCounter, 0);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x02);
+    }
+    uint8_t count = rd(hEnemyCounter);
+    if (count == 0x50) { SET_HL(hEnemyDir); wr(hEnemyDir, rd(hEnemyDir) | 0x01); return 0; }
+    wr(hEnemyCounter, count + 1);
+    set_anim((rd(hEnemyTick) & 0x04) ? 0x3F3A : 0x3ACA);
+    return 0;
+}
+
+/* EnemyBuildTeleportTable (kind 5 at its start): counter $20 and the table at $c489 of the places the enemy visits: left, up, right, down of where it stands and its own
+ * place, ended by a zero; animation $3f3a and hEnemyDir = $90. */
+void *gb_native_EnemyBuildTeleportTable(void) {
+    wr(hEnemyCounter, 0x20);
+    uint8_t x = rd(hEnemyX), y = rd(hEnemyY);
+    wr(0xC48B, x); wr(0xC48F, x); wr(0xC491, x);
+    wr(0xC489, (uint8_t)(x - 0x10));
+    wr(0xC48D, (uint8_t)(x + 0x10));
+    wr(0xC48A, y); wr(0xC48E, y); wr(0xC492, y);
+    wr(0xC48C, (uint8_t)(y - 0x10));
+    wr(0xC490, (uint8_t)(y + 0x10));
+    wr(0xC493, 0);
+    set_anim(0x3F3A);
+    wr(hEnemyDir, 0x90);
+    r.a = 0x90;
+    return 0;
+}
+
+/* EnemyTeleportNext: once hEnemyDir bit 0 is set the enemy jumps to the next place of its table (box size 2, hEnemyStep indexes the pairs); a zero X ends it (RemoveEnemy). */
+void *gb_native_EnemyTeleportNext(void) {
+    if (!(rd(hEnemyDir) & 0x01)) return 0;
+    wr(hEnemyBoxHalf, 0x02);
+    uint16_t at = 0xC489 + (uint8_t)(rd(hEnemyStep) << 1);
+    uint8_t x = rd(at);
+    if (x == 0) return gb_native_RemoveEnemy();
+    wr(hEnemyX, x);
+    wr(hEnemyY, rd(at + 1));
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) + 1);
+    set_anim(0x3F44);
     return 0;
 }

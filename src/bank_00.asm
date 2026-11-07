@@ -5563,7 +5563,7 @@ EnemyKind5::  ; enemy kind 5
 .L_00_3e84:
     call CheckPaintHitsEnemy
     call EnemyIdleAnimate
-    call EnemyKind7Teleport
+    call EnemyTeleportNext
     jp DrawObject
 EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
     ldh a, [hEnemyDir]
@@ -5600,7 +5600,7 @@ EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then 
     ld hl, hEnemyDir
     set 0, [hl]
     ret
-EnemyKind7Teleport::  ; moves the enemy to the next position in the table at $c489 or removes it (name provisional)
+EnemyTeleportNext::  ; moves the enemy to the next position of the table at $c489 (pairs X Y
     ldh a, [hEnemyDir]
     bit 0, a
     ret z
