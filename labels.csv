@@ -509,3 +509,7 @@ bank,addr,name,comment
 0,28a3,BonusSelectJob0,data (table entry)
 0,28fd,BonusSelectJob1,data (table entry)
 0,2957,BonusSelectJob2,data (table entry)
+0,33fd,EnemyScoreTable,points awarded for defeating an enemy by kind (hEnemyKind 0-11; passed to AddScore in E)
+0,36c1,PopFrames1,animation frames of the pop effect when an enemy is defeated (first stage; name provisional)
+0,36bc,PopFrames2,animation frames of the pop effect (second stage; name provisional)
+0,36c6,PopFrames3,animation frames of the pop effect (last stage; name provisional)

@@ -280,3 +280,7 @@ DEF hEnemyField13   EQU $ffc8   ; +$13: only copied (provisional)
 DEF hEnemyField18   EQU $ffcd   ; +$18: only copied (provisional)
 DEF hEnemyField19   EQU $ffce   ; +$19: only copied (provisional)
 DEF hBlinkTick      EQU $ffde   ; incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames (provisional)
+DEF wPlayerStepXLo  EQU $c4ca   ; wPlayer +$0c: horizontal step (fraction part; $c4cb = wPlayerVelX is the pixel part)
+DEF wPlayerStepYLo  EQU $c4cc   ; wPlayer +$0e: vertical step (fraction part; $c4cd = wPlayerVelY is the pixel part)
+DEF wPlayerAnimPtrLo EQU $c4e3  ; pointer to the table of animation pointers chosen by SelectPlayerAnimation (16 bit with $c4e4)
+DEF wPlayerAnimPtrHi EQU $c4e4

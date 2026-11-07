@@ -953,3 +953,403 @@ void *gb_native_EnemyKind11(void) {
     gb_native_DrawObject();
     return 0;
 }
+
+/* Mode1_Play: sets a room up for play and then runs the frame loop forever (the loop is left by a routine that resets the stack and jumps to another mode).
+ * Setup: stack, LCD off, clear the map, load tiles (bank 2), unpack the room map and draw it with the metatiles of the room theme, VRAM jobs of the room,
+ * the paint counter of the round, magic screen and points, camera, round and player variables (once), enemies and projectile cleared, serial start,
+ * interrupts and the LCD on, round music, the round timer. Each frame: wait for the frame, read the pad, PlayFrame, the magic screen, camera,
+ * enemy spawning and updates, the time-up enemy and the extra life check; hBlinkTick counts frames. */
+void *gb_native_Mode1_Play(void) {
+    r.sp = wStackTop;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    CALL(GAME_LoadGfxBank2);
+    CALL(GAME_ClearOamShadow);
+    SET_HL(DATA_RoomMapTable);
+    r.a = rd(wRound);
+    CALL(GAME_TableIndexFromRoundDec);
+    CALL(GAME_UnpackRoomMap);
+    wr(hScratch01, 0x10);
+    wr(hScratch00, 0x10);
+    r.a = rd(wRoomIndex);
+    SET_HL(DATA_RoomMetatileTable);
+    CALL(GAME_TableIndexFromRound);
+    SET_HL(vBGMap0);
+    SET_DE(wRoomMap);
+    wr(wMapCellMask, 0x0F);
+    CALL(GAME_DrawMetatileMap);
+    r.a = rd(wRoomIndex);
+    SET_HL(DATA_RoomVramJobTable);
+    CALL(GAME_TableIndexFromRound);
+    CALL(GAME_RunVramCopyList);
+    r.c = 0x10;
+    r.a = (uint8_t)(rd(wRound) - 1);
+    if (r.a != 0x20) r.c = r.a & 0x0F;
+    SET_HL(DATA_PaintCellCountTable);
+    gb_native_LookupByte();
+    wr(wPaintRemaining, r.a);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    CALL(GAME_InitMagicScreenState);
+    CALL(GAME_InitMagicPoints);
+    CALL(GAME_ResetCamera);
+    if (!(rd(wRoundFlags) & 0x04)) {
+        wr(wRoundFlags, rd(wRoundFlags) | 0x04);
+        CALL(GAME_ClearRoundVariables);
+    }
+    if (!(rd(wGameFlags) & 0x80)) {
+        wr(wGameFlags, rd(wGameFlags) | 0x80);
+        CALL(GAME_InitPlayer);
+    }
+    CALL(GAME_ClearAllEnemies);
+    SET_HL(wProjectile);
+    gb_native_Clear32Bytes();
+    CALL(GAME_SerialStartTransfer);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    CALL(GAME_StartRoundMusic);
+    wr(wGameFlags, rd(wGameFlags) & ~0x20);
+    wr(hTimeFrames, 0x3C);
+    r.a = rd(wRound);
+    if (r.a == 0x21) {
+        r.a = 0x5A;
+    } else {
+        r.c = r.a >> 2;
+        SET_HL(DATA_RoundTimeTable);
+        gb_native_LookupByte();
+    }
+    wr(hTimeSeconds, r.a);
+    wr(hRoundSeconds, r.a);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x10);
+    for (;;) {
+        CALL(GAME_WaitFrameAndSyncOam);
+        CALL(GAME_ReadJoypad);
+        CALL(GAME_PlayFrame);
+        CALL(GAME_ShowMagicScreen);
+        CALL(GAME_UpdateCamera);
+        CALL(GAME_StepEnemySpawnScript);
+        CALL(GAME_UpdateAllEnemies);
+        CALL(GAME_TimeUpSpawnEnemy);
+        CALL(GAME_CheckExtraLife);
+        wr(hBlinkTick, rd(hBlinkTick) + 1);
+    }
+}
+
+/* HoldDirectionUntilAligned: while the player is between two grid cells the pad is overridden: the direction bits of hJoyHeld (high nibble) are replaced by
+ * the direction the player already moves in (wPlayerDir), so a started step is finished. The buttons (low nibble) are kept unless a direction is pressed.
+ * Nothing is done when both opposite directions are combined (the value $30 or $c0), or when the player is exactly on the grid. */
+void *gb_native_HoldDirectionUntilAligned(void) {
+    r.b = rd(wPlayerX);
+    r.c = rd(wPlayerY);
+    gb_native_IsOnTileGrid();
+    if (ZF()) return 0;
+    uint8_t dir_high = (uint8_t)((rd(wPlayerDir) & 0x0F) << 4);
+    uint8_t held = rd(hJoyHeld);
+    if ((uint8_t)(held | dir_high) == 0x30 || (uint8_t)(held | dir_high) == 0xC0) return 0;
+    wr(hJoyHeld, ((held & 0xF0) ? 0 : (held & 0x0F)) | dir_high);
+    return 0;
+}
+
+/* PlayerSetDirection: turns the pad into the player's direction and step. Blocked directions (wPlayerBlocked, shifted into the pad nibble) or no direction
+ * stop the player (SetPlayerStatusBit0). Otherwise wPlayerDir gets the direction, the heading comes from DirectionToAnimIndex, the 16 bit steps from a table of
+ * 4 byte entries (x fraction, x pixels, y fraction, y pixels; a second table while the S.UP card runs), the speed is 9 and the step is applied. */
+void *gb_native_PlayerSetDirection(void) {
+    uint8_t held = rd(hJoyHeld);
+    if (((rd(wPlayerBlocked) << 4 | rd(wPlayerBlocked) >> 4) & 0xFF & held) != 0) return (void *)GAME_SetPlayerStatusBit0;
+    if (!(held & 0xF0)) return (void *)GAME_SetPlayerStatusBit0;
+    uint8_t dir = held >> 4;
+    wr(wPlayerDir, (rd(wPlayerDir) & 0xF0) | dir);
+    uint8_t angle = rd(DATA_DirectionToAnimIndex + dir);
+    wr(wPlayerAngle, angle);
+    uint16_t table = 0x518D;
+    if (rd(wActiveMagic) == 0x01 && (rd(wMagicState) & 0x01)) table = 0x519D;
+    table += angle >> 1;
+    wr(wPlayerStepYLo, rd(table));
+    wr(wPlayerVelY, rd(table + 1));
+    wr(wPlayerStepXLo, rd(table + 2));
+    wr(wPlayerVelX, rd(table + 3));
+    wr(wPlayerSpeed, 0x09);
+    SET_HL(wPlayer);
+    gb_native_SetObjPtr();
+    gb_native_ApplyObjectStep();
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x01);
+    return 0;
+}
+
+/* SelectPlayerAnimation: chooses the table of animation pointers by the direction in wPlayerDir (bit 0 = right: mirrored, bit 1 = left: not mirrored, bit 2 = up). */
+void *gb_native_SelectPlayerAnimation(void) {
+    uint8_t dir = rd(wPlayerDir);
+    uint16_t table;
+    if (dir & 0x01) { wr(wPlayer, rd(wPlayer) | 0x20); table = DATA_PlayerAnimPtrsFlipped; }
+    else if (dir & 0x02) { wr(wPlayer, rd(wPlayer) & ~0x20); table = DATA_PlayerAnimPtrsFlipped; }
+    else if (dir & 0x04) table = 0x48D4;
+    else table = DATA_PlayerAnimPtrs;
+    wr(wPlayerAnimPtrLo, table);
+    wr(wPlayerAnimPtrHi, table >> 8);
+    return 0;
+}
+
+static void draw_record(uint16_t record) {      /* hObjPtr = record, DrawObject */
+    SET_HL(record);
+    gb_native_SetObjPtr();
+    gb_native_DrawObject();
+}
+
+static void draw_enemy_record(void) {           /* the enemy record in hObject2 */
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+}
+
+/* ProjectileFrame: the shot of an enemy (object at wProjectile) kills the player when its box overlaps the player's. Skipped while SEALED (6) or GHOST (4) runs. */
+void *gb_native_ProjectileFrame(void) {
+    if ((rd(wActiveMagic) == 0x06 || rd(wActiveMagic) == 0x04) && (rd(wMagicState) & 0x01)) return 0;
+    if (!(rd(wProjectile) & 0x80)) return 0;
+    wr(hOtherObjLo, (uint8_t)wProjectile);
+    wr(hOtherObjHi, wProjectile >> 8);
+    wr(hObjPtrLo, (uint8_t)wPlayer);
+    wr(hObjPtrHi, wPlayer >> 8);
+    gb_native_ObjectsOverlap();
+    if (r.a) {
+        SET_HL(wPlayerDir);
+        wr(wPlayerDir, rd(wPlayerDir) | 0x20);
+    }
+    return 0;
+}
+
+/* EnemyDefeated: an enemy hit by paint (hEnemyFlags bit 2). It plays sound $8e, then shows a short effect driven by a counter (hEnemyCounter2, or
+ * wComboCounter while wPlayerStatus bit 4 is set, which also pops the projectile object): CounterToFrame turns the counter into a stage; the effect frames
+ * are drawn mirrored four ways to make a burst. After the last stage the score of the enemy's kind (EnemyScoreTable) is added with AddScore,
+ * the status bits 3 and 4 are cleared and the enemy is removed. */
+void *gb_native_EnemyDefeated(void) {
+    r.a = SND_SFX_8E;
+    CALL(GAME_PlaySound);
+    wr(hEnemyCounter2, rd(hEnemyCounter2) + 1);
+    int combo = (rd(wPlayerStatus) & 0x10) != 0;
+    if (combo) wr(wComboCounter, rd(wComboCounter) + 1);
+    wr(hScratch00 + 6, 0x0C);
+    wr(hScratch00 + 7, 0x02);
+    wr(hScratch00 + 8, rd(combo ? wComboCounter : hEnemyCounter2));
+    r.a = 0x03;
+    gb_native_CounterToFrame();
+    wr(hEnemyCounter2, rd(hScratch00 + 8));
+    if (combo) wr(wComboCounter, rd(hScratch00 + 8));
+    if (r.c == 0x06) {
+        wr(wPlayerStatus, rd(wPlayerStatus) & ~0x18);
+        wr(hEnemyFlags, rd(hEnemyFlags) & ~0x04);
+        r.c = rd(hEnemyKind);
+        SET_HL(DATA_EnemyScoreTable);
+        gb_native_LookupByte();
+        r.e = r.a;
+        r.d = 0;
+        CALL(GAME_AddScore);
+        wr(wProjectile, rd(wProjectile) & 0x7F);
+        gb_native_RemoveEnemy();
+        return 0;
+    }
+    uint16_t frames = r.c == 0 ? DATA_PopFrames1 : (r.c == 2 ? DATA_PopFrames2 : DATA_PopFrames3);
+    wr(hEnemyAnimLo, (uint8_t)frames);
+    wr(hEnemyAnimHi, frames >> 8);
+    draw_enemy_record();
+    if (combo) { wr(wProjectileAnimLo, (uint8_t)frames); wr(wProjectileAnimHi, frames >> 8); draw_record(wProjectile); }
+    wr(hObject2, rd(hObject2) | 0x40);
+    draw_enemy_record();
+    if (combo) { wr(wProjectile, rd(wProjectile) | 0x40); draw_record(wProjectile); }
+    wr(hObject2, (rd(hObject2) | 0x20) & ~0x40);
+    draw_enemy_record();
+    if (combo) { wr(wProjectile, (rd(wProjectile) | 0x20) & ~0x40); draw_record(wProjectile); }
+    wr(hObject2, rd(hObject2) | 0x40);
+    draw_enemy_record();
+    if (combo) { wr(wProjectile, rd(wProjectile) | 0x40); draw_record(wProjectile); }
+    wr(hObject2, rd(hObject2) & 0x9F);
+    if (combo) wr(wProjectile, rd(wProjectile) & 0x9F);
+    return 0;
+}
+
+/* AddScore: adds D:E points (E mostly) to the score, which is three bytes of base 100 digits at wScoreDigits (low first). The digits are then redrawn
+ * (DrawDecimalDigits turns each byte into two decimal digits at wScoreDecimal) and queued as the tile stream at wScoreStream (count 6, rows 1, six tiles),
+ * and CheckExtraLife runs. */
+void *gb_native_AddScore(void) {
+    SET_BC(0);
+    SET_HL(wScoreDigits);
+    r.a = r.e;
+    alu_add(rd(HL()), 0);
+    wr(wScoreTemp, r.a);
+    gb_native_ByteToBCD();
+    if (rd(hScratch00 + 3)) {
+        r.d++;
+        wr(wScoreTemp, rd(wScoreTemp) - 100);
+    }
+    wr(HL(), rd(wScoreTemp));
+    SET_HL(HL() + 1);
+    r.a = r.d;
+    alu_add(rd(HL()), 0);                       /* the carry is 0 here (ByteToBCD found a hundred in that case) */
+    wr(HL(), r.a);
+    SET_HL(HL() + 1);
+    int carry = CF() ? 1 : 0;
+    r.a = 0;
+    alu_add(rd(HL()), carry);
+    wr(HL(), r.a);
+    for (int i = 0; i < 3; i++) {
+        CALL(GAME_DrawDecimalDigits);
+        if (i < 2) SET_HL(HL() - 1);
+    }
+    wr(wScoreStream, 0x06);
+    wr(wScoreStream + 1, 0x01);
+    for (int i = 0; i < 6; i++) {
+        r.a = rd(wScoreDecimal + i);
+        CALL(GAME_LowNibbleToDigitTile);
+        wr(wScoreStream + 2 + i, r.a);
+    }
+    return (void *)GAME_CheckExtraLife;
+}
+
+/* StepEnemySpawnScript: runs the spawn list of the round (RoundDataTable[wRound - 1] -> six wave lists -> entries `kind, x, y, delay` of 4 bytes after a count byte).
+ * The delay of the next entry is loaded once (wPlayerStatus bit 5 marks that); when the seconds elapsed in the round (hRoundSeconds - hTimeSeconds) reach it
+ * and fewer than 3 enemies are alive, the entry is spawned through FindFreeEnemySlot (kind in hScratch07, X in hScratch08, Y in hScratch0A, flag in hSpawnFlag).
+ * After the last entry of a wave the next wave starts (wSpawnWave; it wraps after 6 and wWaveEnded is set). */
+void *gb_native_StepEnemySpawnScript(void) {
+    r.a = (uint8_t)(rd(wRound) - 1);
+    SET_HL(DATA_RoundDataTable);
+    gb_native_LookupWord();
+    if (rd(wSpawnWave) == 0x06) wr(wSpawnWave, 0);
+    r.a = rd(wSpawnWave);
+    gb_native_LookupWord();
+    uint16_t list = HL();
+    wr(wSpawnListPtr, (uint8_t)list);
+    wr(wSpawnListPtr + 1, list >> 8);
+    uint8_t count = rd(list);
+    wr(wSpawnCount, count);
+    if ((uint8_t)(rd(wSpawnIndex) - 1) == count) {
+        wr(wSpawnWave, rd(wSpawnWave) + 1);
+        wr(wSpawnIndex, 1);
+        wr(wWaveEnded, 1);
+    }
+    list = rd(wSpawnListPtr) | rd(wSpawnListPtr + 1) << 8;
+    if (!(rd(wPlayerStatus) & 0x20)) {
+        wr(hSpawnDelay, rd(list + (uint8_t)(rd(wSpawnIndex) << 2)));
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x20);
+    }
+    uint8_t delay = rd(hSpawnDelay);
+    if ((uint8_t)(rd(hRoundSeconds) - delay) < rd(hTimeSeconds)) return 0;
+    if (rd(wEnemyCount) >= 0x03) return 0;
+    uint16_t entry = list + (uint8_t)((rd(wSpawnIndex) << 2) - 3);
+    wr(hScratch00 + 7, rd(entry));
+    wr(hScratch00 + 8, rd(entry + 1));
+    wr(hScratch00 + 10, rd(entry + 2) & 0xF8);
+    wr(hSpawnFlag, rd(entry + 2) & (rd(wRound) >= 0x11 ? 0x02 : 0x01));
+    wr(wSpawnIndex, rd(wSpawnIndex) + 1);
+    wr(wWaveEnded, rd(wWaveEnded) + 1);
+    wr(wEnemyCount, rd(wEnemyCount) + 1);
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
+    return (void *)GAME_FindFreeEnemySlot;
+}
+
+/* TimeUpSpawnEnemy: when the round clock has run out (hTimeSeconds and $ffe2 both 0), or in a link game when the other machine asks for it (hSerialByte bit 5),
+ * one extra enemy (kind 4, X $a0, Y $98) is spawned once per round (wGameFlags bit 5) and the link transfer is started. */
+void *gb_native_TimeUpSpawnEnemy(void) {
+    int linked = (rd(hLinkFlags) & 0x01) && (rd(hSerialByte) & 0x20);
+    if (!linked && (rd(hTimeSeconds) | rd(0xFFE2))) return 0;
+    if (rd(wGameFlags) & 0x20) return 0;
+    wr(wGameFlags, rd(wGameFlags) | 0x20);
+    wr(hScratch00 + 7, 0x04);
+    wr(hScratch00 + 8, 0xA0);
+    wr(hScratch00 + 10, 0x98);
+    CALL(GAME_FindFreeEnemySlot);
+    return (void *)GAME_SerialStartTransfer;
+}
+
+/* RunMagicEffect: runs the effect routine of the active card (wActiveMagic indexes MagicEffectTable) as a tail jump; clears wMagicState bit 2 first. */
+void *gb_native_RunMagicEffect(void) {
+    wr(wMagicState, rd(wMagicState) & ~0x04);
+    r.c = (uint8_t)(rd(wActiveMagic) << 1);
+    SET_HL(DATA_MagicEffectTable);
+    gb_native_LookupByte();
+    uint16_t entry = HL();
+    r.e = r.a;
+    r.d = rd(entry + 1);
+    return (void *)gb_dispatch((uint16_t)(r.d << 8 | r.e));
+}
+
+/* PlayerAction: the A button during play. While a card effect runs (wMagicState bit 0) the effect is run. A press (hJoyNew bit 0) sets wPlayerDir bit 6;
+ * with a card selected (wActiveMagic) and the player standing still (wPlayerStatus bit 0) the cast starts: bit 0 of wMagicState is set and the cost of the card
+ * (MagicCostTable) is taken from wMagicPoints by PayMagicCost (with a link game LinkSyncFrame first when the points hit exactly 0). */
+void *gb_native_PlayerAction(void) {
+    if (rd(wMagicState) & 0x01) return gb_native_RunMagicEffect();
+    if (!(rd(hJoyNew) & 0x01)) return 0;
+    wr(wPlayerDir, rd(wPlayerDir) | 0x40);
+    wr(wMagicState, rd(wMagicState) & ~0x02);
+    if (rd(wActiveMagic) == 0) return 0;
+    if (!(rd(wPlayerStatus) & 0x01)) return 0;
+    wr(wMagicState, rd(wMagicState) | 0x01);
+    SET_HL(DATA_MagicCostTable);
+    r.c = rd(wActiveMagic);
+    gb_native_LookupByte();
+    r.c = r.a;
+    r.a = rd(wMagicPoints);
+    alu_sub(r.c, 0);
+    r.e = r.a;
+    if (ZF()) return (void *)GAME_LinkSyncFrame;
+    return (void *)GAME_PayMagicCost;
+}
+
+/* PaintCell: B = X and C = Y of a grid aligned cell under the player. Sets the painted bit ($10) of the map cell and queues the tile update (two tile rows from
+ * D_01_4921 for path type 1, else D_01_491b) at the cell's position in the background map, waits for the VRAM copy, and counts wPaintRemaining down;
+ * at 0 the round is cleared (RoundCleared). Nothing happens when the cell is already painted. */
+void *gb_native_PaintCell(void) {
+    r.a = r.b;
+    gb_native_PixelXToColumn();
+    r.a = r.c;
+    gb_native_LookupMapTile();
+    uint8_t tile = r.a;
+    wr(hScratch00, tile);
+    if (tile & 0x10) return 0;
+    wr(HL(), (tile & 0x0F) | 0x10);
+    wr(hSpriteX, r.b);
+    wr(hSpriteY, (uint8_t)(r.c - 8));
+    CALL(GAME_PixelToTilemapAddr);
+    r.l = rd(hTilemapAddrLo);
+    r.l--;
+    r.h = rd(hTilemapAddrHi);
+    SET_DE((tile & 0x0F) == 0x01 ? 0x4921 : 0x491B);
+    CALL(GAME_QueueVramCopyRows);
+    CALL(GAME_WaitVramCopyDone);
+    wr(wPaintRemaining, rd(wPaintRemaining) - 1);
+    if (rd(wPaintRemaining)) return 0;
+    return (void *)GAME_RoundCleared;
+}
+
+/* PaintUnderPlayerCell: paints the map cell under the player when it is a path cell and the player is exactly on the grid. */
+void *gb_native_PaintUnderPlayerCell(void) {
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = rd(wPlayerY);
+    gb_native_LookupMapTile();
+    if (r.a == 0) return 0;
+    gb_native_LoadPlayerXY();
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    return gb_native_PaintCell();
+}
+
+/* PaintUnderPlayerAligned: the same with the player's Y rounded to the grid row (used while the W.IN card lets the player walk between rows). */
+void *gb_native_PaintUnderPlayerAligned(void) {
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = (uint8_t)((rd(wPlayerY) & 0xF0) + 8);
+    gb_native_LookupMapTile();
+    if (r.a == 0) return 0;
+    return gb_native_PaintUnderPlayerCell();
+}
+
+/* PaintUnderPlayer: paints the floor under the player (not while the card 9, PYON, effect runs; with card 2, W.IN, the aligned version). */
+void *gb_native_PaintUnderPlayer(void) {
+    if (rd(wActiveMagic) == 0x09 && (rd(wMagicState) & 0x01)) return 0;
+    if (rd(wActiveMagic) == 0x02) return gb_native_PaintUnderPlayerAligned();
+    return gb_native_PaintUnderPlayerCell();
+}
