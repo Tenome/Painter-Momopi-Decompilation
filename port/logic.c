@@ -607,14 +607,14 @@ void *gb_native_DrawObject(void) {
         uint8_t part = cursor++;
         int8_t ox = (int8_t)rd(shape + 2 * part + 1);
         if (s00 & 0x20) ox = (int8_t)(0 - ox);
-        int sx = x + ox;
+        int sx = (x + ox) & 0xFFFF;
         wr(hScratch00 + 10, (uint8_t)sx);
-        if (sx < 0 || sx > 255) continue;
+        if (sx > 255) continue;
         int8_t oy = (int8_t)rd(shape + 2 * part + 2);
         if (s00 & 0x40) oy = (int8_t)(0 - oy);
-        int sy = y + oy;
+        int sy = (y + oy) & 0xFFFF;
         wr(hScratch00 + 11, (uint8_t)sy);
-        if (sy < 0 || sy > 255) continue;
+        if (sy > 255) continue;
         wr(hScratch00 + 12, rd(anim + 1 + part));
         s00 |= 0x04;
         wr(hScratch00, s00);

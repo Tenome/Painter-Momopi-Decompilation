@@ -197,3 +197,14 @@ uint32_t gb_state_hash(void) {
     for (unsigned i = 0; i < sizeof oam; i++) h = (h ^ oam[i]) * 16777619u;
     return h;
 }
+
+/* Write work RAM, high RAM, video RAM and OAM (in that order) to a file: used to find what differs between two builds (main_headless --dump). */
+void gb_dump_state(const char *path) {
+    FILE *f = fopen(path, "wb");
+    if (!f) return;
+    fwrite(wram, 1, sizeof wram, f);
+    fwrite(hram, 1, sizeof hram, f);
+    fwrite(vram, 1, sizeof vram, f);
+    fwrite(oam, 1, sizeof oam, f);
+    fclose(f);
+}
