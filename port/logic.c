@@ -1297,3 +1297,59 @@ void *gb_native_PlayerAction(void) {
     if (ZF()) return (void *)GAME_LinkSyncFrame;
     return (void *)GAME_PayMagicCost;
 }
+
+/* PaintCell: B = X and C = Y of a grid aligned cell under the player. Sets the painted bit ($10) of the map cell and queues the tile update (two tile rows from
+ * D_01_4921 for path type 1, else D_01_491b) at the cell's position in the background map, waits for the VRAM copy, and counts wPaintRemaining down;
+ * at 0 the round is cleared (RoundCleared). Nothing happens when the cell is already painted. */
+void *gb_native_PaintCell(void) {
+    r.a = r.b;
+    gb_native_PixelXToColumn();
+    r.a = r.c;
+    gb_native_LookupMapTile();
+    uint8_t tile = r.a;
+    wr(hScratch00, tile);
+    if (tile & 0x10) return 0;
+    wr(HL(), (tile & 0x0F) | 0x10);
+    wr(hSpriteX, r.b);
+    wr(hSpriteY, (uint8_t)(r.c - 8));
+    CALL(GAME_PixelToTilemapAddr);
+    r.l = rd(hTilemapAddrLo);
+    r.l--;
+    r.h = rd(hTilemapAddrHi);
+    SET_DE((tile & 0x0F) == 0x01 ? 0x4921 : 0x491B);
+    CALL(GAME_QueueVramCopyRows);
+    CALL(GAME_WaitVramCopyDone);
+    wr(wPaintRemaining, rd(wPaintRemaining) - 1);
+    if (rd(wPaintRemaining)) return 0;
+    return (void *)GAME_RoundCleared;
+}
+
+/* PaintUnderPlayerCell: paints the map cell under the player when it is a path cell and the player is exactly on the grid. */
+void *gb_native_PaintUnderPlayerCell(void) {
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = rd(wPlayerY);
+    gb_native_LookupMapTile();
+    if (r.a == 0) return 0;
+    gb_native_LoadPlayerXY();
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    return gb_native_PaintCell();
+}
+
+/* PaintUnderPlayerAligned: the same with the player's Y rounded to the grid row (used while the W.IN card lets the player walk between rows). */
+void *gb_native_PaintUnderPlayerAligned(void) {
+    r.a = rd(wPlayerX);
+    gb_native_PixelXToColumn();
+    r.a = (uint8_t)((rd(wPlayerY) & 0xF0) + 8);
+    gb_native_LookupMapTile();
+    if (r.a == 0) return 0;
+    return gb_native_PaintUnderPlayerCell();
+}
+
+/* PaintUnderPlayer: paints the floor under the player (not while the card 9, PYON, effect runs; with card 2, W.IN, the aligned version). */
+void *gb_native_PaintUnderPlayer(void) {
+    if (rd(wActiveMagic) == 0x09 && (rd(wMagicState) & 0x01)) return 0;
+    if (rd(wActiveMagic) == 0x02) return gb_native_PaintUnderPlayerAligned();
+    return gb_native_PaintUnderPlayerCell();
+}

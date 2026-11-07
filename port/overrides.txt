@@ -73,3 +73,7 @@ StepEnemySpawnScript
 TimeUpSpawnEnemy
 RunMagicEffect
 PlayerAction
+PaintCell
+PaintUnderPlayerCell
+PaintUnderPlayerAligned
+PaintUnderPlayer
