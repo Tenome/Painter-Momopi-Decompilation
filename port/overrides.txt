@@ -21,3 +21,4 @@ SetObjPtr
 SelectObject2
 AddOamSprite
 MultiplyByDE
+ByteToBCD

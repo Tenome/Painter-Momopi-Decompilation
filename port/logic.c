@@ -212,3 +212,29 @@ void *gb_native_MultiplyByDE(void) {
     wr(hScratch01, r.a);
     return 0;
 }
+
+/* ByteToBCD: A (plus 256 when C is not 0) to decimal. hScratch02 = the two low digits as BCD (tens in the high nibble),
+ * hScratch03 = the hundreds (carry count); hScratch00 ends as the last remainder; A and the flags are those of the final addition. */
+void *gb_native_ByteToBCD(void) {
+    uint8_t ones = r.a, digits = 0, hundreds = 0;
+    wr(0xFF97, r.c);
+    if (r.c) {
+        ones += 0x38;
+        hundreds += 2;
+    }
+    wr(0xFF96, ones);
+    while (ones >= 0x0A) {
+        ones -= 0x0A;
+        r.a = digits;
+        alu_add(0x10, 0);
+        op_daa();
+        digits = r.a;
+        hundreds += CF() ? 1 : 0;
+    }
+    r.a = digits;
+    alu_add(ones, 0);
+    wr(0xFF96, ones);
+    wr(0xFF98, r.a);
+    wr(0xFF99, hundreds);
+    return 0;
+}
