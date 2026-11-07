@@ -5207,7 +5207,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call EnemyGridStep
     call EnemyEdgeBlockedDirs
     call EnemyChooseDirection
-    call EnemyFlagOnPaintedTile
+    call EnemyFlagOffPath
     ldh a, [hEnemyFlags]
     bit 1, a
     jr z, .L_00_3b26
@@ -5272,7 +5272,7 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     ld de, D_00_3bd2
     ld bc, D_00_3bd7
     jp SetAnimationVariant
-EnemyFlagOnPaintedTile::  ; sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
+EnemyFlagOffPath::  ; sets hEnemyFlags bit 1 when the map cell under the enemy is not a path (low nibble 0) else clears it
     call EnemyTileUnder
     and a, $0f
     or a, a

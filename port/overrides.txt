@@ -169,3 +169,6 @@ SelectKind4Animation
 SelectKind2Animation
 SelectKind9Animation
 EnemyErasePaint
+EnemyFlagOffPath
+EnemyTurnIfBlocked
+EnemyKind10Move

@@ -366,7 +366,7 @@ bank,addr,name,comment
 1,5817,EnemyKind9Move,sets hEnemySpeed 6 then moves and clamps (name provisional)
 0,253b,BonusModeJumpTable,3 entry points chosen by wPlayerBlocked: intro wait then Mode2_Init; BonusSelectLoop; BonusResultWait
 0,2541,BonusIntroWait,waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init (name provisional)
-0,3b99,EnemyFlagOnPaintedTile,sets hEnemyFlags bit 1 when the tile under the enemy has a zero low nibble else clears it (name provisional)
+0,3b99,EnemyFlagOffPath,sets hEnemyFlags bit 1 when the map cell under the enemy is not a path (low nibble 0) else clears it
 0,3bad,EnemyInitAnim3bbe,hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
 0,3c7d,EnemyMapTile,A = room map tile at the enemy position (X to column, Y as is)
 0,3e20,EnemyKind7Init,sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)

@@ -178,7 +178,7 @@ bank	addr	size	name
 0	3b3b	28	EnemyAuxCounterStep
 0	3b57	6	SetEnemyAnimation
 0	3b5d	60	SelectEnemyAnimation
-0	3b99	20	EnemyFlagOnPaintedTile
+0	3b99	20	EnemyFlagOffPath
 0	3bad	17	EnemyInitAnim3bbe
 0	3bdc	114	EnemyKind11
 0	3c4e	9	EnemyKind7SetAnimation

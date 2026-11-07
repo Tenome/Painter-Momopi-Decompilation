@@ -797,7 +797,7 @@ void *gb_native_EnemyKind1(void) {
     NCALL(GAME_EnemyGridStep);
     gb_native_EnemyEdgeBlockedDirs();
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyFlagOffPath);
     if (rd(hEnemyFlags) & 0x02) {
         wr(hEnemyCounter, rd(hEnemyCounter) + 1);
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
@@ -840,7 +840,7 @@ void *gb_native_EnemyKind3(void) {
     if (ZF()) return (void *)GAME_EnemyKind3Init;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyFlagOnPaintedTile);
+    NCALL(GAME_EnemyFlagOffPath);
     NCALL(GAME_EnemyTurnIfBlocked);
     NCALL(GAME_MoveAndApplyObject);
     NCALL(GAME_EnemyPaintUnderB0M);
@@ -2940,5 +2940,51 @@ void *gb_native_EnemyErasePaint(void) {
     NCALL(GAME_QueueVramCopyRows);
     NCALL(GAME_WaitVramCopyDone);
     wr(wPaintRemaining, rd(wPaintRemaining) + 1);
+    return 0;
+}
+
+/* EnemyFlagOffPath: hEnemyFlags bit 1 = the map cell under the enemy is not a path (low nibble 0). */
+void *gb_native_EnemyFlagOffPath(void) {
+    gb_native_EnemyTileUnder();
+    SET_HL(hEnemyFlags);
+    if ((r.a & 0x0F) == 0) wr(hEnemyFlags, rd(hEnemyFlags) | 0x02);
+    else wr(hEnemyFlags, rd(hEnemyFlags) & ~0x02);
+    return 0;
+}
+
+/* EnemyTurnIfBlocked (kinds 3 and 4): a turn is requested when the way is blocked, and also for kind 3 while T.STOP (3) runs, otherwise the heading hEnemyAngle comes from the table at $363d
+ * (direction bits to a heading: up 0, right 8, down $10, left $18). For kind 3 the speed is set to 5 first. */
+void *gb_native_EnemyTurnIfBlocked(void) {
+    uint8_t kind = rd(hEnemyKind);
+    if (kind != 0x04 && kind == 0x03 && rd(wActiveMagic) == 0x03) {
+        if (rd(wMagicState) & 0x01) return gb_native_EnemyRequestTurn();
+        wr(hEnemySpeed, 0x05);
+    }
+    if ((rd(hEnemyBlocked) & 0x0F) & (rd(hEnemyDir) & 0x0F)) return gb_native_EnemyRequestTurn();
+    r.c = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x363D);
+    gb_native_LookupByte();
+    wr(hEnemyAngle, r.a);
+    return 0;
+}
+
+/* EnemyKind10Move: kind 10 flies: its heading comes from the table at $5782 by direction; it moves and applies the step, then ProjectileHitTest compares its position
+ * (hScratch00-03) and hEnemyFlags bit 3 is set when that test says no hit. */
+void *gb_native_EnemyKind10Move(void) {
+    r.c = (rd(hEnemyDir) & 0x0F) >> 1;
+    SET_HL(0x5782);
+    gb_native_LookupByte();
+    wr(hEnemyAngle, r.a);
+    gb_native_SelectObject2();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    wr(hScratch00, rd(hEnemyX));
+    wr(hScratch00 + 1, rd(hEnemyXHi));
+    wr(hScratch00 + 2, rd(hEnemyY));
+    wr(hScratch00 + 3, rd(hEnemyYHi));
+    gb_native_ProjectileHitTest();
+    if (r.a) return 0;
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x08);
     return 0;
 }
