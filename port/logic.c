@@ -378,6 +378,9 @@ void *gb_native_PlayerComputeBlockedDirs(void) {
 }
 
 #define hEnemyTick 0xFFD0
+#define wEnemyCount 0xC47E
+#define wPlayerX 0xC4C5
+#define wPlayerY 0xC4C8
 
 /* TickObjectTimer: hEnemyTick += 1; Z is set unless bit 7 of the next byte (hEnemyDir) is set; HL = hEnemyDir's address. */
 void *gb_native_TickObjectTimer(void) {
@@ -487,5 +490,49 @@ void *gb_native_EnemyRequestTurn(void) {
     wr(0xFFC4, 0);
     r.a = 0;
     r.f = 0x80;
+    return 0;
+}
+
+/* SelectEnemySlot: HL = address of the table of slot pointers, A = slot index. HL ends as the slot address and also goes to hEnemySlotLo/Hi ($ffd7/$ffd8). */
+void *gb_native_SelectEnemySlot(void) {
+    uint8_t carry = r.a >> 7;
+    r.a <<= 1;
+    r.f = (r.a ? 0 : 0x80) | (carry ? 0x10 : 0);
+    r.c = r.a;
+    r.b = 0;
+    add_hl(BC());
+    uint16_t at = HL();
+    uint8_t lo = rd(at), hi = rd(at + 1);
+    wr(0xFFD7, lo);
+    wr(0xFFD8, hi);
+    r.h = hi;
+    r.l = lo;
+    r.a = lo;
+    return 0;
+}
+
+/* RemoveEnemy: clears the active bit of the enemy record in hObject2 and decrements the enemy count. */
+void *gb_native_RemoveEnemy(void) {
+    wr(0xFFB5, rd(0xFFB5) & 0x7F);
+    SET_HL(wEnemyCount);
+    wr(wEnemyCount, dec8(rd(wEnemyCount)));
+    return 0;
+}
+
+/* ClampPlayerPosition: keeps the player inside X $20-$f0 and Y $28-$f8. */
+void *gb_native_ClampPlayerPosition(void) {
+    uint8_t x = rd(wPlayerX), y;
+    if (x < 0x21) x = 0x20;
+    if (x >= 0xF0) x = 0xF0;
+    wr(wPlayerX, x);
+    y = rd(wPlayerY);
+    if (y < 0x29) y = 0x28;
+    wr(wPlayerY, y);
+    r.a = y;
+    alu_cp(0xF8);
+    if (y >= 0xF8) {
+        wr(wPlayerY, 0xF8);
+        r.a = 0xF8;
+    }
     return 0;
 }

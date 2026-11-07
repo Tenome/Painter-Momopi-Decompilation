@@ -39,3 +39,6 @@ EnemyTileUnder
 EnemyMapTile
 ProjectileHitTest
 EnemyRequestTurn
+SelectEnemySlot
+RemoveEnemy
+ClampPlayerPosition
