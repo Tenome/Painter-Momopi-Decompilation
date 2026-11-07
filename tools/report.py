@@ -109,3 +109,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# keep the README progress bars in step with the report
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "progress_svg.py")], check=False)
