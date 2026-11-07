@@ -93,13 +93,13 @@ LoadGfxBank2::  ; selects bank 2; copies $4000 (0x700 bytes) to VRAM $8000; then
     ret
 LoadTilesBank3A::  ; bank 3 $4000 0x1000 bytes to $8000 via LoadTilesBank3
     ld hl, TilesTitle
-    jr L_00_01f4
+    jr LoadTilesBank3Full
 LoadTilesBank3B::  ; bank 3 $5000 0x1000 bytes to $8000
     ld hl, TilesIcons
-    jr L_00_01f4
+    jr LoadTilesBank3Full
 LoadTilesBank3D::  ; bank 3 $6e10 0x1000 bytes to $8000
     ld hl, TilesFont2
-L_00_01f4::
+LoadTilesBank3Full::  ; BC = $1000 then LoadTilesBank3 (copies a full $1000 byte tile set from bank 3)
     ld bc, $1000
     jr LoadTilesBank3
 LoadTilesBank3C::  ; bank 3 $6000 0xe10 bytes to $8000
@@ -462,9 +462,9 @@ OamDmaRoutine::  ; source of the HRAM routine: DMA from $c000 then waits 40 cycl
     ld a, $c0
     ldh [rDMA], a
     ld a, $28
-L_00_0498::
+DelayLoopA::  ; counts A down to 0 (busy wait)
     dec a
-    jr nz, L_00_0498
+    jr nz, DelayLoopA
     ret
 PixelToTilemapAddr::  ; hSpriteY/X pixel to BG map address $9800+
     ldh a, [hSpriteY]
@@ -530,13 +530,13 @@ ClearMemory::  ; zero fill HL for BC bytes
     ret
 FillBackwardsFF::  ; fills $400 bytes with $ff going down from HL
     ld bc, $0400
-L_00_04fc::
+FillBackwardsFFBC::  ; fills BC bytes with $ff going down from HL
     ld a, $ff
     ld [hl-], a
     dec bc
     ld a, b
     or a, c
-    jr nz, L_00_04fc
+    jr nz, FillBackwardsFFBC
     ret
 CopyMemory::  ; copy BC bytes from HL to DE
     ld a, [hl+]
@@ -561,7 +561,7 @@ SetObjPtr::  ; hObjPtr = HL
     ld a, l
     ldh [hObjPtrLo], a
     ret
-L_00_051d::
+DrawBonusMetatileMap::  ; hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
     ld a, $09
     ld [hScratch01], a
     ld a, $0a
@@ -862,7 +862,7 @@ DrawObjectBytePos::  ; variant of DrawObject for records with 8 bit positions (+
     ld c, a
     ld a, [hl]
     bit 7, a
-    jp z, L_00_09aa
+    jp z, ReturnOnly
     ldh a, [hObjPtrHi]
     ld h, a
     ldh a, [hObjPtrLo]
@@ -895,7 +895,7 @@ DrawObject::  ; builds OAM sprites for the object record at hObjPtr from its ani
     ld c, a
     ld a, [hl]
     bit 7, a
-    jp z, L_00_09aa
+    jp z, ReturnOnly
     ld d, $00
     ld e, $07
     add hl, de
@@ -1118,7 +1118,7 @@ DrawObjectParts::  ; shared part of DrawObject: applies camera
     add hl, de
     ldh a, [hOtherObjLo]
     ld [hl], a
-L_00_09aa::
+ReturnOnly::  ; a bare ret (jump target of DrawObject for inactive objects)
     ret
 AddOamSprite::  ; appends one OAM entry from hScratch values to the shadow at $c000 (hOamCount wraps at 39)
     ldh a, [hOamCount]
@@ -1896,7 +1896,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     call RunVramCopyList
     ld bc, $0010
     ld hl, $9cd0
-    call L_00_04fc
+    call FillBackwardsFFBC
     xor a, a
     ld [wMpStreamIdx], a
     ld bc, $0010
@@ -3136,7 +3136,7 @@ Mode2_Init::  ; bonus select setup after LcdOff
     ld hl, vBGMap0
     ld a, $ff
     ld [wMapCellMask], a
-    call L_00_051d
+    call DrawBonusMetatileMap
     ld bc, D_00_29b1
     call RunVramCopyList
     ld a, [wPlayerBlocked]
@@ -3345,7 +3345,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call PlaySound
     ld hl, vBGMapLast
     call FillBackwardsFF
-    ld bc, $2b86
+    ld bc, D_00_2b86
     call RunVramCopyList
     call RequestOamDma
     ld hl, wCursorObject
@@ -3529,20 +3529,8 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     jp SetCursorAnimation
 AnimFrames0_2b84::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/2b84_AnimFrames0_2b84.bin"
-L_00_2b86::
-    ld c, $04
-    sbc a, b
-    cp a, a
-    dec hl
-    ld h, a
-    sbc a, b
-    ldh [c], a
-    dec hl
-    add a, e
-    sbc a, b
-    add sp, 43
-    jp L_00_0498
-    INCBIN "assets/bank_00/2b96.bin"
+D_00_2b86::
+    INCBIN "assets/bank_00/2b86.bin"
 Mode6_Ending::  ; castle scene after the last round
     ld sp, wStackTop
     call LcdOff

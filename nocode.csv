@@ -15,3 +15,4 @@ bank,addr,comment
 0,3aed,data before EnemyKind1
 0,3c87,animation frames
 0,2b84,animation frames
+0,2b86,VRAM copy list (ld bc target of the ending scene)

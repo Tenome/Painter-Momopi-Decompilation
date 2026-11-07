@@ -404,3 +404,11 @@ bank,addr,name,comment
 0,0bb6,MoveVectorTable,32 headings (index 0-31) x (dx dy) signed bytes: points on a circle of radius about 50; MoveObject multiplies them by the speed
 0,132c,DrawMagicPointsDigits,loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
 0,1409,StoreMagicPointsDigit,writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)
+0,01f4,LoadTilesBank3Full,BC = $1000 then LoadTilesBank3 (copies a full $1000 byte tile set from bank 3)
+0,0498,DelayLoopA,counts A down to 0 (busy wait)
+0,04fc,FillBackwardsFFBC,fills BC bytes with $ff going down from HL
+0,051d,DrawBonusMetatileMap,hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
+0,09aa,ReturnOnly,a bare ret (jump target of DrawObject for inactive objects)
+1,4775,SoundReturn,ret shared by the sound command that precedes SoundCmdEnd (name provisional)
+1,570c,EnemyAimAtPlayerWide,sets hEnemyDir towards the player from the X and Y differences (name provisional)
+1,58ee,EnemyShooterAI,decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)

@@ -937,7 +937,7 @@ SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the 
     inc de
     ld hl, wWaveCurrent
     cp a, [hl]
-    jr z, L_01_4775
+    jr z, SoundReturn
     ld [hl], a
     ld hl, wSoundChannels
     ld a, c
@@ -978,7 +978,7 @@ SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wa
     ld a, $80
     ld [rNR30], a
     call SoundInit
-L_01_4775::
+SoundReturn::  ; ret shared by the sound command that precedes SoundCmdEnd (name provisional)
     ret
 SoundCmdEnd::  ; sound command $eb: discards the caller's return address and ends the stream
     ld a, $00
@@ -2628,7 +2628,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyStep
     dec [hl]
     ret nz
-    call L_01_570c
+    call EnemyAimAtPlayerWide
     ldh a, [hEnemyX]
     ld [wProjectileX], a
     ldh a, [hEnemyY]
@@ -2833,7 +2833,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld a, h
     ld [$c49a], a
     jp ProjectileSelectFrame
-L_01_570c::
+EnemyAimAtPlayerWide::  ; sets hEnemyDir towards the player from the X and Y differences (name provisional)
     ld a, [wPlayerY]
     ld e, a
     ld a, [hEnemyY]
@@ -3006,7 +3006,7 @@ EnemyKind2::  ; enemy kind 2
     call EnemyChooseDirection
     call EnemyTurnOrAnimate
     call EnemyShootIfReady
-    call L_01_58ee
+    call EnemyShooterAI
     call ProjectileFrame
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
@@ -3032,7 +3032,7 @@ EnemyShootIfReady::  ; counts hEnemyStep down; when it hits 0 and no projectile 
     and a, a
     ret nz
     jp SpawnEnemyProjectile
-L_01_58ee::
+EnemyShooterAI::  ; decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_58fc

@@ -12,7 +12,7 @@ bank	addr	size	name
 0	01e7	5	LoadTilesBank3A
 0	01ec	5	LoadTilesBank3B
 0	01f1	3	LoadTilesBank3D
-0	01f4	5	L_00_01f4
+0	01f4	5	LoadTilesBank3Full
 0	01f9	6	LoadTilesBank3C
 0	01ff	17	LoadTilesBank3
 0	0210	17	SerialStartTransfer
@@ -27,17 +27,17 @@ bank	addr	size	name
 0	0448	60	ReadJoypad
 0	0484	14	CopyOamDmaRoutine
 0	0492	6	OamDmaRoutine
-0	0498	4	L_00_0498
+0	0498	4	DelayLoopA
 0	049c	45	PixelToTilemapAddr
 0	04c9	12	RstJumpTable
 0	04d5	28	LcdOff
 0	04f1	8	ClearMemory
 0	04f9	3	FillBackwardsFF
-0	04fc	9	L_00_04fc
+0	04fc	9	FillBackwardsFFBC
 0	0505	9	CopyMemory
 0	050e	8	Clear32Bytes
 0	0516	7	SetObjPtr
-0	051d	10	L_00_051d
+0	051d	10	DrawBonusMetatileMap
 0	0527	193	DrawMetatileMap
 0	05e8	27	QueueVramCopyRows
 0	0603	21	QueueVramCopyList
@@ -52,7 +52,7 @@ bank	addr	size	name
 0	080c	52	DrawObjectBytePos
 0	0840	38	DrawObject
 0	0866	324	DrawObjectParts
-0	09aa	1	L_00_09aa
+0	09aa	1	ReturnOnly
 0	09ab	38	AddOamSprite
 0	09d1	15	MoveObjectHalfStep
 0	09e0	13	ClampObjectToRoom
@@ -117,7 +117,6 @@ bank	addr	size	name
 0	2b0a	25	PickRandomRound
 0	2b23	35	TitleCursorUpdate
 0	2b46	62	InitTitleVariables
-0	2b86	16	L_00_2b86
 0	2c70	237	Mode6_Ending
 0	2d5d	124	EndingCreditsWindow
 0	2dd9	24	EndingShowCreditsPage
@@ -239,7 +238,7 @@ bank	addr	size	name
 1	4722	6	SoundSetPendingWave
 1	4728	37	SoundCmdSetWave
 1	474d	40	SoundLoadWave
-1	4775	1	L_01_4775
+1	4775	1	SoundReturn
 1	4776	24	SoundCmdEnd
 1	478e	5	SoundCmdMuteOn
 1	4793	5	SoundCmdMuteOff
@@ -322,7 +321,7 @@ bank	addr	size	name
 1	566a	13	EnemyFlagBit3IfDead
 1	5677	43	ProjectileHitTest
 1	56a2	106	InitProjectile
-1	570c	118	L_01_570c
+1	570c	118	EnemyAimAtPlayerWide
 1	57f0	39	EnemyKind9
 1	5817	10	EnemyKind9Move
 1	5821	55	SelectKind9Animation
@@ -330,7 +329,7 @@ bank	addr	size	name
 1	585e	17	EnemyKind9Init
 1	5899	54	EnemyKind2
 1	58cf	31	EnemyShootIfReady
-1	58ee	89	L_01_58ee
+1	58ee	89	EnemyShooterAI
 1	5947	40	SpawnEnemyProjectile
 1	596f	71	SelectKind2Animation
 1	59b6	21	EnemyKind2Init
