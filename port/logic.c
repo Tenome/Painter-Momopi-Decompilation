@@ -1949,3 +1949,54 @@ void *gb_native_MagicEffectClear(void) {
     }
     return (void *)GAME_EndMagic;
 }
+
+/* The B.O.M card sends eight paint blobs out in the eight headings. Their state is kept in 8 trail segments of 7 bytes at $c1b7: X fraction, X pixel, X high,
+ * Y fraction, Y pixel, Y high, heading. LoadTrailSegment / StoreTrailSegment copy segment wTrailIdx to / from the paint object (wPaintObject +6 to +$b, heading +$10). */
+#define TRAIL 0xC1B7
+
+void *gb_native_LoadTrailSegment(void) {
+    r.a = rd(wTrailIdx);
+    r.e = 7;
+    gb_native_MultiplyByDE();
+    uint16_t seg = TRAIL + r.a;
+    for (int i = 0; i < 6; i++) wr(wPaintObject + 6 + i, rd(seg + i));
+    wr(wPaintObject + 0x10, rd(seg + 6));
+    return 0;
+}
+
+void *gb_native_StoreTrailSegment(void) {
+    r.a = rd(wTrailIdx);
+    r.e = 7;
+    gb_native_MultiplyByDE();
+    uint16_t seg = TRAIL + r.a;
+    for (int i = 0; i < 6; i++) wr(seg + i, rd(wPaintObject + 6 + i));
+    return 0;
+}
+
+/* InitTrailSegment: HL = segment, A = heading, D and E = offsets of X and Y from the player. */
+void *gb_native_InitTrailSegment(void) {
+    uint16_t seg = HL();
+    wr(seg + 6, r.a);
+    wr(seg + 1, (uint8_t)(rd(wPlayerX) + r.d));
+    wr(seg + 4, (uint8_t)(rd(wPlayerY) + r.e));
+    return 0;
+}
+
+/* InitTrailSegments: clears the 8 segments and places them around the player: offsets (x, y) and headings of the eight blobs. */
+void *gb_native_InitTrailSegments(void) {
+    SET_BC(0x0040);
+    SET_HL(TRAIL);
+    gb_native_ClearMemory();
+    static const struct { uint8_t dx, dy, heading; } blobs[8] = {
+        {0x10, 0x00, 0x08}, {0x10, 0xF0, 0x04}, {0x00, 0xF0, 0x00}, {0xF0, 0x00, 0x1C},
+        {0xF0, 0x00, 0x18}, {0xF0, 0x10, 0x14}, {0x00, 0x10, 0x10}, {0x10, 0x10, 0x0C},
+    };
+    for (int i = 0; i < 8; i++) {
+        SET_HL(TRAIL + 7 * i);
+        r.d = blobs[i].dx;
+        r.e = blobs[i].dy;
+        r.a = blobs[i].heading;
+        gb_native_InitTrailSegment();
+    }
+    return 0;
+}

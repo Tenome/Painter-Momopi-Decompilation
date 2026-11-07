@@ -106,3 +106,7 @@ MagicEffectSealed
 MagicTimerTick
 SpawnPaintBlob
 MagicEffectClear
+LoadTrailSegment
+StoreTrailSegment
+InitTrailSegment
+InitTrailSegments
