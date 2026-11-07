@@ -170,7 +170,7 @@ bank	addr	size	name
 0	392e	31	EnemyPaintUnderB0M
 0	394d	9	EnemyRemoveIfPlayerDead
 0	3956	91	EnemySelectAnimByKind
-0	39b1	72	EnemyTurnOrAnimate
+0	39b1	72	EnemyMoveStep
 0	39f9	31	EnemyGridStep
 0	3a18	93	EnemyChooseDirection
 0	3a75	45	EnemyInitMoveAnim

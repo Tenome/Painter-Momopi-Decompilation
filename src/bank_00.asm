@@ -4953,7 +4953,7 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call EnemyComputeBlockedDirs
     call EnemyGridStep
     call EnemyChooseDirection
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call EnemyPaintStep
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
@@ -5026,7 +5026,7 @@ EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (D_00_3acf 
     ld de, D_00_3aba
     ld bc, D_00_3abf
     jp SetAnimationVariant
-EnemyTurnOrAnimate::  ; like EnemyTurnIfBlocked and then picks the animation table D_00_3ae3 or D_00_3aed (name provisional)
+EnemyMoveStep::  ; moves the enemy one step: asks for a turn when the way is blocked (or while T.STOP runs)
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_00_39c0
@@ -5217,7 +5217,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     and a, $08
     ret z
 .L_00_3b26:
-    call EnemyTurnOrAnimate
+    call EnemyMoveStep
     call EnemyPaintStep
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer

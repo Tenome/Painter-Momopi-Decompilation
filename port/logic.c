@@ -775,7 +775,7 @@ void *gb_native_EnemyKindIdle(void) {
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
@@ -802,7 +802,7 @@ void *gb_native_EnemyKind1(void) {
         wr(hEnemyCounter, rd(hEnemyCounter) + 1);
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
     }
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
@@ -820,7 +820,7 @@ void *gb_native_EnemyKind2(void) {
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyShootIfReady);
     NCALL(GAME_EnemyShooterAI);
     NCALL(GAME_ProjectileFrame);
@@ -856,7 +856,7 @@ void *gb_native_EnemyKind4(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_EnemyKind4Init;
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_SelectKind4Animation);
     gb_native_DrawObject();
@@ -900,7 +900,7 @@ void *gb_native_EnemyKind9(void) {
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyAimAtPlayer);
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_SelectKind9Animation);
@@ -913,7 +913,7 @@ void *gb_native_EnemyKind10(void) {
     gb_native_TickObjectTimer();
     if (ZF()) return (void *)GAME_InitProjectile;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
-    NCALL(GAME_EnemyTurnOrAnimate);
+    NCALL(GAME_EnemyMoveStep);
     NCALL(GAME_EnemyKind10Move);
     NCALL(GAME_UpdateProjectile);
     NCALL(GAME_ProjectileCheckPlayerHit);
@@ -2732,4 +2732,89 @@ void *gb_native_EnemyChooseDirection(void) {
             return 0;
         }
     }
+}
+
+/* EnemyMoveStep: one movement step of an enemy on the grid. While the T.STOP card (3) runs, or when the direction in hEnemyDir is blocked, a turn is requested.
+ * Otherwise the step (X and Y pixel parts, hEnemyDXHi and hEnemyDYHi) comes from a table indexed by the direction: $3ae3 for normal enemies and $3aed for fast ones
+ * (hEnemyFlags bit 7 or a spawn flag), and is applied to the position. */
+void *gb_native_EnemyMoveStep(void) {
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) return gb_native_EnemyRequestTurn();
+    uint8_t blocked = rd(hEnemyBlocked) & 0x0F, dir = rd(hEnemyDir) & 0x0F;
+    if (dir & blocked) return gb_native_EnemyRequestTurn();
+    uint16_t table = ((rd(hEnemyFlags) & 0x80) || rd(hEnemySpawnFlag)) ? 0x3AED : 0x3AE3;
+    uint8_t index = (uint8_t)((dir >> 1) << 1);
+    wr(hEnemyDXHi, rd(table + index));
+    wr(hEnemyDYHi, rd(table + index + 1));
+    gb_native_SelectObject2();
+    return gb_native_ApplyObjectStep();
+}
+
+/* EnemyGridStep: off the grid it only drops the turn request (bit 6 of hEnemyDir); on the grid hEnemyStep counts to $0b and then restarts with the bits 5 and 6 of hEnemyDir set. */
+void *gb_native_EnemyGridStep(void) {
+    gb_native_EnemyOnTileGrid();
+    if (!ZF()) { wr(hEnemyDir, rd(hEnemyDir) & ~0x40); return 0; }
+    uint8_t step = rd(hEnemyStep);
+    if (step == 0x0B) {
+        wr(hEnemyStep, 0);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x60);
+    } else {
+        wr(hEnemyStep, step + 1);
+    }
+    return 0;
+}
+
+/* EnemyPaintUnderB0M: while the B.O.M card (5) runs an enemy that is not frozen (flags bit 1) paints the cell it stands on when it is exactly on the grid. */
+void *gb_native_EnemyPaintUnderB0M(void) {
+    if (rd(wActiveMagic) != 0x05) return 0;
+    if (!(rd(wMagicState) & 0x01)) return 0;
+    if (rd(hEnemyFlags) & 0x02) return 0;
+    r.b = rd(hEnemyX);
+    r.c = rd(hEnemyY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    return gb_native_PaintCell();
+}
+
+/* EnemyShootIfReady: an enemy that shoots counts hEnemyStep down while no projectile is live; at 0, when it is on the screen, it shoots (SpawnEnemyProjectile). */
+void *gb_native_EnemyShootIfReady(void) {
+    if (rd(wProjectile) & 0x80) return 0;
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) - 1);
+    if (rd(hEnemyStep)) return 0;
+    if (rd(wProjectile) & 0x80) return 0;
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) return 0;
+    return (void *)GAME_SpawnEnemyProjectile;
+}
+
+/* CheckEnemyTouchesPlayer: when the enemy in hObject2 overlaps the player, wPlayerDir bit 5 is set (PlayFrame then runs PlayerDeath). Not while the GHOST card (4) runs, except for kind 4. */
+void *gb_native_CheckEnemyTouchesPlayer(void) {
+    if (rd(hEnemyKind) != 0x04 && rd(wActiveMagic) == 0x04 && (rd(wMagicState) & 0x01)) return 0;
+    wr(hOtherObjLo, (uint8_t)wPlayer);
+    wr(hOtherObjHi, wPlayer >> 8);
+    gb_native_SelectObject2();
+    gb_native_ObjectsOverlap();
+    if (!r.a) return 0;
+    SET_HL(wPlayerDir);
+    wr(wPlayerDir, rd(wPlayerDir) | 0x20);
+    return 0;
+}
+
+/* CheckPaintHitsEnemy: when the paint blob (wPaintObject) overlaps the enemy in hObject2 the blob is removed, the enemy is marked hit (hEnemyFlags bit 2),
+ * the card state is cleared and wPlayerStatus bit 3 is set. */
+void *gb_native_CheckPaintHitsEnemy(void) {
+    if (!(rd(wPaintObject) & 0x80)) return 0;
+    wr(hOtherObjLo, (uint8_t)wPaintObject);
+    wr(hOtherObjHi, wPaintObject >> 8);
+    gb_native_SelectObject2();
+    gb_native_ObjectsOverlap();
+    if (!r.a) return 0;
+    wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x04);
+    wr(wMagicState, 0);
+    wr(wPlayerStatus, rd(wPlayerStatus) | 0x08);
+    return 0;
 }

@@ -152,3 +152,9 @@ EnemyComputeBlockedDirs
 ProjectileAimAtPlayer
 EnemyAimAtPlayer
 EnemyChooseDirection
+EnemyMoveStep
+EnemyGridStep
+EnemyPaintUnderB0M
+EnemyShootIfReady
+CheckEnemyTouchesPlayer
+CheckPaintHitsEnemy
