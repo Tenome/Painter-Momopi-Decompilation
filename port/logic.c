@@ -444,3 +444,48 @@ void *gb_native_EnemyMapTile(void) {
     r.a = rd(hEnemyY);
     return gb_native_LookupMapTile();
 }
+
+/* ProjectileHitTest: hScratch00/01 = X distance (low, high byte) and hScratch02/03 = Y distance between the projectile and the player, as signed 16 bit
+ * numbers (high byte $ff = negative). A = 1 on a hit, else 0. A high byte of 1 only counts when the low byte is below 8 (X) or $20 (Y). */
+void *gb_native_ProjectileHitTest(void) {
+    r.a = rd(hScratch00 + 1);
+    alu_cp(0xFF);
+    if (ZF()) goto miss;
+    alu_cp(0x01);
+    if (ZF()) {
+        r.a = rd(hScratch00);
+        alu_cp(0x08);
+        if (!CF()) goto miss;
+        r.a = 1;
+        return 0;
+    }
+    r.a = rd(hScratch00 + 3);
+    alu_cp(0xFF);
+    if (ZF()) goto miss;
+    alu_cp(0x01);
+    if (ZF()) {
+        r.a = rd(hScratch00 + 2);
+        alu_cp(0x20);
+        if (!CF()) goto miss;
+        r.a = 1;
+        return 0;
+    }
+    r.a = 1;
+    return 0;
+miss:
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
+
+/* EnemyRequestTurn: sets hEnemyDir bit 6 and stops the enemy (speed and the high bytes of its step are cleared); A = 0, HL = hEnemyDir. */
+void *gb_native_EnemyRequestTurn(void) {
+    SET_HL(0xFFD1);
+    wr(0xFFD1, rd(0xFFD1) | 0x40);
+    wr(0xFFC6, 0);
+    wr(0xFFC2, 0);
+    wr(0xFFC4, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
