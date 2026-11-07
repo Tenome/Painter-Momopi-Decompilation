@@ -1353,3 +1353,122 @@ void *gb_native_PaintUnderPlayer(void) {
     if (rd(wActiveMagic) == 0x02) return gb_native_PaintUnderPlayerAligned();
     return gb_native_PaintUnderPlayerCell();
 }
+
+/* ClearRoomState: zeroes the card state, the enemy count and the spawn script variables (the next entry is number 1). */
+void *gb_native_ClearRoomState(void) {
+    wr(wActiveMagic, 0);
+    wr(wMagicState, 0);
+    wr(wEnemyCount, 0);
+    wr(wWaveEnded, 0);
+    wr(wSpawnWave, 0);
+    wr(wSpawnIndex, 1);
+    r.a = 1;
+    r.f = 0x80;
+    return 0;
+}
+
+/* DrawTwoDigitNumber: B = a value, HL = background map address. Draws its two decimal digits as a VRAM stream (count 2, rows 1, two digit tiles). */
+void *gb_native_DrawTwoDigitNumber(void) {
+    wr(hScratch00 + 10, 0x02);
+    wr(hScratch00 + 11, 0x01);
+    r.a = r.b;
+    gb_native_ByteToBCD();
+    wr(hScratch00, r.a);
+    r.a = r.a & 0xF0;
+    r.a = (uint8_t)(r.a << 4 | r.a >> 4);
+    gb_native_DigitToTile();
+    wr(hScratch00 + 12, r.a);
+    r.a = rd(hScratch00) & 0x0F;
+    gb_native_DigitToTile();
+    wr(hScratch00 + 13, r.a);
+    SET_DE(hScratch00 + 10);
+    return (void *)GAME_VramCopyStream;
+}
+
+/* Mode3_RoundIntro: the "ROUND nn / room name / lives / READY !!" screen. Shown for $97 frames, then mode 1 (play) is started. */
+void *gb_native_Mode3_RoundIntro(void) {
+    r.sp = wStackTop;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    r.a = 0xFF;
+    CALL(GAME_PlaySound);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    wr(0xC7C2, 0);
+    CALL(GAME_LoadTilesBank3A);
+    CALL(GAME_ClearOamShadow);
+    SET_BC(DATA_RoundIntroText);
+    CALL(GAME_RunVramCopyList);
+    r.b = rd(wRound);
+    SET_HL(0x986C);
+    CALL(GAME_DrawTwoDigitNumber);
+    r.b = (rd(hLinkFlags) & 0x01) ? 1 : rd(wLives);
+    SET_HL(0x992C);
+    CALL(GAME_DrawTwoDigitNumber);
+    r.a = rd(wRound);
+    SET_HL(DATA_RoomNameJobTable);
+    CALL(GAME_TableIndexFromRoundDec);
+    SET_HL(0x98C3);
+    CALL(GAME_VramCopyStream);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    gb_native_ClearRoomState();
+    CALL(GAME_ClearBonusFlags);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    wr(hScratch00, 0x97);
+    do {
+        CALL(GAME_WaitVBlankFlag);
+        CALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    r.a = 1;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* Mode4_GameOver: the GAME OVER screen: tiles, the text, the game over music; shown for 3 x 256 frames, then back to the title (mode 0) or, in a link game, a restart. */
+void *gb_native_Mode4_GameOver(void) {
+    r.sp = wStackTop;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    CALL(GAME_LoadTilesBank3A);
+    CALL(GAME_ClearOamShadow);
+    r.a = SND_MUSIC_GAME_OVER;
+    CALL(GAME_PlaySound);
+    SET_HL(0x9905);
+    SET_DE(DATA_GameOverText);
+    CALL(GAME_VramCopyStream);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    wr(wRoundFlags, rd(wRoundFlags) & ~0x01);
+    wr(wGameFlags, rd(wGameFlags) & ~0x04);
+    wr(hScratch00, 0xFF);
+    wr(hScratch00 + 1, 0x02);
+    for (;;) {
+        do {
+            CALL(GAME_WaitVBlankFlag);
+            CALL(GAME_ReadJoypad);
+            wr(hScratch00, rd(hScratch00) - 1);
+        } while (rd(hScratch00));
+        uint8_t left = (uint8_t)(rd(hScratch00 + 1) - 1);
+        wr(hScratch00 + 1, left);
+        if (left & 0x80) break;
+    }
+    if (rd(hLinkFlags) & 0x01) return (void *)GAME_Entry;
+    r.a = 0;
+    return (void *)GAME_GameModeDispatch;
+}
