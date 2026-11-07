@@ -1420,7 +1420,7 @@
      }
     },
     {
-     "name": "EnemyTurnOrAnimate",
+     "name": "EnemyMoveStep",
      "size": "72",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -2663,7 +2663,7 @@
      }
     },
     {
-     "name": "EnemyAimAtPlayerWide",
+     "name": "ProjectileAimAtPlayer",
      "size": "118",
      "fuzzy_match_percent": 100.0,
      "metadata": {
