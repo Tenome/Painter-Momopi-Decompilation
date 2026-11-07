@@ -66,3 +66,5 @@ Mode1_Play
 HoldDirectionUntilAligned
 PlayerSetDirection
 SelectPlayerAnimation
+ProjectileFrame
+EnemyDefeated

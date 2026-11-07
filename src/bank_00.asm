@@ -4108,15 +4108,15 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, c
     and a, a
     jr nz, .L_00_332f
-    ld hl, D_00_36c1
+    ld hl, PopFrames1
     jr .L_00_333b
 .L_00_332f:
     cp a, $02
     jr nz, .L_00_3338
-    ld hl, D_00_36bc
+    ld hl, PopFrames2
     jr .L_00_333b
 .L_00_3338:
-    ld hl, D_00_36c6
+    ld hl, PopFrames3
 .L_00_333b:
     push hl
     ld a, l
@@ -4196,7 +4196,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     res 2, [hl]
     ldh a, [hEnemyKind]
     ld c, a
-    ld hl, D_00_33fd
+    ld hl, EnemyScoreTable
     call LookupByte
     ld e, a
     ld d, $00
@@ -4204,8 +4204,8 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld hl, wProjectile
     res 7, [hl]
     jp RemoveEnemy
-D_00_33fd::
-    INCBIN "assets/bank_00/33fd.bin"
+EnemyScoreTable::  ; points awarded for defeating an enemy by kind (hEnemyKind 0-11; passed to AddScore in E)
+    INCBIN "assets/bank_00/33fd_EnemyScoreTable.bin"
 EnemySnapToGrid::  ; aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)
     ld a, $04
     ldh [hEnemyBoxHalf], a
@@ -4611,12 +4611,12 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     ld hl, wPlayerStatus
     set 3, [hl]
     ret
-D_00_36bc::
-    INCBIN "assets/bank_00/36bc.bin"
-D_00_36c1::
-    INCBIN "assets/bank_00/36c1.bin"
-D_00_36c6::
-    INCBIN "assets/bank_00/36c6.bin"
+PopFrames2::  ; animation frames of the pop effect (second stage; name provisional)
+    INCBIN "assets/bank_00/36bc_PopFrames2.bin"
+PopFrames1::  ; animation frames of the pop effect when an enemy is defeated (first stage; name provisional)
+    INCBIN "assets/bank_00/36c1_PopFrames1.bin"
+PopFrames3::  ; animation frames of the pop effect (last stage; name provisional)
+    INCBIN "assets/bank_00/36c6_PopFrames3.bin"
 EnemyEdgeBlockedDirs::  ; adds the screen edge limits (X $20-$f0; Y $28-$f8) to hEnemyBlocked
     xor a, a
     ldh [hEnemyBlocked], a
