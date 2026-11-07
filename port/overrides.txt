@@ -26,3 +26,5 @@ IsOnTileGrid
 EnemyOnTileGrid
 MoveObject
 ApplyObjectStep
+CompareObjectCoordinate
+ObjectsOverlap

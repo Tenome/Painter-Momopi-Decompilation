@@ -1,6 +1,6 @@
 /* Hand written C versions of game routines (replacing the generated code for the labels listed in port/overrides.txt).
  * Most keep the register and flag results of the original routine so that its callers behave the same (the ones that do not say so in their comment); the generated code and these
- * versions are compared with `python tools/verify_all.py` (frame hashes of random play) before a routine is added here. */
+ * versions are compared with `python tools/lift_check.py` (frame hashes of random play) before a routine is added here. */
 #include "gb_rt.h"
 
 /* LookupByte: A = byte at HL + C (table lookup). */
@@ -309,5 +309,50 @@ void *gb_native_ApplyObjectStep(void) {
     wr(hScratch00, 0x0C);
     wr(hScratch01, 0x10);
     wr(0xFF98, last_step_hi);
+    return 0;
+}
+
+#define hOtherObjLo 0xFFA4
+#define hOtherObjHi 0xFFA5
+
+/* CompareObjectCoordinate: E = offset of a coordinate byte. Takes |obj[E] - other[E]| (the object at hObjPtr against the one at hOtherObj) and compares it with
+ * the sum of the two box sizes taken from the table at $0a3f (indexes hScratch02 and hScratch03). Carry set = closer than the sum (the boxes touch on this axis).
+ * hScratch04 = the distance and hScratch06 = the sum afterwards. Registers other than A and the flags are not kept. */
+void *gb_native_CompareObjectCoordinate(void) {
+    uint16_t a = rd(hObjPtrLo) | rd(hObjPtrHi) << 8, b = rd(hOtherObjLo) | rd(hOtherObjHi) << 8;
+    uint8_t dist = (uint8_t)(rd(a + r.e) - rd(b + r.e));
+    if (rd(a + r.e) < rd(b + r.e)) dist = (uint8_t)(0 - dist);
+    wr(0xFF9A, dist);
+    uint8_t sum = (uint8_t)(rd(0x0A3F + rd(hScratch00 + 2)) + rd(0x0A3F + rd(hScratch00 + 3)));
+    wr(0xFF9C, sum);
+    r.a = dist;
+    alu_cp(sum);
+    return 0;
+}
+
+/* ObjectsOverlap: do the boxes of the object at hObjPtr and the one at hOtherObj overlap? A and C = $80 when they do, else 0.
+ * Both X and Y must be within the summed box sizes; an object whose X is beyond 255 (high byte not 0) never overlaps. */
+void *gb_native_ObjectsOverlap(void) {
+    uint16_t other = rd(hOtherObjLo) | rd(hOtherObjHi) << 8;
+    wr(hScratch00 + 2, (uint8_t)(rd(0xFFB9) << 1));
+    wr(hScratch00 + 3, (uint8_t)(rd(other + 4) << 1));
+    if (rd(0xFFBD) == 0 && rd(other + 8) == 0) {
+        r.d = 0; r.e = 7;
+        gb_native_CompareObjectCoordinate();
+        if (CF()) {
+            wr(hScratch00 + 2, rd(hScratch00 + 2) + 1);
+            wr(hScratch00 + 3, rd(hScratch00 + 3) + 1);
+            r.e = 0x0A;
+            gb_native_CompareObjectCoordinate();
+            if (!CF()) goto no;
+            r.a = 0x80;
+            r.c = 0x80;
+            return 0;
+        }
+    }
+no:
+    r.a = 0;
+    r.c = 0;
+    r.f = 0x80;
     return 0;
 }
