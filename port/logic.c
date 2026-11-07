@@ -7,6 +7,8 @@
 
 /* A `call` inside a lifted routine. Like CALL of the generated code, but when the callee discards its return address (pop hl before a return: the sound command
  * routines do) the whole chain has already returned past this routine, so the routine returns and gives back the slot the stub of the override releases again. */
+/* a call whose callee never discards its return address */
+#define NCALL_VOID(fn) do { r.sp -= 2; gb_run((fn_t)(fn)); } while (0)
 #define NCALL(fn) do { uint16_t sp0_ = r.sp; r.sp -= 2; gb_run((fn_t)(fn)); if (r.sp > sp0_) { r.sp -= 2; return 0; } } while (0)
 
 /* LookupByte: A = byte at HL + C (table lookup). */
@@ -2143,6 +2145,138 @@ void *gb_native_SoundWriteChannel4(void) {
     return 0;
 }
 
+/* SoundLoadWave: A = wave pattern number. Copies the 16 byte pattern (pointer table at $3fb8) into wave RAM ($ff30-$ff3f) with the wave channel switched off, then SoundInit. */
+static void load_wave(uint8_t pattern) {
+    wr(rNR30, 0);
+    uint16_t source = rd(0x3FB8 + 2 * pattern) | rd(0x3FB8 + 2 * pattern + 1) << 8;
+    for (int i = 0; i < 16; i++) wr(0xFF30 + i, rd(source + i));
+    wr(rNR30, 0x80);
+    uint16_t bc = BC();
+    NCALL_VOID(GAME_SoundInit);
+    SET_BC(bc);
+}
+
+/* ends the stream of a record: its flags become the given value and the hardware channel it used is silenced */
+static void silence_record(uint16_t rec, uint8_t flags) {
+    wr(rec, flags);
+    switch (rd(rec + 1)) {
+    case 3: gb_native_SoundSilenceChannel4(); break;
+    case 2: gb_native_SoundSilenceChannel3(); break;
+    case 1: gb_native_SoundSilenceChannel2(); break;
+    case 0: gb_native_SoundSilenceChannel1(); break;
+    }
+}
+
+/* The stream interpreter. The stream pointer is the record's +3/+4. Tokens: $e0-$f1 commands (see below), $80-$df notes (frequency from SoundFrequencyTable
+ * with the transpose +5 added; $80 is a rest), $00-$7f lengths. A note sets the pitch (+$e/+$f, copied to +$10/+$11) and, with flag bit 5, reads a duty byte (+$14);
+ * a length byte after it sets +$b; the pointer is stored back and the length counter +$c restarts. Commands: $e0 $e1 call (small stack at +$a), $e2 return, $e3 stop,
+ * $e4 counted repeat, $e5 jump, $e6 envelope (+7), $e7 transpose (+5), $e8 duty (+$15), $e9 pan (+2), $ea wave pattern, $eb end (also ends the update of the record),
+ * $ec/$ed mute on/off (flag bit 5), $ee clear flag bit 0, $ef master volume (NR50), $f0 field +6, $f1 pitch (+$e).
+ * Returns 1 when the command $eb ended the stream (the caller's update of the record is abandoned too). */
+static int sound_parse(uint16_t rec, uint16_t de) {
+    for (;;) {
+        uint8_t token = rd(de++);
+        if (token >= 0xE0) {
+            switch (token & 0x1F) {
+            case 0x00: case 0x01: {                 /* call: push the return address (after the 2 operand bytes) on the small stack of the record */
+                uint8_t sp = rd(rec + 0x0A);
+                wr(rec + 0x0A, sp - 2);
+                wr(rec + (uint8_t)(sp - 1), (de + 2) >> 8);
+                wr(rec + (uint8_t)(sp - 2), (uint8_t)(de + 2));
+                uint16_t target = rd(de) | rd(de + 1) << 8;
+                wr(rec + 3, (uint8_t)target);
+                wr(rec + 4, target >> 8);
+                de = target;
+                break;
+            }
+            case 0x02: {                            /* return */
+                uint8_t sp = rd(rec + 0x0A);
+                wr(rec + 0x0A, sp + 2);
+                de = rd(rec + sp) | rd(rec + (uint8_t)(sp + 1)) << 8;
+                wr(rec + 3, (uint8_t)de);
+                wr(rec + 4, de >> 8);
+                break;
+            }
+            case 0x03:                              /* stop */
+                wr(wMusicPriority, 0);
+                silence_record(rec, 0);
+                return 0;
+            case 0x04: {                            /* counted repeat: operands counter slot, count, jump target */
+                uint16_t counter = rec + 0x17 + rd(de++);
+                if (rd(counter) == 0) wr(counter, rd(de));
+                de++;
+                wr(counter, rd(counter) - 1);
+                if (rd(counter) == 0) { de += 2; break; }
+                uint16_t target = rd(de) | rd(de + 1) << 8;       /* otherwise it jumps */
+                wr(rec + 3, (uint8_t)target);
+                wr(rec + 4, target >> 8);
+                de = target;
+                break;
+            }
+            case 0x05: {                            /* jump */
+                uint16_t target = rd(de) | rd(de + 1) << 8;
+                wr(rec + 3, (uint8_t)target);
+                wr(rec + 4, target >> 8);
+                de = target;
+                break;
+            }
+            case 0x06: wr(rec + 0x07, rd(de++)); break;
+            case 0x07: wr(rec + 0x05, rd(de++) + rd(rec + 0x05)); break;
+            case 0x08: wr(rec + 0x15, rd(de++)); break;
+            case 0x09: wr(rec + 0x02, rd(de++)); break;
+            case 0x0A:                              /* wave pattern */
+                if (rd(rec) & 0x04) { wr(wWavePending, rd(de++)); break; }
+                {
+                    uint8_t pattern = rd(de++);
+                    if (pattern == rd(wWaveCurrent)) break;
+                    wr(wWaveCurrent, pattern);
+                    if ((uint8_t)(rec - wSoundChannels) < 0x60) wr(wWavePending, pattern);
+                    else wr(wWaveEffect, pattern);
+                    load_wave(pattern);
+                }
+                break;
+            case 0x0B:                              /* end */
+                wr(wEffectPriority, 0);
+                if (rd(wWavePending) != rd(wWaveCurrent)) { wr(wWaveCurrent, rd(wWavePending)); load_wave(rd(wWaveCurrent)); }
+                silence_record(rec, 0);
+                return 1;
+            case 0x0C: wr(rec, rd(rec) | 0x20); break;
+            case 0x0D: wr(rec, rd(rec) & 0xDF); break;
+            case 0x0E: wr(rec, rd(rec) & 0xFE); break;
+            case 0x0F: { uint8_t v = rd(de++); wr(rNR50, v); wr(wSoundMasterVol, v); break; }
+            case 0x10: wr(rec + 0x06, rd(de++)); break;
+            case 0x11: wr(rec + 0x0E, rd(de++)); break;
+            }
+            continue;
+        }
+        if (token & 0x80) {                         /* note */
+            if (token != 0x80) token += rd(rec + 5);
+            uint16_t freq = DATA_SoundFrequencyTable + (uint8_t)(token << 1);
+            wr(rec + 0x0E, rd(freq));
+            wr(rec + 0x0F, rd(freq + 1));
+            wr(rec + 0x10, rd(rec + 0x0E));
+            wr(rec + 0x11, rd(rec + 0x0F));
+            if (rd(rec) & 0x20) wr(rec + 0x14, rd(de++));
+            uint8_t next = rd(de);
+            if (!(next & 0x80)) { de++; wr(rec + 0x0B, next); }
+        } else {
+            wr(rec + 0x0B, token);                  /* a length alone */
+        }
+        wr(rec + 3, (uint8_t)de);
+        wr(rec + 4, de >> 8);
+        wr(rec + 0x0C, 0);
+        return 0;
+    }
+}
+
+/* SoundReadNextNote: BC = record. Sets flag bit 0 (a note starts) and runs the stream interpreter from the record's stream pointer. */
+void *gb_native_SoundReadNextNote(void) {
+    uint16_t rec = rec_of_bc();
+    wr(rec, rd(rec) | 0x01);
+    if (sound_parse(rec, rd(rec + 3) | rd(rec + 4) << 8)) { r.sp += 2; return 0; }
+    return 0;
+}
+
 /* SoundUpdateChannel: one record. Paused (bit 4): nothing. The note timer adds +9 to +8; on overflow the length counter +$c counts up and when it reaches +$b
  * the next note is read (SoundReadNextNote; with bit 0 set the vibrato counter +$d restarts). Unless an effect has taken the channel (bit 2) the pitch slide runs
  * and the registers of the record's hardware channel are written. */
@@ -2155,8 +2289,8 @@ void *gb_native_SoundUpdateChannel(void) {
         uint8_t length = rd(rec + 0x0C) + 1;
         wr(rec + 0x0C, length);
         if (rd(rec + 0x0B) == length) {
-            SET_BC(rec);
-            NCALL(GAME_SoundReadNextNote);
+            wr(rec, rd(rec) | 0x01);
+            if (sound_parse(rec, rd(rec + 3) | rd(rec + 4) << 8)) return 0;
             if (rd(rec) & 0x01) wr(rec + 0x0D, 0);
         }
     }

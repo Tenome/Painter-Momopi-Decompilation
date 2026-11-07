@@ -124,3 +124,4 @@ SoundWriteChannel2
 SoundWriteChannel3
 SoundWriteChannel4
 SoundUpdateChannel
+SoundReadNextNote
