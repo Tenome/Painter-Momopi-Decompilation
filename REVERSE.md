@@ -258,3 +258,7 @@ The bytes after each song's last read byte (for example `$5ef3` onward after the
 - **Object record layout** (32 bytes, used by the player, enemies, projectile, paint blob, cursor and ending objects): +0 flags (bit 7 active), +1/+2 animation pointer, +4 half size of the hit box,
   +5 animation frame, +6 X fraction, +7/+8 X pixel, +9 Y fraction, +$a/+$b Y pixel, +$c/+$d X step (set by `MoveObject`), +$e/+$f Y step, +$10 heading (0-31), +$11 speed.
   `ApplyObjectStep` adds the step to the fixed point position (it does not clamp anything; the older name `ClampObjectToRoom` was a guess).
+- **Object flags** (record byte 0): bit 7 active; bit 1 position is in world coordinates (the camera is subtracted when drawing); bit 2 is set by `DrawObject` when at least one part
+  was drawn (so other code can tell that the object is visible); bit 3 becomes OAM attribute bit 7 (behind the background); bits 4-6 become OAM attribute bits 4-6 (palette, X flip, Y flip).
+  A mirrored object has its part offsets negated and is moved 8 pixels. `DrawObject` draws the parts starting at a cursor (record +5) that moves on by one every frame, so when the OAM
+  overflows (40 sprites) different parts drop out each frame: the flicker technique of the game. A part whose position is outside 0-255 is skipped.

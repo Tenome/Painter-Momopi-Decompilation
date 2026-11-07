@@ -569,3 +569,61 @@ void *gb_native_LoadEnemySlot(void) {
     r.a = rd(slot + 0x1F);
     return 0;
 }
+
+#define wCameraXHi 0xC1AD
+#define wCameraYHi 0xC1AF
+
+/* DrawObject: turns the object record at hObjPtr into OAM sprites (through AddOamSprite).
+ * Record: +0 flags (bit 7 active, bit 1 position is in the world so the camera is subtracted, bit 2 set here when a part was drawn,
+ *         bit 3 -> OAM attribute bit 7, bits 4-6 -> OAM attribute bits 4-6 (palette, X flip, Y flip)), +1/+2 animation pointer, +5 part cursor, +7/+8 X, +$a/+$b Y.
+ * Animation data: shape id, then one tile id per part. Shape (ObjectShapeTable): part count, then x and y offset (signed bytes) of every part.
+ * The parts are drawn starting at the cursor, which moves on by one every frame, so when the OAM overflows different parts drop out each frame.
+ * Mirrored objects (X flip or Y flip) are moved 8 pixels and their part offsets are negated. A part is skipped when its position is off the screen
+ * (high byte not 0). The scratch variables hScratch00-0D, hOtherObjLo/Hi are left as the original leaves them. */
+void *gb_native_DrawObject(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t flags = rd(obj);
+    if (!(flags & 0x80)) return 0;
+    int x = rd(obj + 7) | rd(obj + 8) << 8, y = rd(obj + 0x0A) | rd(obj + 0x0B) << 8;
+    uint8_t s00 = flags & 0xFB;
+    if (s00 & 0x02) {
+        x = (x - (rd(0xC1AC) | rd(wCameraXHi) << 8)) & 0xFFFF;
+        y = (y - (rd(0xC1AE) | rd(wCameraYHi) << 8)) & 0xFFFF;
+    }
+    if (s00 & 0x20) x = (x - 8) & 0xFFFF;
+    if (s00 & 0x40) y = (y - 8) & 0xFFFF;
+    wr(hScratch00, s00);
+    wr(hScratch00 + 1, x);  wr(hScratch00 + 2, x >> 8);
+    wr(hScratch00 + 3, y);  wr(hScratch00 + 4, y >> 8);
+    uint16_t anim = rd(obj + 1) | rd(obj + 2) << 8;
+    wr(hScratch00 + 5, anim); wr(hScratch00 + 6, anim >> 8);
+    uint8_t cursor = rd(obj + 5);
+    uint16_t shape = rd(0x06A4 + 2 * rd(anim)) | rd(0x06A5 + 2 * rd(anim)) << 8;
+    wr(hScratch00 + 7, shape); wr(hScratch00 + 8, shape >> 8);
+    uint8_t count = rd(shape);
+    wr(hScratch00 + 9, count);
+    for (int left = count; left > 0; left--) {
+        if (cursor >= count) cursor = 0;
+        uint8_t part = cursor++;
+        int8_t ox = (int8_t)rd(shape + 2 * part + 1);
+        if (s00 & 0x20) ox = (int8_t)(0 - ox);
+        int sx = x + ox;
+        wr(hScratch00 + 10, (uint8_t)sx);
+        if (sx < 0 || sx > 255) continue;
+        int8_t oy = (int8_t)rd(shape + 2 * part + 2);
+        if (s00 & 0x40) oy = (int8_t)(0 - oy);
+        int sy = y + oy;
+        wr(hScratch00 + 11, (uint8_t)sy);
+        if (sy < 0 || sy > 255) continue;
+        wr(hScratch00 + 12, rd(anim + 1 + part));
+        s00 |= 0x04;
+        wr(hScratch00, s00);
+        wr(hScratch00 + 13, (uint8_t)(((s00 & 0x08) << 4) | (s00 & 0x70)));
+        gb_native_AddOamSprite();
+    }
+    wr(hOtherObjHi, 0);
+    wr(hOtherObjLo, (uint8_t)(cursor - 1));
+    wr(obj, s00);
+    wr(obj + 5, (uint8_t)(cursor - 1));
+    return 0;
+}

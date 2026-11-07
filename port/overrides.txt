@@ -45,3 +45,4 @@ ClampPlayerPosition
 NextRandomDirection
 StoreEnemySlot
 LoadEnemySlot
+DrawObject
