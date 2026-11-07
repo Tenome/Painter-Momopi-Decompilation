@@ -3319,3 +3319,65 @@ void *gb_native_InitPlayer(void) {
     wr(wMagicCards + 2, 6);
     return 0;
 }
+
+/* PlayerDeath: the death sequence (entered by PlayFrame when wPlayerDir bit 5 is set). The first frame waits $27 frames and plays the death music; then every frame the
+ * counter wMagicCastTimer runs through CounterToFrame (60 frames per step, 15 steps) and the player is drawn with the animation pointer taken from the table at $488c
+ * (mirrored at steps 6 and $10). After the last step the game mode is chosen: a link game goes to mode 7 (link lose) or on; otherwise a life is lost and mode 3 (round
+ * intro) follows after $50 frames; with no lives left the lives are reset to 3 and mode 5 (continue) or mode 4 (game over) follows. */
+void *gb_native_PlayerDeath(void) {
+    if (!(rd(wPlayerStatus) & 0x04)) {
+        r.a = 0x27;
+        NCALL(GAME_DelayFrames);
+        r.a = SND_MUSIC_DEATH;
+        NCALL(GAME_PlaySound);
+        SET_HL(wPlayerStatus);
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x04);
+    }
+    wr(wMagicCastTimer, rd(wMagicCastTimer) + 1);
+    wr(hScratch00 + 6, 0x3C);
+    wr(hScratch00 + 7, 0x02);
+    wr(hScratch00 + 8, rd(wMagicCastTimer));
+    r.a = 0x0F;
+    gb_native_CounterToFrame();
+    wr(wMagicCastTimer, rd(hScratch00 + 8));
+    uint8_t step = r.c;
+    if (step != 0x1E) {
+        wr(wPlayer, (step == 0x06 || step == 0x10) ? (rd(wPlayer) | 0x20) : (rd(wPlayer) & ~0x20));
+        uint16_t entry = 0x488C + step;
+        wr(wPlayerAnimLo, rd(entry));
+        wr(wPlayerAnimHi, rd(entry + 1));
+        SET_HL(wPlayer);
+        gb_native_SetObjPtr();
+        return gb_native_DrawObject();
+    }
+    wr(wActiveMagic, 0);
+    wr(wMagicCastTimer, 0);
+    if (rd(hLinkFlags) & 0x02) {
+        wr(hSerialByte, rd(hSerialByte) | 0x40);
+        r.a = 7;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (rd(hLinkFlags) & 0x01) {
+        r.c = 0x04;
+        NCALL(GAME_SerialSendByte);
+        wr(hSerialByte, rd(hSerialByte) | 0x80);
+        if (!(rd(hSerialByte) & 0x02)) { r.a = 7; return (void *)GAME_GameModeDispatch; }
+    }
+    wr(wLives, rd(wLives) - 1);
+    if (rd(wLives) != 0) {
+        r.a = 0x50;
+        NCALL(GAME_DelayFrames);
+        r.a = 3;
+        return (void *)GAME_GameModeDispatch;
+    }
+    wr(wPlayerDir, 0);
+    wr(wPlayerStatus, 0);
+    wr(0xC47B, 0);
+    wr(0xC1A8, 0);
+    wr(wRoundFlags, (rd(wRoundFlags) | 0x01) & 0xF9);
+    wr(wLives, 3);
+    r.a = 0x50;
+    NCALL(GAME_DelayFrames);
+    r.a = (rd(wContinues) == 0 && !(rd(wCheatFlags) & 0x01)) ? 4 : 5;
+    return (void *)GAME_GameModeDispatch;
+}

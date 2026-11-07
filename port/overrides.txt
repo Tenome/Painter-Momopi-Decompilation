@@ -194,3 +194,4 @@ CameraFollowPlayerX
 ResetCamera
 UpdateCamera
 InitPlayer
+PlayerDeath
