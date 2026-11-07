@@ -142,7 +142,7 @@ bank	addr	size	name
 0	3478	9	EnemyOnTileGrid
 0	3481	164	EnemyComputeBlockedDirs
 0	3525	10	RemoveEnemy
-0	352f	106	EnemyPaintStep
+0	352f	106	EnemyErasePaint
 0	3599	95	EnemyAimAtPlayer
 0	35f8	11	RememberEnemyPosition
 0	3603	58	EnemyTurnIfBlocked

@@ -776,7 +776,7 @@ void *gb_native_EnemyKindIdle(void) {
     NCALL(GAME_EnemyGridStep);
     NCALL(GAME_EnemyChooseDirection);
     NCALL(GAME_EnemyMoveStep);
-    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyErasePaint);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
@@ -803,7 +803,7 @@ void *gb_native_EnemyKind1(void) {
         if (!(rd(hEnemyCounter) & 0x08)) return 0;
     }
     NCALL(GAME_EnemyMoveStep);
-    NCALL(GAME_EnemyPaintStep);
+    NCALL(GAME_EnemyErasePaint);
     NCALL(GAME_EnemyPaintUnderB0M);
     NCALL(GAME_CheckEnemyTouchesPlayer);
     NCALL(GAME_CheckPaintHitsEnemy);
@@ -2906,5 +2906,39 @@ void *gb_native_SelectKind9Animation(void) {
     }
     SET_BC(bc);
     set_anim((rd(hEnemyTick) & 0x08) ? bc : de);
+    return 0;
+}
+
+/* EnemyErasePaint: enemies undo the player's work. When hEnemyDir bit 5 asks for it (set by EnemyGridStep), the map cell under the enemy is a painted cell (bit 4)
+ * and the enemy is on the screen, the cell becomes unpainted again (its low nibble with bit 7) and its two tile rows are redrawn from D_00_3ac4; wPaintRemaining goes up by 1.
+ * Not for kind 8, and not while the B.O.M card (5) runs. */
+void *gb_native_EnemyErasePaint(void) {
+    if (rd(hEnemyKind) == 0x08) return 0;
+    if (rd(wActiveMagic) == 0x05 && (rd(wMagicState) & 0x01)) return 0;
+    if (!(rd(hEnemyDir) & 0x20)) return 0;
+    wr(hEnemyDir, rd(hEnemyDir) & ~0x20);
+    r.a = rd(hEnemyX);
+    gb_native_PixelXToColumn();
+    r.a = (uint8_t)((rd(hEnemyY) & 0xF0) + 8);
+    gb_native_LookupMapTile();
+    uint16_t cell = HL();
+    uint8_t tile = r.a;
+    r.e = tile;
+    if (tile & 0x80) return 0;
+    if (!(tile & 0x10)) return 0;
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) return 0;
+    wr(cell, (tile & 0x0F) | 0x80);
+    wr(hSpriteX, (uint8_t)((rd(hEnemyX) + 8) & 0xF0));
+    wr(hSpriteY, (uint8_t)(rd(hEnemyY) & 0xF0));
+    NCALL(GAME_PixelToTilemapAddr);
+    r.l = r.a - 1;
+    r.h = rd(hTilemapAddrHi);
+    SET_DE(0x3AC4);
+    NCALL(GAME_QueueVramCopyRows);
+    NCALL(GAME_WaitVramCopyDone);
+    wr(wPaintRemaining, rd(wPaintRemaining) + 1);
     return 0;
 }

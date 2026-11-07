@@ -168,3 +168,4 @@ SelectKind3Animation
 SelectKind4Animation
 SelectKind2Animation
 SelectKind9Animation
+EnemyErasePaint

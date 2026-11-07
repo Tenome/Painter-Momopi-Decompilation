@@ -4379,7 +4379,7 @@ RemoveEnemy::  ; clears the active bit of hObject2 and decrements wEnemyCount
     ld hl, wEnemyCount
     dec [hl]
     ret
-EnemyPaintStep::  ; paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
+EnemyErasePaint::  ; an enemy standing on a painted cell (hEnemyDir bit 5 asks for the check) on the screen turns it back to unpainted ($80 set) and raises wPaintRemaining; not for kind 8 or while the B.O.M card runs
     ldh a, [hEnemyKind]
     cp a, $08
     ret z
@@ -4954,7 +4954,7 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call EnemyGridStep
     call EnemyChooseDirection
     call EnemyMoveStep
-    call EnemyPaintStep
+    call EnemyErasePaint
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy
@@ -5218,7 +5218,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     ret z
 .L_00_3b26:
     call EnemyMoveStep
-    call EnemyPaintStep
+    call EnemyErasePaint
     call EnemyPaintUnderB0M
     call CheckEnemyTouchesPlayer
     call CheckPaintHitsEnemy

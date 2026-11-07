@@ -383,7 +383,7 @@ bank,addr,name,comment
 0,3d18,EnemyKind7NextStep,reads the next path entry from wEnemyPathPtr (name provisional)
 0,3e90,EnemyIdleAnimate,counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
 0,3ef9,EnemyBuildTeleportTable,fills the position table at $c489 around the enemy (+-$10) (name provisional)
-0,352f,EnemyPaintStep,paint trail step of an enemy: when hEnemyDir bit 5 is set looks up the map tile under the enemy and acts on it (skipped for kind 8 and while the B.O.M card runs; name provisional)
+0,352f,EnemyErasePaint,an enemy standing on a painted cell (hEnemyDir bit 5 asks for the check) on the screen turns it back to unpainted ($80 set) and raises wPaintRemaining; not for kind 8 or while the B.O.M card runs
 0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
 0,39b1,EnemyMoveStep,moves the enemy one step: asks for a turn when the way is blocked (or while T.STOP runs), else takes the step from the table at $3ae3 (slow) or $3aed (fast: flags bit 7 or the spawn flag) and applies it
 0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
