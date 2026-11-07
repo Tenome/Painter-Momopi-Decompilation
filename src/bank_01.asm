@@ -2628,7 +2628,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyStep
     dec [hl]
     ret nz
-    call EnemyAimAtPlayerWide
+    call ProjectileAimAtPlayer
     ldh a, [hEnemyX]
     ld [wProjectileX], a
     ldh a, [hEnemyY]
@@ -2833,7 +2833,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld a, h
     ld [$c49a], a
     jp ProjectileSelectFrame
-EnemyAimAtPlayerWide::  ; sets hEnemyDir towards the player from the X and Y differences (name provisional)
+ProjectileAimAtPlayer::  ; sets the heading of the projectile (wProjectile +$10) towards the player in eight directions from the position differences (a difference below 16 counts as the same row or column)
     ld a, [wPlayerY]
     ld e, a
     ld a, [hEnemyY]

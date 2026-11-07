@@ -2658,3 +2658,55 @@ void *gb_native_EnemyComputeBlockedDirs(void) {
     if (x >= nearest && (map_tile(centre, col + 1) & 0x0F) == 0) { blocked |= 0x01; wr(hEnemyBlocked, blocked); }
     return 0;
 }
+
+/* ProjectileAimAtPlayer: the heading of the enemy projectile (wProjectile +$10) becomes the one of the eight directions that points from the enemy at the player:
+ * 0 up, 4 up-right, 8 right, $c down-right, $10 down, $14 down-left, $1c up-left (a difference of less than 16 pixels counts as the same row or column).
+ * (Same row and the enemy to the right of the player gives $10, not left ($18): that is what the original does.) */
+void *gb_native_ProjectileAimAtPlayer(void) {
+    uint8_t px = rd(wPlayerX), py = rd(wPlayerY), ex = rd(hEnemyX), ey = rd(hEnemyY);
+    uint8_t heading;
+    int left = (uint8_t)(ex - 0x10) >= px, right = (uint8_t)(ex + 0x10) < px;
+    if ((uint8_t)(ey - 0x10) >= py) heading = left ? 0x1C : (right ? 0x04 : 0x00);
+    else if ((uint8_t)(ey + 0x10) < py) heading = left ? 0x14 : (right ? 0x0C : 0x10);
+    else heading = ex < px ? 0x08 : 0x10;
+    wr(wProjectile + 0x10, heading);
+    r.a = heading;
+    return 0;
+}
+
+/* EnemyAimAtPlayer: when the enemy stands on the tile grid it turns towards the player: horizontally first (right 1, left 2; also left when its X is beyond 255),
+ * and when the X agrees vertically (up 4, down 8). If that direction is blocked (hEnemyBlocked) bit 6 of hEnemyDir is set and EnemyChooseDirection picks another.
+ * When both coordinates agree the low nibble of hEnemyDir becomes the low bits of the enemy's Y (as in the original). */
+void *gb_native_EnemyAimAtPlayer(void) {
+    r.b = rd(hEnemyX);
+    r.c = rd(hEnemyY);
+    gb_native_IsOnTileGrid();
+    if (!ZF()) return 0;
+    uint8_t bits;
+    uint8_t want = 0;
+    if (rd(hEnemyXHi) == 1) {
+        want = 0x02;
+    } else {
+        uint8_t ex = rd(hEnemyX), px = rd(wPlayerX);
+        if (px != ex) want = px < ex ? 0x02 : 0x01;
+    }
+    if (want) {
+        if (rd(hEnemyBlocked) & want) goto blocked;
+        bits = want;
+    } else {
+        uint8_t ey = rd(hEnemyY), py = rd(wPlayerY);
+        if (py == ey) {
+            bits = ey;
+        } else {
+            uint8_t vertical = py < ey ? 0x04 : 0x08;
+            if (rd(hEnemyBlocked) & vertical) goto blocked;
+            bits = vertical;
+        }
+    }
+    wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | bits);
+    return 0;
+blocked:
+    SET_HL(hEnemyDir);
+    wr(hEnemyDir, rd(hEnemyDir) | 0x40);
+    return (void *)GAME_EnemyChooseDirection;
+}

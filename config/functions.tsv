@@ -321,7 +321,7 @@ bank	addr	size	name
 1	566a	13	EnemyFlagBit3IfDead
 1	5677	43	ProjectileHitTest
 1	56a2	106	InitProjectile
-1	570c	118	EnemyAimAtPlayerWide
+1	570c	118	ProjectileAimAtPlayer
 1	57f0	39	EnemyKind9
 1	5817	10	EnemyKind9Move
 1	5821	55	SelectKind9Animation

@@ -149,3 +149,5 @@ VramCopyList
 QueueVramCopyList
 QueueVramCopyRows
 EnemyComputeBlockedDirs
+ProjectileAimAtPlayer
+EnemyAimAtPlayer
