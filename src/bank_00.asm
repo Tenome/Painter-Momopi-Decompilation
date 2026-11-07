@@ -1653,10 +1653,10 @@ AddScore::  ; adds to the BCD score digits at wScoreDigits
     dec hl
     call DrawDecimalDigits
     ld a, $06
-    ld [$c46d], a
+    ld [wScoreStream], a
     ld a, $01
     ld [$c46e], a
-    ld a, [$c467]
+    ld a, [wScoreDecimal]
     call LowNibbleToDigitTile
     ld [$c46f], a
     ld a, [$c468]
@@ -1686,7 +1686,7 @@ DrawDecimalDigits::  ; draws a byte as decimal digits using ByteToBCD
     ld d, a
     swap a
     and a, $0f
-    ld hl, $c467
+    ld hl, wScoreDecimal
     add hl, bc
     ld [hl], a
     inc bc
@@ -1911,7 +1911,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     jr nz, .L_00_1265
     call InitMagicScreenState
     ld hl, $9c66
-    ld de, $c46d
+    ld de, wScoreStream
     call VramCopyStream
     ld a, [wMagicPointsHi]
     ld c, a
@@ -2156,14 +2156,14 @@ ClearRoundVariables::  ; zeroes the per-round counters ($c464-$c46c and $c488)
     ld [wScoreDigits], a
     ld [$c465], a
     ld [$c466], a
-    ld [$c467], a
+    ld [wScoreDecimal], a
     ld [$c468], a
     ld [$c469], a
     ld [$c46a], a
     ld [$c46b], a
     ld [$c46c], a
     ld a, $06
-    ld [$c46d], a
+    ld [wScoreStream], a
     ld a, $01
     ld [$c46e], a
     ld a, $ab

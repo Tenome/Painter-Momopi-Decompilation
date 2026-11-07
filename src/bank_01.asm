@@ -1291,20 +1291,20 @@ SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player'
     ld [wPaintAnimHi], a
     ld a, $20
     ld [$c50f], a
-    ld a, [$c4ce]
+    ld a, [wPlayerAngle]
     ld [$c50e], a
     ld a, $86
     ld [wPaintObject], a
     ld a, [$c4c4]
     ld [$c504], a
     ld a, [wPlayerX]
-    ld [$c505], a
+    ld [wPaintX], a
     ld a, [$c4c6]
     ld [$c506], a
     ld a, [$c4c7]
     ld [$c507], a
     ld a, [wPlayerY]
-    ld [$c508], a
+    ld [wPaintY], a
     ld a, [$c4c9]
     ld [$c509], a
     ld a, $01
@@ -1342,13 +1342,13 @@ LoadTrailSegment::  ; copies the 7 byte trail segment $c1b6 of $c1b7.. into the 
     ld a, [hl+]
     ld [$c504], a
     ld a, [hl+]
-    ld [$c505], a
+    ld [wPaintX], a
     ld a, [hl+]
     ld [$c506], a
     ld a, [hl+]
     ld [$c507], a
     ld a, [hl+]
-    ld [$c508], a
+    ld [wPaintY], a
     ld a, [hl+]
     ld [$c509], a
     ld a, [hl]
@@ -1364,13 +1364,13 @@ StoreTrailSegment::  ; copies the paint blob object back into trail segment $c1b
     add hl, bc
     ld a, [$c504]
     ld [hl+], a
-    ld a, [$c505]
+    ld a, [wPaintX]
     ld [hl+], a
     ld a, [$c506]
     ld [hl+], a
     ld a, [$c507]
     ld [hl+], a
-    ld a, [$c508]
+    ld a, [wPaintY]
     ld [hl+], a
     ld a, [$c509]
     ld [hl], a
@@ -2025,9 +2025,9 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ret
 HoldDirectionUntilAligned::  ; keeps hJoyHeld direction until the player reaches the next tile
     ld hl, wPlayerX
@@ -2244,7 +2244,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld c, a
     ld hl, DirectionToAnimIndex
     call LookupByte
-    ld [$c4ce], a
+    ld [wPlayerAngle], a
     srl a
     ld c, a
     ld b, $00
@@ -2267,7 +2267,7 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     ld a, [hl]
     ld [wPlayerVelX], a
     ld a, $09
-    ld [$c4cf], a
+    ld [wPlayerSpeed], a
     ld hl, wPlayer
     call SetObjPtr
     call ClampObjectToRoom
@@ -2280,7 +2280,7 @@ SetPlayerStatusBit0::  ; sets wPlayerStatus bit 0 and clears $c4cf
     ld hl, wPlayerStatus
     set 0, [hl]
     xor a, a
-    ld [$c4cf], a
+    ld [wPlayerSpeed], a
     ret
 D_01_518d::
     INCBIN "assets/bank_01/518d.bin"
@@ -2290,7 +2290,7 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ld hl, wPlayer
     call Clear32Bytes
     ld a, $10
-    ld [$c4ce], a
+    ld [wPlayerAngle], a
     ld a, $a2
     ld [wPlayer], a
     ld a, $80
@@ -2307,9 +2307,9 @@ InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and a
     ldh [hMagicTimer], a
     ld hl, PlayerAnimPtrs
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ldh a, [hLinkFlags]
     bit 0, a
     jr z, .L_01_5207
@@ -2376,9 +2376,9 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld b, $00
     add hl, bc
     ld a, [hl+]
-    ld [$c4bf], a
+    ld [wPlayerAnimLo], a
     ld a, [hl]
-    ld [$c4c0], a
+    ld [wPlayerAnimHi], a
     ld hl, wPlayer
     call SetObjPtr
     jp DrawObject
@@ -2630,9 +2630,9 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ret nz
     call L_01_570c
     ldh a, [hEnemyX]
-    ld [$c4a5], a
+    ld [wProjectileX], a
     ldh a, [hEnemyY]
-    ld [$c4a8], a
+    ld [wProjectileY], a
     ld a, $86
     ld [wProjectile], a
     ldh a, [hEnemyKind]
@@ -2656,11 +2656,11 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
-    ld a, [$c4a5]
+    ld a, [wProjectileX]
     ldh [hScratch00], a
     ld a, [$c4a6]
     ldh [hScratch01], a
-    ld a, [$c4a8]
+    ld a, [wProjectileY]
     ldh [hScratch02], a
     ld a, [$c4a9]
     ldh [hScratch03], a
@@ -2670,7 +2670,7 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ld hl, hEnemyDir
     set 5, [hl]
     ld a, $0b
-    ld [$c4af], a
+    ld [wProjectileSpeed], a
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_55fb
@@ -2680,7 +2680,7 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     xor a, a
     ldh [hEnemySpeed], a
     xor a, a
-    ld [$c4af], a
+    ld [wProjectileSpeed], a
 .L_01_55fb:
     call EnemyKind10Animate
     ld hl, wProjectile
@@ -2779,7 +2779,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ld hl, wProjectile
     call Clear32Bytes
     ld a, $01
-    ld [$c4a2], a
+    ld [wProjectileBox], a
     xor a, a
     ld [hEnemyFlags], a
     ld a, $20
@@ -3080,17 +3080,17 @@ SpawnEnemyProjectile::  ; creates the projectile at wProjectile in front of the 
     ld hl, wProjectile
     call Clear32Bytes
     ld a, $04
-    ld [$c4a2], a
+    ld [wProjectileBox], a
     ld a, $a0
     ld [$c4b4], a
     ldh a, [hEnemyX]
     add a, $08
     and a, $f0
-    ld [$c4a5], a
+    ld [wProjectileX], a
     ldh a, [hEnemyY]
     and a, $f0
     add a, $08
-    ld [$c4a8], a
+    ld [wProjectileY], a
     ld a, $82
     ld [wProjectile], a
     ret

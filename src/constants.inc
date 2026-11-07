@@ -253,3 +253,17 @@ DEF wWaveEnded      EQU $c486   ; set to 1 when a wave has finished spawning (pr
 DEF wComboCounter   EQU $c4bc   ; chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional)
 DEF wCursorBlink    EQU $c47d   ; counts to $50 and toggles the card cursor animation (CursorBlinkStep)
 DEF wWalkAnimCount  EQU $c4d9   ; walk animation counter of the player (AnimatePlayerWalk)
+; more object record fields (offsets from the record start: +1/+2 animation, +4 box half size, +7 X, +$a Y, +$10 heading, +$11 speed)
+DEF wPlayerAnimLo   EQU $c4bf   ; wPlayer +1
+DEF wPlayerAnimHi   EQU $c4c0   ; wPlayer +2
+DEF wPlayerAngle    EQU $c4ce   ; wPlayer +$10
+DEF wPlayerSpeed    EQU $c4cf   ; wPlayer +$11
+DEF wProjectileBox  EQU $c4a2   ; wProjectile +4
+DEF wProjectileX    EQU $c4a5   ; wProjectile +7 (16 bit with $c4a6)
+DEF wProjectileY    EQU $c4a8   ; wProjectile +$a (16 bit with $c4a9)
+DEF wProjectileSpeed EQU $c4af  ; wProjectile +$11
+DEF wPaintX         EQU $c505   ; wPaintObject +7 (16 bit with $c506)
+DEF wPaintY         EQU $c508   ; wPaintObject +$a (16 bit with $c509)
+; score display: wScoreDigits holds the score as three bytes; DrawDecimalDigits turns them into six digits at $c467-$c46c, then tiles are streamed from $c46d
+DEF wScoreDecimal   EQU $c467   ; six decimal digits of the score
+DEF wScoreStream    EQU $c46d   ; VramCopyStream buffer: count, rows, then six digit tiles from $c46f
