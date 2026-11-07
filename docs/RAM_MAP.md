@@ -22,16 +22,39 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c1b6 | `wTrailIdx` | 5 | index of the trail segment (7 bytes each) copied by LoadTrailSegment |
 | $c30b | `wSoundTmp` | 6 | scratch byte used by SoundLoadStream and the stream commands |
 | $c30c | `wSoundArg` | 23 | command byte passed to PlaySound |
+| $c30d | `wSoundChanLeft` | 3 | channel records left to update in SoundUpdate (8 down to 0) |
 | $c30e | `wSoundCmd` | 6 | command being started (bit 7 set = music/effect id) |
 | $c30f | `wMusicPriority` | 3 | priority of the playing music (SoundStartMusic) |
 | $c310 | `wEffectPriority` | 7 | priority of the playing effect (SoundStartEffect) |
 | $c311 | `wSoundBusy` | 3 | 1 while the queue is being modified |
+| $c312 | `wWavePending` | 3 | wave pattern index waiting to be loaded (provisional) |
+| $c313 | `wWaveEffect` | 1 | wave pattern of the effect record (provisional) |
+| $c314 | `wWaveCurrent` | 4 | wave pattern index currently in wave RAM (provisional) |
+| $c315 | `wSoundMasterVol` | 3 | NR50 value ($77 at init, set by command $ef) |
 | $c316 | `wSoundQueueLen` | 5 |  |
 | $c317 | `wSoundQueue` | 3 |  |
 | $c327 | `wSoundChannels` | 11 | 8 records x $20 bytes |
+| $c347 | `wSoundChan1` | 2 |  |
+| $c367 | `wSoundChan2` | 2 |  |
+| $c387 | `wSoundChan3` | 2 |  |
+| $c3a7 | `wSoundChan4` | 4 | SoundStartEffect loads its stream here (records 5-7 provisional) |
+| $c3c7 | `wSoundChan5` | 2 |  |
+| $c3e7 | `wSoundChan6` | 2 |  |
+| $c407 | `wSoundChan7` | 2 |  |
+| $c427 | `wShadowNR12` | 3 | pulse 1 envelope |
+| $c428 | `wShadowNR13` | 4 | pulse 1 frequency low |
+| $c429 | `wShadowNR14` | 4 | pulse 1 frequency high |
+| $c42a | `wShadowNR22` | 3 | pulse 2 envelope |
+| $c42b | `wShadowNR23` | 4 | pulse 2 frequency low |
+| $c42c | `wShadowNR24` | 4 | pulse 2 frequency high |
+| $c42d | `wShadowNR32` | 3 | wave output level |
+| $c42e | `wShadowNR33` | 4 | wave frequency low |
+| $c42f | `wShadowNR34` | 4 | wave frequency high |
+| $c430 | `wShadowNR42` | 3 | noise envelope |
+| $c431 | `wShadowNR43` | 4 | noise polynomial |
 | $c43b | `wPlayerBlocked` | 23 | mask of directions the player cannot walk (set by PlayerComputeBlockedDirs); the bonus screens reuse it as a step counter |
 | $c43c | `wMagicCol` | 16 | magic screen cursor column (0-2) |
-| $c43d | `wMagicRow` | 13 | magic screen cursor row (0-2) |
+| $c43d | `wMagicRow` | 14 | magic screen cursor row (0-2) |
 | $c43e | `wMagicCards` | 13 | 9 bytes: card id per slot of the 3x3 inventory (0 = empty); round 1 starts with S. UP in slot 0 |
 | $c447 | `wActiveMagic` | 31 | card id of the magic being cast or in effect (0 = none); effects test it (3 = T.STOP freezes enemies ...) |
 | $c44a | `wMagicPoints` | 10 | 16 bit MP (MP 050 on the magic screen) |
@@ -69,8 +92,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c524 | `wRoomIndex` | 9 | selects the room tile set / name (0 = kitchen room) |
 | $c533 | `wEnemyPathPtr` | 6 | 16 bit pointer into the scripted path of kind 7 enemies |
 | $c534 | `wEnemyPathPtrHi` | 5 | high byte of the enemy path pointer (wEnemyPathPtr is the low byte) |
-| $c53a | `wMagicState` | 50 | bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process |
-| $c53b | `wMagicScreenFlags` | 8 | bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling |
+| $c53a | `wMagicState` | 51 | bit 0 = effect running, bit 1 = cast animation, bit 2 = new cast to process |
+| $c53b | `wMagicScreenFlags` | 9 | bit 1 = a card was just chosen (input locked), bit 2 = cursor animation toggling |
 | $c53e | `wEnemyLoopIdx` | 7 | slot index of the running enemy loop (15 down to 0) |
 | $c53f | `wEnemyLoopStart` | 2 | incremented each frame so the update order rotates |
 | $c542 | `wEnemySlots` | 0 | 16 enemy records of $20 bytes (to $c741) |
@@ -135,10 +158,10 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffc6 | `hEnemyAnimState` | 18 |  |
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
-| $ffca | `hEnemyStep` | 15 | enemy step counter |
-| $ffcc | `hEnemyAux` | 13 | enemy auxiliary counter |
+| $ffca | `hEnemyStep` | 17 | enemy step counter |
+| $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
-| $ffd1 | `hEnemyDir` | 60 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
+| $ffd1 | `hEnemyDir` | 63 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
 | $ffd2 | `hEnemyKind` | 13 | index into EnemyBehaviorTable |
 | $ffd3 | `hEnemyCounter2` | 7 | +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional) |
 | $ffd4 | `hEnemyFlags` | 38 | bit 1/2 = frozen / hit by the player |
@@ -149,7 +172,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffd9 | `hOamCount` | 7 |  |
 | $ffda | `hRngCounter` | 10 | incremented while the game waits for VBlank: cheap random source |
 | $ffdb | `hFrameSpin` | 7 |  |
-| $ffdf | `hMagicTimer` | 12 | frames left of the running magic effect (MagicTimerTick) |
+| $ffdf | `hMagicTimer` | 13 | frames left of the running magic effect (MagicTimerTick) |
 | $ffe0 | `hTimeFrames` | 4 | frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds) |
 | $ffe1 | `hTimeSeconds` | 9 | seconds left in the round (shown as TIME) |
 | $ffeb | `hSerialByte` | 29 | byte received over the link port |
@@ -161,14 +184,13 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 |---|---|
 | $c000 | 7 |
 | $c463 | 7 |
+| $ffcb | 6 |
 | $c1b7 | 6 |
 | $c7c0 | 5 |
 | $c775 | 5 |
 | $c77e | 5 |
 | $ffc5 | 5 |
 | $ffcf | 5 |
-| $ffcb | 5 |
-| $c431 | 5 |
 | $c47d | 4 |
 | $c798 | 4 |
 | $c780 | 4 |
@@ -176,17 +198,6 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffc2 | 4 |
 | $ffc4 | 4 |
 | $c489 | 4 |
-| $c3a7 | 4 |
-| $c315 | 4 |
-| $c427 | 4 |
-| $c428 | 4 |
-| $c429 | 4 |
-| $c42b | 4 |
-| $c42c | 4 |
-| $c42e | 4 |
-| $c42f | 4 |
-| $c312 | 4 |
-| $c314 | 4 |
 | $c4d9 | 4 |
 | $c499 | 4 |
 | $c49a | 4 |
@@ -199,3 +210,15 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c44d | 3 |
 | $c453 | 3 |
 | $c486 | 3 |
+| $c487 | 3 |
+| $c43f | 3 |
+| $c440 | 3 |
+| $c778 | 3 |
+| $c77f | 3 |
+| $c799 | 3 |
+| $ffee | 3 |
+| $c4bc | 3 |
+| $c449 | 3 |
+| $c4ce | 3 |
+| $c504 | 3 |
+| $c505 | 3 |

@@ -215,3 +215,20 @@ DEF wSoundChan4     EQU $c3a7   ; SoundStartEffect loads its stream here (record
 DEF wSoundChan5     EQU $c3c7
 DEF wSoundChan6     EQU $c3e7
 DEF wSoundChan7     EQU $c407
+; sound register shadows: the engine writes a register only when the new value differs from the last one written
+DEF wShadowNR12     EQU $c427   ; pulse 1 envelope
+DEF wShadowNR13     EQU $c428   ; pulse 1 frequency low
+DEF wShadowNR14     EQU $c429   ; pulse 1 frequency high
+DEF wShadowNR22     EQU $c42a   ; pulse 2 envelope
+DEF wShadowNR23     EQU $c42b   ; pulse 2 frequency low
+DEF wShadowNR24     EQU $c42c   ; pulse 2 frequency high
+DEF wShadowNR32     EQU $c42d   ; wave output level
+DEF wShadowNR33     EQU $c42e   ; wave frequency low
+DEF wShadowNR34     EQU $c42f   ; wave frequency high
+DEF wShadowNR42     EQU $c430   ; noise envelope
+DEF wShadowNR43     EQU $c431   ; noise polynomial
+DEF wSoundChanLeft  EQU $c30d   ; channel records left to update in SoundUpdate (8 down to 0)
+DEF wSoundMasterVol EQU $c315   ; NR50 value ($77 at init, set by command $ef)
+DEF wWavePending    EQU $c312   ; wave pattern index waiting to be loaded (provisional)
+DEF wWaveEffect     EQU $c313   ; wave pattern of the effect record (provisional)
+DEF wWaveCurrent    EQU $c314   ; wave pattern index currently in wave RAM (provisional)
