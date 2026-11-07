@@ -247,3 +247,9 @@ DEF wEnding2Y       EQU $c798   ; wEndingObject2 +$a
 DEF wMapCellMask    EQU $c7c0   ; DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it)
 DEF wMpStream       EQU $c451   ; VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453
 DEF wMpStreamIdx    EQU $c463   ; number of tiles written so far into the magic points stream (provisional)
+DEF wSpawnListPtr   EQU $c481   ; 16 bit pointer to the spawn list of the current wave (StepEnemySpawnScript)
+DEF wSpawnCount     EQU $c485   ; number of spawns in the current wave (first byte of the list)
+DEF wWaveEnded      EQU $c486   ; set to 1 when a wave has finished spawning (provisional)
+DEF wComboCounter   EQU $c4bc   ; chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional)
+DEF wCursorBlink    EQU $c47d   ; counts to $50 and toggles the card cursor animation (CursorBlinkStep)
+DEF wWalkAnimCount  EQU $c4d9   ; walk animation counter of the player (AnimatePlayerWalk)

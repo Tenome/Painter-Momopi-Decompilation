@@ -2004,18 +2004,18 @@ AnimatePlayerWalk::  ; while a direction is held: advances the walk animation co
     ld a, [hJoyHeld]
     and a, $f0
     ret z
-    ld hl, $c4d9
+    ld hl, wWalkAnimCount
     inc [hl]
     ld a, $0c
     ldh [hScratch06], a
     ld a, $02
     ldh [hScratch07], a
-    ld a, [$c4d9]
+    ld a, [wWalkAnimCount]
     ldh [hScratch08], a
     ld a, $04
     call CounterToFrame
     ldh a, [hScratch08]
-    ld [$c4d9], a
+    ld [wWalkAnimCount], a
     ld a, [$c4e3]
     ld e, a
     ld a, [$c4e4]

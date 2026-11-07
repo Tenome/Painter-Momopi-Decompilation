@@ -64,9 +64,13 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c463 | `wMpStreamIdx` | 8 | number of tiles written so far into the magic points stream (provisional) |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
 | $c47a | `wScoreTemp` | 4 | scratch byte of AddScore |
+| $c47d | `wCursorBlink` | 3 | counts to $50 and toggles the card cursor animation (CursorBlinkStep) |
 | $c47e | `wEnemyCount` | 5 | enemies alive (spawning stops at 3) |
+| $c481 | `wSpawnListPtr` | 3 | 16 bit pointer to the spawn list of the current wave (StepEnemySpawnScript) |
 | $c483 | `wSpawnWave` | 4 | index (0-5) of the current wave in the round's list |
 | $c484 | `wSpawnIndex` | 6 | next entry within the wave (1 based) |
+| $c485 | `wSpawnCount` | 1 | number of spawns in the current wave (first byte of the list) |
+| $c486 | `wWaveEnded` | 3 | set to 1 when a wave has finished spawning (provisional) |
 | $c488 | `wExtraLifeIdx` | 4 | index (0-4) of the next score threshold for an extra life (CheckExtraLife) |
 | $c49b | `wContinues` | 7 | continues left (5 in a normal game, $ff with the cheat) |
 | $c49c | `wCheatFlags` | 15 | bit 0 = title code Up+Select+A+B entered: unlimited continues |
@@ -74,12 +78,14 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c49e | `wProjectile` | 31 | object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it) |
 | $c49f | `wProjectileAnimLo` | 4 | wProjectile +1: animation pointer |
 | $c4a0 | `wProjectileAnimHi` | 4 |  |
+| $c4bc | `wComboCounter` | 3 | chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional) |
 | $c4be | `wPlayer` | 14 | the player's object record |
 | $c4c5 | `wPlayerX` | 27 |  |
 | $c4c8 | `wPlayerY` | 23 |  |
 | $c4cb | `wPlayerVelX` | 1 |  |
 | $c4cd | `wPlayerVelY` | 1 |  |
 | $c4d2 | `wMagicCastTimer` | 5 | frame counter used while a card is being cast (provisional) |
+| $c4d9 | `wWalkAnimCount` | 3 | walk animation counter of the player (AnimatePlayerWalk) |
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
 | $c4fe | `wPaintObject` | 14 | the paint blob object record (tested by CheckPaintHitsEnemy) |
@@ -201,11 +207,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c1b7 | 6 |
 | $ffcf | 5 |
 | $c453 | 4 |
-| $c47d | 4 |
 | $c780 | 4 |
-| $c481 | 4 |
 | $c489 | 4 |
-| $c4d9 | 4 |
 | $c499 | 4 |
 | $c49a | 4 |
 | $c4a5 | 4 |
@@ -215,13 +218,11 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c46c | 3 |
 | $c44e | 3 |
 | $c44d | 3 |
-| $c486 | 3 |
 | $c487 | 3 |
 | $c43f | 3 |
 | $c440 | 3 |
 | $c799 | 3 |
 | $ffee | 3 |
-| $c4bc | 3 |
 | $c449 | 3 |
 | $c4ce | 3 |
 | $c504 | 3 |
@@ -236,3 +237,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4cf | 3 |
 | $c4a8 | 3 |
 | $c4b4 | 3 |
+| $c1b5 | 2 |
+| $c46e | 2 |
+| $c46f | 2 |
+| $c468 | 2 |
+| $c470 | 2 |

@@ -2283,11 +2283,11 @@ CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation betwee
     ld a, [wMagicScreenFlags]
     bit 2, a
     ret z
-    ld a, [$c47d]
+    ld a, [wCursorBlink]
     cp a, $50
     jr nc, ResetMagicCursorAnimation
     inc a
-    ld [$c47d], a
+    ld [wCursorBlink], a
     ld a, [$c769]
     and a, $04
     jr nz, SetCursorDefaultAnimation
@@ -2557,7 +2557,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     xor a, a
     ld [wMagicCol], a
     ld [wMagicRow], a
-    ld [$c47d], a
+    ld [wCursorBlink], a
     ld [wMagicScreenFlags], a
     ld hl, wCursorObject
     call Clear32Bytes
@@ -2737,7 +2737,7 @@ ClearRoomState::  ; zeroes wActiveMagic wMagicState and the room script variable
     ld [wActiveMagic], a
     ld [wMagicState], a
     ld [wEnemyCount], a
-    ld [$c486], a
+    ld [wWaveEnded], a
     ld [wSpawnWave], a
     ld a, $01
     ld [wSpawnIndex], a
@@ -3961,11 +3961,11 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
 .L_00_3206:
     call LookupWord
     ld a, l
-    ld [$c481], a
+    ld [wSpawnListPtr], a
     ld a, h
     ld [$c482], a
     ld a, [hl]
-    ld [$c485], a
+    ld [wSpawnCount], a
     ld d, a
     ld a, [wSpawnIndex]
     dec a
@@ -3975,12 +3975,12 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     inc [hl]
     ld a, $01
     ld [wSpawnIndex], a
-    ld [$c486], a
+    ld [wWaveEnded], a
 .L_00_3229:
     ld a, [wPlayerStatus]
     bit 5, a
     jr nz, .L_00_324a
-    ld hl, $c481
+    ld hl, wSpawnListPtr
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -4006,7 +4006,7 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
     ld a, [wEnemyCount]
     cp a, $03
     ret nc
-    ld hl, $c481
+    ld hl, wSpawnListPtr
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -4040,7 +4040,7 @@ StepEnemySpawnScript::  ; reads the round's spawn list (RoundDataTable by wRound
 .L_00_328e:
     ld hl, wSpawnIndex
     inc [hl]
-    ld hl, $c486
+    ld hl, wWaveEnded
     inc [hl]
     ld hl, wEnemyCount
     inc [hl]
@@ -4089,7 +4089,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_32f3
-    ld hl, $c4bc
+    ld hl, wComboCounter
     inc [hl]
 .L_00_32f3:
     ld a, $0c
@@ -4101,7 +4101,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     ld a, [wPlayerStatus]
     bit 4, a
     jr z, .L_00_330b
-    ld a, [$c4bc]
+    ld a, [wComboCounter]
     ldh [hScratch08], a
 .L_00_330b:
     ld a, $03
@@ -4112,7 +4112,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     bit 4, a
     jr z, .L_00_3320
     ldh a, [hScratch08]
-    ld [$c4bc], a
+    ld [wComboCounter], a
 .L_00_3320:
     ld a, $06
     cp a, c
