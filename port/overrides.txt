@@ -62,3 +62,4 @@ EnemyKind7
 EnemyKind9
 EnemyKind10
 EnemyKind11
+Mode1_Play

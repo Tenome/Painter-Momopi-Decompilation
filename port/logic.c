@@ -953,3 +953,90 @@ void *gb_native_EnemyKind11(void) {
     gb_native_DrawObject();
     return 0;
 }
+
+/* Mode1_Play: sets a room up for play and then runs the frame loop forever (the loop is left by a routine that resets the stack and jumps to another mode).
+ * Setup: stack, LCD off, clear the map, load tiles (bank 2), unpack the room map and draw it with the metatiles of the room theme, VRAM jobs of the room,
+ * the paint counter of the round, magic screen and points, camera, round and player variables (once), enemies and projectile cleared, serial start,
+ * interrupts and the LCD on, round music, the round timer. Each frame: wait for the frame, read the pad, PlayFrame, the magic screen, camera,
+ * enemy spawning and updates, the time-up enemy and the extra life check; hBlinkTick counts frames. */
+void *gb_native_Mode1_Play(void) {
+    r.sp = wStackTop;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    CALL(GAME_LoadGfxBank2);
+    CALL(GAME_ClearOamShadow);
+    SET_HL(DATA_RoomMapTable);
+    r.a = rd(wRound);
+    CALL(GAME_TableIndexFromRoundDec);
+    CALL(GAME_UnpackRoomMap);
+    wr(hScratch01, 0x10);
+    wr(hScratch00, 0x10);
+    r.a = rd(wRoomIndex);
+    SET_HL(DATA_RoomMetatileTable);
+    CALL(GAME_TableIndexFromRound);
+    SET_HL(vBGMap0);
+    SET_DE(wRoomMap);
+    wr(wMapCellMask, 0x0F);
+    CALL(GAME_DrawMetatileMap);
+    r.a = rd(wRoomIndex);
+    SET_HL(DATA_RoomVramJobTable);
+    CALL(GAME_TableIndexFromRound);
+    CALL(GAME_RunVramCopyList);
+    r.c = 0x10;
+    r.a = (uint8_t)(rd(wRound) - 1);
+    if (r.a != 0x20) r.c = r.a & 0x0F;
+    SET_HL(DATA_PaintCellCountTable);
+    gb_native_LookupByte();
+    wr(wPaintRemaining, r.a);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    CALL(GAME_InitMagicScreenState);
+    CALL(GAME_InitMagicPoints);
+    CALL(GAME_ResetCamera);
+    if (!(rd(wRoundFlags) & 0x04)) {
+        wr(wRoundFlags, rd(wRoundFlags) | 0x04);
+        CALL(GAME_ClearRoundVariables);
+    }
+    if (!(rd(wGameFlags) & 0x80)) {
+        wr(wGameFlags, rd(wGameFlags) | 0x80);
+        CALL(GAME_InitPlayer);
+    }
+    CALL(GAME_ClearAllEnemies);
+    SET_HL(wProjectile);
+    gb_native_Clear32Bytes();
+    CALL(GAME_SerialStartTransfer);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    CALL(GAME_StartRoundMusic);
+    wr(wGameFlags, rd(wGameFlags) & ~0x20);
+    wr(hTimeFrames, 0x3C);
+    r.a = rd(wRound);
+    if (r.a == 0x21) {
+        r.a = 0x5A;
+    } else {
+        r.c = r.a >> 2;
+        SET_HL(DATA_RoundTimeTable);
+        gb_native_LookupByte();
+    }
+    wr(hTimeSeconds, r.a);
+    wr(hRoundSeconds, r.a);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x10);
+    for (;;) {
+        CALL(GAME_WaitFrameAndSyncOam);
+        CALL(GAME_ReadJoypad);
+        CALL(GAME_PlayFrame);
+        CALL(GAME_ShowMagicScreen);
+        CALL(GAME_UpdateCamera);
+        CALL(GAME_StepEnemySpawnScript);
+        CALL(GAME_UpdateAllEnemies);
+        CALL(GAME_TimeUpSpawnEnemy);
+        CALL(GAME_CheckExtraLife);
+        wr(hBlinkTick, rd(hBlinkTick) + 1);
+    }
+}
