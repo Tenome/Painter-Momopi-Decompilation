@@ -1890,9 +1890,9 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
     ld [wScrollY], a
     ld hl, hVBlankTasks
     res 4, [hl]
-    ld bc, D_00_1a94
+    ld bc, MagicScreenJobsA
     call RunVramCopyList
-    ld bc, D_00_1a57
+    ld bc, MagicScreenJobsB
     call RunVramCopyList
     ld bc, $0010
     ld hl, $9cd0
@@ -2626,10 +2626,10 @@ D_00_1a17::
     INCBIN "assets/bank_00/1a17.bin"
 D_00_1a30::
     INCBIN "assets/bank_00/1a30.bin"
-D_00_1a57::
-    INCBIN "assets/bank_00/1a57.bin"
-D_00_1a94::
-    INCBIN "assets/bank_00/1a94.bin"
+MagicScreenJobsB::  ; VRAM copy list of the magic screen (card pictures; name provisional)
+    INCBIN "assets/bank_00/1a57_MagicScreenJobsB.bin"
+MagicScreenJobsA::  ; VRAM copy list of the magic screen (frame and text; name provisional)
+    INCBIN "assets/bank_00/1a94_MagicScreenJobsA.bin"
 MagicPictureJob0::  ; data (table entry)
     INCBIN "assets/bank_00/1b67_MagicPictureJob0.bin"
 MagicPictureJob7::  ; data (table entry)

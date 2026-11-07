@@ -1501,3 +1501,566 @@ void *gb_native_SoundUpdate(void) {
         record += 0x20;
     }
 }
+
+/* ShowMagicScreen: the B button in play opens MOMOPIE'S MAGIC screen (not while the player is dying or a cast is starting). The screen is set up with the LCD
+ * off (tiles of bank 3, the frame and the card pictures, the score, the magic points as a number and as a gauge, the time, the round) and then runs its own
+ * frame loop (MagicScreenInput moves the cursor, CursorBlinkStep blinks it) until B is pressed again; then the play screen is restored and the round music is
+ * restarted (StartRoundMusic). The gauge: each 100 points give five full tiles ($b8), each 20 points one, and a remainder of 10 a half tile ($a8). */
+void *gb_native_ShowMagicScreen(void) {
+    if (rd(wPlayerDir) & 0x20) return 0;
+    if (rd(wMagicState) & 0x02) return 0;
+    if (!(rd(hJoyNew) & 0x02)) return 0;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    CALL(GAME_LoadTilesBank3B);
+    SET_HL(0x9FFF);
+    gb_native_FillBackwardsFF();
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(hVBlankTasks, rd(hVBlankTasks) & ~0x10);
+    SET_BC(DATA_MagicScreenJobsA);
+    CALL(GAME_RunVramCopyList);
+    SET_BC(DATA_MagicScreenJobsB);
+    CALL(GAME_RunVramCopyList);
+    SET_BC(0x0010);
+    SET_HL(0x9CD0);
+    CALL(GAME_FillBackwardsFFBC);
+    wr(wMpStreamIdx, 0);
+    SET_BC(0x0010);
+    SET_HL(0xC462);
+    do {                                    /* $c453-$c462 = tile $98 */
+        wr(HL(), 0x98);
+        SET_HL(HL() - 1);
+        SET_BC(BC() - 1);
+    } while (BC());
+    CALL(GAME_InitMagicScreenState);
+    SET_HL(0x9C66);
+    SET_DE(wScoreStream);
+    CALL(GAME_VramCopyStream);
+    r.c = rd(wMagicPointsHi);
+    r.a = rd(wMagicPoints);
+    gb_native_ByteToBCD();
+    r.a = rd(hScratch00 + 2) & 0x0F;
+    CALL(GAME_NumberToTile);
+    wr(0xC450, r.a);
+    r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
+    CALL(GAME_NumberToTile);
+    wr(0xC44F, r.a);
+    r.a = rd(hScratch00 + 3);
+    CALL(GAME_NumberToTile);
+    wr(0xC44E, r.a);
+    wr(wTextBuf, 0x03);
+    wr(wTextBuf + 1, 0x01);
+    SET_HL(0x9CA5);
+    SET_DE(wTextBuf);
+    CALL(GAME_VramCopyStream);
+    r.a = rd(hTimeSeconds);
+    r.c = 0;
+    gb_native_ByteToBCD();
+    r.a = rd(hScratch00 + 2) & 0x0F;
+    CALL(GAME_NumberToTile);
+    wr(0xFFE8, r.a);
+    r.a = (uint8_t)(rd(hScratch00 + 2) >> 4);
+    CALL(GAME_NumberToTile);
+    wr(0xFFE7, r.a);
+    r.a = rd(hScratch00 + 3);
+    CALL(GAME_NumberToTile);
+    wr(0xFFE6, r.a);
+    wr(0xFFE4, 0x03);
+    wr(0xFFE5, 0x01);
+    SET_HL(0x9CB0);
+    SET_DE(0xFFE4);
+    CALL(GAME_VramCopyStream);
+    r.b = rd(wRound);
+    SET_HL(0x9C71);
+    CALL(GAME_DrawTwoDigitNumber);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    CALL(GAME_ClearOamShadowY);
+    CALL(GAME_RequestOamDma);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, 0x9B);
+    ime = 1;
+    wr(hScratch00, 0);
+    CALL(GAME_DrawMagicPage);
+    /* the magic points gauge */
+    SET_BC(0x0002);
+    r.e = rd(wMagicPointsHi) ? 1 : 0;
+    wr(hScratch00, rd(wMagicPoints));
+    for (;;) {
+        uint8_t s = rd(hScratch00), minus100 = (uint8_t)(s - 100);
+        if (s >= 100) {
+            wr(hScratch00, minus100);
+        } else if (r.e) {
+            wr(hScratch00, minus100);
+            r.e = 0;
+        } else {
+            for (;;) {
+                s = rd(hScratch00);
+                if (s == 0) goto gauge_done;
+                if (s == 0x0A) {
+                    wr(0xC453 + rd(wMpStreamIdx), 0xA8);
+                    goto gauge_done;
+                }
+                wr(hScratch00, (uint8_t)(s - 0x14));
+                wr(0xC453 + rd(wMpStreamIdx), 0xB8);
+                wr(wMpStreamIdx, rd(wMpStreamIdx) + 1);
+            }
+        }
+        {                                   /* StoreMagicPointsDigit (the index is read once: the tiles may overwrite wMpStreamIdx itself) */
+            uint8_t at = rd(wMpStreamIdx);
+            for (int i = 0; i < 5; i++) wr(0xC453 + at + i, 0xB8);
+            wr(wMpStreamIdx, rd(wMpStreamIdx) + 5);
+        }
+    }
+gauge_done:
+    wr(wMpStream, 0x10);
+    wr(wMpStream + 1, 0x01);
+    SET_HL(0x9CC2);
+    SET_DE(wMpStream);
+    CALL(GAME_QueueVramCopyRows);
+    CALL(GAME_WaitVramCopyDone);
+    CALL(GAME_WaitVBlankFlag);
+    r.a = 0xFF;
+    CALL(GAME_PlaySound);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    do {
+        CALL(GAME_WaitFrameAndSyncOam);
+        uint8_t link = rd(hSerialByte);
+        if ((link & 0x04) && ((link & 0x80) || (link & 0x08))) return (void *)GAME_GotoLinkLose;
+        CALL(GAME_ReadJoypad);
+        wr(0xC769, rd(0xC769) + 1);
+        CALL(GAME_MagicScreenInput);
+        CALL(GAME_CursorBlinkStep);
+    } while (!(rd(hJoyNew) & 0x02));
+    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x02);
+    CALL(GAME_LcdOff);
+    ime = 0;
+    CALL(GAME_LoadGfxBank2);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    CALL(GAME_ClearOamShadow);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    return (void *)GAME_StartRoundMusic;
+}
+
+/* SetCursorAnimation: HL = animation pointer of the card cursor object (wCursorObject +1/+2). SetCursorDefaultAnimation uses D_00_1a30. */
+void *gb_native_SetCursorAnimation(void) {
+    wr(wCursorObject + 1, r.l);
+    wr(wCursorObject + 2, r.h);
+    r.a = r.h;
+    return 0;
+}
+void *gb_native_SetCursorDefaultAnimation(void) {
+    SET_HL(0x1A30);
+    return gb_native_SetCursorAnimation();
+}
+void *gb_native_ResetMagicCursorAnimation(void) {
+    SET_HL(wMagicScreenFlags);
+    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x04);
+    return gb_native_SetCursorDefaultAnimation();
+}
+
+/* CursorBlinkStep: while the cursor is active (wMagicScreenFlags bit 2) wCursorBlink counts to $50 (then the cursor is reset); in between the cursor
+ * animation toggles between D_00_1a17 and D_00_1a30 with bit 2 of the screen frame counter $c769. */
+void *gb_native_CursorBlinkStep(void) {
+    r.a = rd(wMagicScreenFlags);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);
+    if (!(r.a & 4)) return 0;
+    r.a = rd(wCursorBlink);
+    if (r.a >= 0x50) return gb_native_ResetMagicCursorAnimation();
+    r.a++;
+    wr(wCursorBlink, r.a);
+    r.a = rd(0xC769) & 0x04;
+    if (r.a) return gb_native_SetCursorDefaultAnimation();
+    SET_HL(0x1A17);
+    return gb_native_SetCursorAnimation();
+}
+
+/* DrawMagicPage: draws the three cards of a row. hScratch00 = index of the first card in wMagicCards; for each card its name strip, picture and cost label
+ * are queued as VRAM rows (columns 6 tiles apart) and waited for. */
+void *gb_native_DrawMagicPage(void) {
+    for (int i = 0; i < 3; i++) {
+        if (i) wr(hScratch00, rd(hScratch00) + 1);
+        r.c = rd(hScratch00);
+        SET_HL(wMagicCards);
+        gb_native_LookupByte();
+        wr(hScratch00 + 2, r.a);
+        static const uint16_t tables[3] = { DATA_MagicCardTitleJobs, DATA_MagicCardPictureJobs, DATA_MagicCardCostJobs };
+        static const uint16_t base[3] = { 0x9D02, 0x9D42, 0x9DE2 };
+        for (int t = 0; t < 3; t++) {
+            r.a = rd(hScratch00 + 2);
+            SET_HL(tables[t]);
+            gb_native_LookupWord();
+            SET_DE(HL());
+            SET_HL(base[t] + 6 * i);
+            CALL(GAME_QueueVramCopyRows);
+            if (i < 2 || t < 2) CALL(GAME_WaitVramCopyDone); else return (void *)GAME_WaitVramCopyDone;
+        }
+    }
+    return 0;
+}
+
+/* call a lifted routine that may end in a tail jump (it returns the routine to continue with) like a `call` would */
+static void call_native(void *(*fn)(void)) {
+    r.sp -= 2;
+    void *next = fn();
+    if (next) gb_run((fn_t)next); else r.sp += 2;
+}
+
+static uint8_t card_at(uint8_t index) { r.c = index; SET_HL(wMagicCards); gb_native_LookupByte(); return r.a; }
+static uint8_t row_start(uint8_t row) { r.a = row; r.e = 3; gb_native_MultiplyByDE(); return rd(hScratch00); }
+
+/* MagicCursorRight and MagicCursorLeft: move the card cursor (wMagicCol 0-2) when there is a card at the new place. */
+void *gb_native_MagicCursorRight(void) {
+    if (rd(wMagicCol) == 2) { wr(wMagicCol, 0); r.a = 0; return 0; }
+    uint8_t first = row_start(rd(wMagicRow));
+    uint8_t card = card_at((uint8_t)(rd(wMagicCol) + 1 + first));
+    r.a = card;
+    if (!card) return 0;
+    SET_HL(wMagicCol);
+    wr(wMagicCol, rd(wMagicCol) + 1);
+    return 0;
+}
+void *gb_native_MagicCursorLeft(void) {
+    uint8_t col = rd(wMagicCol);
+    r.a = col;
+    if (col) { SET_HL(wMagicCol); wr(wMagicCol, col - 1); return 0; }
+    uint8_t first = row_start(rd(wMagicRow));
+    uint8_t card = card_at(first + 2);
+    r.a = card;
+    if (!card) return 0;
+    wr(wMagicCol, 2);
+    r.a = 2;
+    return 0;
+}
+
+/* MagicCursorUp and MagicCursorDown: move the card cursor between rows (wMagicRow 0-2) when there is a card below, and redraw the page (DrawMagicPage). */
+void *gb_native_MagicCursorUp(void) {
+    uint8_t row = rd(wMagicRow);
+    if (!row) { wr(wMagicRow, 0); r.a = 0; return 0; }
+    SET_HL(wMagicRow);
+    wr(wMagicRow, row - 1);
+    row_start(row - 1);
+    return gb_native_DrawMagicPage();
+}
+void *gb_native_MagicCursorDown(void) {
+    uint8_t row = rd(wMagicRow);
+    r.a = row;
+    if (row == 2) { wr(wMagicRow, 2); return 0; }
+    uint8_t first = row_start(row + 1);
+    uint8_t card = card_at((uint8_t)(rd(wMagicCol) + first));
+    r.a = card;
+    if (!card) return 0;
+    SET_HL(wMagicRow);
+    wr(wMagicRow, row + 1);
+    row_start(rd(wMagicRow));
+    return gb_native_DrawMagicPage();
+}
+
+/* MagicScreenInput: the pad on the magic screen. D-pad: sound, move the cursor (right 4, left 5, up 6, down 7 of hJoyNew; each routine leaves A as the original does and
+ * the following tests read that A). A: the selected card is chosen when the magic points pay for it (cost in MagicCostTable): sound $90, wActiveMagic = the card,
+ * wMagicScreenFlags |= 6, and the A bit is removed from hJoyNew. Then the cursor object is placed at the column (D_00_2630) and drawn. */
+void *gb_native_MagicScreenInput(void) {
+    if (!(rd(wMagicScreenFlags) & 0x02)) {
+        uint8_t pad = rd(hJoyNew) & 0xF1;
+        if (pad) {
+            if (pad & 0x01) {
+                uint8_t card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
+                uint8_t cost = rd(DATA_MagicCostTable + card);
+                if (rd(wMagicPoints) < cost && rd(wMagicPointsHi) == 0) {
+                    wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x04);
+                    return 0;
+                }
+                r.a = SND_SFX_90;
+                CALL(GAME_PlaySound);
+                card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
+                wr(wActiveMagic, card);
+                wr(wMagicScreenFlags, rd(wMagicScreenFlags) | 0x06);
+                wr(hJoyNew, rd(hJoyNew) & ~0x80);
+            } else {
+                r.a = SND_SFX_CURSOR;
+                CALL(GAME_PlaySound);
+                r.a = rd(hJoyNew);
+                if (r.a & 0x10) gb_native_MagicCursorRight();
+                if (r.a & 0x20) gb_native_MagicCursorLeft();
+                if (r.a & 0x40) call_native(gb_native_MagicCursorUp);
+                if (r.a & 0x80) call_native(gb_native_MagicCursorDown);
+            }
+        }
+        r.c = rd(wMagicCol);
+        SET_HL(0x2630);
+        gb_native_LookupByte();
+        wr(wCursorX, r.a);
+    }
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
+}
+
+/* The timed cards S.UP (1, $f0 frames), W.IN (2, $d0), T.STOP (3, $d0), GHOST (4, $b0) and FRIEND (5, $b0): on the first frame of a cast (wMagicState bit 1 clear)
+ * the timer hMagicTimer is set and the cast starts (BeginMagicCast); T.STOP and FRIEND also remove the enemy projectile; W.IN clears wPlayerBlocked every frame
+ * (so walls do not stop the player). Every frame MagicTimerTick counts the timer down. The effects of the cards themselves are made by the checks elsewhere
+ * (the player speed for S.UP, the touch checks for GHOST, the enemy behaviours for T.STOP and so on). */
+static void *magic_timed(uint8_t frames, int remove_projectile, int clear_blocked) {
+    if (!(rd(wMagicState) & 0x02)) {
+        wr(hMagicTimer, frames);
+        CALL(GAME_BeginMagicCast);
+        if (remove_projectile) wr(wProjectile, rd(wProjectile) & 0x7F);
+    }
+    if (clear_blocked) wr(wPlayerBlocked, 0);
+    return (void *)GAME_MagicTimerTick;
+}
+void *gb_native_MagicEffectSUp(void) { return magic_timed(0xF0, 0, 0); }
+void *gb_native_MagicEffectWIn(void) { return magic_timed(0xD0, 0, 1); }
+void *gb_native_MagicEffectTStop(void) { return magic_timed(0xD0, 1, 0); }
+void *gb_native_MagicEffectGhost(void) { return magic_timed(0xB0, 0, 0); }
+void *gb_native_MagicEffectFriend(void) { return magic_timed(0xB0, 1, 0); }
+
+/* SelectBlobAnimation: the paint blob alternates between two animations ($492b and $492d) with bit 1 of its phase counter. */
+void *gb_native_SelectBlobAnimation(void) {
+    uint16_t anim = (rd(wBlobPhase) & 0x02) ? 0x492B : 0x492D;
+    wr(wPaintAnimLo, (uint8_t)anim);
+    wr(wPaintAnimHi, anim >> 8);
+    r.a = anim >> 8;
+    return 0;
+}
+
+/* MagicEffectPyon: card 9 PYON: a paint blob object is created at the player (SpawnPaintBlob) and then, every frame, it is moved (MoveObject, ApplyObjectStep),
+ * painted by MagicPaintEndUnlessBit2, drawn, and removed when it leaves the screen (EnemyScreenPosition of the player is checked: not of the blob). */
+void *gb_native_MagicEffectPyon(void) {
+    if (!(rd(wMagicState) & 0x02)) CALL(GAME_SpawnPaintBlob);
+    SET_HL(wPaintObject);
+    gb_native_SetObjPtr();
+    wr(wBlobPhase, rd(wBlobPhase) + 1);
+    CALL(GAME_MagicPaintEndUnlessBit2);
+    r.c = rd(wPlayerX);
+    r.b = rd(wPlayerY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    gb_native_SelectBlobAnimation();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* MagicEffectBom: card 7 B.O.M: a paint blob trail of 8 segments (wTrailIdx 0-7) is advanced each frame: every segment is loaded into the paint object,
+ * moved, drawn and stored back; at the end of the frame the timer counts down (MagicTimerCountdown). */
+void *gb_native_MagicEffectBom(void) {
+    if (!(rd(wMagicState) & 0x02)) {
+        CALL(GAME_SpawnBombBlob);
+        CALL(GAME_BombHitAllEnemies);
+    }
+    for (;;) {
+        CALL(GAME_LoadTrailSegment);
+        SET_HL(wPaintObject);
+        gb_native_SetObjPtr();
+        gb_native_MoveObject();
+        gb_native_ApplyObjectStep();
+        gb_native_DrawObject();
+        CALL(GAME_StoreTrailSegment);
+        CALL(GAME_SetPaintBlobAnimation);
+        wr(0xC449, rd(0xC449) - 1);
+        if (rd(0xC449) == 0) break;
+        wr(wTrailIdx, rd(wTrailIdx) + 1);
+    }
+    CALL(GAME_MagicTimerCountdown);
+    wr(0xC449, 0x08);
+    wr(wTrailIdx, 0);
+    return 0;
+}
+
+void *gb_native_MagicEffectSealed(void) { return magic_timed(0xA0, 0, 0); }
+
+/* MagicTimerTick: counts hMagicTimer down; at zero the effect ends (EndMagic: wMagicState = 0). */
+void *gb_native_MagicTimerTick(void) {
+    SET_HL(hMagicTimer);
+    wr(hMagicTimer, dec8(rd(hMagicTimer)));
+    if (rd(hMagicTimer)) return 0;
+    wr(wMagicState, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
+
+/* SpawnPaintBlob: creates the paint blob object (wPaintObject) for the PYON card at the player's position: flags $86, animation $492b, heading and fixed point
+ * position copied from the player, speed $20, box size 1; plays sound $8d, sets the timer $d0 and wMagicState bits 4 and 1. */
+void *gb_native_SpawnPaintBlob(void) {
+    SET_HL(wPaintObject);
+    gb_native_Clear32Bytes();
+    wr(wPaintAnimLo, 0x2B);
+    wr(wPaintAnimHi, 0x49);
+    wr(wPaintObject + 0x11, 0x20);
+    wr(wPaintObject + 0x10, rd(wPlayerAngle));
+    wr(wPaintObject, 0x86);
+    wr(wPaintObject + 6, rd(wPlayer + 6));
+    wr(wPaintObject + 7, rd(wPlayerX));
+    wr(wPaintObject + 8, rd(wPlayer + 8));
+    wr(wPaintObject + 9, rd(wPlayer + 9));
+    wr(wPaintObject + 10, rd(wPlayerY));
+    wr(wPaintObject + 11, rd(wPlayer + 11));
+    wr(wPaintObject + 4, 0x01);
+    r.a = SND_SFX_8D;
+    CALL(GAME_PlaySound);
+    wr(hMagicTimer, 0xD0);
+    SET_HL(wMagicState);
+    wr(wMagicState, rd(wMagicState) | 0x12);
+    return 0;
+}
+
+/* MagicEffectClear: card 8 CLEAR: for $50 frames the background palette flashes; then every unpainted path cell (bit 7 set in the map) is painted at once
+ * (tile updates queued; wPaintRemaining counts down and the round is cleared when it hits 0) and the effect ends. */
+void *gb_native_MagicEffectClear(void) {
+    if (!(rd(wMagicState) & 0x02)) {
+        wr(0xC1F8, 0);
+        CALL(GAME_BeginMagicCast);
+    }
+    wr(wBlobPhase, rd(wBlobPhase) + 1);
+    uint8_t step = rd(0xC1F8);
+    if (step != 0x50) {
+        wr(0xC1F8, step + 1);
+        wr(rBGP, PAL_NORMAL);
+        if (rd(wBlobPhase) & 0x02) return 0;
+        wr(rBGP, 0);
+        return 0;
+    }
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    for (int cell = 0xFF; cell >= 0; cell--) {
+        uint8_t tile = rd(wRoomMap + cell);
+        if (!(tile & 0x80)) continue;
+        tile = (tile & 0x0F) | 0x10;
+        wr(wRoomMap + cell, tile);
+        wr(hScratch00 + 2, tile);
+        SET_BC(cell);
+        CALL(GAME_MapCellToVramAddr);
+        CALL(GAME_QueueCellTileRows);
+        wr(wPaintRemaining, rd(wPaintRemaining) - 1);
+        if (rd(wPaintRemaining) == 0) return (void *)GAME_RoundCleared;
+    }
+    return (void *)GAME_EndMagic;
+}
+
+/* The B.O.M card sends eight paint blobs out in the eight headings. Their state is kept in 8 trail segments of 7 bytes at $c1b7: X fraction, X pixel, X high,
+ * Y fraction, Y pixel, Y high, heading. LoadTrailSegment / StoreTrailSegment copy segment wTrailIdx to / from the paint object (wPaintObject +6 to +$b, heading +$10). */
+#define TRAIL 0xC1B7
+
+void *gb_native_LoadTrailSegment(void) {
+    r.a = rd(wTrailIdx);
+    r.e = 7;
+    gb_native_MultiplyByDE();
+    uint16_t seg = TRAIL + r.a;
+    for (int i = 0; i < 6; i++) wr(wPaintObject + 6 + i, rd(seg + i));
+    wr(wPaintObject + 0x10, rd(seg + 6));
+    return 0;
+}
+
+void *gb_native_StoreTrailSegment(void) {
+    r.a = rd(wTrailIdx);
+    r.e = 7;
+    gb_native_MultiplyByDE();
+    uint16_t seg = TRAIL + r.a;
+    for (int i = 0; i < 6; i++) wr(seg + i, rd(wPaintObject + 6 + i));
+    return 0;
+}
+
+/* InitTrailSegment: HL = segment, A = heading, D and E = offsets of X and Y from the player. */
+void *gb_native_InitTrailSegment(void) {
+    uint16_t seg = HL();
+    wr(seg + 6, r.a);
+    wr(seg + 1, (uint8_t)(rd(wPlayerX) + r.d));
+    wr(seg + 4, (uint8_t)(rd(wPlayerY) + r.e));
+    return 0;
+}
+
+/* InitTrailSegments: clears the 8 segments and places them around the player: offsets (x, y) and headings of the eight blobs. */
+void *gb_native_InitTrailSegments(void) {
+    SET_BC(0x0040);
+    SET_HL(TRAIL);
+    gb_native_ClearMemory();
+    static const struct { uint8_t dx, dy, heading; } blobs[8] = {
+        {0x10, 0x00, 0x08}, {0x10, 0xF0, 0x04}, {0x00, 0xF0, 0x00}, {0xF0, 0x00, 0x1C},
+        {0xF0, 0x00, 0x18}, {0xF0, 0x10, 0x14}, {0x00, 0x10, 0x10}, {0x10, 0x10, 0x0C},
+    };
+    for (int i = 0; i < 8; i++) {
+        SET_HL(TRAIL + 7 * i);
+        r.d = blobs[i].dx;
+        r.e = blobs[i].dy;
+        r.a = blobs[i].heading;
+        gb_native_InitTrailSegment();
+    }
+    return 0;
+}
+
+/* BombHitAllEnemies (B.O.M card): every active enemy slot (16 slots through EnemySlotTable) gets bit 2 of its flags byte (+$1f: hit by paint) and its counter
+ * (+$14) cleared, so the enemies are all defeated by their own update. */
+void *gb_native_BombHitAllEnemies(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(hScratch00, i);
+        uint16_t slot = rd(DATA_EnemySlotTable + 2 * i) | rd(DATA_EnemySlotTable + 2 * i + 1) << 8;
+        if (rd(slot) & 0x80) {
+            wr(slot + 0x1F, rd(slot + 0x1F) | 0x04);
+            wr(slot + 0x14, 0);
+        }
+    }
+    wr(hScratch00, 0xFF);
+    return 0;
+}
+
+/* EndMagicPaint: removes the paint blob object and clears bits of wMagicState: bits 0-2 for the PYON card (9), all but bit 3 for the others. */
+void *gb_native_EndMagicPaint(void) {
+    SET_HL(wPaintObject);
+    wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    if (rd(wActiveMagic) == 0x09) wr(wMagicState, rd(wMagicState) & 0xF8);
+    else wr(wMagicState, rd(wMagicState) & 0x08);
+    r.a = rd(wMagicState);
+    r.f = 0;
+    r.f = (r.a ? 0 : 0x80) | 0x20;
+    return 0;
+}
+
+/* MagicPaintEndUnlessBit2: ends the paint (EndMagicPaint) unless the paint object has bit 2 (drawn this frame) set. */
+void *gb_native_MagicPaintEndUnlessBit2(void) {
+    r.a = rd(wPaintObject);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);
+    if (r.a & 4) return 0;
+    return gb_native_EndMagicPaint();
+}
+
+/* MagicTimerCountdown: counts hMagicTimer down; at zero wMagicState is cleared and the paint ended. */
+void *gb_native_MagicTimerCountdown(void) {
+    r.a = rd(hMagicTimer);
+    alu_sub(1, 0);
+    wr(hMagicTimer, r.a);
+    if (r.a) return 0;
+    wr(wMagicState, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return gb_native_EndMagicPaint();
+}
+
+/* SpawnBombBlob: creates the paint blob object for the B.O.M card (flags $82, animation $4929, speed $2a), the timer 7, wPlayerStatus bit 4, places the trail
+ * segments around the player and starts the cast. */
+void *gb_native_SpawnBombBlob(void) {
+    SET_HL(wPaintObject);
+    gb_native_Clear32Bytes();
+    wr(0xC1F7, 0x08);
+    wr(hMagicTimer, 0x07);
+    wr(wPlayerStatus, rd(wPlayerStatus) | 0x10);
+    wr(wPaintObject + 0x11, 0x2A);
+    wr(wPaintAnimLo, 0x29);
+    wr(wPaintAnimHi, 0x49);
+    wr(0xC449, 0x08);
+    wr(wPaintObject, 0x82);
+    gb_native_InitTrailSegments();
+    return (void *)GAME_BeginMagicCast;
+}

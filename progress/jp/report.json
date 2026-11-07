@@ -2135,7 +2135,7 @@
      }
     },
     {
-     "name": "ForEachEnemySlotInit",
+     "name": "BombHitAllEnemies",
      "size": "54",
      "fuzzy_match_percent": 100.0,
      "metadata": {
