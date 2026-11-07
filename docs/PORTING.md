@@ -34,6 +34,14 @@ Next: save-less options (scaling filters, key mapping file), the HAL clean-up be
 - **Still hardware-shaped**: the game's tile, map and sprite data lives in arrays laid out like VRAM and OAM and a small software renderer draws them (`render()` in `port/gb_rt.c`); sound is produced by a register driven
   synth (`port/apu.c`) fed by the original sound engine; ROM banks are a variable. These are the pieces the staged plan below replaces.
 
+## Hand written C (stage 4 under way)
+
+`port/logic.c` holds readable C versions of routines (memory fills and copies, table lookups, the pixel to map column and tile lookups,
+the enemy edge and screen position checks). Each keeps the registers and flags the original leaves, because callers may use them. A label is
+replaced by adding it to `port/overrides.txt` and writing `gb_native_<Label>` in `port/logic.c`. `python tools/lift_check.py --cc <clang> --rgbds E:/rgbds`
+builds the runner with and without the hand written routines and compares a hash of work RAM, high RAM, video RAM and OAM after every frame of
+random play (several seeds); a routine is accepted only when every frame matches.
+
 ## Is a native exe with no emulation possible?
 
 Yes, in stages. Today's `game_win.exe` already runs the game's own code natively (no CPU interpreter), but it still reimplements the Game Boy hardware

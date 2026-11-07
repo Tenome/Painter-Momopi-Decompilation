@@ -46,7 +46,7 @@ with open(os.path.join(ROOT, "build", "recomp", "rom_image.c"), "w", newline="\n
     f.write(f"}};\nconst size_t gb_rom_image_size = {len(data)};\n")
 
 P = lambda *a: os.path.join(ROOT, *a)
-common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "apu.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
+common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "logic.c"), P("port", "apu.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
 exe = ".exe" if os.name == "nt" else ""
 
 

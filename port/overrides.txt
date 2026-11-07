@@ -7,3 +7,13 @@ SerialStartTransfer
 WaitSerialByte
 SerialSendByte
 WaitVramCopyDone
+LookupByte
+LookupWord
+ClearMemory
+FillBackwardsFF
+CopyMemory
+Clear32Bytes
+PixelXToColumn
+LookupMapTile
+EnemyEdgeBlockedDirs
+EnemyScreenPosition

@@ -25,7 +25,11 @@ static void audio(const int16_t *st, int n) {
 }
 static const char *outdir = ".";
 
+uint32_t gb_state_hash(void);
+static FILE *hashes;
+
 static void hook(unsigned frame) {
+    if (hashes) fprintf(hashes, "%u %08x\n", frame, gb_state_hash());
     uint8_t j = 0;
     for (int i = 0; i < npress; i++)
         if (frame >= press[i].from && frame < press[i].from + press[i].hold) j |= press[i].bit;
@@ -48,7 +52,7 @@ static void hook(unsigned frame) {
                 fclose(f);
             }
         }
-    if (frame >= limit) { fprintf(stderr, "done after %u frames (cycles %llu), audio peak %d\n", frame, (unsigned long long)cycles, wav_peak);
+    if (frame >= limit) { if (hashes) fclose(hashes); fprintf(stderr, "done after %u frames (cycles %llu), audio peak %d\n", frame, (unsigned long long)cycles, wav_peak);
         if (wav) { unsigned bytes = wav_frames * 4, h[11] = {0x46464952, 36 + bytes, 0x45564157, 0x20746d66, 16, 0x20001, 44100, 44100 * 4, 0x100004, 0x61746164, bytes}; fseek(wav, 0, SEEK_SET); fwrite(h, 4, 11, wav); fclose(wav); } exit(0); }
 }
 
@@ -76,6 +80,7 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--shot") && i + 1 < argc && nshots < MAXP) shots[nshots++] = (unsigned)atoi(argv[++i]);
         else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
+        else if (!strcmp(argv[i], "--hashes") && i + 1 < argc) hashes = fopen(argv[++i], "w");
         else if (!strcmp(argv[i], "--random") && i + 1 < argc) { random_mode = 1; rnd_seed = (unsigned)atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--wav") && i + 1 < argc) { wav = fopen(argv[++i], "wb"); for (int k = 0; k < 44; k++) fputc(0, wav); }
     }
