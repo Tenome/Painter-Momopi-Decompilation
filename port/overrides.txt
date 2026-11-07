@@ -104,3 +104,5 @@ MagicEffectPyon
 MagicEffectBom
 MagicEffectSealed
 MagicTimerTick
+SpawnPaintBlob
+MagicEffectClear

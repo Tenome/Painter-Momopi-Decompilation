@@ -1890,3 +1890,62 @@ void *gb_native_MagicTimerTick(void) {
     r.f = 0x80;
     return 0;
 }
+
+/* SpawnPaintBlob: creates the paint blob object (wPaintObject) for the PYON card at the player's position: flags $86, animation $492b, heading and fixed point
+ * position copied from the player, speed $20, box size 1; plays sound $8d, sets the timer $d0 and wMagicState bits 4 and 1. */
+void *gb_native_SpawnPaintBlob(void) {
+    SET_HL(wPaintObject);
+    gb_native_Clear32Bytes();
+    wr(wPaintAnimLo, 0x2B);
+    wr(wPaintAnimHi, 0x49);
+    wr(wPaintObject + 0x11, 0x20);
+    wr(wPaintObject + 0x10, rd(wPlayerAngle));
+    wr(wPaintObject, 0x86);
+    wr(wPaintObject + 6, rd(wPlayer + 6));
+    wr(wPaintObject + 7, rd(wPlayerX));
+    wr(wPaintObject + 8, rd(wPlayer + 8));
+    wr(wPaintObject + 9, rd(wPlayer + 9));
+    wr(wPaintObject + 10, rd(wPlayerY));
+    wr(wPaintObject + 11, rd(wPlayer + 11));
+    wr(wPaintObject + 4, 0x01);
+    r.a = SND_SFX_8D;
+    CALL(GAME_PlaySound);
+    wr(hMagicTimer, 0xD0);
+    SET_HL(wMagicState);
+    wr(wMagicState, rd(wMagicState) | 0x12);
+    return 0;
+}
+
+/* MagicEffectClear: card 8 CLEAR: for $50 frames the background palette flashes; then every unpainted path cell (bit 7 set in the map) is painted at once
+ * (tile updates queued; wPaintRemaining counts down and the round is cleared when it hits 0) and the effect ends. */
+void *gb_native_MagicEffectClear(void) {
+    if (!(rd(wMagicState) & 0x02)) {
+        wr(0xC1F8, 0);
+        CALL(GAME_BeginMagicCast);
+    }
+    wr(wBlobPhase, rd(wBlobPhase) + 1);
+    uint8_t step = rd(0xC1F8);
+    if (step != 0x50) {
+        wr(0xC1F8, step + 1);
+        wr(rBGP, PAL_NORMAL);
+        if (rd(wBlobPhase) & 0x02) return 0;
+        wr(rBGP, 0);
+        return 0;
+    }
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    for (int cell = 0xFF; cell >= 0; cell--) {
+        uint8_t tile = rd(wRoomMap + cell);
+        if (!(tile & 0x80)) continue;
+        tile = (tile & 0x0F) | 0x10;
+        wr(wRoomMap + cell, tile);
+        wr(hScratch00 + 2, tile);
+        SET_BC(cell);
+        CALL(GAME_MapCellToVramAddr);
+        CALL(GAME_QueueCellTileRows);
+        wr(wPaintRemaining, rd(wPaintRemaining) - 1);
+        if (rd(wPaintRemaining) == 0) return (void *)GAME_RoundCleared;
+    }
+    return (void *)GAME_EndMagic;
+}
