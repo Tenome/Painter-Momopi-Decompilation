@@ -3381,3 +3381,74 @@ void *gb_native_PlayerDeath(void) {
     r.a = (rd(wContinues) == 0 && !(rd(wCheatFlags) & 0x01)) ? 4 : 5;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* CheckBonusRound: after the rounds 4, 8, 12, 20, 24 and 28 wGameFlags bit 6 is set (the bonus screens follow). */
+void *gb_native_CheckBonusRound(void) {
+    uint8_t round = rd(wRound);
+    if (round == 4 || round == 8 || round == 12 || round == 20 || round == 24 || round == 28) {
+        SET_HL(wGameFlags);
+        wr(wGameFlags, rd(wGameFlags) | 0x40);
+    }
+    return 0;
+}
+
+/* NextRound: the counters advance (wRound, wRoundBackup, wRoomIndex and two more); after round $21 the ending (mode 6) follows, after a bonus round the bonus select
+ * (mode 2), else the round intro (mode 3). */
+void *gb_native_NextRound(void) {
+    if (rd(wRound) == 0x21) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+    wr(0xC47B, rd(0xC47B) + 1);
+    wr(wRound, rd(wRound) + 1);
+    wr(wRoundBackup, rd(wRoundBackup) + 1);
+    wr(0xC1A8, rd(0xC1A8) + 1);
+    wr(wRoomIndex, rd(wRoomIndex) + 1);
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
+    gb_native_CheckBonusRound();
+    if (rd(wGameFlags) & 0x40) {
+        wr(wGameFlags, rd(wGameFlags) & 0xBE);
+        r.a = 2;
+    } else {
+        wr(wGameFlags, rd(wGameFlags) & ~0x01);
+        r.a = 3;
+    }
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* RoundCleared: runs every frame once the last cell is painted. The first time the palettes are restored, the clear music plays, the player is drawn and wGameFlags bit 0
+ * and wPlayerStatus bit 2 are set. Afterwards it waits $97 frames (leaving to the link lose screen when the other player won), fades out and goes on to the next round
+ * (link games first exchange the result). */
+void *gb_native_RoundCleared(void) {
+    if (!(rd(wPlayerStatus) & 0x04)) {
+        wr(rBGP, PAL_NORMAL);
+        wr(rOBP0, PAL_NORMAL);
+        wr(rOBP1, PAL_NORMAL);
+        r.a = SND_MUSIC_ROUND_CLEAR;
+        NCALL(GAME_PlaySound);
+        SET_HL(wPlayer);
+        gb_native_SetObjPtr();
+        gb_native_DrawObject();
+        SET_HL(wPlayerStatus);
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x04);
+        wr(wGameFlags, rd(wGameFlags) | 0x01);
+        return 0;
+    }
+    wr(hScratch00, 0x97);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        uint8_t link = rd(hSerialByte);
+        if ((link & 0x80) || (link & 0x08)) { r.a = 7; return (void *)GAME_GameModeDispatch; }
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    NCALL(GAME_FadeOut);
+    if (rd(hLinkFlags) & 0x04) {
+        wr(hSerialByte, rd(hSerialByte) & ~0x40);
+        r.a = 7;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (!(rd(hLinkFlags) & 0x01)) return gb_native_NextRound();
+    r.c = 0x08;
+    NCALL(GAME_SerialSendByte);
+    if (rd(hSerialByte) & 0x02) return 0;
+    wr(hSerialByte, rd(hSerialByte) | 0x40);
+    r.a = 7;
+    return (void *)GAME_GameModeDispatch;
+}

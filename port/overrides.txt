@@ -195,3 +195,6 @@ ResetCamera
 UpdateCamera
 InitPlayer
 PlayerDeath
+CheckBonusRound
+NextRound
+RoundCleared

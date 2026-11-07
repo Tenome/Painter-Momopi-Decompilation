@@ -100,5 +100,17 @@ for card in range(1, 10):
         bad += not ok
         first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
         print(f"card {card} selected, seed {seed}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
+# a round that is nearly painted: the last cells are painted by the random walk, so RoundCleared, NextRound and the next screens run
+for rnd in ("1", "3", "7", "11", "20", "28", "32"):
+    h = []
+    for name, prog in (("base", base), ("lifted", out)):
+        p = os.path.join(tmp, f"{name}_clear{rnd}.txt")
+        subprocess.run([prog, "-", "5000", "--press", "250:start:3", "--random", "9", "--round", rnd, "--hashes", p,
+                        "--poke", f"600:{0xC520:x}:3"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        h.append(open(p).read())
+    ok = h[0] == h[1]
+    bad += not ok
+    first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+    print(f"nearly painted, round {rnd}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)
