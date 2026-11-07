@@ -1472,3 +1472,32 @@ void *gb_native_Mode4_GameOver(void) {
     r.a = 0;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* SoundDequeue: takes the first command out of the sound queue (wSoundQueue, wSoundQueueLen entries) into wSoundCmd and moves the rest forward. */
+void *gb_native_SoundDequeue(void) {
+    uint8_t len = rd(wSoundQueueLen);
+    if (len == 0) return 0;
+    wr(wSoundCmd, rd(wSoundQueue));
+    for (int i = 0; i < len; i++) wr(wSoundQueue + i, rd(wSoundQueue + 1 + i));
+    wr(wSoundQueueLen, len - 1);
+    return 0;
+}
+
+/* SoundUpdate: the sound engine, called once per frame from the VBlank handler: take a queued command when the queue is not being changed (wSoundBusy),
+ * start the current command, hand out channels, then update each of the 8 channel records of $20 bytes (those with bit 7 of their first byte set). */
+void *gb_native_SoundUpdate(void) {
+    if (!rd(wSoundBusy)) gb_native_SoundDequeue();
+    CALL(GAME_SoundStartCommand);
+    CALL(GAME_SoundAssignChannels);
+    wr(wSoundChanLeft, 8);
+    uint16_t record = wSoundChannels;
+    for (;;) {
+        SET_BC(record);
+        SET_HL(record);
+        if (rd(record) & 0x80) CALL(GAME_SoundUpdateChannel);
+        uint8_t left = rd(wSoundChanLeft) - 1;
+        wr(wSoundChanLeft, left);
+        if (!left) return 0;
+        record += 0x20;
+    }
+}
