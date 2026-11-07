@@ -256,3 +256,35 @@ void *gb_native_EnemyOnTileGrid(void) {
     r.c = rd(hEnemyY);
     return gb_native_IsOnTileGrid();
 }
+
+/* MoveObject: the object record at hObjPtr moves by its heading (+$10, 0-31) and speed (+$11): the vector from MoveVectorTable (pairs dx dy) is
+ * multiplied by the speed; the 16 bit results are stored as the horizontal step at +$0c/+$0d and the vertical step at +$0e/+$0f. */
+void *gb_native_MoveObject(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t speed = rd(obj + 0x11), heading = rd(obj + 0x10);
+    uint8_t d0 = r.d;
+    uint16_t vec = 0x0BB6 + (uint8_t)(heading << 1);
+    int8_t dx = (int8_t)rd(vec), dy = (int8_t)rd(vec + 1);
+
+    r.e = speed;                       /* vertical step */
+    r.a = (uint8_t)dy;
+    r.f = 0;
+    gb_native_MultiplyByDE();
+    wr(obj + 0x0E, rd(hScratch00));
+    wr(obj + 0x0F, rd(hScratch01));
+
+    r.d = d0;                          /* horizontal step (the original pops DE and the flags it pushed) */
+    r.e = speed;
+    r.a = (uint8_t)dx;
+    r.f = 0;
+    gb_native_MultiplyByDE();
+    r.b = 0;
+    r.c = 0x0C;
+    SET_HL(obj);
+    add_hl(BC());
+    wr(HL(), rd(hScratch00));
+    SET_HL(HL() + 1);
+    r.a = rd(hScratch01);
+    wr(HL(), r.a);
+    return 0;
+}

@@ -24,3 +24,4 @@ MultiplyByDE
 ByteToBCD
 IsOnTileGrid
 EnemyOnTileGrid
+MoveObject
