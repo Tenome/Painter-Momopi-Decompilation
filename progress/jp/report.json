@@ -1196,7 +1196,7 @@
      }
     },
     {
-     "name": "EnemyPaintStep",
+     "name": "EnemyErasePaint",
      "size": "106",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1484,7 +1484,7 @@
      }
     },
     {
-     "name": "EnemyFlagOnPaintedTile",
+     "name": "EnemyFlagOffPath",
      "size": "20",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1596,7 +1596,7 @@
      }
     },
     {
-     "name": "EnemyKind7Teleport",
+     "name": "EnemyTeleportNext",
      "size": "40",
      "fuzzy_match_percent": 100.0,
      "metadata": {
