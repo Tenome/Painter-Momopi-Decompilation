@@ -58,3 +58,7 @@ EnemyKind2
 EnemyKind3
 EnemyKind4
 EnemyKind5
+EnemyKind7
+EnemyKind9
+EnemyKind10
+EnemyKind11

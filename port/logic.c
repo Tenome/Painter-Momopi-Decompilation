@@ -857,7 +857,7 @@ void *gb_native_EnemyKind4(void) {
     return 0;
 }
 
-/* EnemyKind5: a teleporting enemy (EnemyKind7Teleport moves it along its position table). It does not touch the player while the GHOST card (6) runs. */
+/* EnemyKind5: a teleporting enemy (EnemyKind7Teleport moves it along its position table). It does not touch the player while the SEALED card (6) runs. */
 void *gb_native_EnemyKind5(void) {
     gb_native_SelectObject2();
     gb_native_TickObjectTimer();
@@ -867,6 +867,89 @@ void *gb_native_EnemyKind5(void) {
     CALL(GAME_CheckPaintHitsEnemy);
     CALL(GAME_EnemyIdleAnimate);
     CALL(GAME_EnemyKind7Teleport);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind7 (rounds 5-7 and 21-23): follows a scripted path (EnemyKind7NextStep reads the path table at wEnemyPathPtr). */
+void *gb_native_EnemyKind7(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind7Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyKind7NextStep);
+    CALL(GAME_MoveAndApplyObject);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_CheckPaintHitsEnemy);
+    CALL(GAME_EnemyKind7Update);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind9: aims at the player like kind 3 but is bound by the blocked directions of the grid. */
+void *gb_native_EnemyKind9(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind9Init;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyComputeBlockedDirs);
+    CALL(GAME_EnemyAimAtPlayer);
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyPaintUnderB0M);
+    CALL(GAME_CheckEnemyTouchesPlayer);
+    CALL(GAME_SelectKind9Animation);
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind10 (rounds 14 and 30): the enemy that fires a projectile object (InitProjectile at first; the projectile is updated and drawn here). */
+void *gb_native_EnemyKind10(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_InitProjectile;
+    if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
+    CALL(GAME_EnemyTurnOrAnimate);
+    CALL(GAME_EnemyKind10Move);
+    CALL(GAME_UpdateProjectile);
+    CALL(GAME_ProjectileCheckPlayerHit);
+    CALL(GAME_ProjectileRemoveIfHit);
+    CALL(GAME_ProjectileSelectFrame);
+    gb_native_SelectObject2();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* EnemyKind11 (rounds 5 6 9 11 and the same +16): an enemy that sits in a map cell; it hides the cell's tile (EnemyClearTileSaveStep keeps the tile it replaced in
+ * hEnemyAux) and writes the tile back when it is hit, when its timer (hEnemyTimer) runs out, or while the GHOST or SEALED card runs. */
+void *gb_native_EnemyKind11(void) {
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind7Start;
+    if (rd(hEnemyFlags) & 0x04) {
+        uint8_t dir = rd(hEnemyDir);
+        if (dir & 0x02) return (void *)GAME_EnemyDefeated;
+        wr(hEnemyDir, dir | 0x02);
+        CALL(GAME_EnemyStoreAuxToTile);
+        return (void *)GAME_EnemyDefeated;
+    }
+    if (!(rd(hEnemyDir) & 0x01)) {
+        CALL(GAME_EnemyClearTileSaveStep);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x01);
+    }
+    uint8_t timer = rd(hEnemyTimer);
+    wr(hEnemyTimer, timer - 1);
+    if (timer == 0) {
+        gb_native_EnemyMapTile();
+        wr(HL(), rd(hEnemyAux));
+        return (void *)GAME_RemoveEnemy;
+    }
+    uint8_t card = rd(wActiveMagic);
+    if ((card == 0x04 || card == 0x06) && (rd(wMagicState) & 0x01)) {
+        gb_native_EnemyMapTile();
+        wr(HL(), rd(hEnemyAux));
+    } else {
+        CALL(GAME_EnemyClearTileSaveStep);
+    }
+    CALL(GAME_EnemyKind7SetAnimation);
+    gb_native_SelectObject2();
     gb_native_DrawObject();
     return 0;
 }
