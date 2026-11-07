@@ -3139,3 +3139,78 @@ void *gb_native_EnemyClearTileSaveStep(void) {
     r.a = 0;
     return 0;
 }
+
+/* SpawnEnemyProjectile: the shot of a shooting enemy appears in the cell of the enemy (flags $82, box size 4, a timer of $a0 in $c4b4). */
+void *gb_native_SpawnEnemyProjectile(void) {
+    SET_HL(wProjectile);
+    gb_native_Clear32Bytes();
+    wr(wProjectileBox, 0x04);
+    wr(0xC4B4, 0xA0);
+    wr(wProjectileX, (uint8_t)((rd(hEnemyX) + 8) & 0xF0));
+    wr(wProjectileY, (uint8_t)((rd(hEnemyY) & 0xF0) + 8));
+    wr(wProjectile, 0x82);
+    r.a = 0x82;
+    return 0;
+}
+
+/* UpdateProjectile (kind 10): the shooter fires every $50 steps while on the screen and not already firing: the shot is aimed at the player, placed at the shooter and
+ * switched on (flags $86; hEnemyFlags bit 0 says a shot is live). When the shooter is hit (bit 3) the shot is removed. */
+void *gb_native_UpdateProjectile(void) {
+    if (rd(hEnemyFlags) & 0x01) return 0;
+    if (rd(hEnemyFlags) & 0x08) { wr(wProjectile, rd(wProjectile) & 0x7F); return 0; }
+    r.c = rd(hEnemyX);
+    r.b = rd(hEnemyY);
+    gb_native_EnemyScreenPosition();
+    if (!ZF()) return 0;                           /* the original tests the flags the routine leaves, not A */
+    SET_HL(hEnemyStep);
+    wr(hEnemyStep, rd(hEnemyStep) - 1);
+    if (rd(hEnemyStep)) return 0;
+    gb_native_ProjectileAimAtPlayer();
+    wr(wProjectileX, rd(hEnemyX));
+    wr(wProjectileY, rd(hEnemyY));
+    wr(wProjectile, 0x86);
+    uint16_t anim = rd(hEnemyKind) == 0x0A ? 0x57EC : 0x57C9;
+    wr(wProjectileAnimLo, (uint8_t)anim);
+    wr(wProjectileAnimHi, anim >> 8);
+    wr(hEnemyStep, 0x50);
+    SET_HL(hEnemyFlags);
+    wr(hEnemyFlags, rd(hEnemyFlags) | 0x01);
+    return 0;
+}
+
+/* ProjectileCheckPlayerHit (kind 10): while a shot is live (hEnemyFlags bit 0) its position is tested against the player (ProjectileHitTest on hScratch00-03). On a hit
+ * hEnemyDir bit 5 is set, the shot speeds up to $0b (stopped while T.STOP runs), it animates, moves and is drawn; with no hit the shot is switched off and hEnemyFlags bit 1 is set. */
+void *gb_native_ProjectileCheckPlayerHit(void) {
+    if (!(rd(hEnemyFlags) & 0x01)) return 0;
+    wr(hScratch00, rd(wProjectileX));
+    wr(hScratch00 + 1, rd(wProjectileX + 1));
+    wr(hScratch00 + 2, rd(wProjectileY));
+    wr(hScratch00 + 3, rd(wProjectileY + 1));
+    gb_native_ProjectileHitTest();
+    if (!r.a) {
+        SET_HL(hEnemyFlags);
+        wr(wProjectile, rd(wProjectile) & 0x7F);
+        wr(hEnemyFlags, rd(hEnemyFlags) | 0x02);
+        return 0;
+    }
+    SET_HL(hEnemyDir);
+    wr(hEnemyDir, rd(hEnemyDir) | 0x20);
+    wr(wProjectileSpeed, 0x0B);
+    if (rd(wActiveMagic) == 0x03 && (rd(wMagicState) & 0x01)) {
+        wr(hEnemySpeed, 0);
+        wr(wProjectileSpeed, 0);
+    }
+    NCALL(GAME_EnemyKind10Animate);
+    SET_HL(wProjectile);
+    gb_native_SetObjPtr();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    return gb_native_DrawObject();
+}
+
+/* ProjectileRemoveIfHit (kind 10): when the enemy has both bits 1 and 3 set the shot and the enemy are removed. */
+void *gb_native_ProjectileRemoveIfHit(void) {
+    if ((rd(hEnemyFlags) & 0x0A) != 0x0A) return 0;
+    wr(wProjectile, rd(wProjectile) & 0x7F);
+    return gb_native_RemoveEnemy();
+}

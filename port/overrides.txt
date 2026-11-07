@@ -183,3 +183,7 @@ EnemyKind7SetAnimation
 EnemyKind7Start
 EnemyStoreAuxToTile
 EnemyClearTileSaveStep
+SpawnEnemyProjectile
+UpdateProjectile
+ProjectileCheckPlayerHit
+ProjectileRemoveIfHit
