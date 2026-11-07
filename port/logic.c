@@ -1263,3 +1263,37 @@ void *gb_native_TimeUpSpawnEnemy(void) {
     CALL(GAME_FindFreeEnemySlot);
     return (void *)GAME_SerialStartTransfer;
 }
+
+/* RunMagicEffect: runs the effect routine of the active card (wActiveMagic indexes MagicEffectTable) as a tail jump; clears wMagicState bit 2 first. */
+void *gb_native_RunMagicEffect(void) {
+    wr(wMagicState, rd(wMagicState) & ~0x04);
+    r.c = (uint8_t)(rd(wActiveMagic) << 1);
+    SET_HL(DATA_MagicEffectTable);
+    gb_native_LookupByte();
+    uint16_t entry = HL();
+    r.e = r.a;
+    r.d = rd(entry + 1);
+    return (void *)gb_dispatch((uint16_t)(r.d << 8 | r.e));
+}
+
+/* PlayerAction: the A button during play. While a card effect runs (wMagicState bit 0) the effect is run. A press (hJoyNew bit 0) sets wPlayerDir bit 6;
+ * with a card selected (wActiveMagic) and the player standing still (wPlayerStatus bit 0) the cast starts: bit 0 of wMagicState is set and the cost of the card
+ * (MagicCostTable) is taken from wMagicPoints by PayMagicCost (with a link game LinkSyncFrame first when the points hit exactly 0). */
+void *gb_native_PlayerAction(void) {
+    if (rd(wMagicState) & 0x01) return gb_native_RunMagicEffect();
+    if (!(rd(hJoyNew) & 0x01)) return 0;
+    wr(wPlayerDir, rd(wPlayerDir) | 0x40);
+    wr(wMagicState, rd(wMagicState) & ~0x02);
+    if (rd(wActiveMagic) == 0) return 0;
+    if (!(rd(wPlayerStatus) & 0x01)) return 0;
+    wr(wMagicState, rd(wMagicState) | 0x01);
+    SET_HL(DATA_MagicCostTable);
+    r.c = rd(wActiveMagic);
+    gb_native_LookupByte();
+    r.c = r.a;
+    r.a = rd(wMagicPoints);
+    alu_sub(r.c, 0);
+    r.e = r.a;
+    if (ZF()) return (void *)GAME_LinkSyncFrame;
+    return (void *)GAME_PayMagicCost;
+}
