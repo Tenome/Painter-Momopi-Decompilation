@@ -1804,3 +1804,76 @@ void *gb_native_MagicScreenInput(void) {
     gb_native_SetObjPtr();
     return (void *)GAME_DrawObjectBytePos;
 }
+
+/* The timed cards S.UP (1, $f0 frames), W.IN (2, $d0), T.STOP (3, $d0), GHOST (4, $b0) and FRIEND (5, $b0): on the first frame of a cast (wMagicState bit 1 clear)
+ * the timer hMagicTimer is set and the cast starts (BeginMagicCast); T.STOP and FRIEND also remove the enemy projectile; W.IN clears wPlayerBlocked every frame
+ * (so walls do not stop the player). Every frame MagicTimerTick counts the timer down. The effects of the cards themselves are made by the checks elsewhere
+ * (the player speed for S.UP, the touch checks for GHOST, the enemy behaviours for T.STOP and so on). */
+static void *magic_timed(uint8_t frames, int remove_projectile, int clear_blocked) {
+    if (!(rd(wMagicState) & 0x02)) {
+        wr(hMagicTimer, frames);
+        CALL(GAME_BeginMagicCast);
+        if (remove_projectile) wr(wProjectile, rd(wProjectile) & 0x7F);
+    }
+    if (clear_blocked) wr(wPlayerBlocked, 0);
+    return (void *)GAME_MagicTimerTick;
+}
+void *gb_native_MagicEffectSUp(void) { return magic_timed(0xF0, 0, 0); }
+void *gb_native_MagicEffectWIn(void) { return magic_timed(0xD0, 0, 1); }
+void *gb_native_MagicEffectTStop(void) { return magic_timed(0xD0, 1, 0); }
+void *gb_native_MagicEffectGhost(void) { return magic_timed(0xB0, 0, 0); }
+void *gb_native_MagicEffectFriend(void) { return magic_timed(0xB0, 1, 0); }
+
+/* SelectBlobAnimation: the paint blob alternates between two animations ($492b and $492d) with bit 1 of its phase counter. */
+void *gb_native_SelectBlobAnimation(void) {
+    uint16_t anim = (rd(wBlobPhase) & 0x02) ? 0x492B : 0x492D;
+    wr(wPaintAnimLo, (uint8_t)anim);
+    wr(wPaintAnimHi, anim >> 8);
+    r.a = anim >> 8;
+    return 0;
+}
+
+/* MagicEffectPyon: card 9 PYON: a paint blob object is created at the player (SpawnPaintBlob) and then, every frame, it is moved (MoveObject, ApplyObjectStep),
+ * painted by MagicPaintEndUnlessBit2, drawn, and removed when it leaves the screen (EnemyScreenPosition of the player is checked: not of the blob). */
+void *gb_native_MagicEffectPyon(void) {
+    if (!(rd(wMagicState) & 0x02)) CALL(GAME_SpawnPaintBlob);
+    SET_HL(wPaintObject);
+    gb_native_SetObjPtr();
+    wr(wBlobPhase, rd(wBlobPhase) + 1);
+    CALL(GAME_MagicPaintEndUnlessBit2);
+    r.c = rd(wPlayerX);
+    r.b = rd(wPlayerY);
+    gb_native_EnemyScreenPosition();
+    if (r.a) wr(wPaintObject, rd(wPaintObject) & 0x7F);
+    gb_native_SelectBlobAnimation();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    gb_native_DrawObject();
+    return 0;
+}
+
+/* MagicEffectBom: card 7 B.O.M: a paint blob trail of 8 segments (wTrailIdx 0-7) is advanced each frame: every segment is loaded into the paint object,
+ * moved, drawn and stored back; at the end of the frame the timer counts down (MagicTimerCountdown). */
+void *gb_native_MagicEffectBom(void) {
+    if (!(rd(wMagicState) & 0x02)) {
+        CALL(GAME_SpawnBombBlob);
+        CALL(GAME_ForEachEnemySlotInit);
+    }
+    for (;;) {
+        CALL(GAME_LoadTrailSegment);
+        SET_HL(wPaintObject);
+        gb_native_SetObjPtr();
+        gb_native_MoveObject();
+        gb_native_ApplyObjectStep();
+        gb_native_DrawObject();
+        CALL(GAME_StoreTrailSegment);
+        CALL(GAME_SetPaintBlobAnimation);
+        wr(0xC449, rd(0xC449) - 1);
+        if (rd(0xC449) == 0) break;
+        wr(wTrailIdx, rd(wTrailIdx) + 1);
+    }
+    CALL(GAME_MagicTimerCountdown);
+    wr(0xC449, 0x08);
+    wr(wTrailIdx, 0);
+    return 0;
+}

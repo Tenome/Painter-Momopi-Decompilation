@@ -94,3 +94,11 @@ MagicCursorLeft
 MagicScreenInput
 MagicCursorUp
 MagicCursorDown
+MagicEffectSUp
+MagicEffectWIn
+MagicEffectTStop
+MagicEffectGhost
+MagicEffectFriend
+SelectBlobAnimation
+MagicEffectPyon
+MagicEffectBom
