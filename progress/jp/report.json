@@ -500,7 +500,7 @@
      }
     },
     {
-     "name": "ClampObjectToRoom",
+     "name": "ApplyObjectStep",
      "size": "13",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -508,7 +508,7 @@
      }
     },
     {
-     "name": "AddObjectFieldSigned",
+     "name": "AddStepSigned",
      "size": "38",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1228,7 +1228,7 @@
      }
     },
     {
-     "name": "MoveAndClampObject",
+     "name": "MoveAndApplyObject",
      "size": "6",
      "fuzzy_match_percent": 100.0,
      "metadata": {
