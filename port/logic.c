@@ -3214,3 +3214,49 @@ void *gb_native_ProjectileRemoveIfHit(void) {
     wr(wProjectile, rd(wProjectile) & 0x7F);
     return gb_native_RemoveEnemy();
 }
+
+/* PixelToTilemapAddr: hSpriteY/hSpriteX (OAM style pixel position: Y + 16, X + 8) to the address in background map 0: $9800 + row * 32 + column. The result is stored in
+ * hTilemapAddrHi/Lo and A = the low byte. */
+void *gb_native_PixelToTilemapAddr(void) {
+    uint8_t row = (uint8_t)(rd(hSpriteY) - 0x10) >> 3;
+    uint8_t column = (uint8_t)(rd(hSpriteX) - 0x08) >> 3;
+    uint16_t address = (uint16_t)(vBGMap0 + row * 0x20 + column);
+    wr(hTilemapAddrHi, address >> 8);
+    wr(hTilemapAddrLo, (uint8_t)address);
+    r.a = (uint8_t)address;
+    r.b = 0;
+    SET_DE(column);
+    SET_HL(address);
+    return 0;
+}
+
+/* MapCellToVramAddr: C = index of a map cell (16 per row); hScratch00/01 = the address in background map 0 of the cell's 2x2 tiles ($9800 + row * $40 + column * 2). */
+void *gb_native_MapCellToVramAddr(void) {
+    uint8_t c = r.c;
+    uint16_t address = vBGMap0;
+    while (c >= 0x10) { c -= 0x10; address += 0x40; }
+    address += (uint8_t)(c << 1);
+    wr(hScratch00, (uint8_t)address);
+    wr(hScratch00 + 1, address >> 8);
+    r.c = c;
+    r.e = (uint8_t)(c << 1);
+    return 0;
+}
+
+/* UnpackRoomMap: HL = a packed map of 64 bytes (4 cells of 2 bits per byte, the top bits first) unpacked to the 256 bytes of wRoomMap. */
+void *gb_native_UnpackRoomMap(void) {
+    uint16_t from = HL();
+    uint8_t packed = 0;
+    for (int i = 0; i < 64; i++) {
+        packed = rd(from++);
+        for (int k = 0; k < 4; k++) wr(wRoomMap + 4 * i + k, (packed >> (6 - 2 * k)) & 3);
+    }
+    wr(hScratch00 + 2, packed);
+    wr(0xC1B5, 0);
+    SET_HL(from);
+    SET_DE(wRoomMap + 256);
+    SET_BC(0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}

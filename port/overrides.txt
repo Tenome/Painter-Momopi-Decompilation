@@ -187,3 +187,6 @@ SpawnEnemyProjectile
 UpdateProjectile
 ProjectileCheckPlayerHit
 ProjectileRemoveIfHit
+PixelToTilemapAddr
+MapCellToVramAddr
+UnpackRoomMap
