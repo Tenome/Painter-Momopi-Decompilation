@@ -2868,7 +2868,7 @@ Mode4_GameOver::  ; GAME OVER screen
     ld a, SND_MUSIC_GAME_OVER
     call PlaySound
     ld hl, $9905
-    ld de, D_00_1f10
+    ld de, GameOverText
     call VramCopyStream
     xor a, a
     ld [wScrollX], a
@@ -2906,8 +2906,8 @@ Mode4_GameOver::  ; GAME OVER screen
     jp GameModeDispatch
 .L_00_1f0d:
     jp Entry
-D_00_1f10::
-    INCBIN "assets/bank_00/1f10.bin"
+GameOverText::  ; VRAM stream "GAME  OVER" (length
+    INCBIN "assets/bank_00/1f10_GameOverText.bin"
 Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     ld sp, wStackTop
     call LcdOff

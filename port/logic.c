@@ -1432,3 +1432,43 @@ void *gb_native_Mode3_RoundIntro(void) {
     r.a = 1;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* Mode4_GameOver: the GAME OVER screen: tiles, the text, the game over music; shown for 3 x 256 frames, then back to the title (mode 0) or, in a link game, a restart. */
+void *gb_native_Mode4_GameOver(void) {
+    r.sp = wStackTop;
+    CALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    CALL(GAME_LoadTilesBank3A);
+    CALL(GAME_ClearOamShadow);
+    r.a = SND_MUSIC_GAME_OVER;
+    CALL(GAME_PlaySound);
+    SET_HL(0x9905);
+    SET_DE(DATA_GameOverText);
+    CALL(GAME_VramCopyStream);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    CALL(GAME_RequestOamDma);
+    CALL(GAME_ClearOamShadowY);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    wr(wRoundFlags, rd(wRoundFlags) & ~0x01);
+    wr(wGameFlags, rd(wGameFlags) & ~0x04);
+    wr(hScratch00, 0xFF);
+    wr(hScratch00 + 1, 0x02);
+    for (;;) {
+        do {
+            CALL(GAME_WaitVBlankFlag);
+            CALL(GAME_ReadJoypad);
+            wr(hScratch00, rd(hScratch00) - 1);
+        } while (rd(hScratch00));
+        uint8_t left = (uint8_t)(rd(hScratch00 + 1) - 1);
+        wr(hScratch00 + 1, left);
+        if (left & 0x80) break;
+    }
+    if (rd(hLinkFlags) & 0x01) return (void *)GAME_Entry;
+    r.a = 0;
+    return (void *)GAME_GameModeDispatch;
+}
