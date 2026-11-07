@@ -142,3 +142,9 @@ SoundResumeMusicChannels
 SoundAssignChannels
 SoundStartCommand
 VBlankHandler
+VramCopyStream
+VramCopyRows
+RunVramCopyList
+VramCopyList
+QueueVramCopyList
+QueueVramCopyRows

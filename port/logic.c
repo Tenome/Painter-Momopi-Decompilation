@@ -2553,3 +2553,91 @@ void *gb_native_VBlankHandler(void) {
     ime = 1;
     return 0;
 }
+
+/* ---- the VRAM copy queue ----
+ * A copy stream is `count, rows, tiles...`: for every row `count` tiles (a count with bit 7 set repeats the one tile that follows) are written at the destination and the
+ * destination moves to the next row of the 32 tile wide background map. The queue entries (wVramDst/wVramSrc for one stream, wVramListPtr for a list of `count,
+ * then 4 byte jobs of destination and source`) are carried out by the VBlank handler. */
+
+/* VramCopyStream: HL = destination in VRAM, DE = the stream. The queue flag bit 0 is cleared at the end unless bit 7 (list mode) is set. */
+void *gb_native_VramCopyStream(void) {
+    uint16_t to = HL(), from = DE();
+    uint8_t spec = rd(from++);
+    uint8_t rows = rd(from++);
+    wr(hScratch12, spec);
+    uint8_t width = spec & 0x7F;
+    for (;;) {
+        for (uint8_t i = 0; i < width; i++) {
+            wr(to++, rd(from));
+            if (!(spec & 0x80)) from++;
+        }
+        if (--rows == 0) break;
+        to = (uint16_t)(to + 0x20 - width);
+    }
+    SET_HL(to);
+    SET_DE(from);
+    r.b = 0;
+    r.c = 0;
+    r.a = rd(wVramCopyFlags);
+    r.f = (r.f & 0x10) | 0x20 | ((r.a & 0x80) ? 0 : 0x80);
+    if (r.a & 0x80) return 0;
+    SET_HL(wVramCopyFlags);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) & ~0x01);
+    return 0;
+}
+
+/* VramCopyRows: the queued single stream (destination wVramDst, source wVramSrc). */
+void *gb_native_VramCopyRows(void) {
+    SET_HL(rd(wVramDstHi) << 8 | rd(wVramDstLo));
+    SET_DE(rd(wVramSrcHi) << 8 | rd(wVramSrcLo));
+    return gb_native_VramCopyStream();
+}
+
+/* RunVramCopyList: BC = a list: a job count, then per job the destination (2 bytes) and the stream address (2 bytes). All jobs run at once; the queue flag bit 0 is cleared. */
+void *gb_native_RunVramCopyList(void) {
+    uint16_t list = BC();
+    uint8_t jobs = rd(list++);
+    wr(hScratch15, jobs);
+    for (;;) {
+        wr(hScratch14, list >> 8);
+        wr(hScratch13, (uint8_t)list);
+        SET_HL(rd(list) | rd(list + 1) << 8);
+        SET_DE(rd(list + 2) | rd(list + 3) << 8);
+        gb_native_VramCopyStream();
+        jobs--;
+        if (jobs == 0) break;
+        wr(hScratch15, jobs);
+        list += 4;
+    }
+    SET_HL(wVramCopyFlags);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) & ~0x01);
+    return 0;
+}
+
+/* VramCopyList: the queued list (wVramListPtr). */
+void *gb_native_VramCopyList(void) {
+    SET_BC(rd(wVramListPtrHi) << 8 | rd(wVramListPtrLo));
+    return gb_native_RunVramCopyList();
+}
+
+/* QueueVramCopyList: BC = a list for the next VBlank (bits 0 and 7 of wVramCopyFlags, hVBlankTasks bit 0). */
+void *gb_native_QueueVramCopyList(void) {
+    wr(wVramListPtrLo, r.c);
+    wr(wVramListPtrHi, r.b);
+    SET_HL(hVBlankTasks);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) | 0x81);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x01);
+    return 0;
+}
+
+/* QueueVramCopyRows: HL = destination, DE = stream, queued for the next VBlank (bit 0 of wVramCopyFlags, hVBlankTasks bit 2). */
+void *gb_native_QueueVramCopyRows(void) {
+    wr(wVramDstHi, r.h);
+    wr(wVramDstLo, r.l);
+    wr(wVramSrcHi, r.d);
+    wr(wVramSrcLo, r.e);
+    wr(wVramCopyFlags, rd(wVramCopyFlags) | 0x01);
+    SET_HL(hVBlankTasks);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x04);
+    return 0;
+}
