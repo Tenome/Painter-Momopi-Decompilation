@@ -237,3 +237,10 @@ DEF hEnemyDXLo      EQU $ffc1   ; +$0c: horizontal movement of the last MoveObje
 DEF hEnemyDXHi      EQU $ffc2
 DEF hEnemyDYLo      EQU $ffc3   ; +$0e: vertical movement of the last MoveObject (16 bit with $ffc4)
 DEF hEnemyDYHi      EQU $ffc4
+; fields of the ending scene objects (record offsets: +7 X, +$a Y, +$10 heading, +$11 speed)
+DEF wEndingX        EQU $c775   ; wEndingObject +7
+DEF wEndingY        EQU $c778   ; wEndingObject +$a
+DEF wEndingAngle    EQU $c77e   ; wEndingObject +$10
+DEF wEndingSpeed    EQU $c77f   ; wEndingObject +$11
+DEF wEnding2X       EQU $c795   ; wEndingObject2 +7
+DEF wEnding2Y       EQU $c798   ; wEndingObject2 +$a

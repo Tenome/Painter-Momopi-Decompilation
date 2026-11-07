@@ -104,11 +104,17 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c759 | `wCursorFlags` | 3 | bit 7 = a choice was confirmed |
 | $c75a | `wBonusChoice` | 4 | chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional) |
 | $c76e | `wEndingObject` | 7 | object record used by the ending scene |
+| $c775 | `wEndingX` | 4 | wEndingObject +7 |
+| $c778 | `wEndingY` | 3 | wEndingObject +$a |
+| $c77e | `wEndingAngle` | 4 | wEndingObject +$10 |
+| $c77f | `wEndingSpeed` | 3 | wEndingObject +$11 |
 | $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a (provisional) |
 | $c782 | `wEndingPhase` | 4 | ending scene step counter (provisional) |
 | $c78e | `wEndingObject2` | 9 | second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional) |
 | $c78f | `wEndingObject2Anim` | 4 | +1 of the second ending object (set to $ff when the credits start) |
 | $c790 | `wCreditsPage` | 5 | index into CreditsPageTable |
+| $c795 | `wEnding2X` | 1 | wEndingObject2 +7 |
+| $c798 | `wEnding2Y` | 3 | wEndingObject2 +$a |
 | $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished (provisional) |
 | $c7bf | `wRemoteRound` | 5 | round number received over the link cable (bit 7 stripped) |
 | $dfff | `wStackTop` | 9 | SP is reset here at the start of every mode |
@@ -192,11 +198,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffcb | 6 |
 | $c1b7 | 6 |
 | $c7c0 | 5 |
-| $c775 | 5 |
-| $c77e | 5 |
 | $ffcf | 5 |
 | $c47d | 4 |
-| $c798 | 4 |
 | $c780 | 4 |
 | $c481 | 4 |
 | $c489 | 4 |
@@ -215,8 +218,6 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c487 | 3 |
 | $c43f | 3 |
 | $c440 | 3 |
-| $c778 | 3 |
-| $c77f | 3 |
 | $c799 | 3 |
 | $ffee | 3 |
 | $c4bc | 3 |
@@ -227,3 +228,8 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c506 | 3 |
 | $c507 | 3 |
 | $c508 | 3 |
+| $c509 | 3 |
+| $c1f8 | 3 |
+| $c4bf | 3 |
+| $c4c0 | 3 |
+| $c4cf | 3 |

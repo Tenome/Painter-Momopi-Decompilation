@@ -3576,17 +3576,17 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, l
     ld [$c76f], a
     ld a, $80
-    ld [$c775], a
+    ld [wEndingX], a
     ld a, $68
-    ld [$c778], a
+    ld [wEndingY], a
     ld a, $04
-    ld [$c77f], a
+    ld [wEndingSpeed], a
     ld a, $18
-    ld [$c77e], a
+    ld [wEndingAngle], a
     ld a, $70
-    ld [$c795], a
+    ld [wEnding2X], a
     ld a, $68
-    ld [$c798], a
+    ld [wEnding2Y], a
     xor a, a
     ld [wScrollX], a
     ld [wScrollY], a
@@ -3761,11 +3761,11 @@ EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = 
     ld a, [wEndingEvents]
     bit 2, a
     ret nz
-    ld a, [$c775]
+    ld a, [wEndingX]
     cp a, $50
     jr z, .L_00_2f41
     dec a
-    ld [$c775], a
+    ld [wEndingX], a
     ret
 .L_00_2f41:
     ld hl, wEndingEvents
@@ -3773,16 +3773,16 @@ EndingMoveHero::  ; moves the hero in the ending scene until it reaches $c775 = 
     ret
 EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld a, $02
-    ld [$c77f], a
+    ld [wEndingSpeed], a
     ld a, [wEndingPhase]
     bit 0, a
     jr nz, .L_00_2f59
     xor a, a
-    ld [$c77e], a
+    ld [wEndingAngle], a
     jr .L_00_2f5e
 .L_00_2f59:
     ld a, $10
-    ld [$c77e], a
+    ld [wEndingAngle], a
 .L_00_2f5e:
     call SelectEndingObject
     call MoveObject
@@ -3820,9 +3820,9 @@ EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_
     call SetObjPtr
     jp DrawObject
 EndingScrollStep::  ; scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
-    ld a, [$c798]
+    ld a, [wEnding2Y]
     sub a, $5a
-    ld [$c798], a
+    ld [wEnding2Y], a
     ld a, [$c799]
     sbc a, $00
     ld [$c799], a
@@ -3846,9 +3846,9 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld a, $80
     ld [wEndingObject], a
     ld a, $c8
-    ld [$c775], a
+    ld [wEndingX], a
     ld a, $50
-    ld [$c778], a
+    ld [wEndingY], a
     ld a, $0a
     ld [wEndingStep], a
     ld bc, D_00_3009
@@ -3864,7 +3864,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
 D_00_3009::
     INCBIN "assets/bank_00/3009.bin"
 EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
-    ld a, [$c778]
+    ld a, [wEndingY]
     cp a, $08
     jr c, EndingAdvance
     ld hl, $c780
@@ -3872,9 +3872,9 @@ EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [hl]
     and a, $10
     jr z, .L_00_3070
-    ld hl, $c77f
+    ld hl, wEndingSpeed
     inc [hl]
-    ld hl, $c77e
+    ld hl, wEndingAngle
     inc [hl]
     xor a, a
     ld [$c780], a
