@@ -1877,3 +1877,16 @@ void *gb_native_MagicEffectBom(void) {
     wr(wTrailIdx, 0);
     return 0;
 }
+
+void *gb_native_MagicEffectSealed(void) { return magic_timed(0xA0, 0, 0); }
+
+/* MagicTimerTick: counts hMagicTimer down; at zero the effect ends (EndMagic: wMagicState = 0). */
+void *gb_native_MagicTimerTick(void) {
+    SET_HL(hMagicTimer);
+    wr(hMagicTimer, dec8(rd(hMagicTimer)));
+    if (rd(hMagicTimer)) return 0;
+    wr(wMagicState, 0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}

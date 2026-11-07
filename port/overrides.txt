@@ -102,3 +102,5 @@ MagicEffectFriend
 SelectBlobAnimation
 MagicEffectPyon
 MagicEffectBom
+MagicEffectSealed
+MagicTimerTick
