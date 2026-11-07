@@ -151,3 +151,4 @@ QueueVramCopyRows
 EnemyComputeBlockedDirs
 ProjectileAimAtPlayer
 EnemyAimAtPlayer
+EnemyChooseDirection

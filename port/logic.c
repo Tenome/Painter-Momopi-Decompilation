@@ -2710,3 +2710,26 @@ blocked:
     wr(hEnemyDir, rd(hEnemyDir) | 0x40);
     return (void *)GAME_EnemyChooseDirection;
 }
+
+/* EnemyChooseDirection: when bit 6 of hEnemyDir asks for a new direction the low nibble of hEnemyDir becomes one free direction (bits 1 right, 2 left, 4 up, 8 down):
+ * random numbers from NextRandomDirection are tried until exactly one bit of (not blocked) and (random nibble) is left. If every direction except the one the table at $3aa2
+ * gives for the current heading is blocked, all free directions are set at once. */
+void *gb_native_EnemyChooseDirection(void) {
+    if (!(rd(hEnemyDir) & 0x40)) return 0;
+    wr(hEnemyDir, rd(hEnemyDir) & ~0x40);
+    uint8_t blocked = rd(hEnemyBlocked);
+    uint8_t opposite = rd(0x3AA2 + ((rd(hEnemyDir) & 0x0F) >> 1));
+    uint8_t free_dirs = (uint8_t)~blocked & 0x0F;
+    if ((uint8_t)(opposite | blocked) == 0x0F) {
+        wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | free_dirs);
+        return 0;
+    }
+    for (;;) {
+        gb_native_NextRandomDirection();
+        uint8_t pick = free_dirs & (rd(hRngCounter) & 0x0F);
+        if (pick == 0x08 || pick == 0x04 || pick == 0x02 || pick == 0x01) {
+            wr(hEnemyDir, (rd(hEnemyDir) & 0xF0) | pick);
+            return 0;
+        }
+    }
+}
