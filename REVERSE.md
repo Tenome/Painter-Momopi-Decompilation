@@ -277,3 +277,10 @@ The bytes after each song's last read byte (for example `$5ef3` onward after the
 - **Frame order of play** (`Mode1_Play`): wait, joypad, `PlayFrame` (player), magic screen when B is pressed, camera, spawn script, enemies, time-up enemy, extra life check.
 - **Sound engine** (`SoundUpdate`, once per VBlank): the queue gives one command per frame; eight channel records (music 0-3, effects 4-7); an effect that takes a hardware channel marks the music record of that channel
   (flag bit 2) so only the effect writes registers; the stream interpreter runs when a note's length counter ends.
+
+## The last round enemy (found by the native port)
+
+A forced run of the last round crashed the recompiled game with "indirect jump to unknown routine 53fa": the spawn list of round 33 contains enemies of kind 13, but `EnemyBehaviorTable` was
+traced as 12 entries (kinds 0-11). It has 14: the words at $379a and $379c are kind 12 ($5513, the projectile enemy again) and kind 13 ($53fa), whose code sits in what had been treated as the data after
+the animations at $53f3. `ptables.csv` now has 14 entries, so the code is traced, named `EnemyKind13` and recompiled. It lives for a fixed time (a 16 bit countdown starting at $0250), chases the player like kind 3
+and then blinks away. Random play never reaches round 33, so `tools/lift_check.py` plays a nearly painted round 32 to run it.

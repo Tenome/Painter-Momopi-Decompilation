@@ -4544,6 +4544,7 @@ MoveAndApplyObject::  ; MoveObject then ApplyObjectStep
     jp ApplyObjectStep
 SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnimation
     ldh a, [hEnemyTick]
+L_00_364b::
     and a, $08
     jr z, SetObjectAnimationStub
     push bc
@@ -4737,7 +4738,8 @@ EnemyBehaviorTable::  ; routine pointers indexed by $ffd2 (enemy kind/state); Up
     dw EnemyKind9
     dw EnemyKind10
     dw EnemyKind11
-    INCBIN "assets/bank_00/379a.bin"
+    dw EnemyKind10
+    dw EnemyKind13
 SelectEnemySlot::  ; HL = slot address from the word table at HL (A = index); stored in $ffd7/$ffd8
     sla a
     ld c, a

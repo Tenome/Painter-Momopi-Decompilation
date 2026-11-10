@@ -3214,3 +3214,301 @@ void *gb_native_ProjectileRemoveIfHit(void) {
     wr(wProjectile, rd(wProjectile) & 0x7F);
     return gb_native_RemoveEnemy();
 }
+
+/* PixelToTilemapAddr: hSpriteY/hSpriteX (OAM style pixel position: Y + 16, X + 8) to the address in background map 0: $9800 + row * 32 + column. The result is stored in
+ * hTilemapAddrHi/Lo and A = the low byte. */
+void *gb_native_PixelToTilemapAddr(void) {
+    uint8_t row = (uint8_t)(rd(hSpriteY) - 0x10) >> 3;
+    uint8_t column = (uint8_t)(rd(hSpriteX) - 0x08) >> 3;
+    uint16_t address = (uint16_t)(vBGMap0 + row * 0x20 + column);
+    wr(hTilemapAddrHi, address >> 8);
+    wr(hTilemapAddrLo, (uint8_t)address);
+    r.a = (uint8_t)address;
+    r.b = 0;
+    SET_DE(column);
+    SET_HL(address);
+    return 0;
+}
+
+/* MapCellToVramAddr: C = index of a map cell (16 per row); hScratch00/01 = the address in background map 0 of the cell's 2x2 tiles ($9800 + row * $40 + column * 2). */
+void *gb_native_MapCellToVramAddr(void) {
+    uint8_t c = r.c;
+    uint16_t address = vBGMap0;
+    while (c >= 0x10) { c -= 0x10; address += 0x40; }
+    address += (uint8_t)(c << 1);
+    wr(hScratch00, (uint8_t)address);
+    wr(hScratch00 + 1, address >> 8);
+    r.c = c;
+    r.e = (uint8_t)(c << 1);
+    return 0;
+}
+
+/* UnpackRoomMap: HL = a packed map of 64 bytes (4 cells of 2 bits per byte, the top bits first) unpacked to the 256 bytes of wRoomMap. */
+void *gb_native_UnpackRoomMap(void) {
+    uint16_t from = HL();
+    uint8_t packed = 0;
+    for (int i = 0; i < 64; i++) {
+        packed = rd(from++);
+        for (int k = 0; k < 4; k++) wr(wRoomMap + 4 * i + k, (packed >> (6 - 2 * k)) & 3);
+    }
+    wr(hScratch00 + 2, packed);
+    wr(0xC1B5, 0);
+    SET_HL(from);
+    SET_DE(wRoomMap + 256);
+    SET_BC(0);
+    r.a = 0;
+    r.f = 0x80;
+    return 0;
+}
+
+/* The camera: a 16 bit position (wCameraX/Hi, wCameraY/Hi) that follows the player, clamped to 0..$60 horizontally and 0..$70 vertically. */
+static void follow(uint16_t cam, uint16_t cam_hi, uint8_t player, uint8_t offset, uint8_t limit) {
+    uint8_t lo = (uint8_t)(player - offset);
+    wr(cam, lo);
+    uint8_t hi = (uint8_t)(rd(cam_hi) - (player < offset ? 1 : 0));
+    wr(cam_hi, hi);
+    if (hi & 0x80) { wr(cam_hi, 0); wr(cam, 0); }
+    else if (lo >= limit) { wr(cam, limit); wr(cam_hi, 0); }
+}
+void *gb_native_CameraFollowPlayerX(void) {
+    follow(wCameraX, wCameraXHi, rd(wPlayerX), 0x58, 0x60);
+    follow(wCameraY, wCameraYHi, rd(wPlayerY), 0x68, 0x70);
+    return 0;
+}
+
+void *gb_native_ResetCamera(void) {
+    wr(wCameraX, 0x20);
+    wr(wCameraY, 0x20);
+    wr(wCameraXHi, 0);
+    wr(wCameraYHi, 0);
+    r.a = 0;
+    return 0;
+}
+
+/* UpdateCamera: follows the player, then the scroll registers of the next VBlank are the camera. */
+void *gb_native_UpdateCamera(void) {
+    gb_native_CameraFollowPlayerX();
+    wr(wScrollX, rd(wCameraX));
+    wr(wScrollY, rd(wCameraY));
+    r.a = rd(wCameraY);
+    return 0;
+}
+
+/* InitPlayer: a fresh player record (flags $a2, heading $10, X $80, Y $78, the first animation of PlayerAnimPtrs, all state cleared) and the cards the player starts
+ * with: card 1, from round 2 also card 9, from round 3 also card 6; in a link game cards 1, 2, 3, 5 and 6. */
+void *gb_native_InitPlayer(void) {
+    SET_HL(wPlayer);
+    gb_native_Clear32Bytes();
+    wr(wPlayerAngle, 0x10);
+    wr(wPlayer, 0xA2);
+    wr(wPlayerX, 0x80);
+    wr(wPlayerY, 0x78);
+    wr(wMagicCastTimer, 0); wr(0xC4C2, 0); wr(wPlayerBlocked, 0); wr(wTrailIdx, 0);
+    wr(wPlayerDir, 0); wr(wPlayerStatus, 0); wr(hMagicTimer, 0);
+    wr(wPlayerAnimLo, rd(DATA_PlayerAnimPtrs));
+    wr(wPlayerAnimHi, rd(DATA_PlayerAnimPtrs + 1));
+    if (rd(hLinkFlags) & 0x01) {
+        static const uint8_t cards[5] = {1, 2, 3, 5, 6};
+        for (int i = 0; i < 5; i++) wr(wMagicCards + i, cards[i]);
+        return 0;
+    }
+    wr(wMagicCards, 1);
+    if (rd(wRound) < 2) return 0;
+    wr(wMagicCards + 1, 9);
+    if (rd(wRound) < 3) return 0;
+    wr(wMagicCards + 2, 6);
+    return 0;
+}
+
+/* PlayerDeath: the death sequence (entered by PlayFrame when wPlayerDir bit 5 is set). The first frame waits $27 frames and plays the death music; then every frame the
+ * counter wMagicCastTimer runs through CounterToFrame (60 frames per step, 15 steps) and the player is drawn with the animation pointer taken from the table at $488c
+ * (mirrored at steps 6 and $10). After the last step the game mode is chosen: a link game goes to mode 7 (link lose) or on; otherwise a life is lost and mode 3 (round
+ * intro) follows after $50 frames; with no lives left the lives are reset to 3 and mode 5 (continue) or mode 4 (game over) follows. */
+void *gb_native_PlayerDeath(void) {
+    if (!(rd(wPlayerStatus) & 0x04)) {
+        r.a = 0x27;
+        NCALL(GAME_DelayFrames);
+        r.a = SND_MUSIC_DEATH;
+        NCALL(GAME_PlaySound);
+        SET_HL(wPlayerStatus);
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x04);
+    }
+    wr(wMagicCastTimer, rd(wMagicCastTimer) + 1);
+    wr(hScratch00 + 6, 0x3C);
+    wr(hScratch00 + 7, 0x02);
+    wr(hScratch00 + 8, rd(wMagicCastTimer));
+    r.a = 0x0F;
+    gb_native_CounterToFrame();
+    wr(wMagicCastTimer, rd(hScratch00 + 8));
+    uint8_t step = r.c;
+    if (step != 0x1E) {
+        wr(wPlayer, (step == 0x06 || step == 0x10) ? (rd(wPlayer) | 0x20) : (rd(wPlayer) & ~0x20));
+        uint16_t entry = 0x488C + step;
+        wr(wPlayerAnimLo, rd(entry));
+        wr(wPlayerAnimHi, rd(entry + 1));
+        SET_HL(wPlayer);
+        gb_native_SetObjPtr();
+        return gb_native_DrawObject();
+    }
+    wr(wActiveMagic, 0);
+    wr(wMagicCastTimer, 0);
+    if (rd(hLinkFlags) & 0x02) {
+        wr(hSerialByte, rd(hSerialByte) | 0x40);
+        r.a = 7;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (rd(hLinkFlags) & 0x01) {
+        r.c = 0x04;
+        NCALL(GAME_SerialSendByte);
+        wr(hSerialByte, rd(hSerialByte) | 0x80);
+        if (!(rd(hSerialByte) & 0x02)) { r.a = 7; return (void *)GAME_GameModeDispatch; }
+    }
+    wr(wLives, rd(wLives) - 1);
+    if (rd(wLives) != 0) {
+        r.a = 0x50;
+        NCALL(GAME_DelayFrames);
+        r.a = 3;
+        return (void *)GAME_GameModeDispatch;
+    }
+    wr(wPlayerDir, 0);
+    wr(wPlayerStatus, 0);
+    wr(0xC47B, 0);
+    wr(0xC1A8, 0);
+    wr(wRoundFlags, (rd(wRoundFlags) | 0x01) & 0xF9);
+    wr(wLives, 3);
+    r.a = 0x50;
+    NCALL(GAME_DelayFrames);
+    r.a = (rd(wContinues) == 0 && !(rd(wCheatFlags) & 0x01)) ? 4 : 5;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* CheckBonusRound: after the rounds 4, 8, 12, 20, 24 and 28 wGameFlags bit 6 is set (the bonus screens follow). */
+void *gb_native_CheckBonusRound(void) {
+    uint8_t round = rd(wRound);
+    if (round == 4 || round == 8 || round == 12 || round == 20 || round == 24 || round == 28) {
+        SET_HL(wGameFlags);
+        wr(wGameFlags, rd(wGameFlags) | 0x40);
+    }
+    return 0;
+}
+
+/* NextRound: the counters advance (wRound, wRoundBackup, wRoomIndex and two more); after round $21 the ending (mode 6) follows, after a bonus round the bonus select
+ * (mode 2), else the round intro (mode 3). */
+void *gb_native_NextRound(void) {
+    if (rd(wRound) == 0x21) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+    wr(0xC47B, rd(0xC47B) + 1);
+    wr(wRound, rd(wRound) + 1);
+    wr(wRoundBackup, rd(wRoundBackup) + 1);
+    wr(0xC1A8, rd(0xC1A8) + 1);
+    wr(wRoomIndex, rd(wRoomIndex) + 1);
+    wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
+    gb_native_CheckBonusRound();
+    if (rd(wGameFlags) & 0x40) {
+        wr(wGameFlags, rd(wGameFlags) & 0xBE);
+        r.a = 2;
+    } else {
+        wr(wGameFlags, rd(wGameFlags) & ~0x01);
+        r.a = 3;
+    }
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* RoundCleared: runs every frame once the last cell is painted. The first time the palettes are restored, the clear music plays, the player is drawn and wGameFlags bit 0
+ * and wPlayerStatus bit 2 are set. Afterwards it waits $97 frames (leaving to the link lose screen when the other player won), fades out and goes on to the next round
+ * (link games first exchange the result). */
+void *gb_native_RoundCleared(void) {
+    if (!(rd(wPlayerStatus) & 0x04)) {
+        wr(rBGP, PAL_NORMAL);
+        wr(rOBP0, PAL_NORMAL);
+        wr(rOBP1, PAL_NORMAL);
+        r.a = SND_MUSIC_ROUND_CLEAR;
+        NCALL(GAME_PlaySound);
+        SET_HL(wPlayer);
+        gb_native_SetObjPtr();
+        gb_native_DrawObject();
+        SET_HL(wPlayerStatus);
+        wr(wPlayerStatus, rd(wPlayerStatus) | 0x04);
+        wr(wGameFlags, rd(wGameFlags) | 0x01);
+        return 0;
+    }
+    wr(hScratch00, 0x97);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        uint8_t link = rd(hSerialByte);
+        if ((link & 0x80) || (link & 0x08)) { r.a = 7; return (void *)GAME_GameModeDispatch; }
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    NCALL(GAME_FadeOut);
+    if (rd(hLinkFlags) & 0x04) {
+        wr(hSerialByte, rd(hSerialByte) & ~0x40);
+        r.a = 7;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (!(rd(hLinkFlags) & 0x01)) return gb_native_NextRound();
+    r.c = 0x08;
+    NCALL(GAME_SerialSendByte);
+    if (rd(hSerialByte) & 0x02) return 0;
+    wr(hSerialByte, rd(hSerialByte) | 0x40);
+    r.a = 7;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* FadeOut: five times each: the palette steps normal -> $94 -> $50 -> $40 -> white, two frames per palette and five blinks per step (BGP, OBP0 and OBP1 together). */
+void *gb_native_FadeOut(void) {
+    static const uint8_t steps[5] = { PAL_NORMAL, PAL_FADE_1, PAL_FADE_2, PAL_FADE_3, PAL_WHITE };
+    for (int s = 0; s < 4; s++) {
+        for (int blink = 0; blink < 5; blink++) {
+            for (int k = 0; k < 2; k++) {
+                wr(rBGP, steps[s + k]);
+                wr(rOBP0, steps[s + k]);
+                wr(rOBP1, steps[s + k]);
+                r.a = 0x02;
+                NCALL(GAME_DelayFrames);
+            }
+        }
+    }
+    r.b = 0;
+    return 0;
+}
+
+/* DrawMetatileMap: draws a map of 2x2 tile blocks into the background map. HL = destination of the first block, BC = the table of blocks (4 tile ids each), DE = the cells
+ * (one byte per block, the index into the table), hScratch00 = blocks per row, hScratch01 = rows; every tile id is ANDed with wMapCellMask. Blocks are 2 tiles wide, a row of
+ * blocks is $40 bytes (two map rows) below the one before. The scratch variables end as the original leaves them. */
+void *gb_native_DrawMetatileMap(void) {
+    wr(hScratch00 + 6, r.l); wr(hScratch00 + 8, r.l);
+    wr(hScratch00 + 7, r.h); wr(hScratch00 + 9, r.h);
+    wr(hScratch00 + 10, r.c); wr(hScratch00 + 11, r.b);
+    wr(hScratch00 + 12, r.e); wr(hScratch00 + 13, r.d);
+    wr(hScratch00 + 16, rd(hScratch00));
+    wr(hScratch00 + 3, 0); wr(hScratch00 + 4, 0); wr(hScratch00 + 5, 0);
+    for (;;) {
+        uint16_t cells = rd(hScratch00 + 12) | rd(hScratch00 + 13) << 8;
+        uint8_t cell = rd(cells + rd(hScratch00 + 4));
+        uint16_t block = (uint16_t)((rd(hScratch00 + 10) | rd(hScratch00 + 11) << 8) + cell * 4);
+        wr(hOtherObjLo, (uint8_t)block);
+        wr(hOtherObjHi, block >> 8);
+        uint16_t at = (uint16_t)((rd(hScratch00 + 6) | rd(hScratch00 + 7) << 8) + (rd(hScratch00 + 5) | rd(hScratch00 + 3) << 8));
+        for (int row = 0; row < 2; row++) {
+            for (int col = 0; col < 2; col++) wr(at++, rd(block++) & rd(wMapCellMask));
+            at += 0x1E;
+        }
+        uint8_t left = rd(hScratch00) - 1;
+        if (left != 0) {
+            wr(hScratch00, left);
+            wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
+            uint8_t offset = (uint8_t)(rd(hScratch00 + 5) + 2);
+            if (offset == 0) wr(hScratch00 + 3, rd(hScratch00 + 3) + 1);
+            else wr(hScratch00 + 5, offset);
+            continue;
+        }
+        uint8_t rows = rd(hScratch00 + 1) - 1;
+        if (rows == 0) return 0;
+        wr(hScratch00 + 1, rows);
+        uint16_t base = (uint16_t)((rd(hScratch00 + 8) | rd(hScratch00 + 9) << 8) + 0x40);
+        wr(hScratch00 + 6, (uint8_t)base); wr(hScratch00 + 8, (uint8_t)base);
+        wr(hScratch00 + 7, base >> 8); wr(hScratch00 + 9, base >> 8);
+        wr(hScratch00 + 5, 0);
+        wr(hScratch00, rd(hScratch00 + 16));
+        wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
+    }
+}
