@@ -28,6 +28,11 @@ python tools/build.py --rgbds E:/rgbds --mod   # writes build/painter_momopie.gb
 Sizes must stay the same for files that sit between code (a longer file moves everything after it and breaks the fixed bank layout); data-only
 regions with padding after them (`Bank2Padding`, `Bank3Padding`, the end of bank 1) can use the spare bytes if you shrink the file after it.
 
+## Map editor
+
+`python tools/map_editor.py assets/typed/round01.txt` opens a small window (tkinter): left click paints, right click erases, the title shows the number of path
+cells, and "Set paint count" writes it to `paint_cells_per_round.txt` for the round you pick. Save and rebuild with `tools/build.py --mod`.
+
 ## Native builds with mods
 
 `python tools/build_port.py` recompiles the traced routines to C and reads the ROM at run time, so a modded ROM (`build/painter_momopie.gb`) can be
