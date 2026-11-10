@@ -1,5 +1,6 @@
 #include "gb_rt.h"
 #include "apu.h"
+#include "texture.h"
 
 Regs r;
 int ime;
@@ -117,13 +118,58 @@ void gb_dma_routine(void) {
     CYC(4 + 12 + 4 + 0x28 * 16 - 4 + 16);
 }
 
+/* ---- texture pack support: tiles with a full-colour replacement are remembered per pixel (which texture, which source pixel, which palette) while the
+ * Game Boy picture is built; a second pass then writes the colour picture (gb_color_scale times larger) ---- */
+uint32_t gb_colorbuf[GB_MAX_W * 8 * 144 * 8];
+uint32_t gb_color_pal[4] = {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000};
+int gb_color_scale = 1;
+static uint32_t refbuf[GB_MAX_W * 144];                 /* (texture index + 1) << 16 | palette << 12 | y << 4 | x ; 0 = none */
+static int tmap[384];
+
+static uint32_t blend(uint32_t base, uint32_t over, unsigned a) {
+    unsigned r1 = (base >> 16) & 255, g1 = (base >> 8) & 255, b1 = base & 255, r2 = (over >> 16) & 255, g2 = (over >> 8) & 255, b2 = over & 255;
+    return ((r1 * (255 - a) + r2 * a) / 255) << 16 | ((g1 * (255 - a) + g2 * a) / 255) << 8 | ((b1 * (255 - a) + b2 * a) / 255);
+}
+
+static void color_pass(int W, unsigned bgp, unsigned obp0, unsigned obp1) {
+    const int S = gb_color_scale;
+    const int CW = W * S;
+    for (int y = 0; y < 144; y++) for (int x = 0; x < W; x++) {
+        uint32_t ref = refbuf[y * W + x];
+        uint32_t flat = gb_color_pal[gb_framebuf[y * W + x] & 3];
+        if (!ref) {
+            for (int sy = 0; sy < S; sy++) for (int sx = 0; sx < S; sx++) gb_colorbuf[(y * S + sy) * CW + x * S + sx] = flat;
+            continue;
+        }
+        const GbTex *t = &gb_texs[(ref >> 16) - 1];
+        unsigned pal = (ref >> 12) & 15, lx = ref & 15, ly = (ref >> 4) & 15;
+        unsigned p = pal == 0 ? bgp : pal == 1 ? obp0 : obp1;
+        unsigned fade = (3 - ((p >> 6) & 3)) * 255 / 3;                      /* the fade steps of the Game Boy palettes lighten the picture */
+        int n = t->scale, ts = 8 * n;
+        for (int sy = 0; sy < S; sy++) for (int sx = 0; sx < S; sx++) {
+            int tx = (int)lx * n + sx * n / S, ty = (int)ly * n + sy * n / S;
+            const uint8_t *q = t->rgba + ((size_t)ty * ts + tx) * 4;
+            uint32_t c = (uint32_t)q[0] << 16 | q[1] << 8 | q[2];
+            if (q[3] < 255) c = blend(gb_color_pal[0], c, q[3]);
+            if (fade) c = blend(c, 0x00FFFFFF, fade);
+            gb_colorbuf[(y * S + sy) * CW + x * S + sx] = c;
+        }
+    }
+}
+
 static void render(void) {
     unsigned lcdc = io[0x40];
     static uint8_t bgcol[GB_MAX_W * 144];
     const int W = gb_view_w, M = (W - 160) / 2, wide = gb_wide_active && M > 0;
+    const int tex_on = gb_tex_count > 0;
     memset(bgcol, 0, sizeof bgcol);
     memset(gb_framebuf, 0, sizeof gb_framebuf);
-    if (!(lcdc & 0x80)) return;
+    if (tex_on) {
+        memset(refbuf, 0, sizeof refbuf);
+        for (int t = 0; t < 384; t++) tmap[t] = gb_texture_find(vram + t * 16);
+        gb_color_scale = gb_tex_scale;
+    } else gb_color_scale = 1;
+    if (!(lcdc & 0x80)) { if (tex_on) color_pass(W, io[0x47], io[0x48], io[0x49]); return; }
     unsigned bgp = io[0x47], pal[4];
     for (int i = 0; i < 4; i++) pal[i] = (bgp >> (2 * i)) & 3;
     unsigned scx = io[0x43], scy = io[0x42], mapbase = (lcdc & 8) ? 0x1C00 : 0x1800;
@@ -141,6 +187,7 @@ static void render(void) {
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
             bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
+            if (tex_on && tmap[base >> 4] >= 0) refbuf[y * W + x] = (uint32_t)(tmap[base >> 4] + 1) << 16 | (yy & 7) << 4 | (xx & 7);
         }
     }
     if (lcdc & 0x20) {
@@ -153,6 +200,7 @@ static void render(void) {
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
             bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
+            refbuf[y * W + x] = (tex_on && tmap[base >> 4] >= 0) ? (uint32_t)(tmap[base >> 4] + 1) << 16 | (yy & 7) << 4 | (xx & 7) : 0;
         }
     }
     if (lcdc & 2) {
@@ -163,6 +211,7 @@ static void render(void) {
         for (int i = count - 1; i >= 0; i--) {
             int sy = src[i * 4] - 16, sx = src[i * 4 + 1] - 8 + (wide ? 0 : M);   /* widescreen: the game logic wrote output coordinates */
             unsigned tile = src[i * 4 + 2], fl = src[i * 4 + 3];
+            unsigned palid = (fl & 0x10) ? 2 : 1;
             unsigned p = (fl & 0x10) ? io[0x49] : io[0x48], sp[4];
             for (int k = 0; k < 4; k++) sp[k] = (p >> (2 * k)) & 3;
             if (h == 16) tile &= 0xFE;
@@ -171,17 +220,25 @@ static void render(void) {
                 if (y < 0 || y >= 144) continue;
                 int row = (fl & 0x40) ? h - 1 - yy : yy;
                 unsigned base = tile * 16 + row * 2, lo = vram[base], hi = vram[base + 1];
+                const GbTex *tx = (tex_on && h == 8 && tmap[tile] >= 0) ? &gb_texs[tmap[tile]] : 0;
                 for (int xx = 0; xx < 8; xx++) {
                     int x = sx + xx;
                     if (x < 0 || x >= W) continue;
                     unsigned bit = (fl & 0x20) ? xx : 7 - xx;
                     unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
-                    if (!ci || ((fl & 0x80) && bgcol[y * W + x])) continue;
+                    unsigned lx = 7 - bit;                                       /* source pixel column of the tile */
+                    if (tx) {
+                        uint64_t m = 1ull << (row * 8 + (int)lx);
+                        if (!((ci != 0 || (tx->edited & m)) && !(tx->clear & m))) continue;
+                    } else if (!ci) continue;
+                    if ((fl & 0x80) && bgcol[y * W + x]) continue;
                     gb_framebuf[y * W + x] = sp[ci];
+                    refbuf[y * W + x] = tx ? (uint32_t)(tmap[tile] + 1) << 16 | palid << 12 | (unsigned)row << 4 | lx : 0;
                 }
             }
         }
     }
+    if (tex_on) color_pass(W, io[0x47], io[0x48], io[0x49]);
 }
 
 void gb_host_vblank(void) {

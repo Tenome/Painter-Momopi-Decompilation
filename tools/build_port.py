@@ -36,6 +36,7 @@ if "--rebuild" in sys.argv or not os.path.exists(rom):
 
 os.makedirs(os.path.join(ROOT, "build", "recomp"), exist_ok=True)
 subprocess.run([PY, os.path.join(ROOT, "tools", "recomp.py"), "--rom", rom], check=True, cwd=ROOT)
+subprocess.run([PY, os.path.join(ROOT, "tools", "make_tile_index.py")], check=True, cwd=ROOT)
 
 data = open(rom, "rb").read()
 with open(os.path.join(ROOT, "build", "recomp", "rom_image.c"), "w", newline="\n") as f:
@@ -46,7 +47,7 @@ with open(os.path.join(ROOT, "build", "recomp", "rom_image.c"), "w", newline="\n
     f.write(f"}};\nconst size_t gb_rom_image_size = {len(data)};\n")
 
 P = lambda *a: os.path.join(ROOT, *a)
-common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "logic.c"), P("port", "apu.c"), P("port", "config.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
+common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "logic.c"), P("port", "apu.c"), P("port", "config.c"), P("port", "texture.c"), P("port", "png.c"), P("build", "recomp", "tile_index.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
 exe = ".exe" if os.name == "nt" else ""
 
 
@@ -60,6 +61,9 @@ def compile_(main, out, extra=()):
 compile_("main_headless.c", P("build", "recomp", "game_headless" + exe))
 if os.name == "nt":
     compile_("main_win32.c", P("build", "recomp", "game_win.exe"), ["-mwindows", "-luser32", "-lgdi32", "-lwinmm", "-lshell32"])
+    gui = P("build", "recomp", "settings.exe")                    # the settings window (edits painter_momopie.ini)
+    subprocess.run([cc, "-O2", "-w", P("port", "config_gui.c"), "-o", gui, "-mwindows", "-luser32", "-lgdi32", "-lcomctl32", "-lcomdlg32", "-lshell32", "-lole32"], check=True)
+    print("built", gui)
     ini = P("build", "recomp", "painter_momopie.ini")
     if not os.path.exists(ini):
         import shutil

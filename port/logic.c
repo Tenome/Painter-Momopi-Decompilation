@@ -3405,7 +3405,7 @@ void *gb_native_PlayerDeath(void) {
     wr(0xC47B, 0);
     wr(0xC1A8, 0);
     wr(wRoundFlags, (rd(wRoundFlags) | 0x01) & 0xF9);
-    wr(wLives, 3);
+    wr(wLives, gb_config.start_lives ? gb_config.start_lives : 3);
     r.a = 0x50;
     NCALL(GAME_DelayFrames);
     r.a = (rd(wContinues) == 0 && !(rd(wCheatFlags) & 0x01)) ? 4 : 5;
@@ -4727,7 +4727,7 @@ void *gb_native_Start(void) {
     wr(rBGP, PAL_NORMAL); wr(rOBP0, PAL_NORMAL); wr(rOBP1, PAL_NORMAL);
     wr(rSCX, 0); wr(rSCY, 0);
     wr(wRound, 0x01); wr(wRoundBackup, 0x01);
-    wr(wLives, 0x03);
+    wr(wLives, gb_config.start_lives ? gb_config.start_lives : 0x03);
     wr(rIF, 0);
     wr(rIE, IE_VBLANK);
     wr(rLCDC, LCDC_ON_BG_OBJ);

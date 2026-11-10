@@ -8,13 +8,14 @@
 #include <mmsystem.h>
 #include "gb_rt.h"
 #include "config.h"
+#include "texture.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
 extern const size_t gb_rom_image_size;
 
 static HWND hwnd;
-static uint32_t pixels[GB_MAX_W * 144];
+static uint32_t pixels[GB_MAX_W * 144];     /* the picture without a texture pack; with one gb_colorbuf is shown */
 static const uint32_t palettes[3][4] = {
     {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* DMG green */
     {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000},   /* grey */
@@ -67,6 +68,8 @@ static void present(void) {
     RECT rc;
     GetClientRect(hwnd, &rc);
     int cw = rc.right, ch = rc.bottom, vw = gb_view_w;
+    int cs = gb_tex_count ? gb_color_scale : 1;           /* the colour picture is cs times larger than the Game Boy one */
+    const uint32_t *src = gb_tex_count ? gb_colorbuf : pixels;
     int w, h;
     if (gb_config.integer_scale) {
         int scale = cw / vw < ch / 144 ? cw / vw : ch / 144;
@@ -76,14 +79,15 @@ static void present(void) {
         if (cw * 144 < ch * vw) { w = cw; h = cw * 144 / vw; } else { h = ch; w = ch * vw / 144; }
     }
     int x = (cw - w) / 2, y = (ch - h) / 2;
-    BITMAPINFO bi = {{sizeof(BITMAPINFOHEADER), vw, -144, 1, 32, BI_RGB}};
+    BITMAPINFO bi = {{sizeof(BITMAPINFOHEADER), vw * cs, -144 * cs, 1, 32, BI_RGB}};
     HDC dc = GetDC(hwnd);
     /* only the bars around the picture are cleared: clearing the whole window first made it flicker */
     if (y > 0) { PatBlt(dc, 0, 0, cw, y, BLACKNESS); }
     if (y + h < ch) { PatBlt(dc, 0, y + h, cw, ch - y - h, BLACKNESS); }
     if (x > 0) { PatBlt(dc, 0, y, x, h, BLACKNESS); }
     if (x + w < cw) { PatBlt(dc, x + w, y, cw - x - w, h, BLACKNESS); }
-    StretchDIBits(dc, x, y, w, h, 0, 0, vw, 144, pixels, &bi, DIB_RGB_COLORS, SRCCOPY);
+    SetStretchBltMode(dc, cs > 1 ? HALFTONE : COLORONCOLOR);
+    StretchDIBits(dc, x, y, w, h, 0, 0, vw * cs, 144 * cs, src, &bi, DIB_RGB_COLORS, SRCCOPY);
     ReleaseDC(hwnd, dc);
 }
 
@@ -129,6 +133,7 @@ static void frame(unsigned f) {
     }
     if (quit) { if (wave) waveOutReset(wave); ExitProcess(0); }
     for (;;) {
+        memcpy(gb_color_pal, palettes[pal_index], sizeof gb_color_pal);
         for (int i = 0; i < gb_view_w * 144; i++) pixels[i] = palettes[pal_index][gb_framebuf[i] & 3];
         present();
         if (!paused) break;

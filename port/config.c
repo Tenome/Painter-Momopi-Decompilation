@@ -4,8 +4,9 @@
 #include <ctype.h>
 #include "config.h"
 #include "gb_rt.h"
+#include "texture.h"
 
-GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, 0};
+GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, "textures", 0, 0};
 
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
@@ -21,6 +22,8 @@ static void set(const char *key, const char *val) {
     else if (!strcmp(key, "integer_scale")) gb_config.integer_scale = v != 0;
     else if (!strcmp(key, "speed")) gb_config.speed = clampi(v, 50, 400);
     else if (!strcmp(key, "infinite_lives")) gb_config.infinite_lives = v != 0;
+    else if (!strcmp(key, "texture_pack")) { strncpy(gb_config.texture_pack, val, sizeof gb_config.texture_pack - 1); gb_config.texture_pack[sizeof gb_config.texture_pack - 1] = 0; }
+    else if (!strcmp(key, "start_lives")) gb_config.start_lives = clampi(v, 0, 99);
     else if (!strcmp(key, "start_round")) gb_config.start_round = clampi(v, 0, 33);
 }
 
@@ -44,6 +47,16 @@ void gb_config_load(const char *path) {
             set(p, val);
         }
         fclose(f);
+    }
+    if (gb_config.texture_pack[0]) {                  /* the texture pack folder: absolute, or next to the ini file */
+        char dir[600];
+        const char *slash = path ? strrchr(path, 47) : 0;
+        const char *bslash = path ? strrchr(path, 92) : 0;
+        if (bslash > slash) slash = bslash;
+        int absolute = gb_config.texture_pack[0] == 47 || gb_config.texture_pack[0] == 92 || (gb_config.texture_pack[1] == 58);
+        if (slash && !absolute) snprintf(dir, sizeof dir, "%.*s%s", (int)(slash - path + 1), path, gb_config.texture_pack);
+        else snprintf(dir, sizeof dir, "%s", gb_config.texture_pack);
+        gb_texture_load(dir);
     }
     gb_margin = gb_config.widescreen;
     gb_view_w = 160 + 2 * gb_margin;

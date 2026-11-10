@@ -1,5 +1,8 @@
 # Player options
 
+`settings.exe` (built next to `game_win.exe`) is a small window for all of these options: it reads and writes `painter_momopie.ini`, and *Save and play*
+starts the game. The file can still be edited by hand.
+
 `game_win.exe` reads `painter_momopie.ini` (a template is `port/painter_momopie.ini`; `tools/build_port.py` copies it next to the exe if none is there).
 `game_headless` takes `--ini FILE`. A missing file or key means the default.
 
@@ -11,6 +14,8 @@
 | `palette` | 0-2 | green, grey, sepia |
 | `widescreen` | 0-40 | extra pixels of the room on each side during play. The room is 256 pixels wide and the Game Boy only shows 160, so the camera view is widened (the picture becomes `160 + 2 * n` pixels wide). The magic screen and the other screens stay 160 pixels wide with black bars. Sprites near the edges are kept (the part culling and the OAM X coordinate are widened); the renderer draws the margin. |
 | `no_sprite_limit` | 0/1 | the 40 entry OAM limit (and the flicker it causes) is gone: every sprite the game asks for is kept in a longer list that the renderer uses |
+| `texture_pack` | folder name | full-colour replacement sheets (docs/TEXTURES.md) |
+| `start_lives` | 1-99 | lives at the start of a game (the continue screen also gives this many) |
 | `volume`, `mute` | 0-100, 0/1 | sound |
 | `speed` | 50-400 | percent of normal speed (no sound unless 100) |
 | `infinite_lives` | 0/1 | the player never loses a life |

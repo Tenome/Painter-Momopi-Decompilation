@@ -2,6 +2,7 @@
  *   game_headless ROM FRAMES [--press FRAME:BUTTON:HOLD]... [--shot FRAME]... [--outdir DIR] */
 #include "gb_rt.h"
 #include "config.h"
+#include "texture.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
@@ -56,6 +57,16 @@ static void hook(unsigned frame) {
             char p[512];
             snprintf(p, sizeof p, "%s/rc_%04u.pgm", outdir, frame);
             int vw = gb_view_w;
+            if (gb_tex_count) {                          /* a texture pack is active: save the colour picture as a PPM */
+                snprintf(p, sizeof p, "%s/rc_%04u.ppm", outdir, frame);
+                FILE *c = fopen(p, "wb");
+                if (c) {
+                    fprintf(c, "P6\n%d %d\n255\n", vw * gb_color_scale, 144 * gb_color_scale);
+                    for (int k = 0; k < vw * gb_color_scale * 144 * gb_color_scale; k++) { uint32_t v = gb_colorbuf[k]; fputc(v >> 16, c); fputc(v >> 8, c); fputc(v, c); }
+                    fclose(c);
+                }
+                continue;
+            }
             FILE *f = fopen(p, "wb");
             if (f) {
                 fprintf(f, "P5\n%d 144\n255\n", vw);

@@ -97,6 +97,9 @@ static inline uint16_t sp_plus(int8_t d) { uint16_t sp = r.sp; r.f = (((sp & 15)
 extern uint8_t gb_joy;             /* pressed buttons, bit layout of emu.py BTN */
 #define GB_MAX_W 256
 extern uint8_t gb_framebuf[GB_MAX_W * 144];   /* shade 0-3 per pixel (rows gb_view_w wide), rendered at the start of VBlank */
+extern uint32_t gb_colorbuf[];      /* with a texture pack: the 0x00RRGGBB picture, (gb_view_w * gb_color_scale) wide */
+extern uint32_t gb_color_pal[4];   /* colours of the four Game Boy shades for everything that has no replacement */
+extern int gb_color_scale;
 #define GB_XOAM 512
 extern int gb_margin, gb_view_w, gb_wide_active, gb_sprite_limit_off;
 extern uint8_t gb_xoam[GB_XOAM * 4];
