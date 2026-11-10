@@ -3676,3 +3676,79 @@ void *gb_native_Mode2_BonusSelect(void) {
     gb_native_InitBonusCursor();
     return gb_native_Mode2_Init();
 }
+
+/* Mode6_Ending: the castle scene after the last round. The setup draws the castle with metatiles (D_00_31a6 cells, D_00_3156 blocks), creates the two scene objects
+ * (the hero walking in at X $80, Y $68, heading $18, and the castle flag object), starts the ending music and runs the scene (castle blink and walk) until the hero
+ * has arrived (wEndingEvents bit 7). Then the credit pages scroll up (EndingSetup, scroll, credits window); wCheatFlags and wCheatTimer serve as counters here
+ * ($10 frames per page step and 5 rounds after the last page). Finally the game restarts (Entry). */
+void *gb_native_Mode6_Ending(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3D);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_HL(0x9FFF);
+    gb_native_FillBackwardsFF();
+    NCALL(GAME_ClearOamShadowY);
+    NCALL(GAME_RequestOamDma);
+    wr(hScratch01, 0x06);
+    wr(hScratch00, 0x0A);
+    SET_HL(0x98C0);
+    SET_BC(0x3156);
+    SET_DE(0x31A6);
+    wr(wMapCellMask, 0xFF);
+    gb_native_DrawMetatileMap();
+    SET_HL(wEndingObject);
+    SET_BC(0x0041);
+    gb_native_ClearMemory();
+    wr(wEndingObject, 0x80);
+    wr(wEndingObject2, 0x80);
+    wr(0xC770, 0x31);
+    wr(0xC76F, 0x43);
+    wr(wEndingX, 0x80);
+    wr(wEndingY, 0x68);
+    wr(wEndingSpeed, 0x04);
+    wr(wEndingAngle, 0x18);
+    wr(wEnding2X, 0x70);
+    wr(wEnding2Y, 0x68);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    NCALL(GAME_EndingCastleBlink);
+    NCALL(GAME_EndingWalkStep);
+    r.a = SND_MUSIC_ENDING;
+    NCALL(GAME_PlaySound);
+    r.a = 0x46;
+    NCALL(GAME_DelayFrames);
+    NCALL(GAME_EndingCastleBlink);
+    NCALL(GAME_EndingWalkStep);
+    do {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_EndingCastleBlink);
+        NCALL(GAME_EndingWalkStep);
+    } while (!(rd(wEndingEvents) & 0x80));
+    NCALL(GAME_EndingSetup);
+    wr(wCheatFlags, 0x10);
+    wr(wCheatTimer, 0x05);
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_EndingScrollStep);
+        NCALL(GAME_EndingTick);
+        NCALL(GAME_EndingCreditsWindow);
+        NCALL(GAME_ReadJoypad);
+        if (rd(wCreditsPage) != 0x08) continue;
+        wr(wCheatFlags, rd(wCheatFlags) - 1);
+        if (rd(wCheatFlags) != 0) continue;
+        uint8_t timer = rd(wCheatTimer) - 1;
+        wr(wCheatTimer, timer);
+        if (!(timer & 0x80)) continue;
+        return (void *)GAME_Entry;
+    }
+}

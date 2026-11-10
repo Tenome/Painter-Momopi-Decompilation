@@ -207,3 +207,4 @@ BonusResultWait
 BonusSelectLoop
 Mode2_Init
 Mode2_BonusSelect
+Mode6_Ending
