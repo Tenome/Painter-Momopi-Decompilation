@@ -6,7 +6,7 @@
 Opens one of the room maps in assets/typed/roundNN.txt (16 lines of 16 digits: 0 = wall/empty, 1 and 2 = path pieces, 3 = special).
 Left click paints the selected brush, right click erases (0). The title shows the number of path cells (cells that are not 0): that is the number
 the game paints to clear the round, so it has to match the entry of the round in assets/typed/paint_cells_per_round.txt. "Set paint count" writes
-the count there for the round you pick. Save, then rebuild with `python tools/build.py --rgbds E:/rgbds --mod`.
+the count there for the round you pick. "show spawns" marks the enemies of that round (kind number) from spawn_roundNN.txt. Save, then rebuild with `python tools/build.py --rgbds E:/rgbds --mod`.
 """
 import os
 import sys
@@ -36,8 +36,10 @@ class Editor:
                            bg=COLORS[b], fg="white" if b == "0" else "black", selectcolor=COLORS[b]).pack(side="left", padx=2)
         tk.Label(bar, text="  round").pack(side="left")
         self.round_var = tk.IntVar(value=1)
-        tk.Spinbox(bar, from_=1, to=34, width=3, textvariable=self.round_var).pack(side="left")
+        tk.Spinbox(bar, from_=1, to=34, width=3, textvariable=self.round_var, command=self.redraw).pack(side="left")
         tk.Button(bar, text="Set paint count", command=self.set_paint_count).pack(side="left")
+        self.spawn_var = tk.IntVar(value=1)
+        tk.Checkbutton(bar, text="show spawns", variable=self.spawn_var, command=self.redraw).pack(side="left")
         self.canvas = tk.Canvas(master, width=16 * CELL, height=16 * CELL, highlightthickness=0)
         self.canvas.pack()
         self.canvas.bind("<Button-1>", lambda e: self.paint(e, self.brush))
@@ -97,11 +99,34 @@ class Editor:
             return
         messagebox.showinfo("Paint count", "round %d: %d cells" % (index + 1, self.count()))
 
+    def spawns(self):
+        """enemy spawns of the selected round from assets/typed/spawn_roundNN.txt: (wave, kind, x, y, delay)"""
+        path = os.path.join(TYPED, "spawn_round%02d.txt" % self.round_var.get())
+        out, wave = [], 0
+        try:
+            for line in open(path):
+                t = line.split()
+                if len(t) == 2 and t[0] == "wave":
+                    wave = int(t[1])
+                elif len(t) == 4:
+                    out.append((wave,) + tuple(int(v) for v in t))
+        except (OSError, ValueError):
+            pass
+        return out
+
+    def draw_spawns(self):
+        for wave, kind, x, y, delay in self.spawns():
+            cx, cy = (x // 16) * CELL + CELL // 2, ((y & ~7) // 16) * CELL + CELL // 2
+            self.canvas.create_oval(cx - 9, cy - 9, cx + 9, cy + 9, fill="#c03030", outline="white")
+            self.canvas.create_text(cx, cy, text=str(kind), fill="white", font=("TkDefaultFont", 9, "bold"))
+
     def redraw(self):
         self.canvas.delete("all")
         for y in range(16):
             for x in range(16):
                 self.canvas.create_rectangle(x * CELL, y * CELL, x * CELL + CELL, y * CELL + CELL, fill=COLORS[self.grid[y][x]], outline="#404060")
+        if self.spawn_var.get():
+            self.draw_spawns()
         name = os.path.basename(self.path) if self.path else "(no file)"
         self.master.title("Painter Momopie map editor - %s%s - %d path cells" % (name, " *" if self.dirty else "", self.count()))
 
