@@ -126,11 +126,32 @@ class Editor:
         self.redo_stack = []
         self.fillval = tk.IntVar(value=2)
         self.loading = False
+        self.icons = self.load_icons()
         self.build_ui()
         if path:
             self.open_file(path)
         self.refresh_all()
         root.protocol("WM_DELETE_WINDOW", self.quit)
+
+    @staticmethod
+    def load_icons():
+        """pictures of the enemy kinds (tools/enemy_icons.py cuts them out of the game; made on the first start when the native runner is built)"""
+        if Image is None:
+            return {}
+        import enemy_icons
+        d = enemy_icons.DEFAULT_OUT
+        try:
+            if not os.path.exists(os.path.join(d, "1.png")):
+                enemy_icons.make(d)
+        except Exception:
+            return {}
+        icons = {}
+        for k in lp.KINDS:
+            p = os.path.join(d, "%d.png" % k)
+            if os.path.exists(p):
+                im = Image.open(p).convert("RGBA")
+                icons[k] = ImageTk.PhotoImage(im.resize((im.width * 2, im.height * 2), Image.NEAREST))
+        return icons
 
     # ---------------------------------------------------------------- data helpers
     @staticmethod
@@ -443,6 +464,12 @@ class Editor:
                 cx, cy = col * CELL + CELL // 2, row * CELL + CELL // 2
                 rad = 12 if w == cur else 8
                 sel = self.selected == (w, i)
+                icon = self.icons.get(kind)
+                if icon and w == cur:                       # the picture of the enemy on a ring in the colour of its wave
+                    c.create_oval(cx - 17, cy - 17, cx + 17, cy + 17, fill=WAVE_COLORS[w], outline="#ffffff" if sel else "#000000", width=3 if sel else 1)
+                    c.create_image(cx, cy, image=icon)
+                    self.photos.append(icon)
+                    continue
                 c.create_oval(cx - rad, cy - rad, cx + rad, cy + rad, fill=WAVE_COLORS[w], outline="#ffffff" if sel else "#000000", width=3 if sel else 1,
                               stipple="" if w == cur else "gray50")
                 c.create_text(cx, cy, text=str(kind), fill="#ffffff", font=("TkDefaultFont", 9, "bold"))

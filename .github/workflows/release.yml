@@ -1,0 +1,35 @@
+name: Release toolkit
+
+# Publishes the part of the project that contains no game data: the settings program, the level and music tools, the docs and the example pack.
+# The player itself (game_win.exe) holds data extracted from the original ROM, so everyone builds it from their own copy with tools/build_port.py
+# and tools/package.py. Run by pushing a tag like v1.0 or by hand.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  toolkit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the settings program
+        shell: bash
+        run: |
+          mkdir -p build/recomp
+          gcc -O2 -w port/config_gui.c -o build/recomp/settings.exe -mwindows -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32 -lole32
+
+      - name: Package the toolkit
+        run: python tools/package.py --tools-only --zip --out dist/PainterMomopie-toolkit
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PainterMomopie-toolkit
+          path: dist/PainterMomopie-toolkit.zip
+
+      - name: Attach it to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/PainterMomopie-toolkit.zip

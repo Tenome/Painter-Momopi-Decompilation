@@ -1,4 +1,5 @@
 #include "gb_rt.h"
+#include "replay.h"
 #include "apu.h"
 #include "texture.h"
 #include "levelpack.h"
@@ -281,6 +282,7 @@ void gb_host_vblank(void) {
     cycles += 70224;
     if (gb_audio_hook) { static int16_t buf[2 * 800]; apu_mix(buf, 735); gb_audio_hook(buf, 735); }
     if (gb_frame_hook) gb_frame_hook(gb_frames);
+    gb_replay_tick(gb_frames);                 /* --record / --replay */
     if (ime && (ie & 1)) {                 /* the VBlank interrupt, delivered between frames */
         io[0x0F] &= ~1;
         Regs saved = r;

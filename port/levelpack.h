@@ -25,5 +25,6 @@ extern uint8_t gb_pack_win[0x4000]; /* spawn data as the game's own wave lists, 
 extern int gb_pack_view;
 void gb_pack_select_textures(int level);   /* loads the textures of a level (layer 2) and, once, those of the pack (layer 1); -1 = none */
 void gb_pack_resolve(const char *rel, char *out, int n);    /* a path from the pack file, made absolute against the pack's folder */
+extern char gb_pack_path[1100];     /* the path the pack was loaded from (a .zip file stays a .zip file) */
 int gb_pack_load(const char *path);     /* returns the number of levels, 0 on failure (the error goes to stderr) */
 #endif

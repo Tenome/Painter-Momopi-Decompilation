@@ -122,6 +122,16 @@ static int inflate_data(Inf *s) {
     return 0;
 }
 
+/* raw deflate data (as inside zip files): returns a malloc'd buffer of *olen bytes, or 0 */
+uint8_t *gb_inflate(const uint8_t *in, size_t n, size_t *olen) {
+    Inf s = {0};
+    s.in = in; s.n = n;
+    if (inflate_data(&s)) { free(s.out); return 0; }
+    *olen = s.olen;
+    if (!s.out) s.out = malloc(1);
+    return s.out;
+}
+
 static uint32_t be32(const uint8_t *p) { return (uint32_t)p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3]; }
 
 int png_load(const char *path, PngImage *img) {

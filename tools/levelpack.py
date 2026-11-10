@@ -163,6 +163,25 @@ def pos_of(col, row, flags=0):
     return col * 16 + 24, row * 16 + 24 + flags
 
 
+def reachable(lv):
+    """the (row, column) cells the player can walk to from the start cell (column 7, row 6): path cells joined side by side"""
+    start = (6, 7)
+    seen = set()
+    if not lv.map[6][7]:
+        return seen
+    todo = [start]
+    while todo:
+        r, c = todo.pop()
+        if (r, c) in seen:
+            continue
+        seen.add((r, c))
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < 16 and 0 <= nc < 16 and lv.map[nr][nc] and (nr, nc) not in seen:
+                todo.append((nr, nc))
+    return seen
+
+
 def problems(pack):
     """a list of readable warnings about a pack"""
     out = []
@@ -179,6 +198,10 @@ def problems(pack):
             out.append("%s: more than 255 path cells (the counter is a byte)." % tag)
         if not lv.map[6][7]:
             out.append("%s: the player starts on column 7, row 6 (counting from 0), which is not a path." % tag)
+        reach = reachable(lv)
+        if lv.map[6][7] and lv.paint_cells() and any(lv.map[r][c] and (r, c) not in reach for r in range(16) for c in range(16)):
+            lost = sum(1 for r in range(16) for c in range(16) if lv.map[r][c] and (r, c) not in reach)
+            out.append("%s: %d path cells cannot be reached from the player's start, so the level can never be cleared." % (tag, lost))
         for w, spawns in enumerate(lv.waves):
             total += 1 + 4 * max(len(spawns), 1)
             for kind, x, y, delay in spawns:

@@ -9,7 +9,7 @@ This repository contains no game files. You need your own copy of the ROM.
 | | |
 |---|---|
 | ROM | 65,536 bytes, MBC1, 4 banks of 16 KiB (SHA-1 in `orig/README.md`) |
-| Code found so far | 327 routines (121 named), about 14.5 KB traced as code (22 % of the ROM); every instruction the game executed in play tests is covered; the rest is data (`INCBIN` of your ROM) |
+| Code found so far | 344 routines, all named; about 14.5 KB traced as code (22 % of the ROM); every instruction the game executed in play tests is covered; the rest is data (`INCBIN` of your ROM) |
 | Native build | a static recompilation to C plays the game on Windows with video, input and sound (`port/`, `tools/recomp.py`) |
 | Byte identity | the generated sources reproduce all 65,536 bytes (proved by `tools/gb_dis.py --check`) |
 | Assembler | RGBDS (rgbasm, rgblink) |
@@ -47,7 +47,7 @@ python tools/report.py            # write progress/jp/report.json
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
 | `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), static recompiler to C (`recomp.py`), report generator, ROM checker |
-| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress); `port/logic.c` holds hand written C versions of about 240 routines (play mode, enemies, scoring), checked frame by frame with `tools/lift_check.py` |
+| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress); `port/logic.c` holds hand written C versions of about 300 routines (play mode, enemies, scoring, sound, ending, link), checked frame by frame with `tools/lift_check.py` |
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 
@@ -55,11 +55,32 @@ python tools/report.py            # write progress/jp/report.json
 
 ```
 python tools/gb_dis.py --write                                   # once: extract src/ and assets/ from your ROM
-python tools/build_port.py --rgbds E:\rgbds --cc path\to\clang.exe   # builds build/recomp/game_win.exe with the data inside
-build\recomp\game_win.exe                                          # no ROM file needed any more
+python tools/build_port.py --rgbds E:/rgbds --cc path/to/clang.exe   # builds game_win.exe, settings.exe and game_headless.exe in build/recomp/
+python tools/package.py                                           # optional: a ready-to-use folder dist/PainterMomopie/ for your own use
+build/recomp/game_win.exe                                          # no ROM file needed any more
 ```
 
-Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit, P = pause, M = mute, F2 = palette, Tab = fast forward. The generated C is derived from the game and is not committed.
+The executables contain the game's data, so they are for your own use and are never committed or published. Run `settings.exe` (next to the player) for a
+window with every option; the same options live in `painter_momopie.ini`.
+
+Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit, P = pause, M = mute, F2 = palette, F5 = reload textures,
+F12 = screenshot, Tab = fast forward. Keys and gamepad buttons can be changed in the ini (`[keys]`).
+
+## What the native player adds
+
+Everything below is optional and off by default: the game plays exactly like the Game Boy original until you switch something on.
+
+| Feature | Where it is explained |
+|---|---|
+| Options: widescreen, no sprite limit, speed, infinite lives, start round, all magic cards, infinite magic, no time limit, quick magic (cycle cards without the menu), best score, resume, scanline / LCD filters, key and gamepad remapping | `docs/CONFIG.md` |
+| Full-colour sprite and background replacement from a folder of PNGs (a `textures` folder with a README is exported for you) | `docs/TEXTURES.md` |
+| Level packs: your own levels in any order, with their own tiles, enemies, intro title and music; `tools/level_editor.py` is a point-and-click editor | `docs/LEVELS.md` |
+| Custom music in a small text language, played by the game's own sound engine | `docs/MUSIC.md` |
+| Level pack check: `tools/pack_check.py` plays a pack with random input and reports levels that cannot be cleared | `docs/LEVELS.md` |
+| Recording and playback of inputs (`--record`, `--replay`) | `docs/CONFIG.md` |
+
+A quick start for making a level: `python tools/level_editor.py` > File > New pack, paint a map, place enemies, press Play. Share the pack file (and its
+folders, or the `.zip` the editor can export, which the player loads directly). The windows and tools use only the Python standard library plus Pillow.
 
 ## Progress report and CI
 

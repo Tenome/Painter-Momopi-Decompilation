@@ -33,6 +33,12 @@ starts the game. The file can still be edited by hand.
 All of these default to the original game's behaviour, and the byte-exact checks (`tools/lift_check.py`, `tools/verify_all.py`) run with the defaults.
 The options live in `port/config.c`; the widescreen and sprite code is in `port/gb_rt.c` (`render`) and `port/logic.c` (`DrawObject`, `AddOamSprite`).
 
+## Recording and replaying
+
+`game_win.exe --record run.pmrec` writes the buttons of every frame (and the options that change the game, and the level pack) to a text file; `game_win.exe --replay run.pmrec`
+plays it back exactly, whatever your own settings are. The game is deterministic, so a replay shows the same game every time (the headless runner takes the
+same two options, which makes replays regression tests). Put `--ini` before `--record` in the headless runner.
+
 ## Controls
 
 The keys can be changed in the `[keys]` section of `painter_momopie.ini` (`key_a=Z`, `key_up=Up,W` ...; several keys per action are allowed). Gamepad buttons are set the same way with `pad_a=1`, `pad_start=8,10` ... (button numbers; D-pad and stick are fixed). The defaults are below.

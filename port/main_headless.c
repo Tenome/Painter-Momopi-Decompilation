@@ -1,6 +1,7 @@
 /* Headless driver for the recompiled game: scripted input, PGM screenshots, exit after N frames.
  *   game_headless ROM FRAMES [--press FRAME:BUTTON:HOLD]... [--shot FRAME]... [--outdir DIR] */
 #include "gb_rt.h"
+#include "replay.h"
 #include "config.h"
 #include "texture.h"
 
@@ -110,6 +111,8 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--ini") && i + 1 < argc) { gb_config_load(argv[++i]); gb_sprite_limit_off = gb_config.no_sprite_limit; }
         else if (!strcmp(argv[i], "--quick") && i + 1 < argc && nquicks < 16) { unsigned f; int d; if (sscanf(argv[++i], "%u:%d", &f, &d) == 2) { quicks[nquicks].frame = f; quicks[nquicks++].dir = d; } }
         else if (!strcmp(argv[i], "--song") && i + 1 < argc) song_path = argv[++i];
+        else if (!strcmp(argv[i], "--replay") && i + 1 < argc) gb_replay_play(argv[++i]);
+        else if (!strcmp(argv[i], "--record") && i + 1 < argc) gb_replay_record(argv[++i]);
         else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
         else if (!strcmp(argv[i], "--dump") && i + 2 < argc) { dump_frame = (unsigned)atoi(argv[i + 1]); dump_path = argv[i + 2]; i += 2; }

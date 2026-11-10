@@ -13,6 +13,7 @@
 #include "config.h"
 #include "texture.h"
 #include "levelpack.h"
+#include "replay.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
@@ -204,6 +205,8 @@ int main(int argc, char **argv) {
         gb_config_load(ini);
         if (pack) gb_pack_load(pack);
         if (round) gb_config.start_round = round;
+        for (int i = 1; i + 1 < argc; i++) if (!strcmp(argv[i], "--replay")) gb_replay_play(argv[i + 1]);
+        for (int i = 1; i + 1 < argc; i++) if (!strcmp(argv[i], "--record") && !gb_replay_active) gb_replay_record(argv[i + 1]);
         bind_keys();
         pal_index = gb_config.palette;
         muted = gb_config.mute;

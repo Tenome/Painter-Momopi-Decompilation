@@ -27,7 +27,17 @@ otherwise flat colours.
 * **File** menu: save/load, *Add the game's 33 original levels* (read from your ROM build), *Add levels from another pack* (pick which), *Export the current level*, *Export the pack as a zip file* (with its tiles and songs, to share).
 * **Pack** menu: check the pack for problems, *Play the pack* (F5) or *Play from the current level* (F6) in `game_win.exe`.
 
+## Checking a pack
+
+`python tools/pack_check.py pack.pmpack [--play]` runs the editor's checks (map, enemies, sizes, and that every path cell can be reached from the player's start,
+so the level can be cleared) and, with `--play` (needs `game_headless` from `tools/build_port.py`), starts every level in the native runner with random buttons
+to see that it runs and whether the random walk clears it. The editor shows the enemy pictures taken from your game (`tools/enemy_icons.py` makes them on the
+first start and keeps them in `tools/.enemy_icons/`, which is not committed).
+
 ## Playing a pack
+
+`level_pack` can also be a `.zip` file (the editor's *Export the pack as a zip file* makes one: the pack file, its texture folders and songs). The player
+unpacks it to a folder next to it (`<name>.zip.unpacked`) and plays the pack from there.
 
 Set `level_pack=path\to\file.pmpack` in `painter_momopie.ini` (or choose it in `settings.exe`), or start `game_win.exe --pack file.pmpack [--round N]`.
 

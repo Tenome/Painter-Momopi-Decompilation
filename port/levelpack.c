@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "levelpack.h"
+#include "zip.h"
 #include "texture.h"
 
 int gb_pack_count;
@@ -31,7 +32,15 @@ void gb_pack_select_textures(int level) {
     gb_texture_load(2, dir);
 }
 
+char gb_pack_path[1100];
 int gb_pack_load(const char *path) {
+    char unpacked[1100];
+    snprintf(gb_pack_path, sizeof gb_pack_path, "%s", path);
+    size_t pl = strlen(path);
+    if (pl > 4 && (!strcmp(path + pl - 4, ".zip") || !strcmp(path + pl - 4, ".ZIP"))) {        /* a zip file: the pack inside, with its textures and songs */
+        if (!gb_zip_unpack(path, unpacked, sizeof unpacked)) return 0;
+        path = unpacked;
+    }
     FILE *f = fopen(path, "r");
     if (!f) { fprintf(stderr, "level pack: cannot open %s\n", path); return 0; }
     gb_pack_count = 0;

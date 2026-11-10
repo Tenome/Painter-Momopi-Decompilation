@@ -10,6 +10,7 @@
 #include "config.h"
 #include "texture.h"
 #include "levelpack.h"
+#include "replay.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
@@ -352,6 +353,18 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
             WideCharToMultiByte(CP_ACP, 0, argv[i], -1, arg, MAX_PATH, 0, 0);
             if (!strcmp(arg, "--pack")) { WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, path, MAX_PATH, 0, 0); gb_pack_load(path); }
             else if (!strcmp(arg, "--round")) gb_config.start_round = atoi((WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, path, MAX_PATH, 0, 0), path));
+        }
+        for (int i = 1; i + 1 < argc; i++) {              /* --replay FILE plays a recorded game, --record FILE records this one (docs/CONFIG.md) */
+            char arg[MAX_PATH], file[MAX_PATH];
+            WideCharToMultiByte(CP_ACP, 0, argv[i], -1, arg, MAX_PATH, 0, 0);
+            WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, file, MAX_PATH, 0, 0);
+            if (!strcmp(arg, "--replay")) gb_replay_play(file);
+        }
+        for (int i = 1; i + 1 < argc; i++) {
+            char arg[MAX_PATH], file[MAX_PATH];
+            WideCharToMultiByte(CP_ACP, 0, argv[i], -1, arg, MAX_PATH, 0, 0);
+            WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, file, MAX_PATH, 0, 0);
+            if (!strcmp(arg, "--record") && !gb_replay_active) gb_replay_record(file);
         }
         pal_index = gb_config.palette;
         muted = gb_config.mute;

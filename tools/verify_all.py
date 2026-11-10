@@ -40,6 +40,16 @@ if a.cc:
     for seed in range(1, a.seeds + 1):
         run(f"native stress run, seed {seed}", [exe, "-", str(a.frames), "--press",
                                                 "250:start:3", "--random", str(seed)])
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:         # a recorded game must replay frame for frame
+        rec, h1, h2 = (os.path.join(tmp, n) for n in ("a.pmrec", "h1.txt", "h2.txt"))
+        run("record a random game", [exe, "-", "3000", "--press", "250:start:3", "--random", "4", "--record", rec, "--hashes", h1])
+        run("replay it", [exe, "-", "3000", "--replay", rec, "--hashes", h2])
+        same = os.path.exists(h1) and os.path.exists(h2) and open(h1).read() == open(h2).read()
+        print(("PASS " if same else "FAIL ") + "the replay is identical to the recorded game")
+        if not same:
+            fails.append("replay")
+    run("example level pack check", [py, "tools/pack_check.py", "packs/example.pmpack", "--play", "--frames", "2500"])
 else:
     print("SKIP native build (pass --cc)")
 print("ALL PASSED" if not fails else "FAILED: " + ", ".join(fails))

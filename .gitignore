@@ -37,3 +37,5 @@ packs/original.pmpack
 screenshots/
 painter_momopie.sav
 *.sav
+dist/
+tools/.enemy_icons/
