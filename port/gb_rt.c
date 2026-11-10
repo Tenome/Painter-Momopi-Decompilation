@@ -12,6 +12,9 @@ int gb_margin;                      /* extra pixels shown on each side of the 16
 int gb_view_w = 160;                /* width of the rendered picture: 160 + 2 * gb_margin */
 int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
 uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
+char gb_overlay[48];
+int gb_overlay_frames;
+volatile int gb_quick_cycle;
 uint8_t gb_song_win[0x2000];         /* a custom song (music text) as the sound engine reads it, visible at $a000-$bfff */
 int gb_xoam_n, gb_xoam_shown_n;
 int gb_wide_active;                 /* set by the game logic while the play screen is shown */
@@ -160,6 +163,31 @@ static void color_pass(int W, unsigned bgp, unsigned obp0, unsigned obp1) {
     }
 }
 
+/* a 5 x 7 font for the overlay message: the characters A-Z 0-9 and a few signs (rows of 5 bits, top row first) */
+static const char font_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:/-<>+ ";
+static const uint8_t font_rows[][7] = {
+    {14,17,17,31,17,17,17},{30,17,17,30,17,17,30},{14,17,16,16,16,17,14},{30,17,17,17,17,17,30},{31,16,16,30,16,16,31},{31,16,16,30,16,16,16},{14,17,16,23,17,17,15},
+    {17,17,17,31,17,17,17},{14,4,4,4,4,4,14},{7,2,2,2,2,18,12},{17,18,20,24,20,18,17},{16,16,16,16,16,16,31},{17,27,21,21,17,17,17},{17,25,21,19,17,17,17},{14,17,17,17,17,17,14},
+    {30,17,17,30,16,16,16},{14,17,17,17,21,18,13},{30,17,17,30,20,18,17},{15,16,16,14,1,1,30},{31,4,4,4,4,4,4},{17,17,17,17,17,17,14},{17,17,17,17,17,10,4},{17,17,17,21,21,27,17},
+    {17,17,10,4,10,17,17},{17,17,10,4,4,4,4},{31,1,2,4,8,16,31},
+    {14,17,19,21,25,17,14},{4,12,4,4,4,4,14},{14,17,1,2,4,8,31},{30,1,1,14,1,1,30},{2,6,10,18,31,2,2},{31,16,30,1,1,17,14},{6,8,16,30,17,17,14},{31,1,2,4,8,8,8},{14,17,17,14,17,17,14},{14,17,17,15,1,2,12},
+    {0,0,0,0,0,12,12},{0,12,12,0,12,12,0},{1,1,2,4,8,16,16},{0,0,0,31,0,0,0},{2,4,8,16,8,4,2},{8,4,2,1,2,4,8},{0,4,4,31,4,4,0},{0,0,0,0,0,0,0},
+};
+static void draw_overlay(int W) {
+    if (gb_overlay_frames <= 0) return;
+    gb_overlay_frames--;
+    int n = (int)strlen(gb_overlay);
+    if (n <= 0) return;
+    int x0 = 2, y0 = 2, w = n * 6 + 3, h = 11;
+    for (int y = y0; y < y0 + h && y < 144; y++) for (int x = x0; x < x0 + w && x < W; x++) { gb_framebuf[y * W + x] = 3; refbuf[y * W + x] = 0; }
+    for (int i = 0; i < n; i++) {
+        const char *at = strchr(font_chars, gb_overlay[i] >= 'a' && gb_overlay[i] <= 'z' ? gb_overlay[i] - 32 : gb_overlay[i]);
+        const uint8_t *g = font_rows[at ? at - font_chars : sizeof font_chars - 2];
+        for (int y = 0; y < 7; y++) for (int x = 0; x < 5; x++)
+            if (g[y] >> (4 - x) & 1) { int px = x0 + 2 + i * 6 + x, py = y0 + 2 + y; if (px < W && py < 144) { gb_framebuf[py * W + px] = 0; refbuf[py * W + px] = 0; } }
+    }
+}
+
 static void render(void) {
     unsigned lcdc = io[0x40];
     static uint8_t bgcol[GB_MAX_W * 144];
@@ -241,6 +269,7 @@ static void render(void) {
             }
         }
     }
+    draw_overlay(W);
     if (tex_on) color_pass(W, io[0x47], io[0x48], io[0x49]);
 }
 

@@ -1006,6 +1006,36 @@ void *gb_native_EnemyKind11(void) {
  * the paint counter of the round, magic screen and points, camera, round and player variables (once), enemies and projectile cleared, serial start,
  * interrupts and the LCD on, round music, the round timer. Each frame: wait for the frame, read the pad, PlayFrame, the magic screen, camera,
  * enemy spawning and updates, the time-up enemy and the extra life check; hBlinkTick counts frames. */
+/* ---- option quick_magic: cycle the selected card with two keys instead of the magic screen ----
+ * The magic screen only sets wActiveMagic (the card the next A press casts); this does the same from the play screen: the unlocked cards (wMagicCards) that the
+ * magic points can pay for, in slot order, and "none". Not while a cast is on (the effects read wActiveMagic) or the player is dying. */
+static void quick_magic(void) {
+    int dir = gb_quick_cycle;
+    gb_quick_cycle = 0;
+    if (!dir || !gb_config.quick_magic) return;
+    if ((rd(wPlayerDir) & 0x20) || (rd(wMagicState) & 0x03)) return;
+    static const char *names[10] = {"", "S.UP", "W.IN", "T.STOP", "GHOST", "FRIEND", "SEALED", "B.O.M", "CLEAR", "PYON"};
+    int list[10], n = 0, cur = -1;
+    uint8_t active = rd(wActiveMagic);
+    list[n++] = 0;                                              /* "none" */
+    for (int i = 0; i < 9; i++) {
+        uint8_t card = rd(wMagicCards + i);
+        if (!card || card > 9) continue;
+        uint8_t cost = rd(DATA_MagicCostTable + card);
+        int ok = gb_config.infinite_magic || rd(wMagicPointsHi) > 0 || rd(wMagicPoints) >= cost;
+        if (ok || card == active) list[n++] = card;
+    }
+    for (int i = 0; i < n; i++) if (list[i] == active) cur = i;
+    if (cur < 0) cur = 0;
+    uint8_t card = (uint8_t)list[(cur + (dir > 0 ? 1 : n - 1)) % n];
+    wr(wActiveMagic, card);
+    r.a = card ? SND_SFX_90 : SND_SFX_CURSOR;
+    { uint16_t sp0 = r.sp; Regs keep = r; r.sp -= 2; gb_run((fn_t)GAME_PlaySound); r = keep; r.sp = sp0; }
+    if (card) snprintf(gb_overlay, sizeof gb_overlay, "%s %dMP", names[card], rd(DATA_MagicCostTable + card));
+    else snprintf(gb_overlay, sizeof gb_overlay, "MAGIC OFF");
+    gb_overlay_frames = 100;
+}
+
 void *gb_native_Mode1_Play(void) {
     r.sp = wStackTop;
     NCALL(GAME_LcdOff);
@@ -1092,6 +1122,7 @@ void *gb_native_Mode1_Play(void) {
     for (;;) {
         NCALL(GAME_WaitFrameAndSyncOam);
         NCALL(GAME_ReadJoypad);
+        quick_magic();
         NCALL(GAME_PlayFrame);
         NCALL(GAME_ShowMagicScreen);
         NCALL(GAME_UpdateCamera);

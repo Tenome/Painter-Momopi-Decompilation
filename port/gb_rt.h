@@ -104,6 +104,11 @@ extern int gb_color_scale;
 extern int gb_margin, gb_view_w, gb_wide_active, gb_sprite_limit_off;
 extern uint8_t gb_xoam[GB_XOAM * 4];
 extern int gb_xoam_n;
+/* a short message drawn over the picture (the quick magic option): the text and the number of frames it stays */
+extern char gb_overlay[48];
+extern int gb_overlay_frames;
+/* set by the front end: +1 / -1 = cycle the selected magic card forward / back (quick_magic option); the game logic consumes it */
+extern volatile int gb_quick_cycle;
 extern uint8_t gb_song_win[0x2000];
 int gb_play_custom_song(const char *path);   /* compiles a music text file and starts it as the music; 0 on failure */
 extern void (*gb_frame_hook)(unsigned frame);

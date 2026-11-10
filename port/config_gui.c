@@ -12,14 +12,14 @@
 #include <ctype.h>
 
 enum { ID_SCALE = 100, ID_FULL, ID_INT, ID_PAL, ID_WIDE, ID_WIDE_L, ID_SPR, ID_VOL, ID_VOL_L, ID_MUTE, ID_SPEED, ID_SPEED_L, ID_INF, ID_LIVES, ID_ROUND,
-       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP, ID_PACK, ID_PACKBR, ID_CARDS, ID_MAGIC, ID_TIME };
+       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP, ID_PACK, ID_PACKBR, ID_CARDS, ID_MAGIC, ID_TIME, ID_QUICK };
 
-static HWND wnd, hscale, hfull, hint, hpal, hwide, hwide_l, hspr, hvol, hvol_l, hmute, hspeed, hspeed_l, hinf, hlives, hround, htex, hbrowse, hopen, hpack, hcards, hmagic, htime;
+static HWND wnd, hscale, hfull, hint, hpal, hwide, hwide_l, hspr, hvol, hvol_l, hmute, hspeed, hspeed_l, hinf, hlives, hround, htex, hbrowse, hopen, hpack, hcards, hmagic, htime, hquick;
 static char ini_path[MAX_PATH], exe_dir[MAX_PATH];
 static HFONT font;
 
-typedef struct { int scale, fullscreen, integer_scale, palette, widescreen, no_sprite_limit, volume, mute, speed, infinite_lives, start_lives, start_round; char texture_pack[MAX_PATH]; char level_pack[MAX_PATH]; int all_cards, infinite_magic, no_time_limit; } Cfg;
-static const Cfg defaults = {4, 0, 1, 0, 0, 0, 100, 0, 100, 0, 3, 0, "textures", "", 0, 0, 0};
+typedef struct { int scale, fullscreen, integer_scale, palette, widescreen, no_sprite_limit, volume, mute, speed, infinite_lives, start_lives, start_round; char texture_pack[MAX_PATH]; char level_pack[MAX_PATH]; int all_cards, infinite_magic, no_time_limit, quick_magic; } Cfg;
+static const Cfg defaults = {4, 0, 1, 0, 0, 0, 100, 0, 100, 0, 3, 0, "textures", "", 0, 0, 0, 0};
 static Cfg cfg;
 
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -57,6 +57,7 @@ static void load(void) {
         else if (!strcmp(p, "infinite_lives")) cfg.infinite_lives = n != 0;
         else if (!strcmp(p, "start_lives")) cfg.start_lives = n ? clampi(n, 1, 99) : 3;
         else if (!strcmp(p, "start_round")) cfg.start_round = clampi(n, 0, 33);
+        else if (!strcmp(p, "quick_magic")) cfg.quick_magic = n != 0;
         else if (!strcmp(p, "all_cards")) cfg.all_cards = n != 0;
         else if (!strcmp(p, "infinite_magic")) cfg.infinite_magic = n != 0;
         else if (!strcmp(p, "no_time_limit")) cfg.no_time_limit = n != 0;
@@ -73,9 +74,9 @@ static int save(void) {
         "; Options of the native Painter Momopie player (written by the settings program; you can also edit it by hand).\n\n"
         "[display]\nscale=%d\nfullscreen=%d\ninteger_scale=%d\npalette=%d\nwidescreen=%d\nno_sprite_limit=%d\ntexture_pack=%s\n\n"
         "[audio]\nvolume=%d\nmute=%d\n\n"
-        "[game]\nlevel_pack=%s\nspeed=%d\ninfinite_lives=%d\nstart_lives=%d\nstart_round=%d\nall_cards=%d\ninfinite_magic=%d\nno_time_limit=%d\n",
+        "[game]\nlevel_pack=%s\nspeed=%d\ninfinite_lives=%d\nstart_lives=%d\nstart_round=%d\nall_cards=%d\ninfinite_magic=%d\nno_time_limit=%d\nquick_magic=%d\n",
         cfg.scale, cfg.fullscreen, cfg.integer_scale, cfg.palette, cfg.widescreen, cfg.no_sprite_limit, cfg.texture_pack,
-        cfg.volume, cfg.mute, cfg.level_pack, cfg.speed, cfg.infinite_lives, cfg.start_lives, cfg.start_round, cfg.all_cards, cfg.infinite_magic, cfg.no_time_limit);
+        cfg.volume, cfg.mute, cfg.level_pack, cfg.speed, cfg.infinite_lives, cfg.start_lives, cfg.start_round, cfg.all_cards, cfg.infinite_magic, cfg.no_time_limit, cfg.quick_magic);
     fclose(f);
     return 1;
 }
@@ -102,6 +103,7 @@ static void to_controls(void) {
     SendMessage(hcards, BM_SETCHECK, cfg.all_cards, 0);
     SendMessage(hmagic, BM_SETCHECK, cfg.infinite_magic, 0);
     SendMessage(htime, BM_SETCHECK, cfg.no_time_limit, 0);
+    SendMessage(hquick, BM_SETCHECK, cfg.quick_magic, 0);
 }
 
 static void from_controls(void) {
@@ -124,6 +126,7 @@ static void from_controls(void) {
     cfg.all_cards = (int)SendMessage(hcards, BM_GETCHECK, 0, 0) == BST_CHECKED;
     cfg.infinite_magic = (int)SendMessage(hmagic, BM_GETCHECK, 0, 0) == BST_CHECKED;
     cfg.no_time_limit = (int)SendMessage(htime, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    cfg.quick_magic = (int)SendMessage(hquick, BM_GETCHECK, 0, 0) == BST_CHECKED;
 }
 
 static HWND mk(const char *cls, const char *text, DWORD style, int x, int y, int w, int h, int id) {
@@ -214,7 +217,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = proc; wc.hInstance = inst; wc.lpszClassName = "pmcfg"; wc.hCursor = LoadCursor(0, IDC_ARROW); wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClassA(&wc);
-    RECT rc = {0, 0, 470, 566};
+    RECT rc = {0, 0, 470, 592};
     AdjustWindowRect(&rc, WS_CAPTION | WS_SYSMENU, 0);
     wnd = CreateWindowA("pmcfg", "Painter Momopie settings", WS_CAPTION | WS_SYSMENU | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, 0, 0, inst, 0);
 
@@ -239,7 +242,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     hvol_l = label("100%", 384, 186, 60);
     hmute = mk("BUTTON", "Mute", BS_AUTOCHECKBOX, 24, 210, 120, 20, ID_MUTE);
 
-    group("Game", 10, 242, 450, 208);
+    group("Game", 10, 242, 450, 234);
     label("Speed", 24, 266, 90);
     hspeed = slider(116, 262, 260, 50, 400, ID_SPEED);
     hspeed_l = label("100%", 384, 266, 60);
@@ -255,21 +258,22 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     hcards = mk("BUTTON", "All magic cards", BS_AUTOCHECKBOX, 24, 374, 130, 20, ID_CARDS);
     hmagic = mk("BUTTON", "Infinite magic", BS_AUTOCHECKBOX, 160, 374, 130, 20, ID_MAGIC);
     htime = mk("BUTTON", "No time limit", BS_AUTOCHECKBOX, 296, 374, 130, 20, ID_TIME);
-    label("Level pack", 24, 406, 70);
-    hpack = mk("EDIT", "", WS_BORDER | ES_AUTOHSCROLL, 100, 402, 292, 22, ID_PACK);
-    mk("BUTTON", "Browse...", BS_PUSHBUTTON, 396, 401, 56, 24, ID_PACKBR);
-    label("(empty = the game's own 33 rounds; make packs with tools/level_editor.py)", 100, 426, 350);
+    hquick = mk("BUTTON", "Quick magic: Q / E (gamepad L1 / R1) cycle the card during play, no magic screen", BS_AUTOCHECKBOX, 24, 398, 420, 20, ID_QUICK);
+    label("Level pack", 24, 432, 70);
+    hpack = mk("EDIT", "", WS_BORDER | ES_AUTOHSCROLL, 100, 428, 292, 22, ID_PACK);
+    mk("BUTTON", "Browse...", BS_PUSHBUTTON, 396, 427, 56, 24, ID_PACKBR);
+    label("(empty = the game's own 33 rounds; make packs with tools/level_editor.py)", 100, 452, 350);
 
-    group("Textures (full-colour sprite replacements)", 10, 456, 450, 56);
-    label("Folder", 24, 482, 50);
-    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 478, 250, 22, ID_TEX);
-    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 330, 477, 62, 24, ID_BROWSE);
-    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 396, 477, 56, 24, ID_OPEN);
+    group("Textures (full-colour sprite replacements)", 10, 482, 450, 56);
+    label("Folder", 24, 508, 50);
+    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 504, 250, 22, ID_TEX);
+    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 330, 503, 62, 24, ID_BROWSE);
+    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 396, 503, 56, 24, ID_OPEN);
 
-    mk("BUTTON", "Save", BS_PUSHBUTTON, 130, 526, 100, 26, ID_SAVE);
-    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 236, 526, 110, 26, ID_PLAY);
-    mk("BUTTON", "Defaults", BS_PUSHBUTTON, 24, 526, 80, 26, ID_RESET);
-    mk("BUTTON", "Close", BS_PUSHBUTTON, 352, 526, 100, 26, ID_CLOSE);
+    mk("BUTTON", "Save", BS_PUSHBUTTON, 130, 552, 100, 26, ID_SAVE);
+    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 236, 552, 110, 26, ID_PLAY);
+    mk("BUTTON", "Defaults", BS_PUSHBUTTON, 24, 552, 80, 26, ID_RESET);
+    mk("BUTTON", "Close", BS_PUSHBUTTON, 352, 552, 100, 26, ID_CLOSE);
     load();
     to_controls();
     MSG msg;

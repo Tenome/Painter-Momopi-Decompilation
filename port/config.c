@@ -7,7 +7,7 @@
 #include "texture.h"
 #include "levelpack.h"
 
-GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, "", "textures", 0, 0, 0, 0, 0};
+GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, "", "textures", 0, 0, 0, 0, 0, 0};
 
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
@@ -29,6 +29,7 @@ static void set(const char *key, const char *val) {
     else if (!strcmp(key, "all_cards")) gb_config.all_cards = v != 0;
     else if (!strcmp(key, "infinite_magic")) gb_config.infinite_magic = v != 0;
     else if (!strcmp(key, "no_time_limit")) gb_config.no_time_limit = v != 0;
+    else if (!strcmp(key, "quick_magic")) gb_config.quick_magic = v != 0;
     else if (!strcmp(key, "start_round")) gb_config.start_round = clampi(v, 0, 33);
 }
 

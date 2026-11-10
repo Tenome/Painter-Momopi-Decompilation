@@ -19,6 +19,7 @@ starts the game. The file can still be edited by hand.
 | `volume`, `mute` | 0-100, 0/1 | sound |
 | `speed` | 50-400 | percent of normal speed (no sound unless 100) |
 | `infinite_lives` | 0/1 | the player never loses a life |
+| `quick_magic` | 0/1 | Q and E (or the gamepad shoulder buttons 5 and 6) cycle the selected magic card during play and show its name and cost; A then casts it as usual. Cards the magic points cannot pay for are skipped, and nothing changes while a cast is running. The original B-button magic screen still works. |
 | `all_cards` | 0/1 | all nine magic cards from the first round |
 | `infinite_magic` | 0/1 | casting costs no magic points |
 | `no_time_limit` | 0/1 | the round clock stops (so the time-up enemy never comes) |

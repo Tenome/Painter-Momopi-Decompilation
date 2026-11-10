@@ -128,6 +128,8 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         if (w == VK_F2) pal_index = (pal_index + 1) % 3;
         if (w == VK_F11) toggle_fullscreen(h);
         if (w == VK_F12) want_shot = 1;
+        if (w == 'Q') gb_quick_cycle = -1;                   /* option quick_magic: previous / next magic card */
+        if (w == 'E') gb_quick_cycle = 1;
         return 0;
     case WM_ERASEBKGND: return 1;
     }
@@ -175,6 +177,10 @@ static uint8_t keys(void) {
     {   /* a gamepad (first joystick, winmm): D-pad or left stick, button 1 = A, 2 = B, 7/8 = Select/Start (or 9/10) */
         JOYINFOEX ji = {sizeof ji, JOY_RETURNALL};
         if (joyGetPosEx(0, &ji) == JOYERR_NOERROR) {
+            static DWORD prev_buttons;
+            if ((ji.dwButtons & 0x10) && !(prev_buttons & 0x10)) gb_quick_cycle = -1;        /* shoulder buttons 5 and 6 */
+            if ((ji.dwButtons & 0x20) && !(prev_buttons & 0x20)) gb_quick_cycle = 1;
+            prev_buttons = ji.dwButtons;
             if (ji.dwXpos > 0xC000) j |= 0x01;
             if (ji.dwXpos < 0x4000) j |= 0x02;
             if (ji.dwYpos < 0x4000) j |= 0x04;
