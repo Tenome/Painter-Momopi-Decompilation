@@ -5,15 +5,15 @@
 <rect x="90" y="34" width="300" height="18" rx="4" fill="#30363d"/>
 <rect x="90" y="34" width="300.0" height="18" rx="4" fill="#3fb950"/>
 <text x="240.0" y="47" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
-<text x="400" y="47" fill="#8b949e">337 / 337</text>
+<text x="400" y="47" fill="#8b949e">344 / 344</text>
 <text x="14" y="77" fill="#e6edf3">Code</text>
 <rect x="90" y="64" width="300" height="18" rx="4" fill="#30363d"/>
 <rect x="90" y="64" width="300.0" height="18" rx="4" fill="#3fb950"/>
 <text x="240.0" y="77" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
-<text x="400" y="77" fill="#8b949e">15,083 / 15,083 bytes</text>
+<text x="400" y="77" fill="#8b949e">15,322 / 15,322 bytes</text>
 <text x="14" y="107" fill="#e6edf3">Data</text>
 <rect x="90" y="94" width="300" height="18" rx="4" fill="#30363d"/>
 <rect x="90" y="94" width="300.0" height="18" rx="4" fill="#3fb950"/>
 <text x="240.0" y="107" fill="#ffffff" text-anchor="middle" font-weight="bold">100.00%</text>
-<text x="400" y="107" fill="#8b949e">50,453 / 50,453 bytes</text>
+<text x="400" y="107" fill="#8b949e">50,214 / 50,214 bytes</text>
 </svg>
