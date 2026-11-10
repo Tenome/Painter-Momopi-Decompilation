@@ -4735,3 +4735,88 @@ void *gb_native_LoadTilesBank3A(void) { SET_HL(DATA_TilesTitle); return gb_nativ
 void *gb_native_LoadTilesBank3B(void) { SET_HL(DATA_TilesIcons); return gb_native_LoadTilesBank3Full(); }
 void *gb_native_LoadTilesBank3D(void) { SET_HL(DATA_TilesFont2); return gb_native_LoadTilesBank3Full(); }
 void *gb_native_LoadTilesBank3C(void) { SET_HL(DATA_TilesEnding); SET_BC(0x0E10); return gb_native_LoadTilesBank3(); }
+
+/* ---- link cable ---- */
+void *gb_native_SetLinkFlag5(void) { SET_HL(hSerialByte); wr(hSerialByte, rd(hSerialByte) | 0x20); return 0; }
+void *gb_native_GotoLinkLose(void) { r.a = 0x07; return (void *)GAME_GameModeDispatch; }
+
+/* SerialHandler: the serial interrupt. A transfer with the internal clock (rSC bit 0) is our own and only sets hSerialByte bits 0 and 2; with a byte received
+ * (not in code mode, wCheatFlags bit 3 clear) the byte's top bit is the partner's round (bit 4), else bits 2, 3, 1 and 4 of the byte are partner states. */
+void *gb_native_SerialHandler(void) {
+    wr(hSerialByte, 0);
+    wr(hLinkFlags, rd(hLinkFlags) & 0xF1);
+    if (rd(rSC) & 0x01) {
+        wr(hSerialByte, rd(hSerialByte) | 0x05);
+        ime = 1;
+        return 0;
+    }
+    if (rd(wCheatFlags) & 0x08) {
+        wr(rSB, 0x88);
+        NCALL(GAME_SerialStartTransfer);
+        ime = 1;
+        return 0;
+    }
+    uint8_t b = rd(rSB);
+    if (b & 0x80) { wr(wRemoteRound, b & 0x7F); wr(hSerialByte, rd(hSerialByte) | 0x10); }
+    else if (b & 0x04) { wr(hLinkFlags, rd(hLinkFlags) | 0x02); wr(hSerialByte, rd(hSerialByte) | 0xC0); }
+    else if (b & 0x08) { wr(hLinkFlags, rd(hLinkFlags) | 0x04); wr(hSerialByte, rd(hSerialByte) | 0x08); }
+    else if (b & 0x02) wr(hSerialByte, rd(hSerialByte) | 0x20);
+    else if (b & 0x10) wr(hLinkFlags, rd(hLinkFlags) | 0x08);
+    wr(hSerialByte, rd(hSerialByte) | 0x06);
+    wr(rSC, rd(rSC) & 0x7F);
+    ime = 1;
+    return 0;
+}
+
+/* LinkSyncFrame: entered when the magic points hit 0 exactly. Without a link game (or with high points left) it pays as usual; in a link game it sends $02 and
+ * waits for the partner's byte, then sets hSerialByte bit 5 when either side says so; the points are 0. */
+void *gb_native_LinkSyncFrame(void) {
+    uint8_t flags = rd(hLinkFlags);
+    r.a = flags;
+    if (!(flags & 0x01)) return (void *)GAME_PayMagicCost;
+    uint8_t hi = rd(wMagicPointsHi);
+    r.a = hi; r.f &= ~0x10;
+    if (hi) return (void *)GAME_PayMagicCost;
+    wr(wRemoteRound, rd(hSerialByte) & 0x20);
+    wr(rSC, rd(rSC) & 0x7F);
+    wr(rSB, 0x02);
+    wr(rSC, rd(rSC) | 0x01);
+    wr(rSC, rd(rSC) | 0x80);
+    NCALL(GAME_WaitSerialByte);
+    if (rd(rSB) == 0x02) gb_native_SetLinkFlag5();
+    if (rd(wRemoteRound) & 0x20) gb_native_SetLinkFlag5();
+    NCALL(GAME_SerialStartTransfer);
+    wr(wMagicPoints, 0);
+    r.a = 0;
+    return 0;
+}
+
+/* Mode7_LinkLose: SORRY YOU LOSE / TRY AGAIN for the loser of a link game; after 255 frames it goes to the continue screen or the game over. */
+void *gb_native_Mode7_LinkLose(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(0x9FFF);
+    gb_native_FillBackwardsFF();
+    r.a = 0xFF;
+    NCALL(GAME_PlaySound);
+    gb_native_LoadTilesBank3C();
+    gb_native_ClearOamShadow();
+    SET_BC((rd(hSerialByte) & 0x40) ? 0x1E57 : 0x1E2E);
+    NCALL(GAME_RunVramCopyList);
+    wr(wScrollX, 0); wr(wScrollY, 0);
+    gb_native_RequestOamDma();
+    gb_native_ClearOamShadowY();
+    wr(rBGP, PAL_NORMAL); wr(rOBP0, PAL_NORMAL); wr(rOBP1, PAL_NORMAL);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, 0x9B);
+    ime = 1;
+    wr(hScratch00, 0xFF);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    r.a = rd(wContinues) ? 0x05 : 0x04;
+    return (void *)GAME_GameModeDispatch;
+}

@@ -293,3 +293,8 @@ LoadTilesBank3A
 LoadTilesBank3B
 LoadTilesBank3D
 LoadTilesBank3C
+SetLinkFlag5
+GotoLinkLose
+SerialHandler
+LinkSyncFrame
+Mode7_LinkLose
