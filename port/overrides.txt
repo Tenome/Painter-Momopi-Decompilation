@@ -259,3 +259,7 @@ EnemyKind4Init
 EnemyKind9Init
 EnemyKind2Init
 EnemyKind3Init
+SetPaintBlobAnimation
+QueueCellTileRows
+StartRoundMusic
+PayMagicCost

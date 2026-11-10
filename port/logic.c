@@ -4508,3 +4508,43 @@ void *gb_native_EnemyKind3Init(void) {
     wr(hEnemyCounter, 0x20);
     return gb_native_EnemySnapToGrid();
 }
+
+void *gb_native_SetPaintBlobAnimation(void) {
+    uint16_t anim = (rd(wBlobPhase) & 0x02) ? 0x4927 : 0x4929;
+    wr(wPaintAnimLo, (uint8_t)anim);
+    wr(wPaintAnimHi, anim >> 8);
+    SET_HL(anim);
+    r.a = anim >> 8;
+    return 0;
+}
+
+/* QueueCellTileRows: the 2x2 tile update of the cell in hScratch00/01 (HL): D_01_4921 for path type 1, else D_01_491b; then waits for the copy. */
+void *gb_native_QueueCellTileRows(void) {
+    SET_DE((rd(hScratch02) & 0x0F) == 0x01 ? 0x4921 : 0x491B);
+    SET_HL(rd(hScratch00) | rd(hScratch01) << 8);
+    gb_native_QueueVramCopyRows();
+    return (void *)GAME_WaitVramCopyDone;
+}
+
+/* StartRoundMusic: the song of the round (table at $1400 by wRound / 4) and the frame countdown task (hVBlankTasks bit 4). */
+void *gb_native_StartRoundMusic(void) {
+    NCALL(GAME_WaitVBlankFlag);
+    r.c = rd(wRound) >> 2;
+    SET_HL(0x1400);
+    gb_native_LookupByte();
+    NCALL(GAME_PlaySound);
+    wr(hVBlankTasks, rd(hVBlankTasks) | 0x10);
+    return 0;
+}
+
+/* PayMagicCost: entered with A = MP - cost and the flags of that subtraction (E = A): pays it, or borrows from wMagicPointsHi, or cancels the cast. */
+void *gb_native_PayMagicCost(void) {
+    if (!CF()) { wr(wMagicPoints, r.a); return gb_native_RunMagicEffect(); }
+    uint8_t hi = rd(wMagicPointsHi);
+    r.a = hi;
+    if (hi == 0) return gb_native_CancelMagic();
+    wr(wMagicPoints, r.e);
+    wr(wMagicPointsHi, 0);
+    r.a = 0;
+    return gb_native_RunMagicEffect();
+}
