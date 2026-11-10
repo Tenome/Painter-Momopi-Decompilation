@@ -4,6 +4,7 @@
 #include "gb_rt.h"
 #include "game_symbols.h"      /* generated: wPlayerX, hEnemyKind ... (from src/constants.inc) */
 #include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
+#include "config.h"            /* options of the native player (infinite lives, start round) */
 
 /* A `call` inside a lifted routine. Like CALL of the generated code, but when the callee discards its return address (pop hl before a return: the sound command
  * routines do) the whole chain has already returned past this routine, so the routine returns and gives back the slot the stub of the override releases again. */
@@ -171,6 +172,10 @@ void *gb_native_AddOamSprite(void) {
     wr(at + 1, rd(0xFFA0));
     wr(at + 2, rd(0xFFA2));
     wr(at + 3, rd(0xFFA3));
+    if (gb_sprite_limit_off && gb_xoam_n < GB_XOAM) {
+        uint8_t *e = gb_xoam + gb_xoam_n++ * 4;
+        e[0] = rd(0xFFA1); e[1] = rd(0xFFA0); e[2] = rd(0xFFA2); e[3] = rd(0xFFA3);
+    }
     wr(hOamCount, slot + 1);
     SET_HL(at + 3);
     r.b = 0;
@@ -591,8 +596,12 @@ static void draw_parts(uint16_t obj, uint8_t flags, int x, int y) {
         int8_t ox = (int8_t)rd(shape + 2 * part + 1);
         if (s00 & 0x20) ox = (int8_t)(0 - ox);
         int sx = (x + ox) & 0xFFFF;
+        if (gb_wide_active && gb_margin) {          /* widescreen option: parts left and right of the screen are kept; X is written in output coordinates */
+            int s = (int16_t)sx;
+            if (s < -gb_margin || s >= 168 + gb_margin) continue;
+            sx = s + gb_margin;
+        } else if (sx > 255) { wr(hScratch00 + 10, (uint8_t)sx); continue; }
         wr(hScratch00 + 10, (uint8_t)sx);
-        if (sx > 255) continue;
         int8_t oy = (int8_t)rd(shape + 2 * part + 2);
         if (s00 & 0x40) oy = (int8_t)(0 - oy);
         int sy = (y + oy) & 0xFFFF;
@@ -1535,6 +1544,7 @@ void *gb_native_ShowMagicScreen(void) {
     if (rd(wPlayerDir) & 0x20) return 0;
     if (rd(wMagicState) & 0x02) return 0;
     if (!(rd(hJoyNew) & 0x02)) return 0;
+    gb_wide_active = 0;                     /* the magic screen is 160 pixels wide */
     NCALL(GAME_LcdOff);
     ime = 0;
     NCALL(GAME_LoadTilesBank3B);
@@ -1673,6 +1683,7 @@ gauge_done:
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
+    gb_wide_active = 1;
     return (void *)GAME_StartRoundMusic;
 }
 
@@ -3382,7 +3393,7 @@ void *gb_native_PlayerDeath(void) {
         wr(hSerialByte, rd(hSerialByte) | 0x80);
         if (!(rd(hSerialByte) & 0x02)) { r.a = 7; return (void *)GAME_GameModeDispatch; }
     }
-    wr(wLives, rd(wLives) - 1);
+    if (!gb_config.infinite_lives) wr(wLives, rd(wLives) - 1);
     if (rd(wLives) != 0) {
         r.a = 0x50;
         NCALL(GAME_DelayFrames);
@@ -4174,9 +4185,12 @@ one_player:
     NCALL(GAME_SerialStartTransfer);
     SET_HL(wCheatFlags);
     wr(wCheatFlags, rd(wCheatFlags) | 0x08);
-    wr(wRound, 1);
-    wr(wRoundBackup, 1);
-    wr(wRoomIndex, 0);
+    {
+        int first = gb_config.start_round ? gb_config.start_round : 1;      /* option start_round */
+        wr(wRound, first);
+        wr(wRoundBackup, first);
+        wr(wRoomIndex, first - 1);
+    }
     r.a = 3;
     return (void *)GAME_GameModeDispatch;
 }
@@ -4628,6 +4642,7 @@ void *gb_native_MoveObjectHalfStep(void) {
 
 /* ---- small helpers ---- */
 void *gb_native_ClearOamShadowY(void) {
+    gb_xoam_n = 0;
     for (unsigned i = 0xC000; i < 0xC0A0; i += 4) wr(i, 0);
     wr(hOamCount, 0);
     SET_HL(0xC0A0);
@@ -4635,6 +4650,7 @@ void *gb_native_ClearOamShadowY(void) {
     return 0;
 }
 void *gb_native_ClearOamShadow(void) {
+    gb_xoam_n = 0;
     wr(hOamCount, 0);
     for (unsigned i = 0xC000; i < 0xC0A0; i++) wr(i, 0);
     SET_HL(0xC0A0); r.b = 0; r.a = 0;
@@ -4686,6 +4702,7 @@ void *gb_native_EnemyKind9Move(void) {
 
 /* GameModeDispatch: A = mode (0-7): the handler is the word at $01ae + 2 * A (the table after the rst $00). */
 void *gb_native_GameModeDispatch(void) {
+    gb_wide_active = (r.a == 1);
     uint16_t at = (uint16_t)(0x01AE + (uint8_t)(r.a * 2));
     uint16_t handler = rd(at) | rd(at + 1) << 8;
     SET_HL(handler); r.e = (uint8_t)handler; r.d = handler >> 8;

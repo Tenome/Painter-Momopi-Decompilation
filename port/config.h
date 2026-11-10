@@ -1,0 +1,19 @@
+/* Options of the native player, read from painter_momopie.ini (next to the program or in the current folder). See docs/CONFIG.md. */
+#ifndef GB_CONFIG_H
+#define GB_CONFIG_H
+typedef struct {
+    int scale;              /* window size in multiples of the picture; 0 = 4 */
+    int fullscreen;         /* start in full screen */
+    int palette;            /* 0 green, 1 grey, 2 sepia */
+    int widescreen;         /* extra pixels of the room shown on each side of the play screen (0-40; 0 = the original 160 pixel view) */
+    int no_sprite_limit;    /* draw every sprite: no 40 sprite OAM limit, so no flicker when many things are on screen */
+    int volume;             /* 0-100 */
+    int mute;
+    int integer_scale;      /* 1 = only whole number scales (sharp pixels), 0 = fill the window keeping the aspect ratio */
+    int speed;              /* percent of the original speed (50-400); above 100 the sound is skipped */
+    int infinite_lives;     /* cheat option: lives never decrease */
+    int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
+} GbConfig;
+extern GbConfig gb_config;
+void gb_config_load(const char *path);     /* missing file or key: the default; applies the options that live in the runtime */
+#endif

@@ -5,7 +5,16 @@ Regs r;
 int ime;
 uint64_t cycles;
 uint8_t gb_joy;
-uint8_t gb_framebuf[160 * 144];
+uint8_t gb_framebuf[GB_MAX_W * 144];
+int gb_margin;                      /* extra pixels shown on each side of the 160 pixel screen in play (widescreen option) */
+int gb_view_w = 160;                /* width of the rendered picture: 160 + 2 * gb_margin */
+int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
+uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
+int gb_xoam_n, gb_xoam_shown_n;
+int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
+uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
+int gb_xoam_n, gb_xoam_shown_n;
+int gb_wide_active;                 /* set by the game logic while the play screen is shown */
 void (*gb_frame_hook)(unsigned frame);
 void (*gb_audio_hook)(const int16_t *stereo, int frames);
 unsigned gb_frames;
@@ -95,7 +104,7 @@ void wr(uint16_t a, uint8_t v) {
     else if (a < 0xFF00) {}
     else if (a < 0xFF80) {
         unsigned x = a - 0xFF00;
-        if (x == 0x46) { unsigned s = v << 8; for (int i = 0; i < 0xA0; i++) oam[i] = rd(s + i); }
+        if (x == 0x46) { unsigned s = v << 8; for (int i = 0; i < 0xA0; i++) oam[i] = rd(s + i); memcpy(gb_xoam_shown, gb_xoam, (size_t)gb_xoam_n * 4); gb_xoam_shown_n = gb_xoam_n; }
         else if (x == 0x00) io[0] = v & 0x30;
         else if (x == 0x44) {}
         else { io[x] = v; if (x >= 0x10 && x < 0x40) apu_write(a, v); }
@@ -113,7 +122,8 @@ void gb_dma_routine(void) {
 
 static void render(void) {
     unsigned lcdc = io[0x40];
-    uint8_t bgcol[160 * 144];
+    static uint8_t bgcol[GB_MAX_W * 144];
+    const int W = gb_view_w, M = (W - 160) / 2, wide = gb_wide_active && M > 0;
     memset(bgcol, 0, sizeof bgcol);
     memset(gb_framebuf, 0, sizeof gb_framebuf);
     if (!(lcdc & 0x80)) return;
@@ -122,32 +132,40 @@ static void render(void) {
     unsigned scx = io[0x43], scy = io[0x42], mapbase = (lcdc & 8) ? 0x1C00 : 0x1800;
     int sgn = !(lcdc & 0x10);
     if (lcdc & 1) {
-        for (int y = 0; y < 144; y++) for (int x = 0; x < 160; x++) {
-            unsigned yy = (y + scy) & 255, xx = (x + scx) & 255;
+        for (int y = 0; y < 144; y++) for (int x = 0; x < W; x++) {
+            int sx = x - M;
+            if (sx < 0 || sx >= 160) {                    /* the margins: the room only, nothing wrapped around */
+                int wx2 = (int)scx + sx;
+                if (!wide || wx2 < 0 || wx2 > 255) { gb_framebuf[y * W + x] = pal[0]; continue; }
+            }
+            unsigned yy = (y + scy) & 255, xx = (unsigned)((int)scx + sx) & 255;
             unsigned t = vram[mapbase + (yy >> 3) * 32 + (xx >> 3)];
             unsigned base = sgn ? 0x1000 + (int8_t)t * 16 : t * 16;
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
-            bgcol[y * 160 + x] = ci; gb_framebuf[y * 160 + x] = pal[ci];
+            bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
         }
     }
     if (lcdc & 0x20) {
         int wy = io[0x4A], wx = (int)io[0x4B] - 7;
         unsigned wmap = (lcdc & 0x40) ? 0x1C00 : 0x1800;
-        for (int y = wy < 0 ? 0 : wy; y < 144; y++) for (int x = wx < 0 ? 0 : wx; x < 160; x++) {
-            int yy = y - wy, xx = x - wx;
+        for (int y = wy < 0 ? 0 : wy; y < 144; y++) for (int sx = wx < 0 ? 0 : wx; sx < 160; sx++) {
+            int yy = y - wy, xx = sx - wx, x = sx + M;
             unsigned t = vram[wmap + (yy >> 3) * 32 + (xx >> 3)];
             unsigned base = sgn ? 0x1000 + (int8_t)t * 16 : t * 16;
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
-            bgcol[y * 160 + x] = ci; gb_framebuf[y * 160 + x] = pal[ci];
+            bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
         }
     }
     if (lcdc & 2) {
         int h = (lcdc & 4) ? 16 : 8;
-        for (int i = 39; i >= 0; i--) {
-            int sy = oam[i * 4] - 16, sx = oam[i * 4 + 1] - 8;
-            unsigned tile = oam[i * 4 + 2], fl = oam[i * 4 + 3];
+        const uint8_t *src = oam;
+        int count = 40;
+        if (gb_sprite_limit_off && gb_xoam_shown_n) { src = gb_xoam_shown; count = gb_xoam_shown_n; }
+        for (int i = count - 1; i >= 0; i--) {
+            int sy = src[i * 4] - 16, sx = src[i * 4 + 1] - 8 + (wide ? 0 : M);   /* widescreen: the game logic wrote output coordinates */
+            unsigned tile = src[i * 4 + 2], fl = src[i * 4 + 3];
             unsigned p = (fl & 0x10) ? io[0x49] : io[0x48], sp[4];
             for (int k = 0; k < 4; k++) sp[k] = (p >> (2 * k)) & 3;
             if (h == 16) tile &= 0xFE;
@@ -158,11 +176,11 @@ static void render(void) {
                 unsigned base = tile * 16 + row * 2, lo = vram[base], hi = vram[base + 1];
                 for (int xx = 0; xx < 8; xx++) {
                     int x = sx + xx;
-                    if (x < 0 || x >= 160) continue;
+                    if (x < 0 || x >= W) continue;
                     unsigned bit = (fl & 0x20) ? xx : 7 - xx;
                     unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
-                    if (!ci || ((fl & 0x80) && bgcol[y * 160 + x])) continue;
-                    gb_framebuf[y * 160 + x] = sp[ci];
+                    if (!ci || ((fl & 0x80) && bgcol[y * W + x])) continue;
+                    gb_framebuf[y * W + x] = sp[ci];
                 }
             }
         }

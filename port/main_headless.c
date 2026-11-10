@@ -1,6 +1,7 @@
 /* Headless driver for the recompiled game: scripted input, PGM screenshots, exit after N frames.
  *   game_headless ROM FRAMES [--press FRAME:BUTTON:HOLD]... [--shot FRAME]... [--outdir DIR] */
 #include "gb_rt.h"
+#include "config.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
@@ -54,11 +55,12 @@ static void hook(unsigned frame) {
         if (shots[i] == frame) {
             char p[512];
             snprintf(p, sizeof p, "%s/rc_%04u.pgm", outdir, frame);
+            int vw = gb_view_w;
             FILE *f = fopen(p, "wb");
             if (f) {
-                fprintf(f, "P5\n160 144\n255\n");
+                fprintf(f, "P5\n%d 144\n255\n", vw);
                 static const uint8_t sh[4] = {255, 170, 85, 0};
-                for (int k = 0; k < 160 * 144; k++) fputc(sh[gb_framebuf[k] & 3], f);
+                for (int k = 0; k < vw * 144; k++) fputc(sh[gb_framebuf[k] & 3], f);
                 fclose(f);
             }
         }
@@ -88,6 +90,7 @@ int main(int argc, char **argv) {
             char b[32]; unsigned fr, h;
             if (sscanf(argv[++i], "%u:%31[^:]:%u", &fr, b, &h) == 3) { press[npress].from = fr; press[npress].hold = h; press[npress].bit = button(b); npress++; }
         } else if (!strcmp(argv[i], "--shot") && i + 1 < argc && nshots < MAXP) shots[nshots++] = (unsigned)atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--ini") && i + 1 < argc) { gb_config_load(argv[++i]); gb_sprite_limit_off = gb_config.no_sprite_limit; }
         else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
         else if (!strcmp(argv[i], "--dump") && i + 2 < argc) { dump_frame = (unsigned)atoi(argv[i + 1]); dump_path = argv[i + 2]; i += 2; }

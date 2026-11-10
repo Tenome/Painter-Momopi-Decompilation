@@ -95,7 +95,12 @@ static inline uint16_t sp_plus(int8_t d) { uint16_t sp = r.sp; r.f = (((sp & 15)
 
 /* PPU / platform layer */
 extern uint8_t gb_joy;             /* pressed buttons, bit layout of emu.py BTN */
-extern uint8_t gb_framebuf[160 * 144];   /* shade 0-3 per pixel, rendered at the start of VBlank */
+#define GB_MAX_W 256
+extern uint8_t gb_framebuf[GB_MAX_W * 144];   /* shade 0-3 per pixel (rows gb_view_w wide), rendered at the start of VBlank */
+#define GB_XOAM 512
+extern int gb_margin, gb_view_w, gb_wide_active, gb_sprite_limit_off;
+extern uint8_t gb_xoam[GB_XOAM * 4];
+extern int gb_xoam_n;
 extern void (*gb_frame_hook)(unsigned frame);
 extern void (*gb_audio_hook)(const int16_t *stereo, int frames);
 void gb_load_rom(const uint8_t *data, size_t size);

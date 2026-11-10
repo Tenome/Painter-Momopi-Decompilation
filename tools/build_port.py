@@ -46,7 +46,7 @@ with open(os.path.join(ROOT, "build", "recomp", "rom_image.c"), "w", newline="\n
     f.write(f"}};\nconst size_t gb_rom_image_size = {len(data)};\n")
 
 P = lambda *a: os.path.join(ROOT, *a)
-common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "logic.c"), P("port", "apu.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
+common = [P("port", "gb_rt.c"), P("port", "gb_native.c"), P("port", "logic.c"), P("port", "apu.c"), P("port", "config.c"), P("build", "recomp", "game.c"), P("build", "recomp", "rom_image.c")]
 exe = ".exe" if os.name == "nt" else ""
 
 
@@ -60,6 +60,10 @@ def compile_(main, out, extra=()):
 compile_("main_headless.c", P("build", "recomp", "game_headless" + exe))
 if os.name == "nt":
     compile_("main_win32.c", P("build", "recomp", "game_win.exe"), ["-mwindows", "-luser32", "-lgdi32", "-lwinmm", "-lshell32"])
+    ini = P("build", "recomp", "painter_momopie.ini")
+    if not os.path.exists(ini):
+        import shutil
+        shutil.copy(P("port", "painter_momopie.ini"), ini)
 if "--sdl" in sys.argv:
     flags = subprocess.run(["sdl2-config", "--cflags", "--libs"], capture_output=True, text=True).stdout.split()
     compile_("main_sdl.c", P("build", "recomp", "game_sdl" + exe), flags + ["-lm"])
