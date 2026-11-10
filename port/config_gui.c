@@ -2,6 +2,7 @@
  * Build: tools/build_port.py (clang ... config_gui.c -mwindows -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32 -lole32). */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
 #include <commctrl.h>
 #include <shellapi.h>
 #include <shlobj.h>
@@ -11,14 +12,14 @@
 #include <ctype.h>
 
 enum { ID_SCALE = 100, ID_FULL, ID_INT, ID_PAL, ID_WIDE, ID_WIDE_L, ID_SPR, ID_VOL, ID_VOL_L, ID_MUTE, ID_SPEED, ID_SPEED_L, ID_INF, ID_LIVES, ID_ROUND,
-       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP };
+       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP, ID_PACK, ID_PACKBR };
 
-static HWND wnd, hscale, hfull, hint, hpal, hwide, hwide_l, hspr, hvol, hvol_l, hmute, hspeed, hspeed_l, hinf, hlives, hround, htex, hbrowse, hopen;
+static HWND wnd, hscale, hfull, hint, hpal, hwide, hwide_l, hspr, hvol, hvol_l, hmute, hspeed, hspeed_l, hinf, hlives, hround, htex, hbrowse, hopen, hpack;
 static char ini_path[MAX_PATH], exe_dir[MAX_PATH];
 static HFONT font;
 
-typedef struct { int scale, fullscreen, integer_scale, palette, widescreen, no_sprite_limit, volume, mute, speed, infinite_lives, start_lives, start_round; char texture_pack[MAX_PATH]; } Cfg;
-static const Cfg defaults = {4, 0, 1, 0, 0, 0, 100, 0, 100, 0, 3, 0, "textures"};
+typedef struct { int scale, fullscreen, integer_scale, palette, widescreen, no_sprite_limit, volume, mute, speed, infinite_lives, start_lives, start_round; char texture_pack[MAX_PATH]; char level_pack[MAX_PATH]; } Cfg;
+static const Cfg defaults = {4, 0, 1, 0, 0, 0, 100, 0, 100, 0, 3, 0, "textures", ""};
 static Cfg cfg;
 
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -56,6 +57,7 @@ static void load(void) {
         else if (!strcmp(p, "infinite_lives")) cfg.infinite_lives = n != 0;
         else if (!strcmp(p, "start_lives")) cfg.start_lives = n ? clampi(n, 1, 99) : 3;
         else if (!strcmp(p, "start_round")) cfg.start_round = clampi(n, 0, 33);
+        else if (!strcmp(p, "level_pack")) { strncpy(cfg.level_pack, v, MAX_PATH - 1); cfg.level_pack[MAX_PATH - 1] = 0; }
         else if (!strcmp(p, "texture_pack")) { strncpy(cfg.texture_pack, v, MAX_PATH - 1); cfg.texture_pack[MAX_PATH - 1] = 0; }
     }
     fclose(f);
@@ -68,9 +70,9 @@ static int save(void) {
         "; Options of the native Painter Momopie player (written by the settings program; you can also edit it by hand).\n\n"
         "[display]\nscale=%d\nfullscreen=%d\ninteger_scale=%d\npalette=%d\nwidescreen=%d\nno_sprite_limit=%d\ntexture_pack=%s\n\n"
         "[audio]\nvolume=%d\nmute=%d\n\n"
-        "[game]\nspeed=%d\ninfinite_lives=%d\nstart_lives=%d\nstart_round=%d\n",
+        "[game]\nlevel_pack=%s\nspeed=%d\ninfinite_lives=%d\nstart_lives=%d\nstart_round=%d\n",
         cfg.scale, cfg.fullscreen, cfg.integer_scale, cfg.palette, cfg.widescreen, cfg.no_sprite_limit, cfg.texture_pack,
-        cfg.volume, cfg.mute, cfg.speed, cfg.infinite_lives, cfg.start_lives, cfg.start_round);
+        cfg.volume, cfg.mute, cfg.level_pack, cfg.speed, cfg.infinite_lives, cfg.start_lives, cfg.start_round);
     fclose(f);
     return 1;
 }
@@ -93,6 +95,7 @@ static void to_controls(void) {
     snprintf(b, sizeof b, "%d", cfg.start_lives); SetWindowTextA(hlives, b);
     SendMessage(hround, CB_SETCURSEL, cfg.start_round, 0);
     SetWindowTextA(htex, cfg.texture_pack);
+    SetWindowTextA(hpack, cfg.level_pack);
 }
 
 static void from_controls(void) {
@@ -111,6 +114,7 @@ static void from_controls(void) {
     cfg.start_lives = clampi(atoi(b), 1, 99);
     cfg.start_round = (int)SendMessage(hround, CB_GETCURSEL, 0, 0);
     GetWindowTextA(htex, cfg.texture_pack, MAX_PATH);
+    GetWindowTextA(hpack, cfg.level_pack, MAX_PATH);
 }
 
 static HWND mk(const char *cls, const char *text, DWORD style, int x, int y, int w, int h, int id) {
@@ -145,6 +149,14 @@ static void browse(void) {
     if (id) { if (SHGetPathFromIDListA(id, out)) SetWindowTextA(htex, out); CoTaskMemFree(id); }
 }
 
+static void browse_pack(void) {
+    char file[MAX_PATH] = "";
+    OPENFILENAMEA o = {sizeof o};
+    o.hwndOwner = wnd; o.lpstrFilter = "Level packs (*.pmpack)\0*.pmpack\0All files\0*.*\0"; o.lpstrFile = file; o.nMaxFile = MAX_PATH;
+    o.lpstrTitle = "Choose a level pack"; o.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    if (GetOpenFileNameA(&o)) SetWindowTextA(hpack, file);
+}
+
 static void open_folder(void) {
     char dir[MAX_PATH];
     GetWindowTextA(htex, dir, sizeof dir);
@@ -169,6 +181,7 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         case ID_PLAY: from_controls(); if (save()) { play(); PostQuitMessage(0); } break;
         case ID_RESET: cfg = defaults; to_controls(); break;
         case ID_BROWSE: browse(); break;
+        case ID_PACKBR: browse_pack(); break;
         case ID_OPEN: open_folder(); break;
         case ID_CLOSE: PostQuitMessage(0); break;
         }
@@ -192,7 +205,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = proc; wc.hInstance = inst; wc.lpszClassName = "pmcfg"; wc.hCursor = LoadCursor(0, IDC_ARROW); wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClassA(&wc);
-    RECT rc = {0, 0, 470, 504};
+    RECT rc = {0, 0, 470, 540};
     AdjustWindowRect(&rc, WS_CAPTION | WS_SYSMENU, 0);
     wnd = CreateWindowA("pmcfg", "Painter Momopie settings", WS_CAPTION | WS_SYSMENU | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, 0, 0, inst, 0);
 
@@ -217,7 +230,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     hvol_l = label("100%", 384, 186, 60);
     hmute = mk("BUTTON", "Mute", BS_AUTOCHECKBOX, 24, 210, 120, 20, ID_MUTE);
 
-    group("Game", 10, 242, 450, 146);
+    group("Game", 10, 242, 450, 182);
     label("Speed", 24, 266, 90);
     hspeed = slider(116, 262, 260, 50, 400, ID_SPEED);
     hspeed_l = label("100%", 384, 266, 60);
@@ -230,16 +243,21 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     SendMessageA(hround, CB_ADDSTRING, 0, (LPARAM)"Round 1 (normal)");
     for (int i = 1; i <= 33; i++) { char b[24]; snprintf(b, sizeof b, "Round %d", i); SendMessageA(hround, CB_ADDSTRING, 0, (LPARAM)b); }
 
-    group("Textures (full-colour sprite replacements)", 10, 394, 450, 56);
-    label("Folder", 24, 420, 50);
-    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 416, 250, 22, ID_TEX);
-    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 330, 415, 62, 24, ID_BROWSE);
-    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 396, 415, 56, 24, ID_OPEN);
+    label("Level pack", 24, 380, 70);
+    hpack = mk("EDIT", "", WS_BORDER | ES_AUTOHSCROLL, 100, 376, 292, 22, ID_PACK);
+    mk("BUTTON", "Browse...", BS_PUSHBUTTON, 396, 375, 56, 24, ID_PACKBR);
+    label("(empty = the game's own 33 rounds; make packs with tools/level_editor.py)", 100, 400, 350);
 
-    mk("BUTTON", "Save", BS_PUSHBUTTON, 130, 464, 100, 26, ID_SAVE);
-    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 236, 464, 110, 26, ID_PLAY);
-    mk("BUTTON", "Defaults", BS_PUSHBUTTON, 24, 464, 80, 26, ID_RESET);
-    mk("BUTTON", "Close", BS_PUSHBUTTON, 352, 464, 100, 26, ID_CLOSE);
+    group("Textures (full-colour sprite replacements)", 10, 430, 450, 56);
+    label("Folder", 24, 456, 50);
+    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 452, 250, 22, ID_TEX);
+    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 330, 451, 62, 24, ID_BROWSE);
+    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 396, 451, 56, 24, ID_OPEN);
+
+    mk("BUTTON", "Save", BS_PUSHBUTTON, 130, 500, 100, 26, ID_SAVE);
+    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 236, 500, 110, 26, ID_PLAY);
+    mk("BUTTON", "Defaults", BS_PUSHBUTTON, 24, 500, 80, 26, ID_RESET);
+    mk("BUTTON", "Close", BS_PUSHBUTTON, 352, 500, 100, 26, ID_CLOSE);
     load();
     to_controls();
     MSG msg;

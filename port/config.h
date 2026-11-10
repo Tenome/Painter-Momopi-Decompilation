@@ -12,6 +12,7 @@ typedef struct {
     int integer_scale;      /* 1 = only whole number scales (sharp pixels), 0 = fill the window keeping the aspect ratio */
     int speed;              /* percent of the original speed (50-400); above 100 the sound is skipped */
     int infinite_lives;     /* cheat option: lives never decrease */
+    char level_pack[260];   /* a .pmpack level pack (empty = the game's own 33 rounds; see docs/LEVELS.md) */
     char texture_pack[260]; /* folder of full-colour PNG sheets (empty = none; see docs/TEXTURES.md) */
     int start_lives;        /* 0 = 3 */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */

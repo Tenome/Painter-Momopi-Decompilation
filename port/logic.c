@@ -5,6 +5,18 @@
 #include "game_symbols.h"      /* generated: wPlayerX, hEnemyKind ... (from src/constants.inc) */
 #include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
 #include "config.h"            /* options of the native player (infinite lives, start round) */
+#include "levelpack.h"         /* custom level packs (level_pack option) */
+
+/* ---- custom level packs: with a pack the per-round data comes from the pack's level number wRound - 1 instead of the game's tables ---- */
+static int pack_index(void) { int i = rd(wRound) - 1; return i < 0 ? 0 : i >= gb_pack_count ? gb_pack_count - 1 : i; }
+/* the value the room look tables are indexed with (wRoomIndex: 0-15, or $20 for the 17th look) */
+static uint8_t room_code(void) {
+    if (!gb_pack_count) return rd(wRoomIndex);
+    int i = pack_index(), t = gb_pack[i].theme;
+    if (t < 0) t = i == 32 ? 16 : i & 15;
+    return t == 16 ? 0x20 : (uint8_t)(t & 15);
+}
+static int pack_last_round(void) { return gb_pack_count ? gb_pack_count : 0x21; }
 
 /* A `call` inside a lifted routine. Like CALL of the generated code, but when the callee discards its return address (pop hl before a return: the sound command
  * routines do) the whole chain has already returned past this routine, so the routine returns and gives back the slot the stub of the override releases again. */
@@ -1001,28 +1013,40 @@ void *gb_native_Mode1_Play(void) {
     gb_native_FillBackwardsFF();
     NCALL(GAME_LoadGfxBank2);
     NCALL(GAME_ClearOamShadow);
+    if (gb_pack_count) {
+        const GbLevel *lv = &gb_pack[pack_index()];
+        gb_pack_select_textures(pack_index());
+        for (int i = 0; i < 256; i++) wr(wRoomMap + i, lv->map[i] & 3);
+        wr(hScratch00 + 2, (uint8_t)((lv->map[252] << 6) | (lv->map[253] << 4) | (lv->map[254] << 2) | lv->map[255]));
+        wr(0xC1B5, 0);
+    } else {
     SET_HL(DATA_RoomMapTable);
     r.a = rd(wRound);
     NCALL(GAME_TableIndexFromRoundDec);
     NCALL(GAME_UnpackRoomMap);
+    }
     wr(hScratch01, 0x10);
     wr(hScratch00, 0x10);
-    r.a = rd(wRoomIndex);
+    r.a = room_code();
     SET_HL(DATA_RoomMetatileTable);
     NCALL(GAME_TableIndexFromRound);
     SET_HL(vBGMap0);
     SET_DE(wRoomMap);
     wr(wMapCellMask, 0x0F);
     NCALL(GAME_DrawMetatileMap);
-    r.a = rd(wRoomIndex);
+    r.a = room_code();
     SET_HL(DATA_RoomVramJobTable);
     NCALL(GAME_TableIndexFromRound);
     NCALL(GAME_RunVramCopyList);
+    if (gb_pack_count) {
+        r.a = (uint8_t)gb_pack[pack_index()].paint;       /* a map has at most 255 path cells here: the counter is a byte */
+    } else {
     r.c = 0x10;
     r.a = (uint8_t)(rd(wRound) - 1);
     if (r.a != 0x20) r.c = r.a & 0x0F;
     SET_HL(DATA_PaintCellCountTable);
     gb_native_LookupByte();
+    }
     wr(wPaintRemaining, r.a);
     NCALL(GAME_RequestOamDma);
     NCALL(GAME_ClearOamShadowY);
@@ -1051,12 +1075,15 @@ void *gb_native_Mode1_Play(void) {
     wr(wGameFlags, rd(wGameFlags) & ~0x20);
     wr(hTimeFrames, 0x3C);
     r.a = rd(wRound);
-    if (r.a == 0x21) {
+    if (gb_pack_count && gb_pack[pack_index()].time >= 0) {
+        r.a = (uint8_t)gb_pack[pack_index()].time;
+    } else if (r.a == 0x21 && !gb_pack_count) {
         r.a = 0x5A;
     } else {
-        r.c = r.a >> 2;
+        r.c = (gb_pack_count ? (rd(wRound) > 0x21 ? 0x21 : rd(wRound)) : r.a) >> 2;
         SET_HL(DATA_RoundTimeTable);
         gb_native_LookupByte();
+        if (gb_pack_count && rd(wRound) == 0x21) r.a = 0x5A;
     }
     wr(hTimeSeconds, r.a);
     wr(hRoundSeconds, r.a);
@@ -1247,10 +1274,13 @@ void *gb_native_AddScore(void) {
  * The delay of the next entry is loaded once (wPlayerStatus bit 5 marks that); when the seconds elapsed in the round (hRoundSeconds - hTimeSeconds) reach it
  * and fewer than 3 enemies are alive, the entry is spawned through FindFreeEnemySlot (kind in hScratch07, X in hScratch08, Y in hScratch0A, flag in hSpawnFlag).
  * After the last entry of a wave the next wave starts (wSpawnWave; it wraps after 6 and wWaveEnded is set). */
-void *gb_native_StepEnemySpawnScript(void) {
+static void *spawn_script(void) {
+    if (gb_pack_count) SET_HL(0x4000 + pack_index() * 12);          /* the pack's wave pointer table (read through gb_pack_view) */
+    else {
     r.a = (uint8_t)(rd(wRound) - 1);
     SET_HL(DATA_RoundDataTable);
     gb_native_LookupWord();
+    }
     if (rd(wSpawnWave) == 0x06) wr(wSpawnWave, 0);
     r.a = rd(wSpawnWave);
     gb_native_LookupWord();
@@ -1276,12 +1306,23 @@ void *gb_native_StepEnemySpawnScript(void) {
     wr(hScratch00 + 7, rd(entry));
     wr(hScratch00 + 8, rd(entry + 1));
     wr(hScratch00 + 10, rd(entry + 2) & 0xF8);
-    wr(hSpawnFlag, rd(entry + 2) & (rd(wRound) >= 0x11 ? 0x02 : 0x01));
+    {
+        int bit = rd(wRound) >= 0x11 ? 0x02 : 0x01;
+        if (gb_pack_count && gb_pack[pack_index()].variant > 0) bit = gb_pack[pack_index()].variant & 3;
+        wr(hSpawnFlag, rd(entry + 2) & bit);
+    }
     wr(wSpawnIndex, rd(wSpawnIndex) + 1);
     wr(wWaveEnded, rd(wWaveEnded) + 1);
     wr(wEnemyCount, rd(wEnemyCount) + 1);
     wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
     return (void *)GAME_FindFreeEnemySlot;
+}
+
+void *gb_native_StepEnemySpawnScript(void) {
+    gb_pack_view = gb_pack_count > 0;
+    void *next = spawn_script();
+    gb_pack_view = 0;
+    return next;
 }
 
 /* TimeUpSpawnEnemy: when the round clock has run out (hTimeSeconds and $ffe2 both 0), or in a link game when the other machine asks for it (hSerialByte bit 5),
@@ -1439,7 +1480,7 @@ void *gb_native_Mode3_RoundIntro(void) {
     r.b = (rd(hLinkFlags) & 0x01) ? 1 : rd(wLives);
     SET_HL(0x992C);
     NCALL(GAME_DrawTwoDigitNumber);
-    r.a = rd(wRound);
+    r.a = gb_pack_count ? (uint8_t)(room_code() + 1) : rd(wRound);        /* the name of the room follows its look */
     SET_HL(DATA_RoomNameJobTable);
     NCALL(GAME_TableIndexFromRoundDec);
     SET_HL(0x98C3);
@@ -3415,7 +3456,13 @@ void *gb_native_PlayerDeath(void) {
 /* CheckBonusRound: after the rounds 4, 8, 12, 20, 24 and 28 wGameFlags bit 6 is set (the bonus screens follow). */
 void *gb_native_CheckBonusRound(void) {
     uint8_t round = rd(wRound);
-    if (round == 4 || round == 8 || round == 12 || round == 20 || round == 24 || round == 28) {
+    int bonus = round == 4 || round == 8 || round == 12 || round == 20 || round == 24 || round == 28;
+    if (gb_pack_count) {                    /* the level just finished is round - 1 */
+        int b = gb_pack[pack_index() > 0 ? pack_index() - 1 : 0].bonus;
+        if (b >= 0 && round > 1) bonus = b != 0;
+        else if (round <= 1) bonus = 0;
+    }
+    if (bonus) {
         SET_HL(wGameFlags);
         wr(wGameFlags, rd(wGameFlags) | 0x40);
     }
@@ -3425,7 +3472,7 @@ void *gb_native_CheckBonusRound(void) {
 /* NextRound: the counters advance (wRound, wRoundBackup, wRoomIndex and two more); after round $21 the ending (mode 6) follows, after a bonus round the bonus select
  * (mode 2), else the round intro (mode 3). */
 void *gb_native_NextRound(void) {
-    if (rd(wRound) == 0x21) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+    if (rd(wRound) == pack_last_round()) { r.a = 6; return (void *)GAME_GameModeDispatch; }
     wr(0xC47B, rd(0xC47B) + 1);
     wr(wRound, rd(wRound) + 1);
     wr(wRoundBackup, rd(wRoundBackup) + 1);
@@ -4232,6 +4279,11 @@ void *gb_native_InitMagicPoints(void) {
         wr(wMagicPointsHi, 0x01);
     } else {
         uint16_t entry = 0x1462 + (uint8_t)(rd(wRound) << 1);
+        if (gb_pack_count) {
+            int m = gb_pack[pack_index()].magic;
+            if (m < 0) entry = 0x1462 + (uint8_t)((rd(wRound) > 0x21 ? 0x21 : rd(wRound)) << 1);
+            else { wr(wMagicPointsHi, (uint8_t)(m >> 8)); wr(wMagicPoints, (uint8_t)m); wr(0xFFEA, 0); r.a = 0; return 0; }
+        }
         wr(wMagicPointsHi, rd(entry));
         wr(wMagicPoints, rd(entry + 1));
     }
@@ -4562,9 +4614,10 @@ void *gb_native_QueueCellTileRows(void) {
 /* StartRoundMusic: the song of the round (table at $1400 by wRound / 4) and the frame countdown task (hVBlankTasks bit 4). */
 void *gb_native_StartRoundMusic(void) {
     NCALL(GAME_WaitVBlankFlag);
-    r.c = rd(wRound) >> 2;
+    r.c = (gb_pack_count && rd(wRound) > 0x21 ? 0x21 : rd(wRound)) >> 2;
     SET_HL(0x1400);
     gb_native_LookupByte();
+    if (gb_pack_count && gb_pack[pack_index()].music >= 0) r.a = (uint8_t)gb_pack[pack_index()].music;
     NCALL(GAME_PlaySound);
     wr(hVBlankTasks, rd(hVBlankTasks) | 0x10);
     return 0;
@@ -4588,7 +4641,7 @@ void *gb_native_LoadGfxBank2(void) {
     SET_HL(DATA_SpriteTiles); SET_DE(vTiles0); SET_BC(0x0700);
     call_native(gb_native_CopyMemory);
     SET_HL(DATA_RoomSpriteSetTable);
-    r.a = rd(wRoomIndex);
+    r.a = room_code();
     NCALL(GAME_TableIndexFromRound);
     SET_DE(vTiles1); SET_BC(0x0900);
     call_native(gb_native_CopyMemory);

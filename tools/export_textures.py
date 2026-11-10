@@ -7,7 +7,7 @@ Paint over the sheets in any editor with full colour (and transparency for sprit
 The native player (game_win.exe) loads the folder named by `texture_pack` in painter_momopie.ini and replaces every tile that you changed; untouched tiles
 keep the Game Boy look. See docs/TEXTURES.md.
 """
-import os, sys
+import os, shutil, sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +29,9 @@ def main():
             im = Image.open(os.path.join(src, name)).convert("RGB")
             im.resize((im.width * scale, im.height * scale), Image.NEAREST).save(os.path.join(out, name))
             n += 1
+    note = os.path.join(ROOT, "port", "textures_readme.ini")
+    if os.path.exists(note):
+        shutil.copy(note, os.path.join(out, "README.ini"))
     print(f"{n} sheets written to {out} ({scale}x)")
 
 

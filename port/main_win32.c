@@ -9,6 +9,7 @@
 #include "gb_rt.h"
 #include "config.h"
 #include "texture.h"
+#include "levelpack.h"
 
 extern void gb_game_main(void);
 extern const unsigned char gb_rom_image[];
@@ -205,6 +206,12 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
         FILE *t = fopen(ini, "r");
         if (t) fclose(t); else strcpy(ini, "painter_momopie.ini");
         gb_config_load(ini);
+        for (int i = 1; i + 1 < argc; i++) {              /* command line: --pack FILE (a level pack) and --round N (first round) override the ini */
+            char arg[MAX_PATH];
+            WideCharToMultiByte(CP_ACP, 0, argv[i], -1, arg, MAX_PATH, 0, 0);
+            if (!strcmp(arg, "--pack")) { WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, path, MAX_PATH, 0, 0); gb_pack_load(path); }
+            else if (!strcmp(arg, "--round")) gb_config.start_round = atoi((WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, path, MAX_PATH, 0, 0), path));
+        }
         pal_index = gb_config.palette;
         muted = gb_config.mute;
         gb_sprite_limit_off = gb_config.no_sprite_limit;

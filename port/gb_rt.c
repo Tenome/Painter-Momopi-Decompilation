@@ -1,6 +1,7 @@
 #include "gb_rt.h"
 #include "apu.h"
 #include "texture.h"
+#include "levelpack.h"
 
 Regs r;
 int ime;
@@ -67,6 +68,7 @@ fn_t gb_dispatch(uint16_t addr) {
 
 uint8_t rd(uint16_t a) {
     if (a < 0x4000) return rom[a];
+    if (gb_pack_view && a < 0x8000) return gb_pack_win[a - 0x4000];     /* the spawn data of a level pack */
     if (a < 0x8000) { size_t o = (size_t)(bank % (rom_size / 0x4000)) * 0x4000 + a - 0x4000; return rom[o]; }
     if (a < 0xA000) return vram[a - 0x8000];
     if (a < 0xC000) return 0xFF;
@@ -123,7 +125,7 @@ void gb_dma_routine(void) {
 uint32_t gb_colorbuf[GB_MAX_W * 8 * 144 * 8];
 uint32_t gb_color_pal[4] = {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000};
 int gb_color_scale = 1;
-static uint32_t refbuf[GB_MAX_W * 144];                 /* (texture index + 1) << 16 | palette << 12 | y << 4 | x ; 0 = none */
+static uint32_t refbuf[GB_MAX_W * 144];                 /* (VRAM tile number + 1) << 16 (tmap gives its texture) | palette << 12 | y << 4 | x ; 0 = none */
 static int tmap[384];
 
 static uint32_t blend(uint32_t base, uint32_t over, unsigned a) {
@@ -141,7 +143,7 @@ static void color_pass(int W, unsigned bgp, unsigned obp0, unsigned obp1) {
             for (int sy = 0; sy < S; sy++) for (int sx = 0; sx < S; sx++) gb_colorbuf[(y * S + sy) * CW + x * S + sx] = flat;
             continue;
         }
-        const GbTex *t = &gb_texs[(ref >> 16) - 1];
+        const GbTex *t = gb_texture_get(tmap[(ref >> 16) - 1]);
         unsigned pal = (ref >> 12) & 15, lx = ref & 15, ly = (ref >> 4) & 15;
         unsigned p = pal == 0 ? bgp : pal == 1 ? obp0 : obp1;
         unsigned fade = (3 - ((p >> 6) & 3)) * 255 / 3;                      /* the fade steps of the Game Boy palettes lighten the picture */
@@ -187,7 +189,7 @@ static void render(void) {
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
             bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
-            if (tex_on && tmap[base >> 4] >= 0) refbuf[y * W + x] = (uint32_t)(tmap[base >> 4] + 1) << 16 | (yy & 7) << 4 | (xx & 7);
+            if (tex_on && tmap[base >> 4] >= 0) refbuf[y * W + x] = (uint32_t)((base >> 4) + 1) << 16 | (yy & 7) << 4 | (xx & 7);
         }
     }
     if (lcdc & 0x20) {
@@ -200,7 +202,7 @@ static void render(void) {
             unsigned lo = vram[base + (yy & 7) * 2], hi = vram[base + (yy & 7) * 2 + 1], bit = 7 - (xx & 7);
             unsigned ci = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
             bgcol[y * W + x] = ci; gb_framebuf[y * W + x] = pal[ci];
-            refbuf[y * W + x] = (tex_on && tmap[base >> 4] >= 0) ? (uint32_t)(tmap[base >> 4] + 1) << 16 | (yy & 7) << 4 | (xx & 7) : 0;
+            refbuf[y * W + x] = (tex_on && tmap[base >> 4] >= 0) ? (uint32_t)((base >> 4) + 1) << 16 | (yy & 7) << 4 | (xx & 7) : 0;
         }
     }
     if (lcdc & 2) {
@@ -220,7 +222,7 @@ static void render(void) {
                 if (y < 0 || y >= 144) continue;
                 int row = (fl & 0x40) ? h - 1 - yy : yy;
                 unsigned base = tile * 16 + row * 2, lo = vram[base], hi = vram[base + 1];
-                const GbTex *tx = (tex_on && h == 8 && tmap[tile] >= 0) ? &gb_texs[tmap[tile]] : 0;
+                const GbTex *tx = (tex_on && h == 8 && tmap[tile] >= 0) ? gb_texture_get(tmap[tile]) : 0;
                 for (int xx = 0; xx < 8; xx++) {
                     int x = sx + xx;
                     if (x < 0 || x >= W) continue;
@@ -233,7 +235,7 @@ static void render(void) {
                     } else if (!ci) continue;
                     if ((fl & 0x80) && bgcol[y * W + x]) continue;
                     gb_framebuf[y * W + x] = sp[ci];
-                    refbuf[y * W + x] = tx ? (uint32_t)(tmap[tile] + 1) << 16 | palid << 12 | (unsigned)row << 4 | lx : 0;
+                    refbuf[y * W + x] = tx ? (uint32_t)(tile + 1) << 16 | palid << 12 | (unsigned)row << 4 | lx : 0;
                 }
             }
         }
@@ -264,8 +266,13 @@ void gb_service(void) {}
 
 /* FNV-1a hash of the work RAM, high RAM, video RAM and OAM: used to compare two builds frame by frame (main_headless --hashes). */
 uint32_t gb_state_hash(void) {
+    static int skip_spawn_ptr = -1;
+    if (skip_spawn_ptr < 0) skip_spawn_ptr = getenv("GB_HASH_SKIP") != 0;
     uint32_t h = 2166136261u;
-    for (unsigned i = 0; i < 0x1000; i++) h = (h ^ wram[i]) * 16777619u;     /* $d000 and up is only the stack (residue below SP differs between equal routines) */
+    for (unsigned i = 0; i < 0x1000; i++) {
+        if (skip_spawn_ptr && (i == 0x481 || i == 0x482)) continue;      /* the spawn list pointer points into the pack's own data (GB_HASH_SKIP=1) */
+        h = (h ^ wram[i]) * 16777619u;
+    }     /* $d000 and up is only the stack (residue below SP differs between equal routines) */
     for (unsigned i = 0; i < sizeof hram; i++) h = (h ^ hram[i]) * 16777619u;
     for (unsigned i = 0; i < sizeof vram; i++) h = (h ^ vram[i]) * 16777619u;
     for (unsigned i = 0; i < sizeof oam; i++) h = (h ^ oam[i]) * 16777619u;
@@ -281,5 +288,6 @@ void gb_dump_state(const char *path) {
     fwrite(hram, 1, sizeof hram, f);
     fwrite(vram, 1, sizeof vram, f);
     fwrite(oam, 1, sizeof oam, f);
+    fwrite(io, 1, sizeof io, f);
     fclose(f);
 }

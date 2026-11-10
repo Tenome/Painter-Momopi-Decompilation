@@ -13,10 +13,13 @@ typedef struct {
     uint64_t clear;         /* bit y * 8 + x: that original pixel is fully transparent */
     uint8_t *rgba;
 } GbTex;
-extern GbTex *gb_texs;      /* the loaded replacements */
-extern int gb_tex_count;    /* 0 = no texture pack: the renderer stays in the Game Boy shades */
+/* Three layers, the last one wins: 0 = the player's own pack (texture_pack option), 1 = the pack of a level pack, 2 = the current level of a level pack.
+ * A texture id is layer << 20 | index. */
+#define GB_TEX_LAYERS 3
+extern int gb_tex_count;    /* replacements in all layers; 0 = no texture pack: the renderer stays in the Game Boy shades */
 extern int gb_tex_scale;    /* the largest scale among them (the colour picture is this many times larger) */
 
-int gb_texture_load(const char *folder);           /* returns the number of replaced tiles; prints what it found to stderr */
-int gb_texture_find(const uint8_t *tile16);        /* index into gb_texs or -1 */
+int gb_texture_load(int layer, const char *folder);   /* (re)loads a layer from a folder ("" or NULL empties it); returns the number of replaced tiles */
+int gb_texture_find(const uint8_t *tile16);           /* texture id or -1 */
+const GbTex *gb_texture_get(int id);
 #endif

@@ -4,10 +4,10 @@
 #include "texture.h"
 #include "png.h"
 
-GbTex *gb_texs;
 int gb_tex_count, gb_tex_scale = 1;
-static int table[8192];                 /* open addressing: index + 1 */
-static int cap;
+
+typedef struct { GbTex *texs; int count, cap; int table[8192]; int scale; char folder[512]; } Layer;
+static Layer layers[GB_TEX_LAYERS];
 
 static uint64_t hash16(const uint8_t *p) {
     uint64_t h = 1469598103934665603ull;
@@ -15,30 +15,52 @@ static uint64_t hash16(const uint8_t *p) {
     return h;
 }
 
+static void recount(void) {
+    gb_tex_count = 0; gb_tex_scale = 1;
+    for (int l = 0; l < GB_TEX_LAYERS; l++) { gb_tex_count += layers[l].count; if (layers[l].count && layers[l].scale > gb_tex_scale) gb_tex_scale = layers[l].scale; }
+}
+
 int gb_texture_find(const uint8_t *tile16) {
     if (!gb_tex_count) return -1;
     uint64_t h = hash16(tile16);
-    for (unsigned i = (unsigned)h & 8191;; i = (i + 1) & 8191) {
-        if (!table[i]) return -1;
-        if (gb_texs[table[i] - 1].hash == h) return table[i] - 1;
+    for (int l = GB_TEX_LAYERS - 1; l >= 0; l--) {
+        Layer *L = &layers[l];
+        if (!L->count) continue;
+        for (unsigned i = (unsigned)h & 8191;; i = (i + 1) & 8191) {
+            if (!L->table[i]) break;
+            if (L->texs[L->table[i] - 1].hash == h) return l << 20 | (L->table[i] - 1);
+        }
     }
+    return -1;
 }
 
-static void add(const GbTex *t) {
-    if (gb_tex_count == cap) { cap = cap ? cap * 2 : 64; gb_texs = realloc(gb_texs, (size_t)cap * sizeof *gb_texs); }
+const GbTex *gb_texture_get(int id) { return &layers[id >> 20].texs[id & 0xFFFFF]; }
+
+static void add(Layer *L, const GbTex *t) {
+    if (L->count == L->cap) { L->cap = L->cap ? L->cap * 2 : 64; L->texs = realloc(L->texs, (size_t)L->cap * sizeof *L->texs); }
     for (unsigned i = (unsigned)t->hash & 8191;; i = (i + 1) & 8191) {
-        if (!table[i]) { gb_texs[gb_tex_count] = *t; table[i] = ++gb_tex_count; return; }
-        if (gb_texs[table[i] - 1].hash == t->hash) { free(t->rgba); return; }       /* the same tile content in another sheet: the first one wins */
+        if (!L->table[i]) { L->texs[L->count] = *t; L->table[i] = ++L->count; return; }
+        if (L->texs[L->table[i] - 1].hash == t->hash) { free(t->rgba); return; }       /* the same tile content in another sheet: the first one wins */
     }
 }
 
-int gb_texture_load(const char *folder) {
+static void clear(Layer *L) {
+    for (int i = 0; i < L->count; i++) free(L->texs[i].rgba);
+    L->count = 0; L->scale = 1;
+    memset(L->table, 0, sizeof L->table);
+    L->folder[0] = 0;
+}
+
+int gb_texture_load(int layer, const char *folder) {
     static const uint8_t grey[4] = {255, 170, 85, 0};
-    gb_tex_count = 0; gb_tex_scale = 1;
-    memset(table, 0, sizeof table);
+    Layer *L = &layers[layer];
+    if (folder && !strcmp(folder, L->folder) && L->folder[0]) return L->count;      /* already loaded */
+    clear(L);
+    if (!folder || !folder[0]) { recount(); return 0; }
+    snprintf(L->folder, sizeof L->folder, "%s", folder);
     int sheets_found = 0;
     for (int s = 0; s < gb_nsheets; s++) {
-        char path[512];
+        char path[640];
         snprintf(path, sizeof path, "%s/%s.png", folder, gb_sheets[s].name);
         PngImage im;
         int rc = png_load(path, &im);
@@ -74,13 +96,14 @@ int gb_texture_load(const char *folder) {
                 if (all) tx.clear |= 1ull << (oy * 8 + ox);
             }
             if (!tx.edited) { free(tx.rgba); continue; }                        /* untouched: keeps the Game Boy palette behaviour */
-            if (n > gb_tex_scale) gb_tex_scale = n;
-            add(&tx);
+            if (n > L->scale) L->scale = n;
+            add(L, &tx);
             changed++;
         }
-        fprintf(stderr, "texture pack: %s: %d of %d tiles replaced (scale %d)\n", gb_sheets[s].name, changed, gb_sheets[s].ntiles, n);
+        fprintf(stderr, "texture pack: %s: %d of %d tiles replaced (scale %d)\n", path, changed, gb_sheets[s].ntiles, n);
         png_free(&im);
     }
     if (!sheets_found) fprintf(stderr, "texture pack: no sheets found in %s\n", folder);
-    return gb_tex_count;
+    recount();
+    return L->count;
 }

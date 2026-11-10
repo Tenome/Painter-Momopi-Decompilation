@@ -26,3 +26,11 @@ __pycache__/
 # Scratch
 scratch/
 re_loop_sessions/
+
+# Texture sheets made from the game graphics (tools/export_textures.py) and local editor settings
+textures/
+packs/**/textures*/
+tools/.level_editor.json
+
+# the game's own levels converted to a pack (made from the ROM data by tools/levelpack.py original)
+packs/original.pmpack
