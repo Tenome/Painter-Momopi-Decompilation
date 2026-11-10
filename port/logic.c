@@ -4281,3 +4281,61 @@ void *gb_native_BeginMagicCast(void) {
     wr(wMagicState, rd(wMagicState) | 0x02);
     return 0;
 }
+
+/* AnimatePlayerWalk: while a direction is held (hJoyHeld high nibble) the walk counter wWalkAnimCount runs through CounterToFrame (mask $0c, shift 2, 4 frames) and
+ * wPlayerAnim takes the animation pointer at that position of the table chosen by SelectPlayerAnimation (wPlayerAnimPtr). */
+void *gb_native_AnimatePlayerWalk(void) {
+    if (!(rd(hJoyHeld) & 0xF0)) { r.a = 0; r.f = 0x80; return 0; }
+    wr(wWalkAnimCount, rd(wWalkAnimCount) + 1);
+    wr(hScratch00 + 6, 0x0C);
+    wr(hScratch00 + 7, 0x02);
+    wr(hScratch00 + 8, rd(wWalkAnimCount));
+    r.a = 0x04;
+    gb_native_CounterToFrame();
+    wr(wWalkAnimCount, rd(hScratch00 + 8));
+    uint16_t entry = (uint16_t)((rd(wPlayerAnimPtrLo) | rd(wPlayerAnimPtrHi) << 8) + r.c);
+    wr(wPlayerAnimLo, rd(entry));
+    wr(wPlayerAnimHi, rd(entry + 1));
+    return 0;
+}
+
+/* EnemyShooterAI (kind 2): the shot of the enemy. While T.STOP (3) or B.O.M (5) runs, or when its timer $c4b4 ($a0 frames) ends, the shot is removed and the enemy gets
+ * a short pause (hEnemyStep = 5). While a shot is live it blinks between two animations (every 16 counts of $c4b9) and is drawn. */
+void *gb_native_EnemyShooterAI(void) {
+    uint8_t card = rd(wActiveMagic);
+    int cut = ((card == 0x03) || (card == 0x05)) && (rd(wMagicState) & 0x01);
+    if (!cut) {
+        if (!(rd(wProjectile) & 0x80)) return 0;
+        wr(0xC4B4, rd(0xC4B4) - 1);
+        if (rd(0xC4B4) != 0) {
+            wr(0xC4B9, rd(0xC4B9) + 1);
+            uint16_t anim = (rd(0xC4B9) & 0x10) ? 0x59F5 : 0x59FA;
+            wr(wProjectileAnimLo, (uint8_t)anim);
+            wr(wProjectileAnimHi, anim >> 8);
+            SET_HL(wProjectile);
+            gb_native_SetObjPtr();
+            return gb_native_DrawObject();
+        }
+    }
+    wr(hEnemyStep, 0x05);
+    wr(0xC4B4, 0xA0);
+    SET_HL(wProjectile);
+    wr(wProjectile, rd(wProjectile) & 0x7F);
+    return 0;
+}
+
+/* EnemyKind10Animate: the projectile of kind 10 alternates between two animations ($57ec and $57ee) every 4 counts of hEnemyCounter2. */
+void *gb_native_EnemyKind10Animate(void) {
+    if (rd(hEnemyKind) != 0x0A) return 0;
+    SET_HL(hEnemyCounter2);
+    wr(hEnemyCounter2, rd(hEnemyCounter2) + 1);
+    uint16_t anim = (rd(hEnemyCounter2) & 0x04) ? 0x57EE : 0x57EC;
+    wr(wProjectileAnimLo, (uint8_t)anim);
+    wr(wProjectileAnimHi, anim >> 8);
+    return 0;
+}
+
+void *gb_native_EnemyFlagBit3IfDead(void) {
+    if (rd(hEnemyDir) & 0x20) { SET_HL(hEnemyFlags); wr(hEnemyFlags, rd(hEnemyFlags) | 0x08); }
+    return 0;
+}

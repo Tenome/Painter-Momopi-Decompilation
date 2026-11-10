@@ -241,3 +241,7 @@ EndMagic
 ClearBonusFlags
 SetPlayerStatusBit0
 BeginMagicCast
+AnimatePlayerWalk
+EnemyShooterAI
+EnemyKind10Animate
+EnemyFlagBit3IfDead
