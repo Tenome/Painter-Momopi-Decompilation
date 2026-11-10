@@ -19,6 +19,8 @@ static void resolve(const char *rel, char *out, size_t n) {
     if (absolute) snprintf(out, n, "%s", rel); else snprintf(out, n, "%s%s", pack_dir, rel);
 }
 
+void gb_pack_resolve(const char *rel, char *out, int n) { resolve(rel, out, (size_t)n); }
+
 void gb_pack_select_textures(int level) {
     char dir[700];
     if (!gb_pack_count) return;
@@ -92,6 +94,7 @@ int gb_pack_load(const char *path) {
         else if (!strcmp(key, "magic")) l->magic = (int)strtol(rest, 0, 0);
         else if (!strcmp(key, "bonus")) l->bonus = (int)strtol(rest, 0, 0);
         else if (!strcmp(key, "variant")) l->variant = (int)strtol(rest, 0, 0);
+        else if (!strcmp(key, "song")) strncpy(l->song, rest, sizeof l->song - 1);
         else if (!strcmp(key, "textures")) strncpy(l->textures, rest, sizeof l->textures - 1);
         else if (!strcmp(key, "map")) { in_map = 1; map_row = 0; }
         else if (!strcmp(key, "wave")) { wave = (int)strtol(rest, 0, 0); if (wave < 0 || wave > 5) { fprintf(stderr, "level pack: %s:%d: wave 0-5\n", path, lineno); wave = 0; } }

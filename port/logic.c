@@ -6,6 +6,7 @@
 #include "game_labels.h"       /* generated: GAME_<Label> = the generated routine of a label */
 #include "config.h"            /* options of the native player (infinite lives, start round) */
 #include "levelpack.h"         /* custom level packs (level_pack option) */
+#include "mml.h"               /* custom songs */
 
 /* ---- custom level packs: with a pack the per-round data comes from the pack's level number wRound - 1 instead of the game's tables ---- */
 static int pack_index(void) { int i = rd(wRound) - 1; return i < 0 ? 0 : i >= gb_pack_count ? gb_pack_count - 1 : i; }
@@ -1852,7 +1853,7 @@ void *gb_native_MagicScreenInput(void) {
             if (pad & 0x01) {
                 uint8_t card = card_at((uint8_t)(rd(wMagicCol) + row_start(rd(wMagicRow))));
                 uint8_t cost = rd(DATA_MagicCostTable + card);
-                if (rd(wMagicPoints) < cost && rd(wMagicPointsHi) == 0) {
+                if (rd(wMagicPoints) < cost && rd(wMagicPointsHi) == 0 && !gb_config.infinite_magic) {
                     wr(wMagicScreenFlags, rd(wMagicScreenFlags) & ~0x04);
                     return 0;
                 }
@@ -2610,7 +2611,7 @@ void *gb_native_VBlankHandler(void) {
         NCALL(GAME_ClearOamShadowY);
     }
     NCALL(GAME_SoundUpdate);
-    if ((rd(hVBlankTasks) & 0x10) && rd(hTimeSeconds)) {
+    if ((rd(hVBlankTasks) & 0x10) && rd(hTimeSeconds) && !gb_config.no_time_limit) {
         uint8_t frames = rd(hTimeFrames);
         wr(hTimeFrames, frames - 1);
         if (frames == 0) {                       /* a second has passed */
@@ -3384,6 +3385,7 @@ void *gb_native_InitPlayer(void) {
         return 0;
     }
     wr(wMagicCards, 1);
+    if (gb_config.all_cards) { for (int i = 0; i < 9; i++) wr(wMagicCards + i, i + 1); return 0; }       /* option all_cards */
     if (rd(wRound) < 2) return 0;
     wr(wMagicCards + 1, 9);
     if (rd(wRound) < 3) return 0;
@@ -4614,6 +4616,11 @@ void *gb_native_QueueCellTileRows(void) {
 /* StartRoundMusic: the song of the round (table at $1400 by wRound / 4) and the frame countdown task (hVBlankTasks bit 4). */
 void *gb_native_StartRoundMusic(void) {
     NCALL(GAME_WaitVBlankFlag);
+    if (gb_pack_count && gb_pack[pack_index()].song[0]) {         /* a custom song of the level (music text file) */
+        char file[700];
+        gb_pack_resolve(gb_pack[pack_index()].song, file, sizeof file);
+        if (gb_play_custom_song(file)) { wr(hVBlankTasks, rd(hVBlankTasks) | 0x10); return 0; }
+    }
     r.c = (gb_pack_count && rd(wRound) > 0x21 ? 0x21 : rd(wRound)) >> 2;
     SET_HL(0x1400);
     gb_native_LookupByte();
@@ -4625,6 +4632,7 @@ void *gb_native_StartRoundMusic(void) {
 
 /* PayMagicCost: entered with A = MP - cost and the flags of that subtraction (E = A): pays it, or borrows from wMagicPointsHi, or cancels the cast. */
 void *gb_native_PayMagicCost(void) {
+    if (gb_config.infinite_magic) return gb_native_RunMagicEffect();                     /* option infinite_magic */
     if (!CF()) { wr(wMagicPoints, r.a); return gb_native_RunMagicEffect(); }
     uint8_t hi = rd(wMagicPointsHi);
     r.a = hi;
@@ -4889,4 +4897,37 @@ void *gb_native_Mode7_LinkLose(void) {
     } while (rd(hScratch00));
     r.a = rd(wContinues) ? 0x05 : 0x04;
     return (void *)GAME_GameModeDispatch;
+}
+
+/* CopyOamDmaRoutine: the 10 byte DMA routine at $0492 is copied to $ff80 (HRAM); the runtime runs it as gb_dma_routine. */
+void *gb_native_CopyOamDmaRoutine(void) {
+    for (int i = 0; i < 10; i++) wr(0xFF80 + i, rd(0x0492 + i));
+    SET_HL(0x0492 + 10); r.c = 0x80 + 10; r.b = 0; r.a = rd(0x0492 + 9);
+    r.f = 0xC0 | (r.f & 0x10);
+    return 0;
+}
+void *gb_native_ReturnOnly(void) { return 0; }
+/* DrawBonusMetatileMap: a 10 by 9 cell map, then DrawMetatileMap. */
+void *gb_native_DrawBonusMetatileMap(void) {
+    wr(hScratch01, 0x09);
+    wr(hScratch00, 0x0A);
+    r.a = 0x0A;
+    return gb_native_DrawMetatileMap();
+}
+
+/* gb_play_custom_song: compiles a music text file (port/mml.c) into the song window at $a000 and starts it like the game starts a song of its own. */
+int gb_play_custom_song(const char *path) {
+    static char loaded[700];
+    static int size;
+    char err[200];
+    uint8_t buf[0x2000];
+    if (strcmp(path, loaded)) {
+        size = gb_mml_compile(path, buf, sizeof buf, err, sizeof err);
+        if (size < 0) { fprintf(stderr, "music: %s: %s%c", path, err, 10); loaded[0] = 0; return 0; }
+        memset(gb_song_win, 0, sizeof gb_song_win);
+        memcpy(gb_song_win, buf, (size_t)size);
+        snprintf(loaded, sizeof loaded, "%s", path);
+    }
+    start_music_now(rd(0x4141 + 0x86), 0xA000);
+    return 1;
 }

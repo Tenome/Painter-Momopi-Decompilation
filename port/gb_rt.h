@@ -104,6 +104,8 @@ extern int gb_color_scale;
 extern int gb_margin, gb_view_w, gb_wide_active, gb_sprite_limit_off;
 extern uint8_t gb_xoam[GB_XOAM * 4];
 extern int gb_xoam_n;
+extern uint8_t gb_song_win[0x2000];
+int gb_play_custom_song(const char *path);   /* compiles a music text file and starts it as the music; 0 on failure */
 extern void (*gb_frame_hook)(unsigned frame);
 extern void (*gb_audio_hook)(const int16_t *stereo, int frames);
 void gb_load_rom(const uint8_t *data, size_t size);

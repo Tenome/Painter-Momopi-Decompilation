@@ -37,7 +37,10 @@ static const char *dump_path;
 static struct { unsigned frame; uint16_t addr; uint8_t value; } pokes[64];
 static int npokes;
 
+static const char *song_path;
+
 static void hook(unsigned frame) {
+    if (song_path && frame == 120) gb_play_custom_song(song_path);     /* --song FILE: audition a music text file (with --wav) */
     for (int i = 0; i < npokes; i++)
         if (pokes[i].frame == frame) wr(pokes[i].addr, pokes[i].value);
     if (dump_path && frame == dump_frame) gb_dump_state(dump_path);
@@ -102,6 +105,7 @@ int main(int argc, char **argv) {
             if (sscanf(argv[++i], "%u:%31[^:]:%u", &fr, b, &h) == 3) { press[npress].from = fr; press[npress].hold = h; press[npress].bit = button(b); npress++; }
         } else if (!strcmp(argv[i], "--shot") && i + 1 < argc && nshots < MAXP) shots[nshots++] = (unsigned)atoi(argv[++i]);
         else if (!strcmp(argv[i], "--ini") && i + 1 < argc) { gb_config_load(argv[++i]); gb_sprite_limit_off = gb_config.no_sprite_limit; }
+        else if (!strcmp(argv[i], "--song") && i + 1 < argc) song_path = argv[++i];
         else if (!strcmp(argv[i], "--round") && i + 1 < argc) force_round = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--outdir") && i + 1 < argc) outdir = argv[++i];
         else if (!strcmp(argv[i], "--dump") && i + 2 < argc) { dump_frame = (unsigned)atoi(argv[i + 1]); dump_path = argv[i + 2]; i += 2; }

@@ -15,6 +15,9 @@ typedef struct {
     char level_pack[260];   /* a .pmpack level pack (empty = the game's own 33 rounds; see docs/LEVELS.md) */
     char texture_pack[260]; /* folder of full-colour PNG sheets (empty = none; see docs/TEXTURES.md) */
     int start_lives;        /* 0 = 3 */
+    int all_cards;          /* all nine magic cards from the first round */
+    int infinite_magic;     /* casting costs no magic points */
+    int no_time_limit;      /* the round clock stops (no time-up enemy) */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
 } GbConfig;
 extern GbConfig gb_config;

@@ -298,3 +298,6 @@ GotoLinkLose
 SerialHandler
 LinkSyncFrame
 Mode7_LinkLose
+CopyOamDmaRoutine
+ReturnOnly
+DrawBonusMetatileMap

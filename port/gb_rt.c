@@ -12,6 +12,7 @@ int gb_margin;                      /* extra pixels shown on each side of the 16
 int gb_view_w = 160;                /* width of the rendered picture: 160 + 2 * gb_margin */
 int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
 uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
+uint8_t gb_song_win[0x2000];         /* a custom song (music text) as the sound engine reads it, visible at $a000-$bfff */
 int gb_xoam_n, gb_xoam_shown_n;
 int gb_wide_active;                 /* set by the game logic while the play screen is shown */
 void (*gb_frame_hook)(unsigned frame);
@@ -71,7 +72,7 @@ uint8_t rd(uint16_t a) {
     if (gb_pack_view && a < 0x8000) return gb_pack_win[a - 0x4000];     /* the spawn data of a level pack */
     if (a < 0x8000) { size_t o = (size_t)(bank % (rom_size / 0x4000)) * 0x4000 + a - 0x4000; return rom[o]; }
     if (a < 0xA000) return vram[a - 0x8000];
-    if (a < 0xC000) return 0xFF;
+    if (a < 0xC000) return gb_song_win[a - 0xA000];      /* the cartridge RAM area is unused by the game: custom songs live here */
     if (a < 0xE000) return wram[a - 0xC000];
     if (a < 0xFE00) return wram[a - 0xE000];
     if (a < 0xFEA0) return oam[a - 0xFE00];

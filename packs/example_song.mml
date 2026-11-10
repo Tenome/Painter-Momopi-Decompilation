@@ -1,0 +1,16 @@
+title Example song
+; A small tune for the example pack (original composition). See docs/MUSIC.md for the music language.
+; Every channel is 64 eighth notes long, so the three channels loop together.
+tempo 132
+
+pulse1 duty=2 volume=11 decay=1
+  L o4 [ e8 g8 b4 a8 g8 e4 ]2
+  [ d8 f+8 a4 g8 f+8 d4 ]2
+  [ c8 e8 g4 f8 e8 c4 ]2
+  o3 [ b8 > d8 f+4 e8 d8 <b4 ]2
+
+pulse2 duty=1 volume=7
+  L o3 [ e2 ]4 [ d2 ]4 [ c2 ]4 [ b2 ]4
+
+wave pattern=4 level=1
+  L o2 e1 e1 d1 d1 > c1 c1 < b1 b1

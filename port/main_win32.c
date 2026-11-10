@@ -1,6 +1,6 @@
 /* Windows front end for the recompiled game: window, keyboard, audio (waveOut), frame pacing by the audio clock.
  * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit,
- * P = pause, M = mute, F2 = next palette (green/grey/sepia), hold Tab = fast forward.
+ * P = pause, M = mute, F2 = next palette (green/grey/sepia), F12 = screenshot (screenshots folder), hold Tab = fast forward.
  *   game_win [ROM]     (no argument: the game data built into the program; a ROM file argument is for testing mods) */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -50,6 +50,74 @@ static void toggle_fullscreen(HWND h) {
     fullscreen = !fullscreen;
 }
 
+/* F12: the picture as a PNG (stored, uncompressed deflate blocks) in the screenshots folder next to the program */
+static uint32_t crc_table[256];
+static uint32_t crc32_of(uint32_t crc, const uint8_t *p, size_t n) {
+    if (!crc_table[1]) for (uint32_t i = 0; i < 256; i++) { uint32_t c = i; for (int k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320u ^ (c >> 1) : c >> 1; crc_table[i] = c; }
+    crc = ~crc;
+    while (n--) crc = crc_table[(crc ^ *p++) & 255] ^ (crc >> 8);
+    return ~crc;
+}
+static void be32w(uint8_t *p, uint32_t v) { p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }
+static void chunk(FILE *f, const char *type, const uint8_t *data, uint32_t n) {
+    uint8_t h[8], c[4];
+    be32w(h, n); memcpy(h + 4, type, 4);
+    fwrite(h, 1, 8, f);
+    if (n) fwrite(data, 1, n, f);
+    uint8_t *tmp = malloc(4 + n);                         /* the crc covers the type and the data */
+    memcpy(tmp, type, 4);
+    if (n) memcpy(tmp + 4, data, n);
+    uint32_t crc = crc32_of(0, tmp, 4 + n);
+    free(tmp);
+    be32w(c, crc);
+    fwrite(c, 1, 4, f);
+}
+static void save_screenshot(void) {
+    int cs = gb_tex_count ? gb_color_scale : 1, w = gb_view_w * cs, h = 144 * cs;
+    const uint32_t *src = gb_tex_count ? gb_colorbuf : pixels;
+    size_t raw_n = (size_t)(w * 3 + 1) * h;
+    uint8_t *raw = malloc(raw_n), *o = raw;
+    for (int y = 0; y < h; y++) {
+        *o++ = 0;
+        for (int x = 0; x < w; x++) { uint32_t v = src[y * w + x]; *o++ = (uint8_t)(v >> 16); *o++ = (uint8_t)(v >> 8); *o++ = (uint8_t)v; }
+    }
+    size_t zn = 2 + raw_n + 5 * (raw_n / 65535 + 1) + 4;
+    uint8_t *z = malloc(zn), *q = z;
+    *q++ = 0x78; *q++ = 1;
+    uint32_t a = 1, b = 0;
+    for (size_t i = 0; i < raw_n; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
+    for (size_t pos = 0; pos < raw_n || pos == 0;) {
+        size_t n = raw_n - pos > 65535 ? 65535 : raw_n - pos;
+        *q++ = pos + n >= raw_n; *q++ = (uint8_t)n; *q++ = (uint8_t)(n >> 8); *q++ = (uint8_t)~n; *q++ = (uint8_t)(~n >> 8);
+        memcpy(q, raw + pos, n); q += n; pos += n;
+        if (pos >= raw_n) break;
+    }
+    be32w(q, (b << 16) | a); q += 4;
+    char exe[MAX_PATH], path[MAX_PATH];
+    GetModuleFileNameA(0, exe, MAX_PATH);
+    char *slash = strrchr(exe, 92);
+    if (slash) slash[1] = 0; else exe[0] = 0;
+    snprintf(path, sizeof path, "%sscreenshots", exe);
+    CreateDirectoryA(path, 0);
+    SYSTEMTIME t;
+    GetLocalTime(&t);
+    snprintf(path, sizeof path, "%sscreenshots%cpm_%04d%02d%02d_%02d%02d%02d.png", exe, 92, t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+    FILE *f = fopen(path, "wb");
+    if (f) {
+        static const uint8_t sig[8] = {0x89, 'P', 'N', 'G', 13, 10, 26, 10};
+        uint8_t ihdr[13];
+        be32w(ihdr, (uint32_t)w); be32w(ihdr + 4, (uint32_t)h);
+        ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = ihdr[11] = ihdr[12] = 0;
+        fwrite(sig, 1, 8, f);
+        chunk(f, "IHDR", ihdr, 13);
+        chunk(f, "IDAT", z, (uint32_t)(q - z));
+        chunk(f, "IEND", 0, 0);
+        fclose(f);
+    }
+    free(raw); free(z);
+}
+static int want_shot;
+
 static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
     switch (m) {
     case WM_DESTROY: quit = 1; PostQuitMessage(0); return 0;
@@ -59,6 +127,7 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         if (w == 'M') muted = !muted;
         if (w == VK_F2) pal_index = (pal_index + 1) % 3;
         if (w == VK_F11) toggle_fullscreen(h);
+        if (w == VK_F12) want_shot = 1;
         return 0;
     case WM_ERASEBKGND: return 1;
     }
@@ -142,6 +211,7 @@ static void frame(unsigned f) {
         if (quit) { if (wave) waveOutReset(wave); ExitProcess(0); }
         Sleep(30);
     }
+    if (want_shot) { want_shot = 0; save_screenshot(); }
     fast = (GetAsyncKeyState(VK_TAB) & 0x8000) && GetForegroundWindow() == hwnd;
     gb_joy = keys();
 }

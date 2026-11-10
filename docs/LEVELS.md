@@ -21,8 +21,10 @@ otherwise flat colours.
   whether the bonus screens follow, and the enemy flag bit. *auto* means "like the original game at this position of the list".
 * **Enemies tab:** six waves. Pick the *Enemy* tool, choose the kind and when it appears (seconds into the round) and click a cell. Click an enemy to select it,
   right click to delete it. At most three enemies are alive at once; when a wave is finished the next one starts; after wave 5 they repeat.
+* **Own song** (Level tab): a music text file for the level (New / Edit / Browse / Listen), see docs/MUSIC.md.
 * **Custom tiles tab:** texture folders for the whole pack and for the current level (see below).
-* **File** menu: save/load, *Add the game's 33 original levels* (read from your ROM build), *Add levels from another pack* (pick which), *Export the current level*.
+* **Edit** menu: undo and redo (Ctrl+Z, Ctrl+Y), mirror the map, clear it, or make a random maze. The *Fill* tool fills a region.
+* **File** menu: save/load, *Add the game's 33 original levels* (read from your ROM build), *Add levels from another pack* (pick which), *Export the current level*, *Export the pack as a zip file* (with its tiles and songs, to share).
 * **Pack** menu: check the pack for problems, *Play the pack* (F5) or *Play from the current level* (F6) in `game_win.exe`.
 
 ## Playing a pack
@@ -51,6 +53,7 @@ textures folder             (optional, every level)
 level Level name
 theme 3                     0-16 (default: as the original at this position)
 music 0x86                  song id $81-$8b (default: original)
+song tune.mml               (optional) a song of your own instead (docs/MUSIC.md), relative to the pack file
 time 90                     seconds (default: original)
 magic 100                   starting magic points (default: original)
 bonus 0                     1 = the bonus screens follow this level (default: after levels 3, 7, 11, 19, 23 and 27)

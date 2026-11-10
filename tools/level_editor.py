@@ -6,12 +6,15 @@
 Edit custom level packs (docs/LEVELS.md): the order of the levels, every map, the enemies of the six waves, the look, music, time and magic points of
 each level, and the texture folders (full-colour tile replacements) of the whole pack or of a single level. "Play" starts the native player on the pack.
 """
+import copy
 import json
 import os
+import random
 import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -118,6 +121,10 @@ class Editor:
         self.delay = tk.IntVar(value=10)
         self.flag = tk.IntVar(value=0)
         self.selected = None                       # (wave, index) of the selected enemy
+        self.fillbox_var = tk.StringVar(value="fill: 2")
+        self.undo_stack = []
+        self.redo_stack = []
+        self.fillval = tk.IntVar(value=2)
         self.loading = False
         self.build_ui()
         if path:
@@ -162,9 +169,19 @@ class Editor:
         f.add_command(label="Add the game's 33 original levels to this pack", command=self.import_original)
         f.add_command(label="Add levels from another pack...", command=self.import_levels)
         f.add_command(label="Export the current level...", command=self.export_level)
+        f.add_command(label="Export the pack as a zip file (with its tiles and music)...", command=self.export_zip)
         f.add_separator()
         f.add_command(label="Quit", command=self.quit)
         menu.add_cascade(label="File", menu=f)
+        e = tk.Menu(menu, tearoff=0)
+        e.add_command(label="Undo", command=self.undo, accelerator="Ctrl+Z")
+        e.add_command(label="Redo", command=self.redo, accelerator="Ctrl+Y")
+        e.add_separator()
+        e.add_command(label="Mirror the map left to right", command=lambda: self.transform("lr"))
+        e.add_command(label="Mirror the map top to bottom", command=lambda: self.transform("tb"))
+        e.add_command(label="Clear the map", command=lambda: self.transform("clear"))
+        e.add_command(label="Make a random maze", command=lambda: self.transform("maze"))
+        menu.add_cascade(label="Edit", menu=e)
         p = tk.Menu(menu, tearoff=0)
         p.add_command(label="Pack properties...", command=self.pack_properties)
         p.add_command(label="Check the pack", command=self.check_pack)
@@ -180,6 +197,8 @@ class Editor:
         r.bind("<Control-s>", lambda e: self.save())
         r.bind("<Control-o>", lambda e: self.open_dialog())
         r.bind("<F5>", lambda e: self.play(1))
+        r.bind("<Control-z>", lambda e: self.undo())
+        r.bind("<Control-y>", lambda e: self.redo())
         r.bind("<F6>", lambda e: self.play(self.cur + 1))
 
         main = ttk.Frame(r, padding=6)
@@ -203,8 +222,9 @@ class Editor:
         mid.pack(side="left")
         tools = ttk.Frame(mid)
         tools.pack(fill="x")
-        for text, val in (("Empty", "paint0"), ("Path 1", "paint1"), ("Path 2", "paint2"), ("Special", "paint3"), ("Enemy", "enemy")):
+        for text, val in (("Empty", "paint0"), ("Path 1", "paint1"), ("Path 2", "paint2"), ("Special", "paint3"), ("Fill", "fill"), ("Enemy", "enemy")):
             ttk.Radiobutton(tools, text=text, value=val, variable=self.tool, style="Toolbutton").pack(side="left", padx=1)
+        ttk.Combobox(tools, width=7, state="readonly", values=["fill: 0", "fill: 1", "fill: 2", "fill: 3"], textvariable=self.fillbox_var).pack(side="left", padx=2)
         ttk.Label(tools, text="  Left click paints or places, right click erases").pack(side="left")
         self.canvas = tk.Canvas(mid, width=16 * CELL, height=16 * CELL, highlightthickness=1, highlightbackground="#555")
         self.canvas.pack(pady=4)
@@ -249,12 +269,20 @@ class Editor:
         self.v_variant = tk.StringVar()
         self.field(t, "Enemy flag bit", 7, ttk.Combobox(t, textvariable=self.v_variant, values=["auto", "1", "2"], width=8, state="readonly"))
         ttk.Label(t, text="'auto' follows the original: bit 1 up to round 16, bit 2 from round 17.", foreground="#666").grid(row=8, column=0, columnspan=2, sticky="w")
+        self.v_song = tk.StringVar()
+        self.field(t, "Own song (music text)", 9, ttk.Entry(t, textvariable=self.v_song, width=26))
+        srow = ttk.Frame(t)
+        srow.grid(row=10, column=0, columnspan=2, sticky="w")
+        ttk.Button(srow, text="New", width=6, command=self.new_song).pack(side="left")
+        ttk.Button(srow, text="Browse", width=8, command=self.browse_song).pack(side="left", padx=2)
+        ttk.Button(srow, text="Edit", width=6, command=self.edit_song).pack(side="left")
+        ttk.Button(srow, text="Listen", width=7, command=self.listen_song).pack(side="left", padx=2)
+        ttk.Label(t, text="Replaces the music above (docs/MUSIC.md).", foreground="#666").grid(row=11, column=0, columnspan=2, sticky="w")
         self.v_paint = ttk.Label(t, text="")
-        self.v_paint.grid(row=9, column=0, columnspan=2, sticky="w", pady=(10, 0))
+        self.v_paint.grid(row=12, column=0, columnspan=2, sticky="w", pady=(10, 0))
         self.theme_preview = tk.Canvas(t, width=4 * 36, height=36, highlightthickness=0)
-        self.theme_preview.grid(row=10, column=0, columnspan=2, sticky="w", pady=6)
-        ttk.Button(t, text="Apply", command=self.apply_level_fields).grid(row=11, column=0, columnspan=2, sticky="w", pady=6)
-        for v in (self.v_name, self.v_theme, self.v_music, self.v_time, self.v_magic, self.v_bonus, self.v_variant):
+        self.theme_preview.grid(row=13, column=0, columnspan=2, sticky="w", pady=6)
+        for v in (self.v_name, self.v_theme, self.v_music, self.v_time, self.v_magic, self.v_bonus, self.v_variant, self.v_song):
             v.trace_add("write", lambda *a: self.apply_level_fields(quiet=True))
 
     def build_enemy_tab(self, nb):
@@ -353,6 +381,7 @@ class Editor:
         self.v_variant.set("auto" if lv.variant is None else str(lv.variant))
         self.v_ltex.set(lv.textures)
         self.v_ptex.set(self.pack.textures)
+        self.v_song.set(lv.song)
         self.loading = False
         self.update_paint_label()
         self.draw_theme_preview()
@@ -449,6 +478,7 @@ class Editor:
         lv.bonus = None if b == "auto" else 1 if b == "yes" else 0
         v = self.v_variant.get()
         lv.variant = None if v == "auto" else int(v)
+        lv.song = self.v_song.get().strip()
         self.touch()
         self.listbox.delete(self.cur)
         self.listbox.insert(self.cur, "%2d  %s" % (self.cur + 1, lv.name))
@@ -463,6 +493,190 @@ class Editor:
         self.pack.textures = self.v_ptex.get().strip()
         self.touch()
 
+    # ---------------------------------------------------------------- undo and map tools
+    def push_undo(self):
+        self.undo_stack.append((self.cur, self.level.copy()))
+        del self.undo_stack[:-100]
+        self.redo_stack = []
+
+    def undo(self):
+        if not self.undo_stack:
+            return
+        idx, lv = self.undo_stack.pop()
+        if idx < len(self.pack.levels):
+            self.redo_stack.append((idx, self.pack.levels[idx].copy()))
+            self.pack.levels[idx] = lv
+            self.cur = idx
+            self.selected = None
+            self.touch()
+            self.refresh_all()
+
+    def redo(self):
+        if not self.redo_stack:
+            return
+        idx, lv = self.redo_stack.pop()
+        if idx < len(self.pack.levels):
+            self.undo_stack.append((idx, self.pack.levels[idx].copy()))
+            self.pack.levels[idx] = lv
+            self.cur = idx
+            self.selected = None
+            self.touch()
+            self.refresh_all()
+
+    def transform(self, what):
+        lv = self.level
+        self.push_undo()
+        if what == "lr":
+            lv.map = [row[::-1] for row in lv.map]
+            for w in lv.waves:
+                for e in w:
+                    col, row = lp.cell_of(e[1], e[2])
+                    e[1], e[2] = lp.pos_of(15 - col, row, e[2] & 7)
+        elif what == "tb":
+            lv.map = lv.map[::-1]
+            for w in lv.waves:
+                for e in w:
+                    col, row = lp.cell_of(e[1], e[2])
+                    e[1], e[2] = lp.pos_of(col, 15 - row, e[2] & 7)
+        elif what == "clear":
+            lv.map = [[0] * 16 for _ in range(16)]
+            lv.map[6][7] = 2
+        elif what == "maze":
+            lv.map = self.make_maze()
+        self.touch()
+        self.redraw()
+
+    @staticmethod
+    def make_maze():
+        """a random maze of one cell wide corridors that includes the player start (column 7, row 6)"""
+        cols = list(range(1, 14, 2))
+        rows = list(range(2, 13, 2))
+        m = [[0] * 16 for _ in range(16)]
+        seen = set()
+        start = (7, 6)
+        stack = [start]
+        seen.add(start)
+        m[start[1]][start[0]] = 2
+        while stack:
+            c, r = stack[-1]
+            nb = [(c + dx, r + dy) for dx, dy in ((2, 0), (-2, 0), (0, 2), (0, -2)) if (c + dx) in cols and (r + dy) in rows and (c + dx, r + dy) not in seen]
+            if not nb:
+                stack.pop()
+                continue
+            nc, nr = random.choice(nb)
+            m[(r + nr) // 2][(c + nc) // 2] = 2
+            m[nr][nc] = 2
+            seen.add((nc, nr))
+            stack.append((nc, nr))
+        for _ in range(8):                                          # a few extra openings make loops
+            c, r = random.choice(cols), random.choice(rows)
+            dx, dy = random.choice(((2, 0), (0, 2)))
+            if (c + dx) in cols and (r + dy) in rows:
+                m[r + dy // 2][c + dx // 2] = 2
+        return m
+
+    def flood(self, c, value):
+        col, row = c
+        m = self.level.map
+        old = m[row][col]
+        if old == value:
+            return
+        self.push_undo()
+        todo = [(col, row)]
+        while todo:
+            x, y = todo.pop()
+            if 0 <= x < 16 and 0 <= y < 16 and m[y][x] == old:
+                m[y][x] = value
+                todo += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        self.touch()
+        self.redraw()
+
+    # ---------------------------------------------------------------- music files
+    def song_path(self):
+        return self.resolve(self.v_song.get().strip())
+
+    def new_song(self):
+        if not self.path:
+            messagebox.showinfo("Music", "Save the pack first: songs are stored next to the pack file.")
+            return
+        name = "".join(ch if ch.isalnum() else "_" for ch in self.level.name).lower() or "song"
+        rel = self.v_song.get().strip() or "%s.mml" % name
+        target = self.resolve(rel)
+        if not os.path.exists(target):
+            example = os.path.join(ROOT, "packs", "example_song.mml")
+            if os.path.exists(example):
+                shutil.copy(example, target)
+            else:
+                open(target, "w").write("title %s\ntempo 120\n\npulse1 duty=2 volume=12\n  L o4 c4 e4 g4 >c4 <g4 e4 c2 r2\n" % self.level.name)
+        self.v_song.set(rel)
+        self.edit_song()
+
+    def browse_song(self):
+        d = filedialog.askopenfilename(initialdir=self.pack_dir() or ROOT, filetypes=[("music text", "*.mml *.txt"), ("all", "*.*")])
+        if d:
+            base = self.pack_dir()
+            try:
+                self.v_song.set(os.path.relpath(d, base) if base else d)
+            except ValueError:
+                self.v_song.set(d)
+
+    def edit_song(self):
+        p = self.song_path()
+        if not p or not os.path.exists(p):
+            messagebox.showinfo("Music", "Choose or create a song first.")
+            return
+        if sys.platform == "win32":
+            os.startfile(p)
+        else:
+            subprocess.Popen(["xdg-open", p])
+
+    def listen_song(self):
+        p = self.song_path()
+        if not p or not os.path.exists(p):
+            messagebox.showinfo("Music", "Choose or create a song first.")
+            return
+        head = os.path.join(ROOT, "build", "recomp", "game_headless.exe" if sys.platform == "win32" else "game_headless")
+        if not os.path.exists(head):
+            messagebox.showinfo("Music", "game_headless was not found (build it with tools/build_port.py).")
+            return
+        wav = os.path.join(tempfile.gettempdir(), "pm_preview.wav")
+        r = subprocess.run([head, "-", "900", "--song", p, "--wav", wav], capture_output=True, text=True)
+        if "music:" in r.stderr:
+            messagebox.showerror("Music", r.stderr.strip().splitlines()[-2] if len(r.stderr.strip().splitlines()) > 1 else r.stderr)
+            return
+        if sys.platform == "win32":
+            import winsound
+            winsound.PlaySound(wav, winsound.SND_FILENAME | winsound.SND_ASYNC)
+        else:
+            subprocess.Popen(["xdg-open", wav])
+
+    def export_zip(self):
+        if not self.path and not self.save():
+            return
+        self.save()
+        out = filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("zip file", "*.zip")], initialfile=os.path.splitext(os.path.basename(self.path))[0] + ".zip")
+        if not out:
+            return
+        base = self.pack_dir()
+        files = {os.path.basename(self.path): self.path}
+        refs = [self.pack.textures] + [lv.textures for lv in self.pack.levels]
+        for rel in refs:
+            d = self.resolve(rel) if rel else None
+            if d and os.path.isdir(d):
+                for root, _, names in os.walk(d):
+                    for n in names:
+                        full = os.path.join(root, n)
+                        files[os.path.relpath(full, base)] = full
+        for lv in self.pack.levels:
+            if lv.song:
+                full = self.resolve(lv.song)
+                if full and os.path.exists(full):
+                    files[os.path.relpath(full, base)] = full
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+            for arc, full in files.items():
+                z.write(full, arc.replace(os.sep, "/"))
+        messagebox.showinfo("Export", "%d files written to %s" % (len(files), out))
+
     def cell_at(self, e):
         col, row = e.x // CELL, e.y // CELL
         return (col, row) if 0 <= col < 16 and 0 <= row < 16 else None
@@ -472,7 +686,10 @@ class Editor:
         if not c:
             return
         tool = self.tool.get()
-        if tool.startswith("paint"):
+        if tool == "fill":
+            self.flood(c, int(self.fillbox_var.get()[-1]))
+        elif tool.startswith("paint"):
+            self.push_undo()
             self.set_cell(c, int(tool[-1]))
         else:
             hit = self.enemy_at(c)
@@ -497,11 +714,14 @@ class Editor:
         if self.tool.get() == "enemy":
             hit = self.enemy_at(c)
             if hit:
+                self.push_undo()
                 del self.level.waves[hit[0]][hit[1]]
                 self.selected = None
                 self.touch()
                 self.refresh_enemies()
         else:
+            if e.type == tk.EventType.ButtonPress:
+                self.push_undo()
             self.set_cell(c, 0)
 
     def set_cell(self, c, v):
@@ -531,6 +751,7 @@ class Editor:
         if len(self.level.waves[w]) >= 60:
             messagebox.showinfo("Enemies", "A wave holds at most 60 enemies.")
             return
+        self.push_undo()
         x, y = lp.pos_of(c[0], c[1], 1 if self.flag.get() else 0)
         self.level.waves[w].append([self.kind_value(), x, y, int(self.delay.get() or 0)])
         self.selected = (w, len(self.level.waves[w]) - 1)
@@ -575,6 +796,7 @@ class Editor:
 
     def del_enemy(self):
         if self.selected:
+            self.push_undo()
             w, i = self.selected
             del self.level.waves[w][i]
             self.selected = None
@@ -582,6 +804,7 @@ class Editor:
             self.refresh_enemies()
 
     def clear_wave(self):
+        self.push_undo()
         self.level.waves[self.wave.get()] = []
         self.selected = None
         self.touch()
