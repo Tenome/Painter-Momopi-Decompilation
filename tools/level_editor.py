@@ -269,6 +269,8 @@ class Editor:
         self.v_variant = tk.StringVar()
         self.field(t, "Enemy flag bit", 7, ttk.Combobox(t, textvariable=self.v_variant, values=["auto", "1", "2"], width=8, state="readonly"))
         ttk.Label(t, text="'auto' follows the original: bit 1 up to round 16, bit 2 from round 17.", foreground="#666").grid(row=8, column=0, columnspan=2, sticky="w")
+        self.v_title = tk.StringVar()
+        self.field(t, "Intro title (8 letters)", 14, ttk.Entry(t, textvariable=self.v_title, width=12))
         self.v_song = tk.StringVar()
         self.field(t, "Own song (music text)", 9, ttk.Entry(t, textvariable=self.v_song, width=26))
         srow = ttk.Frame(t)
@@ -282,7 +284,7 @@ class Editor:
         self.v_paint.grid(row=12, column=0, columnspan=2, sticky="w", pady=(10, 0))
         self.theme_preview = tk.Canvas(t, width=4 * 36, height=36, highlightthickness=0)
         self.theme_preview.grid(row=13, column=0, columnspan=2, sticky="w", pady=6)
-        for v in (self.v_name, self.v_theme, self.v_music, self.v_time, self.v_magic, self.v_bonus, self.v_variant, self.v_song):
+        for v in (self.v_name, self.v_theme, self.v_music, self.v_time, self.v_magic, self.v_bonus, self.v_variant, self.v_song, self.v_title):
             v.trace_add("write", lambda *a: self.apply_level_fields(quiet=True))
 
     def build_enemy_tab(self, nb):
@@ -382,6 +384,7 @@ class Editor:
         self.v_ltex.set(lv.textures)
         self.v_ptex.set(self.pack.textures)
         self.v_song.set(lv.song)
+        self.v_title.set(lv.title)
         self.loading = False
         self.update_paint_label()
         self.draw_theme_preview()
@@ -479,6 +482,7 @@ class Editor:
         v = self.v_variant.get()
         lv.variant = None if v == "auto" else int(v)
         lv.song = self.v_song.get().strip()
+        lv.title = self.v_title.get().strip()[:8]
         self.touch()
         self.listbox.delete(self.cur)
         self.listbox.insert(self.cur, "%2d  %s" % (self.cur + 1, lv.name))

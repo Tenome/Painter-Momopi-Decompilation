@@ -1512,11 +1512,28 @@ void *gb_native_Mode3_RoundIntro(void) {
     r.b = (rd(hLinkFlags) & 0x01) ? 1 : rd(wLives);
     SET_HL(0x992C);
     NCALL(GAME_DrawTwoDigitNumber);
+    if (gb_pack_count && gb_pack[pack_index()].title[0]) {              /* a title of the level: 8 tiles, letters A-Z (tile $80 +), digits, blank = $ff */
+        const char *t = gb_pack[pack_index()].title;
+        int len = (int)strlen(t) > 8 ? 8 : (int)strlen(t), pad = (8 - len) / 2;
+        uint8_t *s = gb_pack_win + sizeof gb_pack_win - 16;
+        s[0] = 8; s[1] = 1;
+        for (int i = 0; i < 8; i++) {
+            int c = (i >= pad && i < pad + len) ? t[i - pad] : ' ';
+            if (c >= 'a' && c <= 'z') c -= 32;
+            s[2 + i] = (c >= 'A' && c <= 'Z') ? (uint8_t)(0x80 + c - 'A') : (c >= '0' && c <= '9') ? rd(0x10AB + c - '0') : 0xFF;
+        }
+        gb_pack_view = 1;
+        SET_HL(0x98C3);
+        SET_DE(0x4000 + (uint16_t)(sizeof gb_pack_win - 16));
+        NCALL(GAME_VramCopyStream);
+        gb_pack_view = 0;
+    } else {
     r.a = gb_pack_count ? (uint8_t)(room_code() + 1) : rd(wRound);        /* the name of the room follows its look */
     SET_HL(DATA_RoomNameJobTable);
     NCALL(GAME_TableIndexFromRoundDec);
     SET_HL(0x98C3);
     NCALL(GAME_VramCopyStream);
+    }
     NCALL(GAME_RequestOamDma);
     NCALL(GAME_ClearOamShadowY);
     gb_native_ClearRoomState();

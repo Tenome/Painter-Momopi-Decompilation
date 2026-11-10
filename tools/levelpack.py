@@ -10,6 +10,7 @@ Format (text, one item per line; see docs/LEVELS.md):
     level Level name
     theme 3                    0-16: the look (tile set, floor, walls, room name); default = as in the original at this position
     music 0x84                 song id $81-$8b; default = original
+    title NIGHT                (optional) up to 8 letters shown as the room name on the round intro screen
     song music.mml             (optional) a music text file played instead (docs/MUSIC.md)
     time 90                    seconds; magic 100  starting magic points; bonus 1  bonus screens follow; variant 1  spawn flag bit (1 or 2)
     textures folder            (optional: texture sheets used only in this level)
@@ -35,6 +36,7 @@ class Level:
         self.theme = self.music = self.time = self.magic = self.bonus = self.variant = None   # None = the original's value at this position
         self.textures = ""
         self.song = ""
+        self.title = ""
         self.map = [[0] * 16 for _ in range(16)]
         self.waves = [[] for _ in range(6)]          # lists of [kind, x, y, delay]
 
@@ -46,6 +48,7 @@ class Level:
         n.name = self.name
         n.textures = self.textures
         n.song = self.song
+        n.title = self.title
         for k in FIELDS:
             setattr(n, k, getattr(self, k))
         n.map = [row[:] for row in self.map]
@@ -104,6 +107,8 @@ def load(path):
             cur.textures = rest
         elif key == "song":
             cur.song = rest
+        elif key == "title":
+            cur.title = rest
         elif key == "map":
             in_map = 16
         elif key == "wave":
@@ -131,6 +136,8 @@ def save(pack, path):
             v = getattr(lv, key)
             if v is not None:
                 out.append("%s %s" % (key, hex(v) if key == "music" else v))
+        if lv.title:
+            out.append("title " + lv.title)
         if lv.song:
             out.append("song " + lv.song)
         if lv.textures:

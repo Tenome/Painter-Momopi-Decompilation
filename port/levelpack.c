@@ -94,6 +94,7 @@ int gb_pack_load(const char *path) {
         else if (!strcmp(key, "magic")) l->magic = (int)strtol(rest, 0, 0);
         else if (!strcmp(key, "bonus")) l->bonus = (int)strtol(rest, 0, 0);
         else if (!strcmp(key, "variant")) l->variant = (int)strtol(rest, 0, 0);
+        else if (!strcmp(key, "title")) strncpy(l->title, rest, sizeof l->title - 1);
         else if (!strcmp(key, "song")) strncpy(l->song, rest, sizeof l->song - 1);
         else if (!strcmp(key, "textures")) strncpy(l->textures, rest, sizeof l->textures - 1);
         else if (!strcmp(key, "map")) { in_map = 1; map_row = 0; }
@@ -113,7 +114,7 @@ int gb_pack_load(const char *path) {
         for (int c = 0; c < 256; c++) if (l->map[c]) l->paint++;
         for (int w = 0; w < 6; w++) {
             int cnt = nwave[i][w], need = 1 + cnt * 4 + 4;
-            if (off + need > (int)sizeof gb_pack_win) { fprintf(stderr, "level pack: too many enemies in total (the spawn data is limited to 16 KB)\n"); return gb_pack_count = 0; }
+            if (off + need > (int)sizeof gb_pack_win - 32) { fprintf(stderr, "level pack: too many enemies in total (the spawn data is limited to 16 KB)\n"); return gb_pack_count = 0; }
             gb_pack_win[i * 12 + w * 2] = (uint8_t)((0x4000 + off) & 255);
             gb_pack_win[i * 12 + w * 2 + 1] = (uint8_t)((0x4000 + off) >> 8);
             gb_pack_win[off] = (uint8_t)cnt;

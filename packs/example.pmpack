@@ -5,6 +5,7 @@ level Crossroads
 theme 0
 time 120
 bonus 0
+title CROSS
 song example_song.mml
 map
 0000000000000000
@@ -35,6 +36,7 @@ level The Spiral
 theme 3
 time 150
 bonus 0
+title SPIRAL
 map
 0000000000000000
 0122222222222210
@@ -63,6 +65,7 @@ level Grid
 theme 8
 time 170
 bonus 0
+title GRID 3
 map
 0000000000000000
 0222222222222220

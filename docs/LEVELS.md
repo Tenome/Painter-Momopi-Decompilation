@@ -52,6 +52,7 @@ textures folder             (optional, every level)
 
 level Level name
 theme 3                     0-16 (default: as the original at this position)
+title NIGHT                 up to 8 letters (A-Z, 0-9) shown as the room name on the round intro screen (default: the look's own name)
 music 0x86                  song id $81-$8b (default: original)
 song tune.mml               (optional) a song of your own instead (docs/MUSIC.md), relative to the pack file
 time 90                     seconds (default: original)

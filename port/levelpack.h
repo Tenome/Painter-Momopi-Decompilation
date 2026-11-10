@@ -14,6 +14,7 @@ typedef struct {
     uint8_t map[256];       /* 16 x 16 cells, 0-3 (row by row) */
     int paint;              /* cells to paint: the number of cells that are not 0 */
     char name[48];
+    char title[16];         /* up to 8 letters shown as the room name on the round intro screen; empty = the look's own name */
     char song[160];         /* music text file played as this level's music (relative to the pack file); empty = the music id above */
     char textures[160];     /* folder of texture sheets used only in this level (relative to the pack file); empty = none */
 } GbLevel;
