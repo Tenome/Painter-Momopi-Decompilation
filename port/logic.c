@@ -4683,3 +4683,40 @@ void *gb_native_EnemyKind9Move(void) {
     NCALL(GAME_EnemyTurnIfBlocked);
     return gb_native_MoveAndApplyObject();
 }
+
+/* GameModeDispatch: A = mode (0-7): the handler is the word at $01ae + 2 * A (the table after the rst $00). */
+void *gb_native_GameModeDispatch(void) {
+    uint16_t at = (uint16_t)(0x01AE + (uint8_t)(r.a * 2));
+    uint16_t handler = rd(at) | rd(at + 1) << 8;
+    SET_HL(handler); r.e = (uint8_t)handler; r.d = handler >> 8;
+    return (void *)gb_dispatch(handler);
+}
+
+/* Start: stack at $dfff, LCD off, work RAM and the high RAM cleared, the OAM DMA routine copied, background map 0 filled with $ff, the OAM shadow cleared,
+ * palettes, round 1, 3 lives, VBlank interrupt on, LCD on, the sound silenced; then mode 0 (the title). */
+void *gb_native_Start(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    wr(0x3FFF, 0x01);
+    SET_HL(0xC000); SET_BC(0x1FEF);
+    gb_native_ClearMemory();
+    SET_HL(hOamDma); SET_BC(0x007E);
+    gb_native_ClearMemory();
+    NCALL(GAME_CopyOamDmaRoutine);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    gb_native_ClearOamShadow();
+    wr(rBGP, PAL_NORMAL); wr(rOBP0, PAL_NORMAL); wr(rOBP1, PAL_NORMAL);
+    wr(rSCX, 0); wr(rSCY, 0);
+    wr(wRound, 0x01); wr(wRoundBackup, 0x01);
+    wr(wLives, 0x03);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    r.a = 0xFF;
+    NCALL(GAME_PlaySound);
+    r.a = 0;
+    return (void *)GAME_GameModeDispatch;
+}

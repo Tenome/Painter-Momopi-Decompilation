@@ -285,3 +285,5 @@ MoveAndApplyObject
 SetEnemyAnimation
 EnemyInitAnim3bbe
 EnemyKind9Move
+GameModeDispatch
+Start
