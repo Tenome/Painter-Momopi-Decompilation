@@ -3934,3 +3934,408 @@ void *gb_native_EndingCreditsWindow(void) {
     gb_native_EndingShowCreditsPage();
     return 0;
 }
+
+/* ContinueCursorInput: B (hJoyNew bit 5... the pad bits $30: left or right) puts the cursor on YES (X $3c, wMagicCol 0) or NO (X $74, wMagicCol 1). */
+void *gb_native_ContinueCursorInput(void) {
+    uint8_t pad = rd(hJoyNew) & 0x30;
+    r.a = pad;
+    if (!pad) return 0;
+    if (pad & 0x10) { wr(wCursorX, 0x74); wr(wMagicCol, 1); r.a = 1; }
+    else { wr(wCursorX, 0x3C); wr(wMagicCol, 0); r.a = 0; }
+    return 0;
+}
+
+/* Mode5_Continue: "CONTINUE?" with YES and NO and a countdown (wPlayerBlocked from $f0, one per frame; at 0 the game restarts). YES (A on the left): the round and
+ * the cards are kept and wContinues goes down, then mode 3; NO: everything is reset (round 1, no cards, new continues) and mode 4 (game over) follows. Link games exchange the
+ * answer over the cable. wCheatFlags bit 0 (the title code) gives endless continues, shown as two special tiles. */
+void *gb_native_Mode5_Continue(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    NCALL(GAME_LoadTilesBank3A);
+    NCALL(GAME_ClearOamShadow);
+    SET_BC(0x2085);
+    NCALL(GAME_RunVramCopyList);
+    SET_HL(0x2083);
+    gb_native_SetCursorAnimation();
+    wr(wCursorX, 0x3C);
+    wr(wCursorY, 0x50);
+    wr(wCursorObject, 0x80);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(wMagicCol, 0);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
+    if (rd(wCheatFlags) & 0x01) {
+        wr(wContinues, 0xFF);
+        wr(wTextBuf, 0x02);
+        wr(wTextBuf + 1, 0x01);
+        wr(wTextBuf + 2, 0xCD);
+        wr(wTextBuf + 3, 0xCE);
+    } else {
+        wr(wTextBuf, 0x01);
+        wr(wTextBuf + 1, 0x01);
+        r.a = rd(wContinues);
+        NCALL(GAME_NumberToTile);
+        wr(wTextBuf + 2, r.a);
+    }
+    SET_DE(wTextBuf);
+    SET_HL(0x98A9);
+    NCALL(GAME_VramCopyStream);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rSB, 0xEE);
+    NCALL(GAME_SerialStartTransfer);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    wr(wPlayerBlocked, 0xF0);
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        if (rd(hSerialByte) & 0x10) goto remote_round;
+        if (rd(hLinkFlags) & 0x08) { r.a = 4; return (void *)GAME_GameModeDispatch; }
+        NCALL(GAME_ReadJoypad);
+        gb_native_ContinueCursorInput();
+        SET_HL(wCursorObject);
+        gb_native_SetObjPtr();
+        NCALL(GAME_DrawObjectBytePos);
+        SET_HL(wPlayerBlocked);
+        wr(wPlayerBlocked, rd(wPlayerBlocked) - 1);
+        if (rd(wPlayerBlocked) == 0) return (void *)GAME_Entry;
+        if (!(rd(hJoyNew) & 0x01)) continue;
+        break;
+    }
+    if (rd(wMagicCol) != 0) {                      /* NO */
+        wr(wRoomIndex, 0);
+        wr(wRound, 1);
+        wr(wRoundBackup, 1);
+        SET_HL(wMagicCards);
+        SET_BC(0x0008);
+        gb_native_ClearMemory();
+        if (rd(hLinkFlags) & 0x01) { r.c = 0x10; NCALL(GAME_SerialSendByte); }
+        wr(wContinues, (rd(wCheatFlags) & 0x01) ? 0xFF : 0x05);
+        r.a = 4;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (rd(hLinkFlags) & 0x01) {                   /* YES in a link game: pick the round and tell the other machine */
+        NCALL(GAME_PickRandomRound);
+        if (!(rd(rSC) & 0x80)) goto remote_round;
+        r.c = rd(wRound) | 0x80;
+        NCALL(GAME_SerialSendByte);
+    }
+    goto yes;
+remote_round:
+    wr(rSB, 0);
+    wr(hSerialByte, 0);
+    wr(wRound, rd(wRemoteRound));
+    wr(wRoundBackup, rd(wRemoteRound));
+    wr(wRoomIndex, rd(wRemoteRound) - 1);
+yes:
+    wr(wRoundFlags, rd(wRoundFlags) & ~0x04);
+    wr(wContinues, rd(wContinues) - 1);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* ---- the title screen ---- */
+
+/* InitTitleVariables: link flags, the code flags, the cards and the bonus counter are cleared; 5 continues; the cursor object at X $34, Y $64 with its animation. */
+void *gb_native_InitTitleVariables(void) {
+    wr(hLinkFlags, 0);
+    wr(wCheatFlags, 0);
+    for (int i = 0; i < 9; i++) wr(wMagicCards + i, 0);
+    wr(0xC487, 0);
+    wr(wContinues, 0x05);
+    wr(wCursorX, 0x34);
+    wr(wCursorY, 0x64);
+    wr(wCursorObject, 0x80);
+    SET_HL(0x2B84);
+    return gb_native_SetCursorAnimation();
+}
+
+/* TitleCursorUpdate: Select (hJoyNew = 4) toggles the cursor between 1 PLAYER (Y $64) and 2 PLAYER (Y $74); the cursor object is drawn. */
+void *gb_native_TitleCursorUpdate(void) {
+    if (rd(hJoyNew) == 0x04) wr(wCursorY, rd(wCursorY) == 0x64 ? 0x74 : 0x64);
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
+}
+
+/* PickRandomRound (link games): wRound = a random number 1-30 from hRngCounter (the value $1f gives $1e); wRoundBackup and wRoomIndex follow. */
+void *gb_native_PickRandomRound(void) {
+    uint8_t round;
+    for (;;) {
+        gb_native_NextRandomDirection();
+        round = rd(hRngCounter) & 0x1F;
+        if (round) break;
+    }
+    if (round == 0x1F) round--;
+    wr(wRound, round);
+    wr(wRoundBackup, round);
+    wr(wRoomIndex, round - 1);
+    r.a = round - 1;
+    return 0;
+}
+
+/* Mode0_Title: sets up the title (tiles, music, the logo list, the cursor) and runs TitleLoop. The loop: a serial byte with bit 4 means the other machine started a link game
+ * (the round it sent is taken over); the pad value $93 held goes to the ending (mode 6, a test) and $47 sets the unlimited continues flag (wCheatFlags bit 0); Start (hJoyNew = 8)
+ * on 1 PLAYER starts mode 3 at round 1 (the serial register is cleared and $88 sent so a partner machine joins as the second player); on 2 PLAYER a random round is sent and the
+ * answer decides: no partner leaves the cursor on 1 PLAYER, a partner starts a link game. */
+void *gb_native_Mode0_Title(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3A);
+    r.a = SND_MUSIC_TITLE;
+    NCALL(GAME_PlaySound);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_BC(0x2B86);
+    NCALL(GAME_RunVramCopyList);
+    NCALL(GAME_RequestOamDma);
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    gb_native_InitTitleVariables();
+    wr(rSB, 0xEE);
+    NCALL(GAME_SerialStartTransfer);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        if (rd(hSerialByte) & 0x10) goto partner_started;
+        NCALL(GAME_ReadJoypad);
+        if (rd(hJoyHeld) == 0x93) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+        if (rd(hJoyHeld) == 0x47) wr(wCheatFlags, rd(wCheatFlags) | 0x01);
+        call_native(gb_native_TitleCursorUpdate);
+        if (rd(wCheatFlags) & 0x20) {
+            wr(wCheatTimer, rd(wCheatTimer) - 1);
+            if (rd(wCheatTimer) != 0) {
+                if (rd(wCursorY) != 0x64) continue;
+                if (rd(hJoyNew) != 0x08) continue;
+                goto one_player;
+            }
+            wr(wCheatFlags, rd(wCheatFlags) & ~0x20);
+        }
+        if (rd(hJoyNew) != 0x08) continue;
+        if (rd(wCursorY) == 0x64) goto one_player;
+        NCALL(GAME_PickRandomRound);
+        r.c = rd(wRound) | 0x80;
+        NCALL(GAME_SerialSendByte);
+        {
+            uint8_t answer = rd(rSB);
+            if (answer == 0xEE) { wr(wCheatFlags, rd(wCheatFlags) & ~0x22); }
+            else if (answer == 0xFF) { wr(wCheatFlags, rd(wCheatFlags) | 0x02); }
+            else if (answer == 0x88) { wr(wCheatTimer, 0xA0); wr(wCheatFlags, rd(wCheatFlags) | 0x20); }
+            else { wr(wCursorY, 0x64); continue; }
+        }
+        if ((rd(wCheatFlags) & 0x02) || (rd(wCheatFlags) & 0x20)) { wr(wCursorY, 0x64); continue; }
+        SET_HL(hLinkFlags);
+        wr(hLinkFlags, rd(hLinkFlags) | 0x01);
+        r.a = 3;
+        return (void *)GAME_GameModeDispatch;
+    }
+partner_started:
+    wr(hLinkFlags, rd(hLinkFlags) | 0x01);
+    wr(wRound, rd(wRemoteRound));
+    wr(wRoundBackup, rd(wRemoteRound));
+    wr(wRoomIndex, rd(wRemoteRound) - 1);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+one_player:
+    wr(rSC, rd(rSC) & ~0x80);
+    wr(rSB, 0x88);
+    NCALL(GAME_SerialStartTransfer);
+    SET_HL(wCheatFlags);
+    wr(wCheatFlags, rd(wCheatFlags) | 0x08);
+    wr(wRound, 1);
+    wr(wRoundBackup, 1);
+    wr(wRoomIndex, 0);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* ---- small setup routines ---- */
+void *gb_native_ClearRoundVariables(void) {
+    wr(wExtraLifeIdx, 0);
+    wr(wScoreDigits, 0); wr(wScoreDigits + 1, 0); wr(wScoreDigits + 2, 0);
+    for (int i = 0; i < 6; i++) wr(wScoreDecimal + i, 0);
+    wr(wScoreStream, 0x06);
+    wr(wScoreStream + 1, 0x01);
+    for (int i = 0; i < 6; i++) wr(wScoreStream + 2 + i, 0xAB);
+    r.a = 0xAB;
+    return 0;
+}
+
+/* CheckExtraLife: once the second score byte has reached 2 (a score of 200 or more in base 100 digits), a life is added each time the top score digit ($c46a) hits the next value of
+ * the table at $11e7 (the index wExtraLifeIdx runs through 5 entries). */
+void *gb_native_CheckExtraLife(void) {
+    if (!(rd(wRoundFlags) & 0x02)) {
+        if (rd(wScoreDigits + 1) < 0x02) return 0;
+        SET_HL(wRoundFlags);
+        wr(wRoundFlags, rd(wRoundFlags) | 0x02);
+    }
+    uint8_t digit = rd(wScoreDecimal + 3);
+    uint8_t index = rd(wExtraLifeIdx);
+    if (index == 0x05) { index = 0; wr(wExtraLifeIdx, 0); }
+    if (rd(0x11E7 + index) != digit) return 0;
+    wr(wLives, rd(wLives) + 1);
+    SET_HL(wExtraLifeIdx);
+    wr(wExtraLifeIdx, rd(wExtraLifeIdx) + 1);
+    return 0;
+}
+
+/* InitMagicPoints: the magic points of the round from MagicPointsTable (16 bit per round), or $0140 in a link game. */
+void *gb_native_InitMagicPoints(void) {
+    if (rd(hLinkFlags) & 0x01) {
+        wr(wMagicPoints, 0x40);
+        wr(wMagicPointsHi, 0x01);
+    } else {
+        uint16_t entry = 0x1462 + (uint8_t)(rd(wRound) << 1);
+        wr(wMagicPointsHi, rd(entry));
+        wr(wMagicPoints, rd(entry + 1));
+    }
+    wr(0xFFEA, 0);
+    r.a = 0;
+    return 0;
+}
+
+void *gb_native_InitMagicScreenState(void) {
+    wr(wMagicCol, 0); wr(wMagicRow, 0); wr(wCursorBlink, 0); wr(wMagicScreenFlags, 0);
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    wr(wCursorObject, 0xA0);
+    wr(wCursorX, 0x28);
+    wr(wCursorY, 0x68);
+    SET_HL(0x1A30);
+    return gb_native_SetCursorAnimation();
+}
+
+void *gb_native_ClearEnemySlot(void) { SET_HL(hObject2); return gb_native_Clear32Bytes(); }
+
+void *gb_native_ClearAllEnemies(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(wEnemyLoopIdx, i);
+        r.a = i;
+        SET_HL(DATA_EnemySlotTable);
+        gb_native_SelectEnemySlot();
+        wr(HL(), 0);
+    }
+    wr(wEnemyLoopIdx, 0xFF);
+    r.a = 0xFF;
+    return 0;
+}
+
+/* FindFreeEnemySlot: scans the 16 slots from 15 down for one that is not in use and creates an enemy there from hScratch07 (kind), hScratch08 (X), hScratch0A (Y)
+ * and hSpawnFlag: flags $82, then the slot is stored. */
+void *gb_native_FindFreeEnemySlot(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(hScratch00 + 6, i);
+        r.a = i;
+        SET_HL(DATA_EnemySlotTable);
+        gb_native_SelectEnemySlot();
+        if (rd(HL()) & 0x80) continue;
+        gb_native_ClearEnemySlot();
+        wr(hObject2, 0x82);
+        wr(hEnemyKind, rd(hScratch00 + 7));
+        wr(hEnemyX, rd(hScratch00 + 8));
+        wr(hEnemyY, rd(hScratch00 + 10));
+        wr(hEnemySpawnFlag, rd(hSpawnFlag));
+        return gb_native_StoreEnemySlot();
+    }
+    wr(hScratch00 + 6, 0xFF);
+    return 0;
+}
+
+/* DrawDecimalDigits: HL = one byte of the score, BC = index into wScoreDecimal: its two digits go there (tens first); BC advances by 2; HL is kept. */
+void *gb_native_DrawDecimalDigits(void) {
+    uint16_t hl = HL(), bc = BC();
+    r.a = rd(hl);
+    r.c = 0;
+    gb_native_ByteToBCD();
+    uint8_t digits = rd(hScratch00 + 2);
+    wr(wScoreDecimal + bc, digits >> 4);
+    wr(wScoreDecimal + bc + 1, digits & 0x0F);
+    SET_BC(bc + 2);
+    SET_HL(hl);
+    r.d = digits;
+    return 0;
+}
+
+void *gb_native_SetEnemyHitFlag(void) { SET_HL(hEnemyFlags); wr(hEnemyFlags, rd(hEnemyFlags) | 0x04); return 0; }
+void *gb_native_CancelMagic(void) { wr(wActiveMagic, 0); wr(wMagicState, 0); r.a = 0; return 0; }
+void *gb_native_EndMagic(void) { wr(wMagicState, 0); r.a = 0; return 0; }
+void *gb_native_ClearBonusFlags(void) { SET_HL(wGameFlags); wr(wGameFlags, rd(wGameFlags) & 0x7E); return 0; }
+void *gb_native_SetPlayerStatusBit0(void) { SET_HL(wPlayerStatus); wr(wPlayerStatus, rd(wPlayerStatus) | 0x01); wr(wPlayerSpeed, 0); r.a = 0; return 0; }
+void *gb_native_BeginMagicCast(void) {
+    r.a = SND_SFX_82;
+    NCALL(GAME_PlaySound);
+    SET_HL(wMagicState);
+    wr(wMagicState, rd(wMagicState) | 0x02);
+    return 0;
+}
+
+/* AnimatePlayerWalk: while a direction is held (hJoyHeld high nibble) the walk counter wWalkAnimCount runs through CounterToFrame (mask $0c, shift 2, 4 frames) and
+ * wPlayerAnim takes the animation pointer at that position of the table chosen by SelectPlayerAnimation (wPlayerAnimPtr). */
+void *gb_native_AnimatePlayerWalk(void) {
+    if (!(rd(hJoyHeld) & 0xF0)) { r.a = 0; r.f = 0x80; return 0; }
+    wr(wWalkAnimCount, rd(wWalkAnimCount) + 1);
+    wr(hScratch00 + 6, 0x0C);
+    wr(hScratch00 + 7, 0x02);
+    wr(hScratch00 + 8, rd(wWalkAnimCount));
+    r.a = 0x04;
+    gb_native_CounterToFrame();
+    wr(wWalkAnimCount, rd(hScratch00 + 8));
+    uint16_t entry = (uint16_t)((rd(wPlayerAnimPtrLo) | rd(wPlayerAnimPtrHi) << 8) + r.c);
+    wr(wPlayerAnimLo, rd(entry));
+    wr(wPlayerAnimHi, rd(entry + 1));
+    return 0;
+}
+
+/* EnemyShooterAI (kind 2): the shot of the enemy. While T.STOP (3) or B.O.M (5) runs, or when its timer $c4b4 ($a0 frames) ends, the shot is removed and the enemy gets
+ * a short pause (hEnemyStep = 5). While a shot is live it blinks between two animations (every 16 counts of $c4b9) and is drawn. */
+void *gb_native_EnemyShooterAI(void) {
+    uint8_t card = rd(wActiveMagic);
+    int cut = ((card == 0x03) || (card == 0x05)) && (rd(wMagicState) & 0x01);
+    if (!cut) {
+        if (!(rd(wProjectile) & 0x80)) return 0;
+        wr(0xC4B4, rd(0xC4B4) - 1);
+        if (rd(0xC4B4) != 0) {
+            wr(0xC4B9, rd(0xC4B9) + 1);
+            uint16_t anim = (rd(0xC4B9) & 0x10) ? 0x59F5 : 0x59FA;
+            wr(wProjectileAnimLo, (uint8_t)anim);
+            wr(wProjectileAnimHi, anim >> 8);
+            SET_HL(wProjectile);
+            gb_native_SetObjPtr();
+            return gb_native_DrawObject();
+        }
+    }
+    wr(hEnemyStep, 0x05);
+    wr(0xC4B4, 0xA0);
+    SET_HL(wProjectile);
+    wr(wProjectile, rd(wProjectile) & 0x7F);
+    return 0;
+}
+
+/* EnemyKind10Animate: the projectile of kind 10 alternates between two animations ($57ec and $57ee) every 4 counts of hEnemyCounter2. */
+void *gb_native_EnemyKind10Animate(void) {
+    if (rd(hEnemyKind) != 0x0A) return 0;
+    SET_HL(hEnemyCounter2);
+    wr(hEnemyCounter2, rd(hEnemyCounter2) + 1);
+    uint16_t anim = (rd(hEnemyCounter2) & 0x04) ? 0x57EE : 0x57EC;
+    wr(wProjectileAnimLo, (uint8_t)anim);
+    wr(wProjectileAnimHi, anim >> 8);
+    return 0;
+}
+
+void *gb_native_EnemyFlagBit3IfDead(void) {
+    if (rd(hEnemyDir) & 0x20) { SET_HL(hEnemyFlags); wr(hEnemyFlags, rd(hEnemyFlags) | 0x08); }
+    return 0;
+}
