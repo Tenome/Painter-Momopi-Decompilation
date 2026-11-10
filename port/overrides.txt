@@ -200,3 +200,10 @@ NextRound
 RoundCleared
 FadeOut
 DrawMetatileMap
+InitBonusCursor
+MenuCursorInput
+BonusIntroWait
+BonusResultWait
+BonusSelectLoop
+Mode2_Init
+Mode2_BonusSelect

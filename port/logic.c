@@ -3512,3 +3512,167 @@ void *gb_native_DrawMetatileMap(void) {
         wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
     }
 }
+
+/* ---- the bonus screens (after the rounds 4, 8, 12, 20, 24 and 28) ----
+ * wPlayerBlocked is the step: 0 the "SELECT JUST ONE!" intro wait, 1 the choice of one of three doors with a cursor, 2 the result (a magic card is awarded).
+ * $c487 counts the bonus screens and picks the row of the prize table at $25cb; the prize is chosen by hFrameSpin. */
+void *gb_native_InitBonusCursor(void) {
+    wr(wCursorIndex, 0);
+    wr(wCursorFlags, 0);
+    wr(wCursorY, 0x50);
+    wr(wCursorObject, 0x80);
+    SET_HL(0x2704);
+    return gb_native_SetCursorAnimation();
+}
+
+/* MenuCursorInput: left and right move the cursor over three places (sound $8f), A sets wCursorFlags bit 7 (chosen); the cursor object is placed (X from the table at $2630) and drawn. */
+void *gb_native_MenuCursorInput(void) {
+    if (rd(hJoyNew) & 0x20) {
+        r.a = SND_SFX_CURSOR;
+        NCALL(GAME_PlaySound);
+        uint8_t index = rd(wCursorIndex) - 1;
+        if (index & 0x80) index = 2;
+        wr(wCursorIndex, index);
+    }
+    if (rd(hJoyNew) & 0x10) {
+        r.a = SND_SFX_CURSOR;
+        NCALL(GAME_PlaySound);
+        uint8_t index = rd(wCursorIndex) + 1;
+        if (index >= 3) index = 0;
+        wr(wCursorIndex, index);
+    }
+    if (rd(hJoyNew) & 0x01) wr(wCursorFlags, rd(wCursorFlags) | 0x80);
+    r.c = rd(wCursorIndex);
+    SET_HL(0x2630);
+    gb_native_LookupByte();
+    wr(wCursorX, r.a);
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
+}
+
+void *gb_native_Mode2_Init(void);
+
+/* BonusIntroWait: $d0 frames, then the step 1 and the screen is set up again. */
+void *gb_native_BonusIntroWait(void) {
+    wr(hScratch00, 0xD0);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    SET_HL(wPlayerBlocked);
+    wr(wPlayerBlocked, rd(wPlayerBlocked) + 1);
+    return gb_native_Mode2_Init();
+}
+
+/* BonusResultWait: 100 points (D:E = 1:0 for AddScore), $e0 frames, then mode 3 (round intro). */
+void *gb_native_BonusResultWait(void) {
+    r.d = 1;
+    r.e = 0;
+    call_native(gb_native_AddScore);
+    wr(hScratch00, 0xE0);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* BonusSelectLoop: after $10 frames the cursor loop runs until A is pressed; the prize card is read from the table at $25cb (3 candidates per bonus screen, picked by
+ * hFrameSpin: below $7f the first, below $cd the second, else the third); if the player already has it that is the choice, otherwise it is added to wMagicCards. */
+void *gb_native_BonusSelectLoop(void) {
+    r.a = 0x10;
+    NCALL(GAME_DelayFrames);
+    SET_HL(wPlayerBlocked);
+    wr(wPlayerBlocked, rd(wPlayerBlocked) + 1);
+    do {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_ReadJoypad);
+        call_native(gb_native_MenuCursorInput);
+    } while (!(rd(wCursorFlags) & 0x80));
+    r.a = rd(0xC487);
+    r.e = 3;
+    gb_native_MultiplyByDE();
+    uint16_t at = 0x25CB + r.a;
+    uint8_t spin = rd(hFrameSpin);
+    if (spin >= 0x7F) { at++; if (spin >= 0xCD) at++; }
+    uint8_t prize = rd(at);
+    wr(hScratch00, prize);
+    for (uint16_t slot = wMagicCards;; slot++) {
+        uint8_t have = rd(slot);
+        if (have == 0) { wr(slot, prize); break; }
+        if (have == prize) break;
+    }
+    wr(wBonusChoice, prize);
+    return gb_native_Mode2_Init();
+}
+
+/* Mode2_Init: (re)draws the bonus screen of the current step (wPlayerBlocked: door picture lists from BonusSelectJobTable, the text strips; in the result step the card
+ * name and picture) and continues with the routine of that step (BonusModeJumpTable). */
+void *gb_native_Mode2_Init(void) {
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    r.a = rd(wPlayerBlocked);
+    SET_HL(DATA_BonusSelectJobTable);
+    gb_native_LookupWord();
+    SET_DE(HL());
+    SET_BC(0x270F);
+    SET_HL(vBGMap0);
+    wr(wMapCellMask, 0xFF);
+    NCALL(GAME_DrawBonusMetatileMap);
+    SET_BC(0x29B1);
+    NCALL(GAME_RunVramCopyList);
+    r.a = rd(wPlayerBlocked);
+    if (r.a == 0) {
+        SET_DE(0x264A);
+        SET_HL(0x988C);
+        NCALL(GAME_VramCopyStream);
+    }
+    if (r.a == 0x02) {
+        r.a = rd(wBonusChoice);
+        SET_HL(0x269B);
+        gb_native_LookupWord();
+        SET_DE(HL());
+        SET_HL(0x9886);
+        NCALL(GAME_VramCopyStream);
+        r.a = rd(wBonusChoice);
+        SET_HL(0x2651);
+        gb_native_LookupWord();
+        SET_DE(HL());
+        SET_HL(0x98C9);
+        NCALL(GAME_VramCopyStream);
+    }
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadow);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    r.a = rd(wPlayerBlocked);
+    SET_HL(0x253B);
+    gb_native_LookupWord();
+    return (void *)gb_dispatch(HL());
+}
+
+/* Mode2_BonusSelect: the bonus screen: counts the screen ($c487), step 0, the bonus music, tiles of bank 3, the cursor; then Mode2_Init. */
+void *gb_native_Mode2_BonusSelect(void) {
+    r.sp = wStackTop;
+    wr(0xC487, rd(0xC487) + 1);
+    wr(wPlayerBlocked, 0);
+    r.a = SND_MUSIC_BONUS_SELECT;
+    NCALL(GAME_PlaySound);
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3C);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    gb_native_InitBonusCursor();
+    return gb_native_Mode2_Init();
+}
