@@ -251,3 +251,5 @@ EnemyKind13Speed
 EnemyKind13Init
 EnemyKind13Leave
 EnemyKind13
+ProjectileSelectFrame
+InitProjectile

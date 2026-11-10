@@ -4417,3 +4417,43 @@ void *gb_native_EnemyKind13(void) {
     gb_native_DrawObject();
     return 0;
 }
+
+/* ProjectileSelectFrame: the pair of frame pointers saved at $c499 gives the animation: the first with bit 2 of hEnemyTick set, else the second. */
+void *gb_native_ProjectileSelectFrame(void) {
+    uint16_t at = rd(0xC499) | rd(0xC49A) << 8;
+    if (!(rd(hEnemyTick) & 0x04)) at += 2;
+    wr(hEnemyAnimLo, rd(at));
+    wr(hEnemyAnimHi, rd(at + 1));
+    SET_HL(at + 1);
+    r.a = rd(at + 1);
+    return 0;
+}
+
+/* InitProjectile: clears the projectile record, box 1, the shooter gets 32 and 48 for its counters; the two frame pointer pairs (kind 10 or the others) are chosen
+ * by the position on the grid: the mirror flag of the projectile follows the X nibble, a pair by its direction bits. */
+void *gb_native_InitProjectile(void) {
+    SET_HL(wProjectile);
+    gb_native_Clear32Bytes();
+    wr(wProjectileBox, 0x01);
+    wr(hEnemyFlags, 0x00);
+    wr(hEnemyCounter, 0x20);
+    wr(hEnemyStep, 0x30);
+    uint16_t bc, de, hl;
+    if (rd(hEnemyKind) == 0x0A) { bc = 0x5793; de = 0x579B; hl = 0x5797; }
+    else { bc = 0x5787; de = 0x578F; hl = 0x578B; }
+    gb_native_EnemySnapToGrid();
+    uint8_t a = r.a;
+    uint8_t e = (uint8_t)(((uint8_t)((a << 4) | (a >> 4)) & 0x10) << 1);
+    wr(hObject2, rd(hObject2) | e | 0x86);
+    if (!(a & 0x03)) {
+        uint8_t dir = rd(hEnemyDir);
+        if (dir & 0x08) hl = bc;
+        else if (dir & 0x10) hl = de;
+        else hl = 0x578B;
+    }
+    wr(0xC499, (uint8_t)hl);
+    wr(0xC49A, hl >> 8);
+    SET_BC(bc); SET_DE(de);
+    SET_HL(hl);
+    return gb_native_ProjectileSelectFrame();
+}
