@@ -20,6 +20,8 @@ starts the game. The file can still be edited by hand.
 | `speed` | 50-400 | percent of normal speed (no sound unless 100) |
 | `infinite_lives` | 0/1 | the player never loses a life |
 | `quick_magic` | 0/1 | Q and E (or the gamepad shoulder buttons 5 and 6) cycle the selected magic card during play and show its name and cost; A then casts it as usual. Cards the magic points cannot pay for are skipped, and nothing changes while a cast is running. The original B-button magic screen still works. |
+| `high_score` | 0/1 | The best score (and the round it was reached in) is kept in `painter_momopie.sav` next to the ini and shown at the top of the title screen. |
+| `resume` | 0/1 | The state at the start of each round (round, lives, score, magic cards, continues) is saved in `painter_momopie.sav`; 1 PLAYER on the title screen continues there (hold B while pressing START for a new game). Finishing the game clears it. |
 | `all_cards` | 0/1 | all nine magic cards from the first round |
 | `infinite_magic` | 0/1 | casting costs no magic points |
 | `no_time_limit` | 0/1 | the round clock stops (so the time-up enemy never comes) |
@@ -31,7 +33,7 @@ The options live in `port/config.c`; the widescreen and sprite code is in `port/
 
 ## Controls
 
-The keys can be changed in the `[keys]` section of `painter_momopie.ini` (`key_a=Z`, `key_up=Up,W` ...; several keys per action are allowed). The defaults are below.
+The keys can be changed in the `[keys]` section of `painter_momopie.ini` (`key_a=Z`, `key_up=Up,W` ...; several keys per action are allowed). Gamepad buttons are set the same way with `pad_a=1`, `pad_start=8,10` ... (button numbers; D-pad and stick are fixed). The defaults are below.
 
 Keyboard: arrows, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select, Esc quit, P pause, M mute, F2 palette, F11 full screen, F5 reloads the texture folders (edit a sheet, press F5, see the change), F12 saves a screenshot (PNG, in the `screenshots` folder next to the program), hold Tab to fast forward.
 A gamepad (first joystick known to Windows) works too: D-pad or left stick, button 1 = A, button 2 = B, buttons 7/8 or 9/10 = Select/Start.

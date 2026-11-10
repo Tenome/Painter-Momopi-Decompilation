@@ -20,6 +20,9 @@ typedef struct {
     int no_time_limit;      /* the round clock stops (no time-up enemy) */
     int quick_magic;        /* Q / E (gamepad shoulder buttons) cycle the selected magic card during play: no trip to the magic screen */
     char keys[10][48];      /* key names for right, left, up, down, A, B, Select, Start, previous card, next card (comma separated lists) */
+    unsigned pad[6];        /* gamepad button masks (bit n-1 = button n) for A, B, Select, Start, previous card, next card */
+    int high_score;         /* the best score is kept in painter_momopie.sav and shown on the title screen */
+    int resume;             /* the title screen's 1 PLAYER continues at the last round reached (hold SELECT for a new game) */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
 } GbConfig;
 extern GbConfig gb_config;

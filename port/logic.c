@@ -7,6 +7,8 @@
 #include "config.h"            /* options of the native player (infinite lives, start round) */
 #include "levelpack.h"         /* custom level packs (level_pack option) */
 #include "mml.h"               /* custom songs */
+#include "save.h"              /* best score and resume state (options high_score, resume) */
+static void track_best(void), save_resume(void), apply_resume(void);
 
 /* ---- custom level packs: with a pack the per-round data comes from the pack's level number wRound - 1 instead of the game's tables ---- */
 static int pack_index(void) { int i = rd(wRound) - 1; return i < 0 ? 0 : i >= gb_pack_count ? gb_pack_count - 1 : i; }
@@ -1091,6 +1093,7 @@ void *gb_native_Mode1_Play(void) {
     if (!(rd(wGameFlags) & 0x80)) {
         wr(wGameFlags, rd(wGameFlags) | 0x80);
         NCALL(GAME_InitPlayer);
+        apply_resume();
     }
     NCALL(GAME_ClearAllEnemies);
     SET_HL(wProjectile);
@@ -1123,6 +1126,7 @@ void *gb_native_Mode1_Play(void) {
         NCALL(GAME_WaitFrameAndSyncOam);
         NCALL(GAME_ReadJoypad);
         quick_magic();
+        track_best();
         NCALL(GAME_PlayFrame);
         NCALL(GAME_ShowMagicScreen);
         NCALL(GAME_UpdateCamera);
@@ -3522,7 +3526,7 @@ void *gb_native_CheckBonusRound(void) {
 /* NextRound: the counters advance (wRound, wRoundBackup, wRoomIndex and two more); after round $21 the ending (mode 6) follows, after a bonus round the bonus select
  * (mode 2), else the round intro (mode 3). */
 void *gb_native_NextRound(void) {
-    if (rd(wRound) == pack_last_round()) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+    if (rd(wRound) == pack_last_round()) { if (gb_save.has_resume) { gb_save.has_resume = 0; gb_save_write(); } r.a = 6; return (void *)GAME_GameModeDispatch; }
     wr(0xC47B, rd(0xC47B) + 1);
     wr(wRound, rd(wRound) + 1);
     wr(wRoundBackup, rd(wRoundBackup) + 1);
@@ -3530,6 +3534,7 @@ void *gb_native_NextRound(void) {
     wr(wRoomIndex, rd(wRoomIndex) + 1);
     wr(wPlayerStatus, rd(wPlayerStatus) & ~0x20);
     gb_native_CheckBonusRound();
+    save_resume();
     if (rd(wGameFlags) & 0x40) {
         wr(wGameFlags, rd(wGameFlags) & 0xBE);
         r.a = 2;
@@ -4214,6 +4219,40 @@ void *gb_native_PickRandomRound(void) {
  * (the round it sent is taken over); the pad value $93 held goes to the ending (mode 6, a test) and $47 sets the unlimited continues flag (wCheatFlags bit 0); Start (hJoyNew = 8)
  * on 1 PLAYER starts mode 3 at round 1 (the serial register is cleared and $88 sent so a partner machine joins as the second player); on 2 PLAYER a random round is sent and the
  * answer decides: no partner leaves the cursor on 1 PLAYER, a partner starts a link game. */
+/* options high_score and resume (painter_momopie.sav) */
+static int resume_pending;
+static unsigned score_now(void) {
+    unsigned s = 0;
+    for (int i = 2; i >= 0; i--) { uint8_t b = rd(wScoreDigits + i); s = s * 100 + (b >> 4) * 10 + (b & 15); }
+    return s;
+}
+static void track_best(void) {
+    if (!gb_config.high_score) return;
+    unsigned s = score_now();
+    if (s > gb_save.best_score) { gb_save.best_score = s; gb_save.best_round = rd(wRound); gb_save_write(); }
+}
+static void save_resume(void) {
+    if (!gb_config.resume) return;
+    uint8_t *b = gb_save.resume;
+    b[0] = rd(wRound); b[1] = rd(wRoundBackup); b[2] = rd(wRoomIndex); b[3] = rd(0xC47B); b[4] = rd(0xC1A8); b[5] = rd(wLives);
+    for (int i = 0; i < 3; i++) b[6 + i] = rd(wScoreDigits + i);
+    b[9] = rd(wExtraLifeIdx);
+    for (int i = 0; i < 9; i++) b[10 + i] = rd(wMagicCards + i);
+    b[19] = rd(wContinues);
+    gb_save.has_resume = 1;
+    gb_save_write();
+}
+static void apply_resume(void) {                   /* after the new game's own setup: the numbers of the saved round */
+    if (!resume_pending) return;
+    resume_pending = 0;
+    const uint8_t *b = gb_save.resume;
+    wr(wRound, b[0]); wr(wRoundBackup, b[1]); wr(wRoomIndex, b[2]); wr(0xC47B, b[3]); wr(0xC1A8, b[4]); wr(wLives, b[5]);
+    for (int i = 0; i < 3; i++) wr(wScoreDigits + i, b[6 + i]);
+    wr(wExtraLifeIdx, b[9]);
+    for (int i = 0; i < 9; i++) wr(wMagicCards + i, b[10 + i]);
+    wr(wContinues, b[19]);
+}
+
 void *gb_native_Mode0_Title(void) {
     r.sp = wStackTop;
     NCALL(GAME_LcdOff);
@@ -4235,6 +4274,12 @@ void *gb_native_Mode0_Title(void) {
     wr(rIE, IE_VBLANK_SERIAL);
     wr(rLCDC, LCDC_ON_BG_OBJ);
     ime = 1;
+    if (gb_config.high_score || (gb_config.resume && gb_save.has_resume)) {     /* the best score and the saved round, small text over the title */
+        int n = 0;
+        if (gb_config.high_score) n += snprintf(gb_overlay, sizeof gb_overlay, "BEST %06u R%u", gb_save.best_score, gb_save.best_round);
+        if (gb_config.resume && gb_save.has_resume) snprintf(gb_overlay + n, sizeof gb_overlay - (size_t)n, "%sRESUME R%u", n ? " " : "", gb_save.resume[0]);
+        gb_overlay_frames = 600;
+    }
     for (;;) {
         NCALL(GAME_WaitFrameAndSyncOam);
         if (rd(hSerialByte) & 0x10) goto partner_started;
@@ -4284,6 +4329,7 @@ one_player:
     wr(wCheatFlags, rd(wCheatFlags) | 0x08);
     {
         int first = gb_config.start_round ? gb_config.start_round : 1;      /* option start_round */
+        if (gb_config.resume && gb_save.has_resume && !(rd(hJoyHeld) & 0x02)) { first = gb_save.resume[0]; resume_pending = 1; }       /* option resume */
         wr(wRound, first);
         wr(wRoundBackup, first);
         wr(wRoomIndex, first - 1);

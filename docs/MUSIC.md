@@ -43,7 +43,7 @@ Music text:
 | `&` | tie: `c4&c8` is one note of 3 eighths |
 | `[ ... ]3` | repeat 3 times (`]` alone repeats twice); repeats can be nested up to 8 deep |
 | `L` (capital) | where the song repeats from at its end; without one the channel stops |
-| `x8f` | a raw note number in hexadecimal (for the noise channel; separate it from what follows with a space) |
+| `x8f` | a raw note number in hexadecimal (for the noise channel; separate it from what follows with a space; a raw note takes the length set by `l`, e.g. `l4 x20 x28`, because digits after it would read as more hex) |
 | `; text` | a comment |
 
 Notes range from `c+2` (the lowest) to `o9 d+` or so. Keep the channels the same length if you want them to loop together.

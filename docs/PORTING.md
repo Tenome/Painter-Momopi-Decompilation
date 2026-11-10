@@ -21,7 +21,7 @@ sweep, wave, noise). `python tools/build_port.py` builds `build/recomp/game_win.
 Verified on this machine: title screen, Enter starts a game, the kitchen room plays with the painter, enemy and music.
 Return addresses are modelled on the GB stack only as reserved slots: a routine that discards its return address (`pop hl` before a jump, used by the sound command table) is handled by `CALL`, which makes the caller return too when the stack ends up above where it started. Random-input stress runs (`game_headless ROM 12000 --press 250:start:3 --random SEED`) run clean.
 
-`port/main_sdl.c` is the same player on SDL2 for Linux and macOS (`python tools/build_port.py --sdl`; written but not run yet on this Windows machine).
+`port/main_sdl.c` is the same player on SDL2 for Linux and macOS (`python tools/build_port.py --sdl`; same options, key bindings, textures, widescreen and gamepad support as the Windows player; compile-checked but not run yet, since this machine has no SDL2).
 Next: save-less options (scaling filters, key mapping file), the HAL clean-up below.
 
 ## Current state of the native build

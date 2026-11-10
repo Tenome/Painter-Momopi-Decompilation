@@ -222,8 +222,8 @@ static uint8_t keys(void) {
         JOYINFOEX ji = {sizeof ji, JOY_RETURNALL};
         if (joyGetPosEx(0, &ji) == JOYERR_NOERROR) {
             static DWORD prev_buttons;
-            if ((ji.dwButtons & 0x10) && !(prev_buttons & 0x10)) gb_quick_cycle = -1;        /* shoulder buttons 5 and 6 */
-            if ((ji.dwButtons & 0x20) && !(prev_buttons & 0x20)) gb_quick_cycle = 1;
+            if ((ji.dwButtons & gb_config.pad[4]) && !(prev_buttons & gb_config.pad[4])) gb_quick_cycle = -1;        /* option quick_magic */
+            if ((ji.dwButtons & gb_config.pad[5]) && !(prev_buttons & gb_config.pad[5])) gb_quick_cycle = 1;
             prev_buttons = ji.dwButtons;
             if (ji.dwXpos > 0xC000) j |= 0x01;
             if (ji.dwXpos < 0x4000) j |= 0x02;
@@ -236,10 +236,10 @@ static uint8_t keys(void) {
                 if (d > 270 || d < 90) j |= 0x04;
                 if (d > 90 && d < 270) j |= 0x08;
             }
-            if (ji.dwButtons & 0x01) j |= 0x10;
-            if (ji.dwButtons & 0x02) j |= 0x20;
-            if (ji.dwButtons & (0x40 | 0x100)) j |= 0x40;
-            if (ji.dwButtons & (0x80 | 0x200)) j |= 0x80;
+            if (ji.dwButtons & gb_config.pad[0]) j |= 0x10;
+            if (ji.dwButtons & gb_config.pad[1]) j |= 0x20;
+            if (ji.dwButtons & gb_config.pad[2]) j |= 0x40;
+            if (ji.dwButtons & gb_config.pad[3]) j |= 0x80;
         }
     }
     return j;
