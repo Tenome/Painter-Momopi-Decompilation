@@ -567,11 +567,7 @@ void *gb_native_LoadEnemySlot(void) {
  * The parts are drawn starting at the cursor, which moves on by one every frame, so when the OAM overflows different parts drop out each frame.
  * Mirrored objects (X flip or Y flip) are moved 8 pixels and their part offsets are negated. A part is skipped when its position is off the screen
  * (high byte not 0). The scratch variables hScratch00-0D, hOtherObjLo/Hi are left as the original leaves them. */
-void *gb_native_DrawObject(void) {
-    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
-    uint8_t flags = rd(obj);
-    if (!(flags & 0x80)) return 0;
-    int x = rd(obj + 7) | rd(obj + 8) << 8, y = rd(obj + 0x0A) | rd(obj + 0x0B) << 8;
+static void draw_parts(uint16_t obj, uint8_t flags, int x, int y) {
     uint8_t s00 = flags & 0xFB;
     if (s00 & 0x02) {
         x = (x - (rd(0xC1AC) | rd(wCameraXHi) << 8)) & 0xFFFF;
@@ -612,6 +608,29 @@ void *gb_native_DrawObject(void) {
     wr(hOtherObjLo, (uint8_t)(cursor - 1));
     wr(obj, s00);
     wr(obj + 5, (uint8_t)(cursor - 1));
+}
+
+void *gb_native_DrawObject(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t flags = rd(obj);
+    if (!(flags & 0x80)) return 0;
+    draw_parts(obj, flags, rd(obj + 7) | rd(obj + 8) << 8, rd(obj + 0x0A) | rd(obj + 0x0B) << 8);
+    return 0;
+}
+
+/* DrawObjectBytePos: the same for records with 8 bit positions (X at +6, Y at +7). */
+void *gb_native_DrawObjectBytePos(void) {
+    uint16_t obj = rd(0xFFD5) | rd(0xFFD6) << 8;
+    uint8_t flags = rd(obj);
+    if (!(flags & 0x80)) return 0;
+    draw_parts(obj, flags, rd(obj + 6), rd(obj + 7));
+    return 0;
+}
+
+/* DrawObjectParts: the shared part, with BC = the record and the position in hScratch01-04. */
+void *gb_native_DrawObjectParts(void) {
+    uint16_t obj = BC();
+    draw_parts(obj, rd(obj), rd(hScratch00 + 1) | rd(hScratch00 + 2) << 8, rd(hScratch00 + 3) | rd(hScratch00 + 4) << 8);
     return 0;
 }
 
@@ -4547,4 +4566,19 @@ void *gb_native_PayMagicCost(void) {
     wr(wMagicPointsHi, 0);
     r.a = 0;
     return gb_native_RunMagicEffect();
+}
+
+/* LoadGfxBank2: the sprite tiles ($0700 bytes) and the tile set of the room (RoomSpriteSetTable by wRoomIndex, $0900 bytes) from bank 2 to VRAM. */
+void *gb_native_LoadGfxBank2(void) {
+    wr(0x3FFF, 0x02);
+    SET_HL(DATA_SpriteTiles); SET_DE(vTiles0); SET_BC(0x0700);
+    call_native(gb_native_CopyMemory);
+    SET_HL(DATA_RoomSpriteSetTable);
+    r.a = rd(wRoomIndex);
+    NCALL(GAME_TableIndexFromRound);
+    SET_DE(vTiles1); SET_BC(0x0900);
+    call_native(gb_native_CopyMemory);
+    wr(0x3FFF, 0x01);
+    r.a = 0x01;
+    return 0;
 }

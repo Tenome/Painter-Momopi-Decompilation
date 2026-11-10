@@ -263,3 +263,6 @@ SetPaintBlobAnimation
 QueueCellTileRows
 StartRoundMusic
 PayMagicCost
+DrawObjectBytePos
+DrawObjectParts
+LoadGfxBank2
