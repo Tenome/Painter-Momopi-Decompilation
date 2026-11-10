@@ -4582,3 +4582,76 @@ void *gb_native_LoadGfxBank2(void) {
     r.a = 0x01;
     return 0;
 }
+
+/* ---- fixed point helpers of the object records ---- */
+static uint16_t obj_ptr(void) { return rd(hObjPtrLo) | rd(hObjPtrHi) << 8; }
+static void adc_mem(uint16_t at, uint8_t v) {       /* [at] = v + [at] + carry; flags of the adc (the carry chains through the callers) */
+    int c = CF() ? 1 : 0, m = rd(at), x = v + m + c;
+    r.a = (uint8_t)x;
+    r.f = (r.f & 0x40 ? 0 : 0) | ((x & 255) ? 0 : 0x80) | (((v & 15) + (m & 15) + c) > 15 ? 0x20 : 0) | (x > 255 ? 0x10 : 0);
+    wr(at, r.a);
+}
+
+/* AddObjectField: object byte [hScratch00] += object byte [hScratch01] with carry; the byte read also lands in hScratch02; both indexes advance. */
+void *gb_native_AddObjectField(void) {
+    uint16_t obj = obj_ptr();
+    uint8_t v = rd(obj + rd(hScratch00 + 1));
+    wr(hScratch00 + 2, v);
+    r.b = v;
+    adc_mem(obj + rd(hScratch00), v);
+    SET_HL(hScratch00 + 1);
+    wr(hScratch00, rd(hScratch00) + 1);
+    wr(hScratch00 + 1, rd(hScratch00 + 1) + 1);
+    return 0;
+}
+
+/* AddStepSigned: two bytes of the step are added, then its sign (bit 7 of the last byte read) is added into the top byte. */
+void *gb_native_AddStepSigned(void) {
+    r.f &= ~0x10;
+    gb_native_AddObjectField();
+    gb_native_AddObjectField();
+    uint8_t c = (rd(hScratch00 + 2) & 0x80) ? 0xFF : 0x00;
+    r.c = c;
+    adc_mem(obj_ptr() + rd(hScratch00), c);
+    SET_HL(hScratch00);
+    wr(hScratch00, rd(hScratch00) + 1);
+    return 0;
+}
+
+void *gb_native_MoveObjectHalfStep(void) {
+    wr(hScratch00, 0x06);
+    wr(hScratch00 + 1, 0x08);
+    r.e = 0x08; r.a = 0x08;
+    gb_native_AddObjectField();
+    return gb_native_AddObjectField();
+}
+
+/* ---- small helpers ---- */
+void *gb_native_ClearOamShadowY(void) {
+    for (unsigned i = 0xC000; i < 0xC0A0; i += 4) wr(i, 0);
+    wr(hOamCount, 0);
+    SET_HL(0xC0A0);
+    r.a = 0;
+    return 0;
+}
+void *gb_native_ClearOamShadow(void) {
+    wr(hOamCount, 0);
+    for (unsigned i = 0xC000; i < 0xC0A0; i++) wr(i, 0);
+    SET_HL(0xC0A0); r.b = 0; r.a = 0;
+    return 0;
+}
+void *gb_native_RequestOamDma(void) { SET_HL(hVBlankTasks); wr(hVBlankTasks, rd(hVBlankTasks) | 0x02); return 0; }
+void *gb_native_FillBackwardsFFBC(void) {
+    uint16_t hl = HL(), bc = BC();
+    do { wr(hl--, 0xFF); bc--; } while (bc);
+    SET_HL(hl); SET_BC(0); r.a = 0;
+    return 0;
+}
+void *gb_native_NumberToTile(void) { r.c = r.a; SET_HL(0x10AB); return gb_native_LookupByte(); }
+void *gb_native_LowNibbleToDigitTile(void) { r.a &= 0x0F; return gb_native_NumberToTile(); }
+void *gb_native_TableIndexFromRound(void) {
+    r.c = 0x10;
+    r.a = (r.a == 0x20) ? 0x10 : (r.a & 0x0F);
+    return gb_native_LookupWord();
+}
+void *gb_native_TableIndexFromRoundDec(void) { r.a--; return gb_native_TableIndexFromRound(); }

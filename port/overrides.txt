@@ -266,3 +266,14 @@ PayMagicCost
 DrawObjectBytePos
 DrawObjectParts
 LoadGfxBank2
+AddObjectField
+AddStepSigned
+MoveObjectHalfStep
+ClearOamShadowY
+ClearOamShadow
+RequestOamDma
+FillBackwardsFFBC
+NumberToTile
+LowNibbleToDigitTile
+TableIndexFromRound
+TableIndexFromRoundDec
