@@ -18,3 +18,8 @@
 
 All of these default to the original game's behaviour, and the byte-exact checks (`tools/lift_check.py`, `tools/verify_all.py`) run with the defaults.
 The options live in `port/config.c`; the widescreen and sprite code is in `port/gb_rt.c` (`render`) and `port/logic.c` (`DrawObject`, `AddOamSprite`).
+
+## Controls
+
+Keyboard: arrows, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select, Esc quit, P pause, M mute, F2 palette, F11 full screen, hold Tab to fast forward.
+A gamepad (first joystick known to Windows) works too: D-pad or left stick, button 1 = A, button 2 = B, buttons 7/8 or 9/10 = Select/Start.

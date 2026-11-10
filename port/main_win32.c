@@ -94,6 +94,26 @@ static uint8_t keys(void) {
     if (GetAsyncKeyState('X') & 0x8000) j |= 0x20;
     if ((GetAsyncKeyState(VK_RSHIFT) & 0x8000) || (GetAsyncKeyState(VK_BACK) & 0x8000)) j |= 0x40;
     if (GetAsyncKeyState(VK_RETURN) & 0x8000) j |= 0x80;
+    {   /* a gamepad (first joystick, winmm): D-pad or left stick, button 1 = A, 2 = B, 7/8 = Select/Start (or 9/10) */
+        JOYINFOEX ji = {sizeof ji, JOY_RETURNALL};
+        if (joyGetPosEx(0, &ji) == JOYERR_NOERROR) {
+            if (ji.dwXpos > 0xC000) j |= 0x01;
+            if (ji.dwXpos < 0x4000) j |= 0x02;
+            if (ji.dwYpos < 0x4000) j |= 0x04;
+            if (ji.dwYpos > 0xC000) j |= 0x08;
+            if (ji.dwPOV != JOY_POVCENTERED && ji.dwPOV <= 36000) {
+                unsigned d = ji.dwPOV / 100;
+                if (d > 0 && d < 180) j |= 0x01;
+                if (d > 180) j |= 0x02;
+                if (d > 270 || d < 90) j |= 0x04;
+                if (d > 90 && d < 270) j |= 0x08;
+            }
+            if (ji.dwButtons & 0x01) j |= 0x10;
+            if (ji.dwButtons & 0x02) j |= 0x20;
+            if (ji.dwButtons & (0x40 | 0x100)) j |= 0x40;
+            if (ji.dwButtons & (0x80 | 0x200)) j |= 0x80;
+        }
+    }
     return j;
 }
 
