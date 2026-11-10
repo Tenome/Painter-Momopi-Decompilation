@@ -4655,3 +4655,31 @@ void *gb_native_TableIndexFromRound(void) {
     return gb_native_LookupWord();
 }
 void *gb_native_TableIndexFromRoundDec(void) { r.a--; return gb_native_TableIndexFromRound(); }
+
+void *gb_native_PlaySound(void) { wr(wSoundArg, r.a); return gb_native_PlaySound_Bank1(); }
+void *gb_native_DelayLoopA(void) { r.a = 0; r.f = (r.f & 0x10) | 0xC0; return 0; }
+void *gb_native_SetMagicRowAndReturn(void) { wr(wMagicRow, r.a); return 0; }
+void *gb_native_EnemyRemoveIfPlayerDead(void) {
+    r.a = rd(wPlayerDir);
+    if (!(r.a & 0x20)) return 0;
+    return gb_native_RemoveEnemy();
+}
+void *gb_native_MoveAndApplyObject(void) {
+    gb_native_MoveObject();
+    return gb_native_ApplyObjectStep();
+}
+void *gb_native_SetEnemyAnimation(void) {
+    gb_native_SelectEnemyAnimation();
+    return gb_native_SetAnimationVariant();
+}
+void *gb_native_EnemyInitAnim3bbe(void) {
+    wr(hEnemySpeed, 0x05);
+    wr(hEnemyCounter, 0x20);
+    set_anim(0x3BBE);
+    return gb_native_EnemySnapToGrid();
+}
+void *gb_native_EnemyKind9Move(void) {
+    wr(hEnemySpeed, 0x06);
+    NCALL(GAME_EnemyTurnIfBlocked);
+    return gb_native_MoveAndApplyObject();
+}
