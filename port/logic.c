@@ -4720,3 +4720,18 @@ void *gb_native_Start(void) {
     r.a = 0;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* LoadTilesBank3 and its entries: copies BC bytes from bank 3 at HL to VRAM $8000 (A/B/D: $1000 bytes of the title, icon and font tiles; C: $0e10 of the ending tiles). */
+void *gb_native_LoadTilesBank3(void) {
+    wr(0x3FFF, 0x03);
+    SET_DE(vTiles0);
+    call_native(gb_native_CopyMemory);
+    wr(0x3FFF, 0x01);
+    r.a = 0x01;
+    return 0;
+}
+void *gb_native_LoadTilesBank3Full(void) { SET_BC(0x1000); return gb_native_LoadTilesBank3(); }
+void *gb_native_LoadTilesBank3A(void) { SET_HL(DATA_TilesTitle); return gb_native_LoadTilesBank3Full(); }
+void *gb_native_LoadTilesBank3B(void) { SET_HL(DATA_TilesIcons); return gb_native_LoadTilesBank3Full(); }
+void *gb_native_LoadTilesBank3D(void) { SET_HL(DATA_TilesFont2); return gb_native_LoadTilesBank3Full(); }
+void *gb_native_LoadTilesBank3C(void) { SET_HL(DATA_TilesEnding); SET_BC(0x0E10); return gb_native_LoadTilesBank3(); }
