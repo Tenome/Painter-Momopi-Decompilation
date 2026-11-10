@@ -3512,3 +3512,425 @@ void *gb_native_DrawMetatileMap(void) {
         wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
     }
 }
+
+/* ---- the bonus screens (after the rounds 4, 8, 12, 20, 24 and 28) ----
+ * wPlayerBlocked is the step: 0 the "SELECT JUST ONE!" intro wait, 1 the choice of one of three doors with a cursor, 2 the result (a magic card is awarded).
+ * $c487 counts the bonus screens and picks the row of the prize table at $25cb; the prize is chosen by hFrameSpin. */
+void *gb_native_InitBonusCursor(void) {
+    wr(wCursorIndex, 0);
+    wr(wCursorFlags, 0);
+    wr(wCursorY, 0x50);
+    wr(wCursorObject, 0x80);
+    SET_HL(0x2704);
+    return gb_native_SetCursorAnimation();
+}
+
+/* MenuCursorInput: left and right move the cursor over three places (sound $8f), A sets wCursorFlags bit 7 (chosen); the cursor object is placed (X from the table at $2630) and drawn. */
+void *gb_native_MenuCursorInput(void) {
+    if (rd(hJoyNew) & 0x20) {
+        r.a = SND_SFX_CURSOR;
+        NCALL(GAME_PlaySound);
+        uint8_t index = rd(wCursorIndex) - 1;
+        if (index & 0x80) index = 2;
+        wr(wCursorIndex, index);
+    }
+    if (rd(hJoyNew) & 0x10) {
+        r.a = SND_SFX_CURSOR;
+        NCALL(GAME_PlaySound);
+        uint8_t index = rd(wCursorIndex) + 1;
+        if (index >= 3) index = 0;
+        wr(wCursorIndex, index);
+    }
+    if (rd(hJoyNew) & 0x01) wr(wCursorFlags, rd(wCursorFlags) | 0x80);
+    r.c = rd(wCursorIndex);
+    SET_HL(0x2630);
+    gb_native_LookupByte();
+    wr(wCursorX, r.a);
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
+}
+
+void *gb_native_Mode2_Init(void);
+
+/* BonusIntroWait: $d0 frames, then the step 1 and the screen is set up again. */
+void *gb_native_BonusIntroWait(void) {
+    wr(hScratch00, 0xD0);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    SET_HL(wPlayerBlocked);
+    wr(wPlayerBlocked, rd(wPlayerBlocked) + 1);
+    return gb_native_Mode2_Init();
+}
+
+/* BonusResultWait: 100 points (D:E = 1:0 for AddScore), $e0 frames, then mode 3 (round intro). */
+void *gb_native_BonusResultWait(void) {
+    r.d = 1;
+    r.e = 0;
+    call_native(gb_native_AddScore);
+    wr(hScratch00, 0xE0);
+    do {
+        NCALL(GAME_WaitVBlankFlag);
+        NCALL(GAME_ReadJoypad);
+        wr(hScratch00, rd(hScratch00) - 1);
+    } while (rd(hScratch00));
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}
+
+/* BonusSelectLoop: after $10 frames the cursor loop runs until A is pressed; the prize card is read from the table at $25cb (3 candidates per bonus screen, picked by
+ * hFrameSpin: below $7f the first, below $cd the second, else the third); if the player already has it that is the choice, otherwise it is added to wMagicCards. */
+void *gb_native_BonusSelectLoop(void) {
+    r.a = 0x10;
+    NCALL(GAME_DelayFrames);
+    SET_HL(wPlayerBlocked);
+    wr(wPlayerBlocked, rd(wPlayerBlocked) + 1);
+    do {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_ReadJoypad);
+        call_native(gb_native_MenuCursorInput);
+    } while (!(rd(wCursorFlags) & 0x80));
+    r.a = rd(0xC487);
+    r.e = 3;
+    gb_native_MultiplyByDE();
+    uint16_t at = 0x25CB + r.a;
+    uint8_t spin = rd(hFrameSpin);
+    if (spin >= 0x7F) { at++; if (spin >= 0xCD) at++; }
+    uint8_t prize = rd(at);
+    wr(hScratch00, prize);
+    for (uint16_t slot = wMagicCards;; slot++) {
+        uint8_t have = rd(slot);
+        if (have == 0) { wr(slot, prize); break; }
+        if (have == prize) break;
+    }
+    wr(wBonusChoice, prize);
+    return gb_native_Mode2_Init();
+}
+
+/* Mode2_Init: (re)draws the bonus screen of the current step (wPlayerBlocked: door picture lists from BonusSelectJobTable, the text strips; in the result step the card
+ * name and picture) and continues with the routine of that step (BonusModeJumpTable). */
+void *gb_native_Mode2_Init(void) {
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    r.a = rd(wPlayerBlocked);
+    SET_HL(DATA_BonusSelectJobTable);
+    gb_native_LookupWord();
+    SET_DE(HL());
+    SET_BC(0x270F);
+    SET_HL(vBGMap0);
+    wr(wMapCellMask, 0xFF);
+    NCALL(GAME_DrawBonusMetatileMap);
+    SET_BC(0x29B1);
+    NCALL(GAME_RunVramCopyList);
+    r.a = rd(wPlayerBlocked);
+    if (r.a == 0) {
+        SET_DE(0x264A);
+        SET_HL(0x988C);
+        NCALL(GAME_VramCopyStream);
+    }
+    if (r.a == 0x02) {
+        r.a = rd(wBonusChoice);
+        SET_HL(0x269B);
+        gb_native_LookupWord();
+        SET_DE(HL());
+        SET_HL(0x9886);
+        NCALL(GAME_VramCopyStream);
+        r.a = rd(wBonusChoice);
+        SET_HL(0x2651);
+        gb_native_LookupWord();
+        SET_DE(HL());
+        SET_HL(0x98C9);
+        NCALL(GAME_VramCopyStream);
+    }
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadow);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    r.a = rd(wPlayerBlocked);
+    SET_HL(0x253B);
+    gb_native_LookupWord();
+    return (void *)gb_dispatch(HL());
+}
+
+/* Mode2_BonusSelect: the bonus screen: counts the screen ($c487), step 0, the bonus music, tiles of bank 3, the cursor; then Mode2_Init. */
+void *gb_native_Mode2_BonusSelect(void) {
+    r.sp = wStackTop;
+    wr(0xC487, rd(0xC487) + 1);
+    wr(wPlayerBlocked, 0);
+    r.a = SND_MUSIC_BONUS_SELECT;
+    NCALL(GAME_PlaySound);
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3C);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    gb_native_InitBonusCursor();
+    return gb_native_Mode2_Init();
+}
+
+/* Mode6_Ending: the castle scene after the last round. The setup draws the castle with metatiles (D_00_31a6 cells, D_00_3156 blocks), creates the two scene objects
+ * (the hero walking in at X $80, Y $68, heading $18, and the castle flag object), starts the ending music and runs the scene (castle blink and walk) until the hero
+ * has arrived (wEndingEvents bit 7). Then the credit pages scroll up (EndingSetup, scroll, credits window); wCheatFlags and wCheatTimer serve as counters here
+ * ($10 frames per page step and 5 rounds after the last page). Finally the game restarts (Entry). */
+void *gb_native_Mode6_Ending(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3D);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_HL(0x9FFF);
+    gb_native_FillBackwardsFF();
+    NCALL(GAME_ClearOamShadowY);
+    NCALL(GAME_RequestOamDma);
+    wr(hScratch01, 0x06);
+    wr(hScratch00, 0x0A);
+    SET_HL(0x98C0);
+    SET_BC(0x3156);
+    SET_DE(0x31A6);
+    wr(wMapCellMask, 0xFF);
+    gb_native_DrawMetatileMap();
+    SET_HL(wEndingObject);
+    SET_BC(0x0041);
+    gb_native_ClearMemory();
+    wr(wEndingObject, 0x80);
+    wr(wEndingObject2, 0x80);
+    wr(0xC770, 0x31);
+    wr(0xC76F, 0x43);
+    wr(wEndingX, 0x80);
+    wr(wEndingY, 0x68);
+    wr(wEndingSpeed, 0x04);
+    wr(wEndingAngle, 0x18);
+    wr(wEnding2X, 0x70);
+    wr(wEnding2Y, 0x68);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    NCALL(GAME_EndingCastleBlink);
+    NCALL(GAME_EndingWalkStep);
+    r.a = SND_MUSIC_ENDING;
+    NCALL(GAME_PlaySound);
+    r.a = 0x46;
+    NCALL(GAME_DelayFrames);
+    NCALL(GAME_EndingCastleBlink);
+    NCALL(GAME_EndingWalkStep);
+    do {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_EndingCastleBlink);
+        NCALL(GAME_EndingWalkStep);
+    } while (!(rd(wEndingEvents) & 0x80));
+    NCALL(GAME_EndingSetup);
+    wr(wCheatFlags, 0x10);
+    wr(wCheatTimer, 0x05);
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        NCALL(GAME_EndingScrollStep);
+        NCALL(GAME_EndingTick);
+        NCALL(GAME_EndingCreditsWindow);
+        NCALL(GAME_ReadJoypad);
+        if (rd(wCreditsPage) != 0x08) continue;
+        wr(wCheatFlags, rd(wCheatFlags) - 1);
+        if (rd(wCheatFlags) != 0) continue;
+        uint8_t timer = rd(wCheatTimer) - 1;
+        wr(wCheatTimer, timer);
+        if (!(timer & 0x80)) continue;
+        return (void *)GAME_Entry;
+    }
+}
+
+/* ---- the ending scene ----
+ * Two objects: wEndingObject (the hero walking in, then standing in front of the castle) and wEndingObject2 (the castle with its blinking flag; its flag bits 0-2 also
+ * track the credits window: 0 window shown, 1 slid in, 2 slid out). wEndingStep and wEndingPhase form a 16 bit counter; wEndingEvents bit 2 = the hero has arrived,
+ * bit 7 = the walk-in has finished. The credit text pages (CreditsPageTable) are queued one by one while the window (rWX) slides in and out. */
+void *gb_native_SelectEndingObject(void) { SET_HL(wEndingObject); return gb_native_SetObjPtr(); }
+
+void *gb_native_EndingScrollStep(void) {
+    uint8_t lo = rd(wEnding2Y);
+    wr(wEnding2Y, lo - 0x5A);
+    uint8_t hi = rd(wEnding2Y + 1) - (lo < 0x5A ? 1 : 0);
+    wr(wEnding2Y + 1, hi);
+    wr(wScrollX, hi);
+    r.a = hi;
+    return 0;
+}
+
+void *gb_native_EndingAdvance(void) {
+    unsigned step = rd(wEndingStep) + 0x10;
+    wr(wEndingStep, step);
+    uint8_t phase = rd(wEndingPhase) + (step >> 8);
+    wr(wEndingPhase, phase);
+    if (phase != 0x05) return 0;
+    SET_HL(wEndingEvents);
+    wr(wEndingEvents, rd(wEndingEvents) | 0x80);
+    return 0;
+}
+
+void *gb_native_EndingWalkStep(void) {
+    if (rd(wEndingY) < 0x08) return gb_native_EndingAdvance();
+    wr(0xC780, rd(0xC780) + 1);
+    if (rd(0xC780) & 0x10) {
+        wr(wEndingSpeed, rd(wEndingSpeed) + 1);
+        wr(wEndingAngle, rd(wEndingAngle) + 1);
+        wr(0xC780, 0);
+    }
+    gb_native_SelectEndingObject();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    gb_native_SelectEndingObject();
+    return gb_native_DrawObject();
+}
+
+void *gb_native_EndingCastleBlink(void) {
+    wr(0xC7A0, rd(0xC7A0) + 1);
+    uint16_t entry = 0x3148 + ((rd(0xC7A0) & 0x08) >> 2);
+    wr(wEndingObject2 + 1, rd(entry));
+    wr(wEndingObject2 + 2, rd(entry + 1));
+    SET_HL(wEndingObject2);
+    gb_native_SetObjPtr();
+    return gb_native_DrawObject();
+}
+
+void *gb_native_EndingHeroFrame(void) {
+    wr(wEndingSpeed, 0x02);
+    wr(wEndingAngle, (rd(wEndingPhase) & 0x01) ? 0x10 : 0x00);
+    gb_native_SelectEndingObject();
+    gb_native_MoveObject();
+    gb_native_ApplyObjectStep();
+    SET_HL(wEndingStep);
+    wr(wEndingStep, rd(wEndingStep) - 1);
+    if (rd(wEndingStep)) return 0;
+    wr(wEndingStep, 0x0A);
+    wr(wEndingPhase, rd(wEndingPhase) + 1);
+    return 0;
+}
+
+void *gb_native_EndingMoveHero(void) {
+    gb_native_EndingHeroFrame();
+    if (rd(wEndingEvents) & 0x04) return 0;
+    uint8_t x = rd(wEndingX);
+    if (x == 0x50) { SET_HL(wEndingEvents); wr(wEndingEvents, rd(wEndingEvents) | 0x04); return 0; }
+    wr(wEndingX, x - 1);
+    return 0;
+}
+
+void *gb_native_EndingAnimateObject(void) {
+    wr(0xC780, rd(0xC780) + 1);
+    uint16_t table = (rd(wEndingEvents) & 0x04) ? 0x3111 : 0x30DF;
+    uint16_t entry = table + ((rd(0xC780) & 0x08) >> 2);
+    wr(0xC76F, rd(entry));
+    wr(0xC770, rd(entry + 1));
+    SET_HL(wEndingObject);
+    gb_native_SetObjPtr();
+    return gb_native_DrawObject();
+}
+
+void *gb_native_EndingTick(void) {
+    gb_native_EndingMoveHero();
+    return gb_native_EndingAnimateObject();
+}
+
+/* EndingSetup: after the walk-in the screen is cleared and the credits layout (jobs $30c4 and $3009) is loaded; the hero is placed at X $c8, Y $50. */
+void *gb_native_EndingSetup(void) {
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    NCALL(GAME_ClearOamShadowY);
+    NCALL(GAME_RequestOamDma);
+    SET_HL(wEndingObject);
+    SET_BC(0x0041);
+    gb_native_ClearMemory();
+    wr(wCameraX, 0);
+    wr(wCameraY, 0);
+    SET_BC(0x30C4);
+    gb_native_RunVramCopyList();
+    wr(wEndingObject, 0x80);
+    wr(wEndingX, 0xC8);
+    wr(wEndingY, 0x50);
+    wr(wEndingStep, 0x0A);
+    SET_BC(0x3009);
+    gb_native_RunVramCopyList();
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    return 0;
+}
+
+void *gb_native_RunEndingTextListAndWait(void) {
+    SET_BC(0x2DFF);
+    gb_native_QueueVramCopyList();
+    while (rd(wVramCopyFlags) & 0x01) gb_host_vblank();      /* the original spins on the flag; the frame is what clears it */
+    return 0;
+}
+
+void *gb_native_EndingShowCreditsPage(void) {
+    gb_native_EndingScrollStep();
+    gb_native_RunEndingTextListAndWait();
+    gb_native_EndingScrollStep();
+    r.a = rd(wCreditsPage);
+    SET_HL(DATA_CreditsPageTable);
+    gb_native_LookupWord();
+    gb_native_QueueVramCopyList();
+    NCALL(GAME_WaitVramCopyDone);
+    return 0;
+}
+
+/* EndingCreditsWindow: once the hero has arrived the window (rWY $5a, rWX $a5) is turned on and slides in 5 pixels a frame to X $0a, the page is shown until its timer
+ * ends, the window slides out again and the next page follows (the last page is number 8). */
+void *gb_native_EndingCreditsWindow(void) {
+    if (!(rd(wEndingEvents) & 0x04)) return 0;
+    if (!(rd(wEndingObject2) & 0x01)) {
+        wr(rWY, 0x5A);
+        wr(rWX, 0xA5);
+        wr(rLCDC, rd(rLCDC) | 0x60);
+        SET_HL(wEndingObject2);
+        wr(wEndingObject2, rd(wEndingObject2) | 0x01);
+        wr(wEndingObject2 + 1, 0xFF);
+        gb_native_EndingShowCreditsPage();
+    }
+    if (!(rd(wEndingObject2) & 0x04)) {
+        if (!(rd(wEndingObject2) & 0x02)) {
+            wr(rWX, rd(rWX) - 5);
+            SET_HL(rWX);
+            r.a = rd(rWX);
+            alu_cp(0x0A);
+            if (r.a != 0x0A) return 0;
+            SET_HL(wEndingObject2);
+            wr(wEndingObject2, rd(wEndingObject2) | 0x02);
+            return 0;
+        }
+        if (rd(wCreditsPage) == 0x08) return 0;
+        SET_HL(wEndingObject2 + 1);
+        wr(wEndingObject2 + 1, rd(wEndingObject2 + 1) - 1);
+        if (rd(wEndingObject2 + 1)) return 0;
+        wr(wEndingObject2 + 1, 0xFF);
+        SET_HL(wEndingObject2);
+        wr(wEndingObject2, (rd(wEndingObject2) & ~0x02) | 0x04);
+        return 0;
+    }
+    wr(rWX, rd(rWX) + 5);
+    SET_HL(rWX);
+    r.a = rd(rWX);
+    if (r.a != 0xA5) return 0;
+    wr(wEndingObject2, 0);
+    SET_HL(wCreditsPage);
+    wr(wCreditsPage, rd(wCreditsPage) + 1);
+    gb_native_EndingShowCreditsPage();
+    return 0;
+}
