@@ -1,6 +1,6 @@
 /* Windows front end for the recompiled game: window, keyboard, audio (waveOut), frame pacing by the audio clock.
  * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit,
- * P = pause, M = mute, F2 = next palette (green/grey/sepia), F12 = screenshot (screenshots folder), hold Tab = fast forward.
+ * P = pause, M = mute, F2 = next palette (green/grey/sepia), F5 = reload the texture folders, F12 = screenshot (screenshots folder), hold Tab = fast forward.
  *   game_win [ROM]     (no argument: the game data built into the program; a ROM file argument is for testing mods) */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -31,6 +31,21 @@ static WAVEHDR hdr[NBUF];
 static int16_t abuf[NBUF][735 * 2];
 static HWAVEOUT wave;
 static int quit;
+/* the window position is remembered in painter_momopie.pos next to the program */
+static void pos_path(char *out, size_t n) {
+    GetModuleFileNameA(0, out, (DWORD)n);
+    char *slash = strrchr(out, 92);
+    if (slash) strcpy(slash + 1, "painter_momopie.pos"); else strcpy(out, "painter_momopie.pos");
+}
+static void save_pos(HWND h) {
+    RECT rc;
+    char path[MAX_PATH];
+    if (fullscreen || IsIconic(h) || !GetWindowRect(h, &rc)) return;
+    pos_path(path, sizeof path);
+    FILE *f = fopen(path, "w");
+    if (f) { fprintf(f, "%ld %ld %ld %ld%c", rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 10); fclose(f); }
+}
+static int bound_is(int action, WPARAM w);
 
 static void toggle_fullscreen(HWND h) {
     DWORD st = GetWindowLong(h, GWL_STYLE);
@@ -116,20 +131,22 @@ static void save_screenshot(void) {
     }
     free(raw); free(z);
 }
-static int want_shot;
+static int want_shot, want_reload;
 
 static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
     switch (m) {
+    case WM_CLOSE: save_pos(h); DestroyWindow(h); return 0;
     case WM_DESTROY: quit = 1; PostQuitMessage(0); return 0;
     case WM_KEYDOWN:
-        if (w == VK_ESCAPE) { quit = 1; DestroyWindow(h); }
+        if (w == VK_ESCAPE) { quit = 1; save_pos(h); DestroyWindow(h); }
         if (w == 'P') paused = !paused;
         if (w == 'M') muted = !muted;
         if (w == VK_F2) pal_index = (pal_index + 1) % 3;
         if (w == VK_F11) toggle_fullscreen(h);
         if (w == VK_F12) want_shot = 1;
-        if (w == 'Q') gb_quick_cycle = -1;                   /* option quick_magic: previous / next magic card */
-        if (w == 'E') gb_quick_cycle = 1;
+        if (w == VK_F5) want_reload = 1;
+        if (bound_is(8, w)) gb_quick_cycle = -1;             /* option quick_magic: previous / next magic card */
+        if (bound_is(9, w)) gb_quick_cycle = 1;
         return 0;
     case WM_ERASEBKGND: return 1;
     }
@@ -163,17 +180,44 @@ static void present(void) {
     ReleaseDC(hwnd, dc);
 }
 
+/* key bindings (the key_* options of the ini): up to four virtual keys per action */
+static int binds[10][4];
+static int vk_of(const char *n) {
+    static const struct { const char *name; int vk; } names[] = {
+        {"up", VK_UP}, {"down", VK_DOWN}, {"left", VK_LEFT}, {"right", VK_RIGHT}, {"enter", VK_RETURN}, {"return", VK_RETURN}, {"space", VK_SPACE}, {"tab", VK_TAB},
+        {"backspace", VK_BACK}, {"shift", VK_SHIFT}, {"lshift", VK_LSHIFT}, {"rshift", VK_RSHIFT}, {"ctrl", VK_CONTROL}, {"lctrl", VK_LCONTROL}, {"rctrl", VK_RCONTROL},
+        {"alt", VK_MENU}, {"ins", VK_INSERT}, {"del", VK_DELETE}, {"home", VK_HOME}, {"end", VK_END}, {"pgup", VK_PRIOR}, {"pgdn", VK_NEXT},
+        {"num0", VK_NUMPAD0}, {"num1", VK_NUMPAD1}, {"num2", VK_NUMPAD2}, {"num3", VK_NUMPAD3}, {"num4", VK_NUMPAD4}, {"num5", VK_NUMPAD5}, {"num6", VK_NUMPAD6},
+        {"num7", VK_NUMPAD7}, {"num8", VK_NUMPAD8}, {"num9", VK_NUMPAD9}, {"comma", VK_OEM_COMMA}, {"period", VK_OEM_PERIOD}, {"none", 0}};
+    char low[32];
+    size_t len = strlen(n);
+    if (len == 1 && ((n[0] >= 'a' && n[0] <= 'z') || (n[0] >= 'A' && n[0] <= 'Z') || (n[0] >= '0' && n[0] <= '9'))) return n[0] >= 'a' ? n[0] - 32 : n[0];
+    if (len >= sizeof low) return 0;
+    for (size_t i = 0; i <= len; i++) low[i] = (char)((n[i] >= 'A' && n[i] <= 'Z') ? n[i] + 32 : n[i]);
+    for (size_t i = 0; i < sizeof names / sizeof *names; i++) if (!strcmp(low, names[i].name)) return names[i].vk;
+    return 0;
+}
+static void bind_keys(void) {
+    for (int a = 0; a < 10; a++) {
+        char list[48];
+        strcpy(list, gb_config.keys[a]);
+        int n = 0;
+        for (char *tok = strtok(list, ", "); tok && n < 4; tok = strtok(0, ", ")) { int vk = vk_of(tok); if (vk) binds[a][n++] = vk; }
+    }
+}
+static int bound_down(int action) {
+    for (int i = 0; i < 4 && binds[action][i]; i++) if (GetAsyncKeyState(binds[action][i]) & 0x8000) return 1;
+    return 0;
+}
+static int bound_is(int action, WPARAM w) {
+    for (int i = 0; i < 4 && binds[action][i]; i++) if ((WPARAM)binds[action][i] == w) return 1;
+    return 0;
+}
+
 static uint8_t keys(void) {
     uint8_t j = 0;
     if (GetForegroundWindow() != hwnd) return 0;
-    if (GetAsyncKeyState(VK_RIGHT) & 0x8000) j |= 0x01;
-    if (GetAsyncKeyState(VK_LEFT) & 0x8000) j |= 0x02;
-    if (GetAsyncKeyState(VK_UP) & 0x8000) j |= 0x04;
-    if (GetAsyncKeyState(VK_DOWN) & 0x8000) j |= 0x08;
-    if (GetAsyncKeyState('Z') & 0x8000) j |= 0x10;
-    if (GetAsyncKeyState('X') & 0x8000) j |= 0x20;
-    if ((GetAsyncKeyState(VK_RSHIFT) & 0x8000) || (GetAsyncKeyState(VK_BACK) & 0x8000)) j |= 0x40;
-    if (GetAsyncKeyState(VK_RETURN) & 0x8000) j |= 0x80;
+    for (int a = 0; a < 8; a++) if (bound_down(a)) j |= (uint8_t)(1 << a);        /* right, left, up, down, A, B, Select, Start */
     {   /* a gamepad (first joystick, winmm): D-pad or left stick, button 1 = A, 2 = B, 7/8 = Select/Start (or 9/10) */
         JOYINFOEX ji = {sizeof ji, JOY_RETURNALL};
         if (joyGetPosEx(0, &ji) == JOYERR_NOERROR) {
@@ -218,6 +262,7 @@ static void frame(unsigned f) {
         Sleep(30);
     }
     if (want_shot) { want_shot = 0; save_screenshot(); }
+    if (want_reload) { want_reload = 0; gb_texture_reload_all(); }                     /* F5: the texture folders again */
     fast = (GetAsyncKeyState(VK_TAB) & 0x8000) && GetForegroundWindow() == hwnd;
     gb_joy = keys();
 }
@@ -282,6 +327,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
         FILE *t = fopen(ini, "r");
         if (t) fclose(t); else strcpy(ini, "painter_momopie.ini");
         gb_config_load(ini);
+        bind_keys();
         for (int i = 1; i + 1 < argc; i++) {              /* command line: --pack FILE (a level pack) and --round N (first round) override the ini */
             char arg[MAX_PATH];
             WideCharToMultiByte(CP_ACP, 0, argv[i], -1, arg, MAX_PATH, 0, 0);
@@ -297,8 +343,18 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     RegisterClassA(&wc);
     RECT r = {0, 0, gb_view_w * gb_config.scale, 144 * gb_config.scale};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, 0);
-    hwnd = CreateWindowA("gbrecomp", "Painter Momopie", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT,
-                         r.right - r.left, r.bottom - r.top, 0, 0, inst, 0);
+    int wx = CW_USEDEFAULT, wy = CW_USEDEFAULT, ww = r.right - r.left, wh = r.bottom - r.top;
+    {   /* the position and size of the last session (kept when it is still on a screen) */
+        char pp[MAX_PATH];
+        long x, y, w, h;
+        pos_path(pp, sizeof pp);
+        FILE *pf = fopen(pp, "r");
+        if (pf) {
+            if (fscanf(pf, "%ld %ld %ld %ld", &x, &y, &w, &h) == 4 && w > 100 && h > 100 && x > -w + 80 && y > -h + 80 && x < GetSystemMetrics(SM_CXVIRTUALSCREEN) - 80 && y < GetSystemMetrics(SM_CYVIRTUALSCREEN) - 80) { wx = (int)x; wy = (int)y; ww = (int)w; wh = (int)h; }
+            fclose(pf);
+        }
+    }
+    hwnd = CreateWindowA("gbrecomp", "Painter Momopie", WS_OVERLAPPEDWINDOW | WS_VISIBLE, wx, wy, ww, wh, 0, 0, inst, 0);
     if (gb_config.fullscreen) toggle_fullscreen(hwnd);
     WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 2, 44100, 44100 * 4, 4, 16, 0};
     if (waveOutOpen(&wave, WAVE_MAPPER, &wf, 0, 0, CALLBACK_NULL) != MMSYSERR_NOERROR) wave = 0;

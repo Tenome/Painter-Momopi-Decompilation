@@ -9,10 +9,14 @@
 
 GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, "", "textures", 0, 0, 0, 0, 0, 0};
 
+static const char *const key_option[10] = {"key_right", "key_left", "key_up", "key_down", "key_a", "key_b", "key_select", "key_start", "key_card_prev", "key_card_next"};
+static const char *const key_default[10] = {"Right", "Left", "Up", "Down", "Z", "X", "RShift,Backspace", "Enter", "Q", "E"};
+
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 static void set(const char *key, const char *val) {
     int v = atoi(val);
+    for (int k = 0; k < 10; k++) if (!strcmp(key, key_option[k])) { strncpy(gb_config.keys[k], val, 47); gb_config.keys[k][47] = 0; return; }
     if (!strcmp(key, "scale")) gb_config.scale = clampi(v, 1, 16);
     else if (!strcmp(key, "fullscreen")) gb_config.fullscreen = v != 0;
     else if (!strcmp(key, "palette")) gb_config.palette = clampi(v, 0, 2);
@@ -34,6 +38,7 @@ static void set(const char *key, const char *val) {
 }
 
 void gb_config_load(const char *path) {
+    for (int k = 0; k < 10; k++) strcpy(gb_config.keys[k], key_default[k]);
     FILE *f = fopen(path, "r");
     if (f) {
         char line[256];

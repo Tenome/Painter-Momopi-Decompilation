@@ -51,6 +51,14 @@ static void clear(Layer *L) {
     L->folder[0] = 0;
 }
 
+void gb_texture_reload_all(void) {
+    for (int l = 0; l < GB_TEX_LAYERS; l++) {
+        char f[512];
+        snprintf(f, sizeof f, "%s", layers[l].folder);
+        if (f[0]) { layers[l].folder[0] = 0; gb_texture_load(l, f); }
+    }
+}
+
 int gb_texture_load(int layer, const char *folder) {
     static const uint8_t grey[4] = {255, 170, 85, 0};
     Layer *L = &layers[layer];

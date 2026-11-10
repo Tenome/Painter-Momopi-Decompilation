@@ -27,6 +27,8 @@ that use the same graphics in different places (for example the floor) therefore
 
 ## Using a pack
 
+In `game_win.exe` F5 reloads the texture folders while the game runs: paint, save the PNG, press F5.
+
 Put the folder next to `game_win.exe` (default name `textures`) or set `texture_pack` in `painter_momopie.ini` (or the folder in `settings.exe`), then start the game.
 The loader reports what it replaced on the console of `game_headless` (`game_headless - 600 --ini painter_momopie.ini --shot 500` writes `rc_0500.ppm`).
 

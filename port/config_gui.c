@@ -21,6 +21,7 @@ static HFONT font;
 typedef struct { int scale, fullscreen, integer_scale, palette, widescreen, no_sprite_limit, volume, mute, speed, infinite_lives, start_lives, start_round; char texture_pack[MAX_PATH]; char level_pack[MAX_PATH]; int all_cards, infinite_magic, no_time_limit, quick_magic; } Cfg;
 static const Cfg defaults = {4, 0, 1, 0, 0, 0, 100, 0, 100, 0, 3, 0, "textures", "", 0, 0, 0, 0};
 static Cfg cfg;
+static char keylines[1024];                    /* the [keys] lines of the ini are kept as they are */
 
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
@@ -45,6 +46,7 @@ static void load(void) {
         for (e = v + strlen(v) - 1; e >= v && isspace((unsigned char)*e); e--) *e = 0;
         for (char *q = p; *q; q++) *q = (char)tolower((unsigned char)*q);
         int n = atoi(v);
+        if (!strncmp(p, "key_", 4)) { size_t n = strlen(keylines); snprintf(keylines + n, sizeof keylines - n, "%s=%s%c", p, v, 10); continue; }
         if (!strcmp(p, "scale")) cfg.scale = clampi(n, 1, 16);
         else if (!strcmp(p, "fullscreen")) cfg.fullscreen = n != 0;
         else if (!strcmp(p, "integer_scale")) cfg.integer_scale = n != 0;
@@ -73,9 +75,11 @@ static int save(void) {
     fprintf(f,
         "; Options of the native Painter Momopie player (written by the settings program; you can also edit it by hand).\n\n"
         "[display]\nscale=%d\nfullscreen=%d\ninteger_scale=%d\npalette=%d\nwidescreen=%d\nno_sprite_limit=%d\ntexture_pack=%s\n\n"
+        "[keys]\n%s\n"
         "[audio]\nvolume=%d\nmute=%d\n\n"
         "[game]\nlevel_pack=%s\nspeed=%d\ninfinite_lives=%d\nstart_lives=%d\nstart_round=%d\nall_cards=%d\ninfinite_magic=%d\nno_time_limit=%d\nquick_magic=%d\n",
         cfg.scale, cfg.fullscreen, cfg.integer_scale, cfg.palette, cfg.widescreen, cfg.no_sprite_limit, cfg.texture_pack,
+        keylines,
         cfg.volume, cfg.mute, cfg.level_pack, cfg.speed, cfg.infinite_lives, cfg.start_lives, cfg.start_round, cfg.all_cards, cfg.infinite_magic, cfg.no_time_limit, cfg.quick_magic);
     fclose(f);
     return 1;

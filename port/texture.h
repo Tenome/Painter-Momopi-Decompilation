@@ -22,4 +22,5 @@ extern int gb_tex_scale;    /* the largest scale among them (the colour picture 
 int gb_texture_load(int layer, const char *folder);   /* (re)loads a layer from a folder ("" or NULL empties it); returns the number of replaced tiles */
 int gb_texture_find(const uint8_t *tile16);           /* texture id or -1 */
 const GbTex *gb_texture_get(int id);
+void gb_texture_reload_all(void);                     /* loads every layer again from its folder (F5 in the Windows player): edit a sheet, press F5, see it */
 #endif

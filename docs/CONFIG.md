@@ -31,5 +31,7 @@ The options live in `port/config.c`; the widescreen and sprite code is in `port/
 
 ## Controls
 
-Keyboard: arrows, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select, Esc quit, P pause, M mute, F2 palette, F11 full screen, F12 saves a screenshot (PNG, in the `screenshots` folder next to the program), hold Tab to fast forward.
+The keys can be changed in the `[keys]` section of `painter_momopie.ini` (`key_a=Z`, `key_up=Up,W` ...; several keys per action are allowed). The defaults are below.
+
+Keyboard: arrows, Z = A, X = B, Enter = Start, Right Shift or Backspace = Select, Esc quit, P pause, M mute, F2 palette, F11 full screen, F5 reloads the texture folders (edit a sheet, press F5, see the change), F12 saves a screenshot (PNG, in the `screenshots` folder next to the program), hold Tab to fast forward.
 A gamepad (first joystick known to Windows) works too: D-pad or left stick, button 1 = A, button 2 = B, buttons 7/8 or 9/10 = Select/Start.

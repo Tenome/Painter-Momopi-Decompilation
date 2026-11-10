@@ -19,6 +19,7 @@ typedef struct {
     int infinite_magic;     /* casting costs no magic points */
     int no_time_limit;      /* the round clock stops (no time-up enemy) */
     int quick_magic;        /* Q / E (gamepad shoulder buttons) cycle the selected magic card during play: no trip to the magic screen */
+    char keys[10][48];      /* key names for right, left, up, down, A, B, Select, Start, previous card, next card (comma separated lists) */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
 } GbConfig;
 extern GbConfig gb_config;
