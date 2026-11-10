@@ -9,10 +9,8 @@ uint8_t gb_framebuf[GB_MAX_W * 144];
 int gb_margin;                      /* extra pixels shown on each side of the 160 pixel screen in play (widescreen option) */
 int gb_view_w = 160;                /* width of the rendered picture: 160 + 2 * gb_margin */
 int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
-uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
 int gb_xoam_n, gb_xoam_shown_n;
 int gb_sprite_limit_off;             /* option: sprites are also kept in a long list that the renderer uses (no 40 sprite limit) */
-uint8_t gb_xoam[GB_XOAM * 4], gb_xoam_shown[GB_XOAM * 4];
 int gb_xoam_n, gb_xoam_shown_n;
 int gb_wide_active;                 /* set by the game logic while the play screen is shown */
 void (*gb_frame_hook)(unsigned frame);

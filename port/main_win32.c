@@ -78,7 +78,11 @@ static void present(void) {
     int x = (cw - w) / 2, y = (ch - h) / 2;
     BITMAPINFO bi = {{sizeof(BITMAPINFOHEADER), vw, -144, 1, 32, BI_RGB}};
     HDC dc = GetDC(hwnd);
-    PatBlt(dc, 0, 0, cw, ch, BLACKNESS);
+    /* only the bars around the picture are cleared: clearing the whole window first made it flicker */
+    if (y > 0) { PatBlt(dc, 0, 0, cw, y, BLACKNESS); }
+    if (y + h < ch) { PatBlt(dc, 0, y + h, cw, ch - y - h, BLACKNESS); }
+    if (x > 0) { PatBlt(dc, 0, y, x, h, BLACKNESS); }
+    if (x + w < cw) { PatBlt(dc, x + w, y, cw - x - w, h, BLACKNESS); }
     StretchDIBits(dc, x, y, w, h, 0, 0, vw, 144, pixels, &bi, DIB_RGB_COLORS, SRCCOPY);
     ReleaseDC(hwnd, dc);
 }
