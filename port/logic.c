@@ -4161,3 +4161,123 @@ one_player:
     r.a = 3;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* ---- small setup routines ---- */
+void *gb_native_ClearRoundVariables(void) {
+    wr(wExtraLifeIdx, 0);
+    wr(wScoreDigits, 0); wr(wScoreDigits + 1, 0); wr(wScoreDigits + 2, 0);
+    for (int i = 0; i < 6; i++) wr(wScoreDecimal + i, 0);
+    wr(wScoreStream, 0x06);
+    wr(wScoreStream + 1, 0x01);
+    for (int i = 0; i < 6; i++) wr(wScoreStream + 2 + i, 0xAB);
+    r.a = 0xAB;
+    return 0;
+}
+
+/* CheckExtraLife: once the second score byte has reached 2 (a score of 200 or more in base 100 digits), a life is added each time the top score digit ($c46a) hits the next value of
+ * the table at $11e7 (the index wExtraLifeIdx runs through 5 entries). */
+void *gb_native_CheckExtraLife(void) {
+    if (!(rd(wRoundFlags) & 0x02)) {
+        if (rd(wScoreDigits + 1) < 0x02) return 0;
+        SET_HL(wRoundFlags);
+        wr(wRoundFlags, rd(wRoundFlags) | 0x02);
+    }
+    uint8_t digit = rd(wScoreDecimal + 3);
+    uint8_t index = rd(wExtraLifeIdx);
+    if (index == 0x05) { index = 0; wr(wExtraLifeIdx, 0); }
+    if (rd(0x11E7 + index) != digit) return 0;
+    wr(wLives, rd(wLives) + 1);
+    SET_HL(wExtraLifeIdx);
+    wr(wExtraLifeIdx, rd(wExtraLifeIdx) + 1);
+    return 0;
+}
+
+/* InitMagicPoints: the magic points of the round from MagicPointsTable (16 bit per round), or $0140 in a link game. */
+void *gb_native_InitMagicPoints(void) {
+    if (rd(hLinkFlags) & 0x01) {
+        wr(wMagicPoints, 0x40);
+        wr(wMagicPointsHi, 0x01);
+    } else {
+        uint16_t entry = 0x1462 + (uint8_t)(rd(wRound) << 1);
+        wr(wMagicPointsHi, rd(entry));
+        wr(wMagicPoints, rd(entry + 1));
+    }
+    wr(0xFFEA, 0);
+    r.a = 0;
+    return 0;
+}
+
+void *gb_native_InitMagicScreenState(void) {
+    wr(wMagicCol, 0); wr(wMagicRow, 0); wr(wCursorBlink, 0); wr(wMagicScreenFlags, 0);
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    wr(wCursorObject, 0xA0);
+    wr(wCursorX, 0x28);
+    wr(wCursorY, 0x68);
+    SET_HL(0x1A30);
+    return gb_native_SetCursorAnimation();
+}
+
+void *gb_native_ClearEnemySlot(void) { SET_HL(hObject2); return gb_native_Clear32Bytes(); }
+
+void *gb_native_ClearAllEnemies(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(wEnemyLoopIdx, i);
+        r.a = i;
+        SET_HL(DATA_EnemySlotTable);
+        gb_native_SelectEnemySlot();
+        wr(HL(), 0);
+    }
+    wr(wEnemyLoopIdx, 0xFF);
+    r.a = 0xFF;
+    return 0;
+}
+
+/* FindFreeEnemySlot: scans the 16 slots from 15 down for one that is not in use and creates an enemy there from hScratch07 (kind), hScratch08 (X), hScratch0A (Y)
+ * and hSpawnFlag: flags $82, then the slot is stored. */
+void *gb_native_FindFreeEnemySlot(void) {
+    for (int i = 15; i >= 0; i--) {
+        wr(hScratch00 + 6, i);
+        r.a = i;
+        SET_HL(DATA_EnemySlotTable);
+        gb_native_SelectEnemySlot();
+        if (rd(HL()) & 0x80) continue;
+        gb_native_ClearEnemySlot();
+        wr(hObject2, 0x82);
+        wr(hEnemyKind, rd(hScratch00 + 7));
+        wr(hEnemyX, rd(hScratch00 + 8));
+        wr(hEnemyY, rd(hScratch00 + 10));
+        wr(hEnemySpawnFlag, rd(hSpawnFlag));
+        return gb_native_StoreEnemySlot();
+    }
+    wr(hScratch00 + 6, 0xFF);
+    return 0;
+}
+
+/* DrawDecimalDigits: HL = one byte of the score, BC = index into wScoreDecimal: its two digits go there (tens first); BC advances by 2; HL is kept. */
+void *gb_native_DrawDecimalDigits(void) {
+    uint16_t hl = HL(), bc = BC();
+    r.a = rd(hl);
+    r.c = 0;
+    gb_native_ByteToBCD();
+    uint8_t digits = rd(hScratch00 + 2);
+    wr(wScoreDecimal + bc, digits >> 4);
+    wr(wScoreDecimal + bc + 1, digits & 0x0F);
+    SET_BC(bc + 2);
+    SET_HL(hl);
+    r.d = digits;
+    return 0;
+}
+
+void *gb_native_SetEnemyHitFlag(void) { SET_HL(hEnemyFlags); wr(hEnemyFlags, rd(hEnemyFlags) | 0x04); return 0; }
+void *gb_native_CancelMagic(void) { wr(wActiveMagic, 0); wr(wMagicState, 0); r.a = 0; return 0; }
+void *gb_native_EndMagic(void) { wr(wMagicState, 0); r.a = 0; return 0; }
+void *gb_native_ClearBonusFlags(void) { SET_HL(wGameFlags); wr(wGameFlags, rd(wGameFlags) & 0x7E); return 0; }
+void *gb_native_SetPlayerStatusBit0(void) { SET_HL(wPlayerStatus); wr(wPlayerStatus, rd(wPlayerStatus) | 0x01); wr(wPlayerSpeed, 0); r.a = 0; return 0; }
+void *gb_native_BeginMagicCast(void) {
+    r.a = SND_SFX_82;
+    NCALL(GAME_PlaySound);
+    SET_HL(wMagicState);
+    wr(wMagicState, rd(wMagicState) | 0x02);
+    return 0;
+}

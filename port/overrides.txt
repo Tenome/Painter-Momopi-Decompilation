@@ -227,3 +227,17 @@ InitTitleVariables
 TitleCursorUpdate
 PickRandomRound
 Mode0_Title
+ClearRoundVariables
+CheckExtraLife
+InitMagicPoints
+InitMagicScreenState
+ClearEnemySlot
+ClearAllEnemies
+FindFreeEnemySlot
+DrawDecimalDigits
+SetEnemyHitFlag
+CancelMagic
+EndMagic
+ClearBonusFlags
+SetPlayerStatusBit0
+BeginMagicCast
