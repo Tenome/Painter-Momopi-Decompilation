@@ -245,3 +245,9 @@ AnimatePlayerWalk
 EnemyShooterAI
 EnemyKind10Animate
 EnemyFlagBit3IfDead
+EnemyKind13Timer
+SelectKind13Animation
+EnemyKind13Speed
+EnemyKind13Init
+EnemyKind13Leave
+EnemyKind13

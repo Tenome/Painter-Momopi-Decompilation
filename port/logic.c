@@ -4339,3 +4339,81 @@ void *gb_native_EnemyFlagBit3IfDead(void) {
     if (rd(hEnemyDir) & 0x20) { SET_HL(hEnemyFlags); wr(hEnemyFlags, rd(hEnemyFlags) | 0x08); }
     return 0;
 }
+
+/* ---- kind 13 enemy (round 33): a chaser with a lifetime of $0250 frames; at 0 it blinks for hEnemyStep frames and leaves ---- */
+void *gb_native_EnemyKind13Timer(void) {
+    uint16_t t = (rd(hEnemyTimer) | rd(hEnemyAux) << 8) - 1;
+    r.c = (uint8_t)t; r.b = t >> 8;
+    if (t == 0) { wr(hEnemyFlags, rd(hEnemyFlags) | 0x01); return 0; }
+    wr(hEnemyTimer, (uint8_t)t);
+    wr(hEnemyAux, t >> 8);
+    return 0;
+}
+
+void *gb_native_SelectKind13Animation(void) {
+    uint8_t dir = rd(hEnemyDir);
+    if (dir & 0x01) { set_flip(1); anim_variant(0x54F7, 0x54FE); }
+    else if (dir & 0x02) { set_flip(0); anim_variant(0x54F7, 0x54FE); }
+    else if (dir & 0x04) anim_variant(0x5505, 0x550C);
+    else anim_variant(0x54E9, 0x54F0);
+    return 0;
+}
+
+void *gb_native_EnemyKind13Speed(void) {
+    if (!(rd(hEnemyDir) & 0x20)) {
+        uint8_t a = rd(hEnemyField18);
+        if (a) { wr(hEnemyField18, a - 1); wr(hEnemyFlags, rd(hEnemyFlags) | 0x80); return 0; }
+        wr(hEnemyField18, 0xB0);
+        wr(hEnemyDir, rd(hEnemyDir) | 0x20);
+        return 0;
+    }
+    uint8_t v = rd(hEnemyField19) - 1;
+    wr(hEnemyField19, v);
+    if (v) { wr(hEnemyFlags, rd(hEnemyFlags) & 0x7F); return 0; }
+    wr(hEnemyField19, 0x50);
+    wr(hEnemyDir, rd(hEnemyDir) & ~0x20);
+    return 0;
+}
+
+void *gb_native_EnemyKind13Init(void) {
+    wr(hEnemyTimer, 0x50);
+    wr(hEnemyAux, 0x02);
+    wr(hEnemyField18, 0xB0);
+    wr(hEnemyField19, 0x50);
+    wr(hEnemyStep, 0x50);
+    wr(hEnemyCounter, 0x20);
+    set_anim(0x54E9);
+    return gb_native_EnemySnapToGrid();
+}
+
+void *gb_native_EnemyKind13Leave(void) {
+    uint8_t s = rd(hEnemyStep) - 1;
+    wr(hEnemyStep, s);
+    if (s == 0) return gb_native_RemoveEnemy();
+    uint8_t c = rd(hEnemyCounter) + 1;
+    wr(hEnemyCounter, c);
+    SET_BC(0x54E9);
+    set_anim((c & 0x08) ? 0x54E9 : 0x3ACA);
+    return 0;
+}
+
+void *gb_native_EnemyKind13(void) {
+    gb_native_SelectObject2();
+    gb_native_TickObjectTimer();
+    if (ZF()) return (void *)GAME_EnemyKind13Init;
+    if (rd(hEnemyFlags) & 0x01) {
+        gb_native_EnemyKind13Leave();
+        gb_native_DrawObject();
+        return 0;
+    }
+    gb_native_EnemyKind13Timer();
+    NCALL(GAME_EnemyComputeBlockedDirs);
+    NCALL(GAME_EnemyAimAtPlayer);
+    gb_native_EnemyKind13Speed();
+    NCALL(GAME_EnemyMoveStep);
+    NCALL(GAME_EnemyPaintUnderB0M);
+    NCALL(GAME_CheckEnemyTouchesPlayer);
+    gb_native_SelectKind13Animation();
+    gb_native_DrawObject();
+    return 0;
+}
