@@ -253,3 +253,9 @@ EnemyKind13Leave
 EnemyKind13
 ProjectileSelectFrame
 InitProjectile
+EnemyInitMoveAnim
+EnemyAuxCounterStep
+EnemyKind4Init
+EnemyKind9Init
+EnemyKind2Init
+EnemyKind3Init

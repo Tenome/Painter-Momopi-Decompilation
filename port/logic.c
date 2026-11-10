@@ -4457,3 +4457,54 @@ void *gb_native_InitProjectile(void) {
     SET_HL(hl);
     return gb_native_ProjectileSelectFrame();
 }
+
+/* ---- first animation and counters of the enemy kinds ---- */
+void *gb_native_EnemyInitMoveAnim(void) {
+    wr(hEnemyCounter, 0x20);
+    wr(hEnemyBoxHalf, 0x04);
+    uint8_t kind = rd(hEnemyKind);
+    set_anim(kind == 0x06 ? 0x3ACF : kind == 0x08 ? 0x3AD9 : 0x3AA6);
+    return gb_native_EnemySnapToGrid();
+}
+
+void *gb_native_EnemyAuxCounterStep(void) {
+    uint8_t f = rd(hEnemyFlags);
+    if (!(f & 0x01)) { r.a = f; return 0; }
+    uint8_t aux = rd(hEnemyAux);
+    if (aux == 0x80) { wr(hEnemyFlags, f & 0xFE); wr(hEnemyAux, 0); r.a = 0; return 0; }
+    wr(hEnemyAux, aux + 1);
+    r.a = aux + 1;
+    return 0;
+}
+
+void *gb_native_EnemyKind4Init(void) {
+    wr(hEnemySpeed, 0x08);
+    wr(hEnemySpawnFlag, 0x01);
+    wr(hEnemyCounter, (rd(hLinkFlags) & 0x01) ? 0x50 : 0x80);
+    set_anim(0x53E5);
+    wr(hEnemyDir, 0x91);
+    r.a = 0x91;
+    return 0;
+}
+
+void *gb_native_EnemyKind9Init(void) {
+    wr(hEnemySpeed, 0x06);
+    wr(hEnemyCounter, 0x20);
+    set_anim(0x586F);
+    return gb_native_EnemySnapToGrid();
+}
+
+void *gb_native_EnemyKind2Init(void) {
+    wr(hEnemySpeed, 0x05);
+    wr(hEnemyCounter, 0x20);
+    wr(hEnemyStep, 0x05);
+    set_anim(0x59CB);
+    return gb_native_EnemySnapToGrid();
+}
+
+void *gb_native_EnemyKind3Init(void) {
+    set_anim(0x5A76);
+    wr(hEnemySpeed, 0x05);
+    wr(hEnemyCounter, 0x20);
+    return gb_native_EnemySnapToGrid();
+}
