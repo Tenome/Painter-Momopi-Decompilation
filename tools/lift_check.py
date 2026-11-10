@@ -101,7 +101,7 @@ for card in range(1, 10):
         first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
         print(f"card {card} selected, seed {seed}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 # a round that is nearly painted: the last cells are painted by the random walk, so RoundCleared, NextRound and the next screens run
-for rnd in ("1", "3", "7", "11", "20", "28", "32"):
+for rnd in ("1", "3", "7", "11", "20", "28", "32", "33"):
     h = []
     for name, prog in (("base", base), ("lifted", out)):
         p = os.path.join(tmp, f"{name}_clear{rnd}.txt")
