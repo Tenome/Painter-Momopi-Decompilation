@@ -43,6 +43,8 @@ static void set(const char *key, const char *val) {
     else if (!strcmp(key, "all_cards")) gb_config.all_cards = v != 0;
     else if (!strcmp(key, "infinite_magic")) gb_config.infinite_magic = v != 0;
     else if (!strcmp(key, "no_time_limit")) gb_config.no_time_limit = v != 0;
+    else if (!strcmp(key, "filter")) gb_config.filter = clampi(v, 0, 2);
+    else if (!strcmp(key, "pause_on_focus_loss")) gb_config.pause_on_focus_loss = v != 0;
     else if (!strcmp(key, "high_score")) gb_config.high_score = v != 0;
     else if (!strcmp(key, "resume")) gb_config.resume = v != 0;
     else if (!strcmp(key, "quick_magic")) gb_config.quick_magic = v != 0;

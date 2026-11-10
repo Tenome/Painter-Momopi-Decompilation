@@ -148,6 +148,7 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         if (bound_is(8, w)) gb_quick_cycle = -1;             /* option quick_magic: previous / next magic card */
         if (bound_is(9, w)) gb_quick_cycle = 1;
         return 0;
+    case WM_KILLFOCUS: if (gb_config.pause_on_focus_loss) paused = 1; return 0;
     case WM_ERASEBKGND: return 1;
     }
     return DefWindowProc(h, m, w, l);
@@ -159,6 +160,24 @@ static void present(void) {
     int cw = rc.right, ch = rc.bottom, vw = gb_view_w;
     int cs = gb_tex_count ? gb_color_scale : 1;           /* the colour picture is cs times larger than the Game Boy one */
     const uint32_t *src = gb_tex_count ? gb_colorbuf : pixels;
+    if (gb_config.filter) {                          /* scanlines / LCD grid: the picture is enlarged to at least 3x and the gaps between the pixels are darkened */
+        static uint32_t *fbuf;
+        static size_t fcap;
+        int k = cs >= 3 ? 1 : 3 / cs, e = cs * k, ow = vw * e, oh = 144 * e;
+        if (fcap < (size_t)ow * oh) { free(fbuf); fcap = (size_t)ow * oh; fbuf = malloc(fcap * 4); }
+        for (int y = 0; y < oh; y++) {
+            const uint32_t *row = src + (size_t)(y / k) * vw * cs;
+            uint32_t *o = fbuf + (size_t)y * ow;
+            int dark_row = y % e == e - 1;
+            for (int x = 0; x < ow; x++) {
+                uint32_t c = row[x / k];
+                if (dark_row || (gb_config.filter == 2 && x % e == e - 1)) c = ((c >> 1) & 0x7F7F7F) + ((c >> 2) & 0x3F3F3F);   /* about 75% brightness */
+                o[x] = c;
+            }
+        }
+        src = fbuf;
+        cs = e;
+    }
     int w, h;
     if (gb_config.integer_scale) {
         int scale = cw / vw < ch / 144 ? cw / vw : ch / 144;

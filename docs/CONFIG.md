@@ -19,6 +19,8 @@ starts the game. The file can still be edited by hand.
 | `volume`, `mute` | 0-100, 0/1 | sound |
 | `speed` | 50-400 | percent of normal speed (no sound unless 100) |
 | `infinite_lives` | 0/1 | the player never loses a life |
+| `filter` | 0-2 | 0 = none, 1 = scanlines, 2 = LCD grid (Windows player; the picture is enlarged at least 3 times and the gaps darkened). Edit by hand; the settings window keeps it. |
+| `pause_on_focus_loss` | 0/1 | The game pauses when its window loses the focus; P resumes. Edit by hand. |
 | `quick_magic` | 0/1 | Q and E (or the gamepad shoulder buttons 5 and 6) cycle the selected magic card during play and show its name and cost; A then casts it as usual. Cards the magic points cannot pay for are skipped, and nothing changes while a cast is running. The original B-button magic screen still works. |
 | `high_score` | 0/1 | The best score (and the round it was reached in) is kept in `painter_momopie.sav` next to the ini and shown at the top of the title screen. |
 | `resume` | 0/1 | The state at the start of each round (round, lives, score, magic cards, continues) is saved in `painter_momopie.sav`; 1 PLAYER on the title screen continues there (hold B while pressing START for a new game). Finishing the game clears it. |
