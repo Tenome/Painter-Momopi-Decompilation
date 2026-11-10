@@ -4042,3 +4042,122 @@ yes:
     r.a = 3;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* ---- the title screen ---- */
+
+/* InitTitleVariables: link flags, the code flags, the cards and the bonus counter are cleared; 5 continues; the cursor object at X $34, Y $64 with its animation. */
+void *gb_native_InitTitleVariables(void) {
+    wr(hLinkFlags, 0);
+    wr(wCheatFlags, 0);
+    for (int i = 0; i < 9; i++) wr(wMagicCards + i, 0);
+    wr(0xC487, 0);
+    wr(wContinues, 0x05);
+    wr(wCursorX, 0x34);
+    wr(wCursorY, 0x64);
+    wr(wCursorObject, 0x80);
+    SET_HL(0x2B84);
+    return gb_native_SetCursorAnimation();
+}
+
+/* TitleCursorUpdate: Select (hJoyNew = 4) toggles the cursor between 1 PLAYER (Y $64) and 2 PLAYER (Y $74); the cursor object is drawn. */
+void *gb_native_TitleCursorUpdate(void) {
+    if (rd(hJoyNew) == 0x04) wr(wCursorY, rd(wCursorY) == 0x64 ? 0x74 : 0x64);
+    SET_HL(wCursorObject);
+    gb_native_SetObjPtr();
+    return (void *)GAME_DrawObjectBytePos;
+}
+
+/* PickRandomRound (link games): wRound = a random number 1-30 from hRngCounter (the value $1f gives $1e); wRoundBackup and wRoomIndex follow. */
+void *gb_native_PickRandomRound(void) {
+    uint8_t round;
+    for (;;) {
+        gb_native_NextRandomDirection();
+        round = rd(hRngCounter) & 0x1F;
+        if (round) break;
+    }
+    if (round == 0x1F) round--;
+    wr(wRound, round);
+    wr(wRoundBackup, round);
+    wr(wRoomIndex, round - 1);
+    r.a = round - 1;
+    return 0;
+}
+
+/* Mode0_Title: sets up the title (tiles, music, the logo list, the cursor) and runs TitleLoop. The loop: a serial byte with bit 4 means the other machine started a link game
+ * (the round it sent is taken over); the pad value $93 held goes to the ending (mode 6, a test) and $47 sets the unlimited continues flag (wCheatFlags bit 0); Start (hJoyNew = 8)
+ * on 1 PLAYER starts mode 3 at round 1 (the serial register is cleared and $88 sent so a partner machine joins as the second player); on 2 PLAYER a random round is sent and the
+ * answer decides: no partner leaves the cursor on 1 PLAYER, a partner starts a link game. */
+void *gb_native_Mode0_Title(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    NCALL(GAME_LoadTilesBank3A);
+    r.a = SND_MUSIC_TITLE;
+    NCALL(GAME_PlaySound);
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_BC(0x2B86);
+    NCALL(GAME_RunVramCopyList);
+    NCALL(GAME_RequestOamDma);
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    gb_native_InitTitleVariables();
+    wr(rSB, 0xEE);
+    NCALL(GAME_SerialStartTransfer);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        if (rd(hSerialByte) & 0x10) goto partner_started;
+        NCALL(GAME_ReadJoypad);
+        if (rd(hJoyHeld) == 0x93) { r.a = 6; return (void *)GAME_GameModeDispatch; }
+        if (rd(hJoyHeld) == 0x47) wr(wCheatFlags, rd(wCheatFlags) | 0x01);
+        call_native(gb_native_TitleCursorUpdate);
+        if (rd(wCheatFlags) & 0x20) {
+            wr(wCheatTimer, rd(wCheatTimer) - 1);
+            if (rd(wCheatTimer) != 0) {
+                if (rd(wCursorY) != 0x64) continue;
+                if (rd(hJoyNew) != 0x08) continue;
+                goto one_player;
+            }
+            wr(wCheatFlags, rd(wCheatFlags) & ~0x20);
+        }
+        if (rd(hJoyNew) != 0x08) continue;
+        if (rd(wCursorY) == 0x64) goto one_player;
+        NCALL(GAME_PickRandomRound);
+        r.c = rd(wRound) | 0x80;
+        NCALL(GAME_SerialSendByte);
+        {
+            uint8_t answer = rd(rSB);
+            if (answer == 0xEE) { wr(wCheatFlags, rd(wCheatFlags) & ~0x22); }
+            else if (answer == 0xFF) { wr(wCheatFlags, rd(wCheatFlags) | 0x02); }
+            else if (answer == 0x88) { wr(wCheatTimer, 0xA0); wr(wCheatFlags, rd(wCheatFlags) | 0x20); }
+            else { wr(wCursorY, 0x64); continue; }
+        }
+        if ((rd(wCheatFlags) & 0x02) || (rd(wCheatFlags) & 0x20)) { wr(wCursorY, 0x64); continue; }
+        SET_HL(hLinkFlags);
+        wr(hLinkFlags, rd(hLinkFlags) | 0x01);
+        r.a = 3;
+        return (void *)GAME_GameModeDispatch;
+    }
+partner_started:
+    wr(hLinkFlags, rd(hLinkFlags) | 0x01);
+    wr(wRound, rd(wRemoteRound));
+    wr(wRoundBackup, rd(wRemoteRound));
+    wr(wRoomIndex, rd(wRemoteRound) - 1);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+one_player:
+    wr(rSC, rd(rSC) & ~0x80);
+    wr(rSB, 0x88);
+    NCALL(GAME_SerialStartTransfer);
+    SET_HL(wCheatFlags);
+    wr(wCheatFlags, rd(wCheatFlags) | 0x08);
+    wr(wRound, 1);
+    wr(wRoundBackup, 1);
+    wr(wRoomIndex, 0);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}

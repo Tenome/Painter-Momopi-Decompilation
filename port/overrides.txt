@@ -223,3 +223,7 @@ EndingShowCreditsPage
 EndingCreditsWindow
 ContinueCursorInput
 Mode5_Continue
+InitTitleVariables
+TitleCursorUpdate
+PickRandomRound
+Mode0_Title

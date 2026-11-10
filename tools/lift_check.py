@@ -126,5 +126,16 @@ for seed in ("2", "4", "6", "8"):
         bad += not ok
         first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
         print(f"last life, seed {seed}, continues {cont}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
+# the title screen with the 2 PLAYER cursor (there is no partner on the cable: the attempt must fall back to 1 PLAYER) and a few start timings
+for name_, args in (("2 player", ["--press", "40:select:2", "--press", "120:start:3"]), ("code", ["--press", "40:select:2", "--press", "80:right:20", "--press", "150:start:3"])):
+    h = []
+    for name, prog in (("base", base), ("lifted", out)):
+        p = os.path.join(tmp, f"{name}_title.txt")
+        subprocess.run([prog, "-", "1500", "--hashes", p] + args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        h.append(open(p).read())
+    ok = h[0] == h[1]
+    bad += not ok
+    first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+    print(f"title, {name_}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)
