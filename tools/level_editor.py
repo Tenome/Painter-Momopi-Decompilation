@@ -14,12 +14,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import webbrowser
 import zipfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import levelpack as lp
+import community
 
 try:
     from PIL import Image, ImageTk
@@ -211,6 +214,10 @@ class Editor:
         p.add_command(label="Play from the current level", command=lambda: self.play(self.cur + 1), accelerator="F6")
         p.add_command(label="Choose the game program...", command=self.choose_game)
         menu.add_cascade(label="Pack", menu=p)
+        c = tk.Menu(menu, tearoff=0)
+        c.add_command(label="Browse and download community packs...", command=self.community_browse)
+        c.add_command(label="Submit this pack to the community...", command=self.community_submit)
+        menu.add_cascade(label="Community", menu=c)
         h = tk.Menu(menu, tearoff=0)
         h.add_command(label="How it works", command=self.help)
         menu.add_cascade(label="Help", menu=h)
@@ -912,14 +919,16 @@ class Editor:
         if not self.confirm_discard():
             return
         p = filedialog.askopenfilename(initialdir=os.path.join(ROOT, "packs") if os.path.isdir(os.path.join(ROOT, "packs")) else ROOT,
-                                       filetypes=[("level packs", "*.pmpack"), ("all", "*.*")])
+                                       filetypes=[("level packs", "*.pmpack *.zip"), ("all", "*.*")])
         if p:
             self.open_file(p)
 
     def open_file(self, p):
         try:
+            if p.lower().endswith(".zip"):                 # a zipped pack is unpacked next to the zip (the editor then works on the unpacked copy)
+                p = community.extract_zip(p, p + ".unpacked")
             self.pack = lp.load(p)
-        except (OSError, ValueError) as ex:
+        except (OSError, ValueError, zipfile.BadZipFile) as ex:
             messagebox.showerror("Open", str(ex))
             return
         if not self.pack.levels:
@@ -1080,6 +1089,176 @@ class Editor:
             return
         self.save()
         subprocess.Popen([game, "--pack", os.path.abspath(self.path), "--round", str(level)], cwd=os.path.dirname(game))
+
+    # ---------------------------------------------------------------- community packs (docs/COMMUNITY.md)
+    def community_browse(self):
+        """list of the community's packs from the repository, with preview, description and a download button"""
+        win = tk.Toplevel(self.root)
+        win.title("Community level packs")
+        win.geometry("760x460")
+        left = ttk.Frame(win)
+        left.pack(side="left", fill="y", padx=8, pady=8)
+        lb = tk.Listbox(left, width=34, height=20, exportselection=False)
+        lb.pack(side="top", fill="y", expand=True)
+        status = ttk.Label(left, text="Loading...", wraplength=240)
+        status.pack(side="bottom", anchor="w", pady=4)
+        right = ttk.Frame(win)
+        right.pack(side="left", fill="both", expand=True, padx=8, pady=8)
+        title = ttk.Label(right, text="", font=("TkDefaultFont", 12, "bold"), wraplength=440)
+        title.pack(anchor="w")
+        meta = ttk.Label(right, text="", wraplength=440)
+        meta.pack(anchor="w")
+        pic = ttk.Label(right)
+        pic.pack(anchor="w", pady=6)
+        desc = tk.Text(right, height=6, width=54, wrap="word", state="disabled")
+        desc.pack(fill="x")
+        btn = ttk.Button(right, text="Download and open", state="disabled")
+        btn.pack(anchor="w", pady=8)
+        ttk.Label(right, text="Packs are made by other players. They contain only maps, enemy lists, songs and pictures; the player checks every zip.", wraplength=440).pack(anchor="w")
+        state = {"entries": [], "photo": None}
+        results = []                                    # filled by the worker threads, read by the main thread
+
+        def work(fn, then):
+            def run():
+                try:
+                    results.append((then, fn(), None))
+                except Exception as ex:                  # network errors and bad data are shown, not raised
+                    results.append((then, None, ex))
+            threading.Thread(target=run, daemon=True).start()
+
+        def poll():
+            while results:
+                then, value, err = results.pop(0)
+                if win.winfo_exists():
+                    then(value, err)
+            if win.winfo_exists():
+                win.after(150, poll)
+
+        def got_index(entries, err):
+            if err:
+                status.config(text="Could not load the list: %s" % err)
+                return
+            state["entries"] = entries
+            for e in entries:
+                lb.insert("end", "%s  (%s, %d level%s)" % (e["title"], e["author"], e["levels"], "" if e["levels"] == 1 else "s"))
+            status.config(text="%d pack%s" % (len(entries), "" if len(entries) == 1 else "s") if entries else "No community packs yet. Be the first: Community > Submit.")
+
+        def show(e):
+            title.config(text=e["title"])
+            meta.config(text="by %s - %d level%s - %d KB%s" % (e["author"], e["levels"], "" if e["levels"] == 1 else "s", (e.get("size", 0) + 1023) // 1024,
+                                                               (" - " + ", ".join(e["tags"])) if e.get("tags") else ""))
+            desc.config(state="normal")
+            desc.delete("1.0", "end")
+            desc.insert("1.0", e["description"])
+            desc.config(state="disabled")
+            btn.config(state="normal", command=lambda: download(e))
+            pic.config(image="")
+            if Image is not None:
+                def got_pic(data, err):
+                    if err or not data:
+                        return
+                    import io
+                    im = Image.open(io.BytesIO(data))
+                    state["photo"] = ImageTk.PhotoImage(im)
+                    pic.config(image=state["photo"])
+                work(lambda: community.fetch_preview(e), got_pic)
+
+        def on_select(_):
+            sel = lb.curselection()
+            if sel:
+                show(state["entries"][sel[0]])
+
+        def download(e):
+            if not self.confirm_discard():
+                return
+            btn.config(state="disabled")
+            status.config(text="Downloading...")
+
+            def fetch():
+                dest = os.path.join(ROOT, "packs", "community")
+                zp = community.download(e, dest)
+                return community.extract_zip(zp, os.path.join(dest, e["id"]))
+
+            def done(path, err):
+                btn.config(state="normal")
+                if err:
+                    status.config(text="Download failed: %s" % err)
+                    return
+                status.config(text="Saved in packs/community/%s" % e["id"])
+                self.open_file(path)
+                win.destroy()
+            work(fetch, done)
+
+        lb.bind("<<ListboxSelect>>", on_select)
+        work(community.fetch_index, got_index)
+        poll()
+
+    def community_submit(self):
+        """checks the pack and makes the folder to add to the community/packs folder of the repository; the editor itself sends nothing anywhere"""
+        if not self.path and not self.save():
+            return
+        self.save()
+        win = tk.Toplevel(self.root)
+        win.title("Submit to the community")
+        win.geometry("560x560")
+        frm = ttk.Frame(win, padding=10)
+        frm.pack(fill="both", expand=True)
+        ttk.Label(frm, text="Share your pack with everybody: the level editor shows community packs under Community > Browse.\n"
+                            "A submission is a folder (the pack as a zip, a description and a preview picture) that you add to the repository with a pull request.",
+                  wraplength=520).pack(anchor="w")
+        v_title, v_author, v_tags = tk.StringVar(value=self.pack.title), tk.StringVar(value=self.pack.author), tk.StringVar()
+        for label, var in (("Title (60 characters)", v_title), ("Author name shown to everybody", v_author), ("Tags, separated by commas (optional)", v_tags)):
+            ttk.Label(frm, text=label).pack(anchor="w", pady=(8, 0))
+            ttk.Entry(frm, textvariable=var, width=60).pack(anchor="w")
+        ttk.Label(frm, text="Description (what is special about the levels)").pack(anchor="w", pady=(8, 0))
+        desc = tk.Text(frm, height=6, width=62, wrap="word")
+        desc.pack(anchor="w")
+        v_ok = tk.IntVar()
+        ttk.Checkbutton(frm, variable=v_ok, text="I made these levels (no copies of the game's own levels, no pictures taken from the game),\n"
+                                                 "and I agree that they are shared under the repository's MIT licence.").pack(anchor="w", pady=8)
+        out = ttk.Label(frm, text="", wraplength=520, justify="left")
+        out.pack(anchor="w", pady=4)
+        btns = ttk.Frame(frm)
+        btns.pack(anchor="w", pady=4)
+        made = {}
+
+        def make():
+            if not v_ok.get():
+                out.config(text="Please confirm that the levels are yours.")
+                return
+            title, author, text = v_title.get().strip(), v_author.get().strip(), desc.get("1.0", "end").strip()
+            if not title or not author or not text:
+                out.config(text="Title, author and description are needed.")
+                return
+            self.save()
+            folder, errs = community.make_submission(self.path, title, author, text, os.path.join(ROOT, "submissions"), v_tags.get().split(","))
+            made["folder"] = folder
+            if errs:
+                out.config(text="Fix these first:\n- " + "\n- ".join(errs[:8]))
+                return
+            out.config(text="The submission folder is ready:\n%s\n\nNext: open the GitHub page, sign in, drag the three files of that folder in (the page asks you to put them in "
+                            "community/packs/%s), and press \"Propose changes\". GitHub then makes the pull request for you; it is only sent when you do that."
+                            % (folder, os.path.basename(folder)))
+            open_btn.config(state="normal")
+            web_btn.config(state="normal")
+
+        def open_folder():
+            if made.get("folder"):
+                path = made["folder"]
+                if sys.platform.startswith("win"):
+                    os.startfile(path)
+                else:
+                    subprocess.Popen(["xdg-open", path])
+
+        def open_web():
+            if messagebox.askyesno("GitHub", "This opens the GitHub upload page in your browser. Nothing is sent from here.\nContinue?", parent=win):
+                webbrowser.open(community.UPLOAD_URL)
+
+        ttk.Button(btns, text="Check and make the submission folder", command=make).pack(side="left", padx=2)
+        open_btn = ttk.Button(btns, text="Open the folder", command=open_folder, state="disabled")
+        open_btn.pack(side="left", padx=2)
+        web_btn = ttk.Button(btns, text="Open the GitHub upload page", command=open_web, state="disabled")
+        web_btn.pack(side="left", padx=2)
 
     def help(self):
         messagebox.showinfo("How it works", "A pack is an ordered list of levels. Each level has a map (16 x 16 cells), up to six waves of enemies, a look,\n"

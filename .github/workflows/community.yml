@@ -1,0 +1,50 @@
+name: Community packs
+
+# Pull requests that touch community/ are checked (tools/community.py validate); after a merge the index the level editor reads is rebuilt.
+# No game data is on the runners: the checks look at the submitted files only.
+on:
+  pull_request:
+    paths: ["community/**", "tools/community.py", "tools/levelpack.py"]
+  push:
+    branches: [master]
+    paths: ["community/packs/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - name: Check the packs
+        run: python tools/community.py validate community/packs
+      - name: The index is made by the repository, not by pull requests
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -qx 'community/index.json'; then
+            echo "Please do not change community/index.json: it is rebuilt after the merge."; exit 1
+          fi
+
+  index:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - run: python tools/community.py validate community/packs
+      - run: python tools/community.py index
+      - name: Commit the index
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add community/index.json
+          git diff --cached --quiet || (git commit -m "Update the community index" && git push)

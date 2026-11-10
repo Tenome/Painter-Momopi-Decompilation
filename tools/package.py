@@ -34,7 +34,7 @@ if os.path.isdir(tex) and not a.tools_only:                       # the exported
 shutil.copytree(P("packs"), os.path.join(a.out, "packs"), ignore=shutil.ignore_patterns("original.pmpack", "textures*", "*.zip"))
 tools = os.path.join(a.out, "tools")
 os.makedirs(tools)
-for f in ("level_editor.py", "levelpack.py", "tilesheet.py", "pack_check.py"):
+for f in ("level_editor.py", "levelpack.py", "tilesheet.py", "pack_check.py", "enemy_icons.py", "community.py", "original_levels.json", "sprite_sheet.py"):
     if os.path.exists(P("tools", f)):
         shutil.copy(P("tools", f), tools)
 shutil.copytree(P("docs"), os.path.join(a.out, "docs"), ignore=shutil.ignore_patterns("CALLGRAPH.md", "PSEUDOCODE.md", "RAM_MAP.md", "architecture_exe.md"))
