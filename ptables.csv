@@ -6,7 +6,7 @@ bank,addr,count,target_bank,kind,comment
 0,171e,17,0,data,RoomMapTable: packed 2 bit room maps (64 bytes each)
 0,14f9,17,0,data,RoomVramJobTable: VRAM copy jobs per room
 0,37af,16,0,data,EnemySlotTable: addresses of the 16 enemy slots in WRAM
-0,3782,12,1,code,EnemyBehaviorTable: routine run by UpdateEnemy indexed by hEnemyKind (kinds 0-11)
+0,3782,14,1,code,EnemyBehaviorTable: routine run by UpdateEnemy indexed by hEnemyKind (kinds 0-13; kind 13 is the last round boss and its code was found through the spawn list of round 33)
 1,40f4,20,1,data,SoundCommandDataTable: song or effect data start per sound id ($81-$93; $8c is an empty slot that points at padding)
 1,411a,1,1,data,SoundCommandHandlerTable entry 0 (not a routine: the value $5cba is the data of id $93)
 1,411c,18,1,code,SoundCommandHandlerTable entries for ids $81-$92 (the entry for $93 overlaps the priority table at $4141 and stays raw): the routine that starts each id (music type $4263; effect type $4292)

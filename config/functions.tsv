@@ -147,7 +147,8 @@ bank	addr	size	name
 0	35f8	11	RememberEnemyPosition
 0	3603	58	EnemyTurnIfBlocked
 0	3643	6	MoveAndApplyObject
-0	3649	8	SetAnimationVariant
+0	3649	2	SetAnimationVariant
+0	364b	6	L_00_364b
 0	3651	3	SetObjectAnimationStub
 0	3654	11	SelectObject2
 0	365f	7	SetObjectAnimation
@@ -311,6 +312,12 @@ bank	addr	size	name
 1	537a	26	EnemyKind4
 1	5394	48	SelectKind4Animation
 1	53c4	33	EnemyKind4Init
+1	53fa	50	EnemyKind13
+1	542c	22	EnemyKind13Leave
+1	5442	24	EnemyKind13Timer
+1	545a	60	SelectKind13Animation
+1	5496	52	EnemyKind13Speed
+1	54ca	31	EnemyKind13Init
 1	5513	39	EnemyKind10
 1	553a	15	ProjectileRemoveIfHit
 1	5549	33	ProjectileSelectFrame

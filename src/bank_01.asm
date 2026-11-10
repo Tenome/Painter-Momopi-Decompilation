@@ -2562,6 +2562,134 @@ D_01_53ec::
     INCBIN "assets/bank_01/53ec.bin"
 D_01_53f3::
     INCBIN "assets/bank_01/53f3.bin"
+EnemyKind13::  ; enemy kind 13 of the last round (round 33): a chaser that lives for a fixed time (a 16 bit countdown in hEnemyTimer and hEnemyAux)
+    call SelectObject2
+    call TickObjectTimer
+    jr nz, .L_01_5405
+    jp EnemyKind13Init
+.L_01_5405:
+    ldh a, [hEnemyFlags]
+    bit 0, a
+    jr z, .L_01_5411
+    call EnemyKind13Leave
+    jp DrawObject
+.L_01_5411:
+    call EnemyKind13Timer
+    call EnemyComputeBlockedDirs
+    call EnemyAimAtPlayer
+    call EnemyKind13Speed
+    call EnemyMoveStep
+    call EnemyPaintUnderB0M
+    call CheckEnemyTouchesPlayer
+    call SelectKind13Animation
+    jp DrawObject
+EnemyKind13Leave::  ; when the timer has run out: counts hEnemyStep down while blinking and then removes the enemy (name provisional)
+    ld hl, hEnemyStep
+    dec [hl]
+    jp z, RemoveEnemy
+    ld hl, hEnemyCounter
+    inc [hl]
+    ld de, D_00_3aca
+    ld bc, $54e9
+    ldh a, [hEnemyCounter]
+    jp L_00_364b
+EnemyKind13Timer::  ; counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) down; at 0 hEnemyFlags bit 0 starts the leaving (name provisional)
+    ldh a, [hEnemyTimer]
+    ld c, a
+    ldh a, [hEnemyAux]
+    ld b, a
+    dec bc
+    ld a, c
+    or a, b
+    jr z, .L_01_5454
+    ld a, c
+    ldh [hEnemyTimer], a
+    ld a, b
+    ldh [hEnemyAux], a
+    ret
+.L_01_5454:
+    ld hl, hEnemyFlags
+    set 0, [hl]
+    ret
+SelectKind13Animation::  ; animation pointers of the kind 13 enemy by hEnemyDir (name provisional)
+    ldh a, [hEnemyDir]
+    bit 0, a
+    jr nz, .L_01_5471
+    bit 1, a
+    jr nz, .L_01_547f
+    bit 2, a
+    jr nz, .L_01_548d
+    ld de, D_01_54e9
+    ld bc, $54f0
+    jp SetAnimationVariant
+.L_01_5471:
+    ld hl, hObject2
+    set 5, [hl]
+    ld de, D_01_54f7
+    ld bc, $54fe
+    jp SetAnimationVariant
+.L_01_547f:
+    ld hl, hObject2
+    res 5, [hl]
+    ld de, D_01_54f7
+    ld bc, $54fe
+    jp SetAnimationVariant
+.L_01_548d:
+    ld de, D_01_5505
+    ld bc, $550c
+    jp SetAnimationVariant
+EnemyKind13Speed::  ; speed phases of the kind 13 enemy: sets the fast flag (hEnemyFlags bit 7) while hEnemyField18 counts down (name provisional)
+    ldh a, [hEnemyDir]
+    bit 5, a
+    jr nz, .L_01_54b4
+    ldh a, [hEnemyField18]
+    or a, a
+    jr z, .L_01_54aa
+    dec a
+    ldh [hEnemyField18], a
+    ld hl, hEnemyFlags
+    set 7, [hl]
+    ret
+.L_01_54aa:
+    ld a, $b0
+    ldh [hEnemyField18], a
+    ld hl, hEnemyDir
+    set 5, [hl]
+    ret
+.L_01_54b4:
+    ld hl, hEnemyField19
+    dec [hl]
+    jr z, .L_01_54c0
+    ld hl, hEnemyFlags
+    res 7, [hl]
+    ret
+.L_01_54c0:
+    ld a, $50
+    ldh [hEnemyField19], a
+    ld hl, hEnemyDir
+    res 5, [hl]
+    ret
+EnemyKind13Init::  ; starts the kind 13 enemy: timer $0250
+    ld a, $50
+    ldh [hEnemyTimer], a
+    ld a, $02
+    ldh [hEnemyAux], a
+    ld a, $b0
+    ldh [hEnemyField18], a
+    ld a, $50
+    ldh [hEnemyField19], a
+    ldh [hEnemyStep], a
+    ld a, $20
+    ldh [hEnemyCounter], a
+    ld de, D_01_54e9
+    call SetObjectAnimation
+    jp EnemySnapToGrid
+D_01_54e9::
+    INCBIN "assets/bank_01/54e9.bin"
+D_01_54f7::
+    INCBIN "assets/bank_01/54f7.bin"
+D_01_5505::
+    INCBIN "assets/bank_01/5505.bin"
 EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call TickObjectTimer
     jr nz, .L_01_551b

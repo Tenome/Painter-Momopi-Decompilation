@@ -3452,3 +3452,63 @@ void *gb_native_RoundCleared(void) {
     r.a = 7;
     return (void *)GAME_GameModeDispatch;
 }
+
+/* FadeOut: five times each: the palette steps normal -> $94 -> $50 -> $40 -> white, two frames per palette and five blinks per step (BGP, OBP0 and OBP1 together). */
+void *gb_native_FadeOut(void) {
+    static const uint8_t steps[5] = { PAL_NORMAL, PAL_FADE_1, PAL_FADE_2, PAL_FADE_3, PAL_WHITE };
+    for (int s = 0; s < 4; s++) {
+        for (int blink = 0; blink < 5; blink++) {
+            for (int k = 0; k < 2; k++) {
+                wr(rBGP, steps[s + k]);
+                wr(rOBP0, steps[s + k]);
+                wr(rOBP1, steps[s + k]);
+                r.a = 0x02;
+                NCALL(GAME_DelayFrames);
+            }
+        }
+    }
+    r.b = 0;
+    return 0;
+}
+
+/* DrawMetatileMap: draws a map of 2x2 tile blocks into the background map. HL = destination of the first block, BC = the table of blocks (4 tile ids each), DE = the cells
+ * (one byte per block, the index into the table), hScratch00 = blocks per row, hScratch01 = rows; every tile id is ANDed with wMapCellMask. Blocks are 2 tiles wide, a row of
+ * blocks is $40 bytes (two map rows) below the one before. The scratch variables end as the original leaves them. */
+void *gb_native_DrawMetatileMap(void) {
+    wr(hScratch00 + 6, r.l); wr(hScratch00 + 8, r.l);
+    wr(hScratch00 + 7, r.h); wr(hScratch00 + 9, r.h);
+    wr(hScratch00 + 10, r.c); wr(hScratch00 + 11, r.b);
+    wr(hScratch00 + 12, r.e); wr(hScratch00 + 13, r.d);
+    wr(hScratch00 + 16, rd(hScratch00));
+    wr(hScratch00 + 3, 0); wr(hScratch00 + 4, 0); wr(hScratch00 + 5, 0);
+    for (;;) {
+        uint16_t cells = rd(hScratch00 + 12) | rd(hScratch00 + 13) << 8;
+        uint8_t cell = rd(cells + rd(hScratch00 + 4));
+        uint16_t block = (uint16_t)((rd(hScratch00 + 10) | rd(hScratch00 + 11) << 8) + cell * 4);
+        wr(hOtherObjLo, (uint8_t)block);
+        wr(hOtherObjHi, block >> 8);
+        uint16_t at = (uint16_t)((rd(hScratch00 + 6) | rd(hScratch00 + 7) << 8) + (rd(hScratch00 + 5) | rd(hScratch00 + 3) << 8));
+        for (int row = 0; row < 2; row++) {
+            for (int col = 0; col < 2; col++) wr(at++, rd(block++) & rd(wMapCellMask));
+            at += 0x1E;
+        }
+        uint8_t left = rd(hScratch00) - 1;
+        if (left != 0) {
+            wr(hScratch00, left);
+            wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
+            uint8_t offset = (uint8_t)(rd(hScratch00 + 5) + 2);
+            if (offset == 0) wr(hScratch00 + 3, rd(hScratch00 + 3) + 1);
+            else wr(hScratch00 + 5, offset);
+            continue;
+        }
+        uint8_t rows = rd(hScratch00 + 1) - 1;
+        if (rows == 0) return 0;
+        wr(hScratch00 + 1, rows);
+        uint16_t base = (uint16_t)((rd(hScratch00 + 8) | rd(hScratch00 + 9) << 8) + 0x40);
+        wr(hScratch00 + 6, (uint8_t)base); wr(hScratch00 + 8, (uint8_t)base);
+        wr(hScratch00 + 7, base >> 8); wr(hScratch00 + 9, base >> 8);
+        wr(hScratch00 + 5, 0);
+        wr(hScratch00, rd(hScratch00 + 16));
+        wr(hScratch00 + 4, rd(hScratch00 + 4) + 1);
+    }
+}

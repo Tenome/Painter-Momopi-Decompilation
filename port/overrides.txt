@@ -198,3 +198,5 @@ PlayerDeath
 CheckBonusRound
 NextRound
 RoundCleared
+FadeOut
+DrawMetatileMap
