@@ -3934,3 +3934,111 @@ void *gb_native_EndingCreditsWindow(void) {
     gb_native_EndingShowCreditsPage();
     return 0;
 }
+
+/* ContinueCursorInput: B (hJoyNew bit 5... the pad bits $30: left or right) puts the cursor on YES (X $3c, wMagicCol 0) or NO (X $74, wMagicCol 1). */
+void *gb_native_ContinueCursorInput(void) {
+    uint8_t pad = rd(hJoyNew) & 0x30;
+    r.a = pad;
+    if (!pad) return 0;
+    if (pad & 0x10) { wr(wCursorX, 0x74); wr(wMagicCol, 1); r.a = 1; }
+    else { wr(wCursorX, 0x3C); wr(wMagicCol, 0); r.a = 0; }
+    return 0;
+}
+
+/* Mode5_Continue: "CONTINUE?" with YES and NO and a countdown (wPlayerBlocked from $f0, one per frame; at 0 the game restarts). YES (A on the left): the round and
+ * the cards are kept and wContinues goes down, then mode 3; NO: everything is reset (round 1, no cards, new continues) and mode 4 (game over) follows. Link games exchange the
+ * answer over the cable. wCheatFlags bit 0 (the title code) gives endless continues, shown as two special tiles. */
+void *gb_native_Mode5_Continue(void) {
+    r.sp = wStackTop;
+    NCALL(GAME_LcdOff);
+    ime = 0;
+    SET_HL(vBGMapLast);
+    gb_native_FillBackwardsFF();
+    SET_HL(wCursorObject);
+    gb_native_Clear32Bytes();
+    NCALL(GAME_LoadTilesBank3A);
+    NCALL(GAME_ClearOamShadow);
+    SET_BC(0x2085);
+    NCALL(GAME_RunVramCopyList);
+    SET_HL(0x2083);
+    gb_native_SetCursorAnimation();
+    wr(wCursorX, 0x3C);
+    wr(wCursorY, 0x50);
+    wr(wCursorObject, 0x80);
+    wr(wScrollX, 0);
+    wr(wScrollY, 0);
+    wr(wMagicCol, 0);
+    NCALL(GAME_RequestOamDma);
+    NCALL(GAME_ClearOamShadowY);
+    if (rd(wCheatFlags) & 0x01) {
+        wr(wContinues, 0xFF);
+        wr(wTextBuf, 0x02);
+        wr(wTextBuf + 1, 0x01);
+        wr(wTextBuf + 2, 0xCD);
+        wr(wTextBuf + 3, 0xCE);
+    } else {
+        wr(wTextBuf, 0x01);
+        wr(wTextBuf + 1, 0x01);
+        r.a = rd(wContinues);
+        NCALL(GAME_NumberToTile);
+        wr(wTextBuf + 2, r.a);
+    }
+    SET_DE(wTextBuf);
+    SET_HL(0x98A9);
+    NCALL(GAME_VramCopyStream);
+    wr(rBGP, PAL_NORMAL);
+    wr(rOBP0, PAL_NORMAL);
+    wr(rOBP1, PAL_NORMAL);
+    wr(rSB, 0xEE);
+    NCALL(GAME_SerialStartTransfer);
+    wr(rIF, 0);
+    wr(rIE, IE_VBLANK_SERIAL);
+    wr(rLCDC, LCDC_ON_BG_OBJ);
+    ime = 1;
+    wr(wPlayerBlocked, 0xF0);
+    for (;;) {
+        NCALL(GAME_WaitFrameAndSyncOam);
+        if (rd(hSerialByte) & 0x10) goto remote_round;
+        if (rd(hLinkFlags) & 0x08) { r.a = 4; return (void *)GAME_GameModeDispatch; }
+        NCALL(GAME_ReadJoypad);
+        gb_native_ContinueCursorInput();
+        SET_HL(wCursorObject);
+        gb_native_SetObjPtr();
+        NCALL(GAME_DrawObjectBytePos);
+        SET_HL(wPlayerBlocked);
+        wr(wPlayerBlocked, rd(wPlayerBlocked) - 1);
+        if (rd(wPlayerBlocked) == 0) return (void *)GAME_Entry;
+        if (!(rd(hJoyNew) & 0x01)) continue;
+        break;
+    }
+    if (rd(wMagicCol) != 0) {                      /* NO */
+        wr(wRoomIndex, 0);
+        wr(wRound, 1);
+        wr(wRoundBackup, 1);
+        SET_HL(wMagicCards);
+        SET_BC(0x0008);
+        gb_native_ClearMemory();
+        if (rd(hLinkFlags) & 0x01) { r.c = 0x10; NCALL(GAME_SerialSendByte); }
+        wr(wContinues, (rd(wCheatFlags) & 0x01) ? 0xFF : 0x05);
+        r.a = 4;
+        return (void *)GAME_GameModeDispatch;
+    }
+    if (rd(hLinkFlags) & 0x01) {                   /* YES in a link game: pick the round and tell the other machine */
+        NCALL(GAME_PickRandomRound);
+        if (!(rd(rSC) & 0x80)) goto remote_round;
+        r.c = rd(wRound) | 0x80;
+        NCALL(GAME_SerialSendByte);
+    }
+    goto yes;
+remote_round:
+    wr(rSB, 0);
+    wr(hSerialByte, 0);
+    wr(wRound, rd(wRemoteRound));
+    wr(wRoundBackup, rd(wRemoteRound));
+    wr(wRoomIndex, rd(wRemoteRound) - 1);
+yes:
+    wr(wRoundFlags, rd(wRoundFlags) & ~0x04);
+    wr(wContinues, rd(wContinues) - 1);
+    r.a = 3;
+    return (void *)GAME_GameModeDispatch;
+}

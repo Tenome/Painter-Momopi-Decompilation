@@ -36,7 +36,7 @@ Next: save-less options (scaling filters, key mapping file), the HAL clean-up be
 
 ## Hand written C (stage 4 under way)
 
-`port/logic.c` holds readable C versions of about 180 routines: the memory and table helpers, the object movement, drawing and collision code, the player's
+`port/logic.c` holds readable C versions of over 200 routines: the memory and table helpers, the object movement, drawing and collision code, the player's
 direction and painting code, the enemy loop and eleven enemy behaviours, the spawn script, scoring, the magic screen and all card effects, the sound engine (queue, commands,
 stream interpreter, pitch and register writers) and the play mode (`Mode1_Play`, `PlayFrame`).
 It includes two generated headers: `game_symbols.h` (the names of `src/constants.inc`, such as `wPlayerX`) and `game_labels.h` (`GAME_<Label>` for the generated routine of a

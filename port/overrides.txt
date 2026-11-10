@@ -221,3 +221,5 @@ EndingSetup
 RunEndingTextListAndWait
 EndingShowCreditsPage
 EndingCreditsWindow
+ContinueCursorInput
+Mode5_Continue

@@ -112,5 +112,19 @@ for rnd in ("1", "3", "7", "11", "20", "28", "32", "33", "19", "23", "27"):
     bad += not ok
     first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
     print(f"nearly painted, round {rnd}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
+# the last life: dying leads to the continue screen (and game over when the continues are used up)
+for seed in ("2", "4", "6", "8"):
+    for cont in ("0", "3"):
+        h = []
+        for name, prog in (("base", base), ("lifted", out)):
+            p = os.path.join(tmp, f"{name}_life{seed}_{cont}.txt")
+            subprocess.run([prog, "-", "6000", "--press", "250:start:3", "--random", seed, "--hashes", p,
+                            "--poke", f"300:{0xC1A9:x}:1", "--poke", f"300:{0xC49B:x}:{cont}"], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            h.append(open(p).read())
+        ok = h[0] == h[1]
+        bad += not ok
+        first = next((i for i, (x, y) in enumerate(zip(h[0].splitlines(), h[1].splitlines())) if x != y), None)
+        print(f"last life, seed {seed}, continues {cont}: {'same' if ok else 'DIFFERENT from frame ' + str(first)}")
 print(f"{len(lifted)} lifted routines:", ", ".join(sorted(lifted)))
 sys.exit(1 if bad else 0)
