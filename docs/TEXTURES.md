@@ -25,6 +25,8 @@ Paint over the sheets in any editor (Aseprite, GIMP, Krita, Photoshop ...). Rule
 Tiles are found by their content, not by their place: if the same 8x8 picture appears in two sheets, one replacement covers both (the first sheet wins). Tiles
 that use the same graphics in different places (for example the floor) therefore stay consistent.
 
+Painting a whole character instead of single tiles: see `docs/SPRITES.md`.
+
 ## Using a pack
 
 In `game_win.exe` F5 reloads the texture folders while the game runs: paint, save the PNG, press F5.
