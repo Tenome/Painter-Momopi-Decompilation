@@ -208,3 +208,16 @@ BonusSelectLoop
 Mode2_Init
 Mode2_BonusSelect
 Mode6_Ending
+SelectEndingObject
+EndingScrollStep
+EndingAdvance
+EndingWalkStep
+EndingCastleBlink
+EndingHeroFrame
+EndingMoveHero
+EndingAnimateObject
+EndingTick
+EndingSetup
+RunEndingTextListAndWait
+EndingShowCreditsPage
+EndingCreditsWindow
