@@ -81,3 +81,15 @@ around it (memory map, picture unit, sound chip) and reads the ROM file for its 
 - **Widescreen and larger views.** Needs the native renderer (stage 2): draw from object records and the room map instead of the 160x144 picture unit.
 - **Map editor** as a separate executable that reads and writes the same text forms (`assets/typed/`) and shows the room with the real tiles.
 - **README progress bar** like the one on the ByteMatch page of this project (badge or generated SVG from `progress/jp/report.json`).
+
+## What is hand-written C and what is not (`python tools/lift_status.py`)
+
+Of the 344 routines, 294 are lifted into `port/logic.c`, 9 are hardware routines of the runtime (`port/gb_native.c`), and the other 41 are never entered by the native build:
+
+* the interrupt vectors, the boot entry, the OAM DMA routine (the runtime does the DMA itself) and two jump tables;
+* routines whose job a lifted routine does inside itself: the 27 sound stream command routines are the cases of `sound_parse` (and `load_wave`) in `logic.c`, the magic points digit loop is part of
+  `ShowMagicScreen`, the title loop is the loop of `Mode0_Title`, and `L_00_364b` is the tail of `EnemyKind13Leave`.
+
+This was checked with a probe build in which all 31 of the non-vector routines print and return when they are entered: random play of every one of the 33 rounds (all their songs and effects), the bonus
+rounds, the two link modes and the ending never reached one. The routines are still in the generated C and in the source, so nothing is lost; a future change that makes the game enter one of them would
+make the probe (see `tools/lift_status.py`) show it.
