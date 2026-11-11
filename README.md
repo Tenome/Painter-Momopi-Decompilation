@@ -79,6 +79,7 @@ Everything below is optional and off by default: the game plays exactly like the
 | Level pack check: `tools/pack_check.py` plays a pack with random input and reports levels that cannot be cleared | `docs/LEVELS.md` |
 | A tutorial pack and a ten minute guide to making a level | `docs/TUTORIAL.md` |
 | Community level packs: browse, download and submit from the level editor (Community menu; submissions are pull requests, nothing is sent until you finish them on GitHub) | `docs/COMMUNITY.md` |
+| Fonts and translating (which tile is which letter, on which screen) | `docs/FONTS.md` |
 | Painting the player and other characters: `tools/sprite_sheet.py` assembles every frame into one picture and splits it back; `tools/make_example_player.py` makes a recoloured example | `docs/SPRITES.md` |
 | Recording and playback of inputs (`--record`, `--replay`) | `docs/CONFIG.md` |
 
