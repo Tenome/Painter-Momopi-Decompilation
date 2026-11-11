@@ -6,6 +6,9 @@ The game has no text rendering. Every letter is an 8x8 tile in a tile sheet, and
 Tile number = row * 16 + column in the sheet, for example `$c3` is row C, column 3. The sheets are loaded at tile 0 of video memory when a screen starts, so the numbers below are
 the numbers the game uses.
 
+The tile ranges below were read off the sheets by eye and are approximate. `python tools/sheet_grid.py build/recomp/textures/3_4000_TilesTitle.png` writes a copy of a sheet with the row and column of every tile
+printed around it, so you can check or find any tile yourself.
+
 ## Which sheet is on which screen
 
 | Sheet (`textures/`) | Screens |
