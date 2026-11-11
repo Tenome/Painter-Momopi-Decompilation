@@ -28,6 +28,7 @@ starts the game. The file can still be edited by hand.
 | `all_cards` | 0/1 | all nine magic cards from the first round |
 | `infinite_magic` | 0/1 | casting costs no magic points |
 | `no_time_limit` | 0/1 | the round clock stops (so the time-up enemy never comes) |
+| `music_folder` | folder | music texts `song_81.mml` ... `song_8b.mml` in that folder replace the game's own songs with the same id (see docs/MUSIC.md for the ids and the language); a missing file keeps the original song. A level's own `song` still wins. |
 | `level_pack` | file | a level pack (docs/LEVELS.md) |
 | `start_round` | 0-33 | first round of a one player game |
 

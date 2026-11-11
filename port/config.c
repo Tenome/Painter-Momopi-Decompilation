@@ -60,6 +60,7 @@ static void set(const char *key, const char *val) {
     else if (!strcmp(key, "no_time_limit")) gb_config.no_time_limit = v != 0;
     else if (!strcmp(key, "filter")) gb_config.filter = clampi(v, 0, 2);
     else if (!strcmp(key, "pause_on_focus_loss")) gb_config.pause_on_focus_loss = v != 0;
+    else if (!strcmp(key, "music_folder")) { strncpy(gb_config.music_folder, val, sizeof gb_config.music_folder - 1); gb_config.music_folder[sizeof gb_config.music_folder - 1] = 0; }
     else if (!strcmp(key, "high_score")) gb_config.high_score = v != 0;
     else if (!strcmp(key, "resume")) gb_config.resume = v != 0;
     else if (!strcmp(key, "quick_magic")) gb_config.quick_magic = v != 0;
@@ -89,6 +90,14 @@ void gb_config_load(const char *path) {
             set(p, val);
         }
         fclose(f);
+    }
+    if (gb_config.music_folder[0]) {                  /* the music folder: absolute, or next to the ini file */
+        char dir[600];
+        const char *slash = path ? strrchr(path, 47) : 0;
+        const char *bslash = path ? strrchr(path, 92) : 0;
+        if (bslash > slash) slash = bslash;
+        int absolute = gb_config.music_folder[0] == 47 || gb_config.music_folder[0] == 92 || (gb_config.music_folder[1] == 58);
+        if (slash && !absolute) { snprintf(dir, sizeof dir, "%.*s%s", (int)(slash - path + 1), path, gb_config.music_folder); snprintf(gb_config.music_folder, sizeof gb_config.music_folder, "%s", dir); }
     }
     if (gb_config.texture_pack[0]) {                  /* the texture pack folder: absolute, or next to the ini file */
         char dir[600];

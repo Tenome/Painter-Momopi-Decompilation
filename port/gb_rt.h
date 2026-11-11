@@ -114,6 +114,7 @@ int gb_play_custom_song(const char *path);   /* compiles a music text file and s
 extern void (*gb_frame_hook)(unsigned frame);
 extern void (*gb_audio_hook)(const int16_t *stereo, int frames);
 void gb_load_rom(const uint8_t *data, size_t size);
+uint8_t gb_rom_byte(unsigned bank, unsigned addr);   /* a byte of the cartridge whatever bank is mapped (addr $4000-$7fff = that bank) */
 void gb_reset_state(void);
 extern unsigned gb_frames;
 #endif

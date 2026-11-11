@@ -48,6 +48,11 @@ Music text:
 
 Notes range from `c+2` (the lowest) to `o9 d+` or so. Keep the channels the same length if you want them to loop together.
 
+## Replacing the game's own songs
+
+Set `music_folder=music` in `painter_momopie.ini` and put music texts named `song_81.mml` ... `song_8b.mml` in that folder (ids in hexadecimal: `$81` the title, `$8a` the round clear jingle ...;
+the ids are the ones the level editor lists). Whenever the game starts that song it plays your text instead; songs without a file keep the original. A level pack's own `song` for a level still wins.
+
 ## How it works
 
 `port/mml.c` compiles the text to the engine's own song format (channel count, 10 byte channel headers, note streams) in the song window at `$a000-$bfff` of the

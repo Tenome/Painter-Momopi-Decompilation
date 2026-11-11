@@ -46,7 +46,7 @@ static void load(void) {
         for (e = v + strlen(v) - 1; e >= v && isspace((unsigned char)*e); e--) *e = 0;
         for (char *q = p; *q; q++) *q = (char)tolower((unsigned char)*q);
         int n = atoi(v);
-        if (!strncmp(p, "key_", 4) || !strncmp(p, "pad_", 4) || !strcmp(p, "palette_colors") || !strcmp(p, "filter") || !strcmp(p, "pause_on_focus_loss")) { size_t n = strlen(keylines); snprintf(keylines + n, sizeof keylines - n, "%s=%s%c", p, v, 10); continue; }
+        if (!strncmp(p, "key_", 4) || !strncmp(p, "pad_", 4) || !strcmp(p, "music_folder") || !strcmp(p, "palette_colors") || !strcmp(p, "filter") || !strcmp(p, "pause_on_focus_loss")) { size_t n = strlen(keylines); snprintf(keylines + n, sizeof keylines - n, "%s=%s%c", p, v, 10); continue; }
         if (!strcmp(p, "scale")) cfg.scale = clampi(n, 1, 16);
         else if (!strcmp(p, "fullscreen")) cfg.fullscreen = n != 0;
         else if (!strcmp(p, "integer_scale")) cfg.integer_scale = n != 0;

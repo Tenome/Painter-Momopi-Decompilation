@@ -42,6 +42,7 @@ void gb_fatal(const char *why, unsigned v) {
 }
 
 void gb_load_rom(const uint8_t *data, size_t size) { rom = data; rom_size = size; }
+uint8_t gb_rom_byte(unsigned b, unsigned a) { size_t o = (a < 0x4000 ? 0 : (size_t)(b % (rom_size / 0x4000)) * 0x4000) + (a & 0x3FFF); return o < rom_size ? rom[o] : 0xFF; }
 
 void gb_reset_state(void) {
     memset(&r, 0, sizeof r);

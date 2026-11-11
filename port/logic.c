@@ -9,6 +9,7 @@
 #include "mml.h"               /* custom songs */
 #include "save.h"              /* best score and resume state (options high_score, resume) */
 static void track_best(void), save_resume(void), apply_resume(void);
+static int gb_load_custom_song(const char *path);
 
 /* ---- custom level packs: with a pack the per-round data comes from the pack's level number wRound - 1 instead of the game's tables ---- */
 static int pack_index(void) { int i = rd(wRound) - 1; return i < 0 ? 0 : i >= gb_pack_count ? gb_pack_count - 1 : i; }
@@ -2568,10 +2569,20 @@ void *gb_native_SoundStartMusicNow(void) {
 
 /* SoundStartMusic: BC = song id (index into the priority table at $4141): replaces the playing music when its priority is lower or equal, else the request is dropped. */
 void *gb_native_SoundStartMusic(void) {
-    uint8_t priority = rd(0x4141 + BC());
+    uint16_t id = BC();
+    uint8_t priority = rd(0x4141 + id);
     r.b = priority;
     uint8_t playing = rd(wMusicPriority);
     if (playing > priority) return gb_native_SoundRequestStop();
+    if (gb_config.music_folder[0] && id >= 0x01 && id <= 0x0B) {          /* option music_folder: song_NN.mml replaces the song with that id */
+        char file[700];
+        snprintf(file, sizeof file, "%s/song_%02x.mml", gb_config.music_folder, 0x80 + id);
+        FILE *f = fopen(file, "r");
+        if (f) {
+            fclose(f);
+            if (gb_load_custom_song(file)) { start_music_now(priority, 0xA000); return 0; }
+        }
+    }
     start_music_now(priority, DE());
     return 0;
 }
@@ -5010,7 +5021,12 @@ void *gb_native_DrawBonusMetatileMap(void) {
 }
 
 /* gb_play_custom_song: compiles a music text file (port/mml.c) into the song window at $a000 and starts it like the game starts a song of its own. */
+static int gb_load_custom_song(const char *path);
 int gb_play_custom_song(const char *path) {
+    if (!gb_load_custom_song(path)) return 0;
+    return 1;
+}
+static int gb_load_custom_song(const char *path) {
     static char loaded[700];
     static int size;
     char err[200];
@@ -5022,6 +5038,5 @@ int gb_play_custom_song(const char *path) {
         memcpy(gb_song_win, buf, (size_t)size);
         snprintf(loaded, sizeof loaded, "%s", path);
     }
-    start_music_now(rd(0x4141 + 0x86), 0xA000);
     return 1;
 }

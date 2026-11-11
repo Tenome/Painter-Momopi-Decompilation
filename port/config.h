@@ -28,6 +28,7 @@ typedef struct {
     int resume;             /* the title screen's 1 PLAYER continues at the last round reached (hold SELECT for a new game) */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
     char palette_colors[40]; /* four RRGGBB values, lightest first, separated by commas or spaces (palette 4) */
+    char music_folder[600]; /* folder with song_81.mml ... song_8b.mml: music texts that replace the game's own songs (docs/MUSIC.md); empty = the original music */
 } GbConfig;
 extern GbConfig gb_config;
 extern uint32_t gb_palettes[5][4];     /* 0x00RRGGBB of the four Game Boy shades (lightest first) of every palette; slot 4 comes from palette_colors */
