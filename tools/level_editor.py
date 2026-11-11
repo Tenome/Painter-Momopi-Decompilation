@@ -129,6 +129,9 @@ class Editor:
         self.redo_stack = []
         self.fillval = tk.IntVar(value=2)
         self.loading = False
+        self.game_proc = None                      # the test window (game_win.exe) while it runs
+        self.last_level = 1
+        self.auto_restart = tk.IntVar(value=1)
         self.icons = self.load_icons()
         self.build_ui()
         if path:
@@ -212,6 +215,7 @@ class Editor:
         p.add_separator()
         p.add_command(label="Play the pack from level 1", command=lambda: self.play(1), accelerator="F5")
         p.add_command(label="Play from the current level", command=lambda: self.play(self.cur + 1), accelerator="F6")
+        p.add_checkbutton(label="Restart the test window when I save", variable=self.auto_restart)
         p.add_command(label="Choose the game program...", command=self.choose_game)
         menu.add_cascade(label="Pack", menu=p)
         c = tk.Menu(menu, tearoff=0)
@@ -949,6 +953,8 @@ class Editor:
             return False
         self.dirty = False
         self.update_title()
+        if self.auto_restart.get() and self.game_proc and self.game_proc.poll() is None:      # the test window is open: it restarts with the saved level
+            self.launch(self.last_level)
         return True
 
     def save_as(self):
@@ -1088,7 +1094,21 @@ class Editor:
         if not self.path and not self.save():
             return
         self.save()
-        subprocess.Popen([game, "--pack", os.path.abspath(self.path), "--round", str(level)], cwd=os.path.dirname(game))
+        self.launch(level)
+
+    def launch(self, level):
+        """starts (or restarts) the test window on the saved pack at a level; the window of an earlier test is closed first"""
+        game = self.settings.get("game") or find_game()
+        if not game or not os.path.exists(game) or not self.path:
+            return
+        if self.game_proc and self.game_proc.poll() is None:
+            self.game_proc.terminate()
+            try:
+                self.game_proc.wait(3)
+            except subprocess.TimeoutExpired:
+                self.game_proc.kill()
+        self.last_level = level
+        self.game_proc = subprocess.Popen([game, "--pack", os.path.abspath(self.path), "--round", str(level)], cwd=os.path.dirname(game))
 
     # ---------------------------------------------------------------- community packs (docs/COMMUNITY.md)
     def community_browse(self):

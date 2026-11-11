@@ -77,6 +77,7 @@ Everything below is optional and off by default: the game plays exactly like the
 | Level packs: your own levels in any order, with their own tiles, enemies, intro title and music; `tools/level_editor.py` is a point-and-click editor | `docs/LEVELS.md` |
 | Custom music in a small text language, played by the game's own sound engine | `docs/MUSIC.md` |
 | Level pack check: `tools/pack_check.py` plays a pack with random input and reports levels that cannot be cleared | `docs/LEVELS.md` |
+| A tutorial pack and a ten minute guide to making a level | `docs/TUTORIAL.md` |
 | Community level packs: browse, download and submit from the level editor (Community menu; submissions are pull requests, nothing is sent until you finish them on GitHub) | `docs/COMMUNITY.md` |
 | Painting the player and other characters: `tools/sprite_sheet.py` assembles every frame into one picture and splits it back; `tools/make_example_player.py` makes a recoloured example | `docs/SPRITES.md` |
 | Recording and playback of inputs (`--record`, `--replay`) | `docs/CONFIG.md` |

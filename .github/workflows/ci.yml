@@ -1,0 +1,30 @@
+name: Portable code checks
+
+# The player itself needs data extracted from the original ROM, so it cannot be built on a hosted runner. These checks compile everything that does not
+# need that data (the runtime, the front ends for SDL2 on Linux and the headless runner, the option, texture, level pack, music, zip and replay code)
+# and check the Python tools, so that portability and syntax problems show up on every push.
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SDL2 development files
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - name: Compile the portable C code (warnings are errors for the real mistakes)
+        run: |
+          mkdir -p /tmp/gen
+          for f in gb_rt gb_native apu config texture levelpack mml png zip replay save main_headless; do
+            gcc -fsyntax-only -Wall -Wno-unused -Wno-missing-braces -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Iport -I/tmp/gen port/$f.c
+          done
+          gcc -fsyntax-only -Wall -Wno-unused -Wno-missing-braces -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Iport -I/tmp/gen $(sdl2-config --cflags) port/main_sdl.c
+      - name: Python tools compile
+        run: python3 -m py_compile tools/*.py
+      - name: Community and level pack checks
+        run: |
+          pip install pillow
+          python3 tools/community.py validate community/packs
+          python3 tools/pack_check.py packs/example.pmpack

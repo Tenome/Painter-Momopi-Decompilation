@@ -26,11 +26,6 @@ static int tex_w, tex_h;
 static SDL_AudioDeviceID dev;
 static SDL_GameController *pad;
 static uint32_t pixels[GB_MAX_W * 144];
-static const uint32_t palettes[3][4] = {
-    {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* DMG green */
-    {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000},   /* grey */
-    {0x00F8E8C8, 0x00D8A860, 0x00985820, 0x00301810},   /* sepia */
-};
 static int pal_index, paused, muted, fast, want_shot, want_reload;
 static SDL_Keycode binds[10][4];
 
@@ -117,14 +112,14 @@ static void frame(unsigned f) {
             if (k == SDLK_F11) SDL_SetWindowFullscreen(win, (SDL_GetWindowFlags(win) & SDL_WINDOW_FULLSCREEN_DESKTOP) ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
             else if (k == SDLK_p) paused = !paused;
             else if (k == SDLK_m) muted = !muted;
-            else if (k == SDLK_F2) pal_index = (pal_index + 1) % 3;
+            else if (k == SDLK_F2) pal_index = (pal_index + 1) % gb_palette_count;
             else if (k == SDLK_F5) want_reload = 1;
             else if (k == SDLK_F12) want_shot = 1;
             if (bound_is(8, k)) gb_quick_cycle = -1;
             if (bound_is(9, k)) gb_quick_cycle = 1;
         }
-        memcpy(gb_color_pal, palettes[pal_index], sizeof gb_color_pal);
-        for (int i = 0; i < gb_view_w * 144; i++) pixels[i] = palettes[pal_index][gb_framebuf[i] & 3];
+        memcpy(gb_color_pal, gb_palettes[pal_index], sizeof gb_color_pal);
+        for (int i = 0; i < gb_view_w * 144; i++) pixels[i] = gb_palettes[pal_index][gb_framebuf[i] & 3];
         present();
         if (!paused) break;
         SDL_Delay(30);
@@ -208,7 +203,7 @@ int main(int argc, char **argv) {
         for (int i = 1; i + 1 < argc; i++) if (!strcmp(argv[i], "--replay")) gb_replay_play(argv[i + 1]);
         for (int i = 1; i + 1 < argc; i++) if (!strcmp(argv[i], "--record") && !gb_replay_active) gb_replay_record(argv[i + 1]);
         bind_keys();
-        pal_index = gb_config.palette;
+        pal_index = gb_config.palette < gb_palette_count ? gb_config.palette : 0;
         muted = gb_config.mute;
         gb_sprite_limit_off = gb_config.no_sprite_limit;
     }

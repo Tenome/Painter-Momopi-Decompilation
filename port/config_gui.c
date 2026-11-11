@@ -46,11 +46,11 @@ static void load(void) {
         for (e = v + strlen(v) - 1; e >= v && isspace((unsigned char)*e); e--) *e = 0;
         for (char *q = p; *q; q++) *q = (char)tolower((unsigned char)*q);
         int n = atoi(v);
-        if (!strncmp(p, "key_", 4) || !strncmp(p, "pad_", 4) || !strcmp(p, "filter") || !strcmp(p, "pause_on_focus_loss")) { size_t n = strlen(keylines); snprintf(keylines + n, sizeof keylines - n, "%s=%s%c", p, v, 10); continue; }
+        if (!strncmp(p, "key_", 4) || !strncmp(p, "pad_", 4) || !strcmp(p, "palette_colors") || !strcmp(p, "filter") || !strcmp(p, "pause_on_focus_loss")) { size_t n = strlen(keylines); snprintf(keylines + n, sizeof keylines - n, "%s=%s%c", p, v, 10); continue; }
         if (!strcmp(p, "scale")) cfg.scale = clampi(n, 1, 16);
         else if (!strcmp(p, "fullscreen")) cfg.fullscreen = n != 0;
         else if (!strcmp(p, "integer_scale")) cfg.integer_scale = n != 0;
-        else if (!strcmp(p, "palette")) cfg.palette = clampi(n, 0, 2);
+        else if (!strcmp(p, "palette")) cfg.palette = clampi(n, 0, 4);
         else if (!strcmp(p, "widescreen")) cfg.widescreen = clampi(n, 0, 40);
         else if (!strcmp(p, "no_sprite_limit")) cfg.no_sprite_limit = n != 0;
         else if (!strcmp(p, "volume")) cfg.volume = clampi(n, 0, 100);
@@ -237,7 +237,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     for (int i = 1; i <= 8; i++) { char b[16]; snprintf(b, sizeof b, "%dx", i); SendMessageA(hscale, CB_ADDSTRING, 0, (LPARAM)b); }
     label("Colours", 230, 28, 50);
     hpal = mk("COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL, 285, 24, 160, 200, ID_PAL);
-    SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Game Boy green"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Grey"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Sepia");
+    SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Game Boy green"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Grey"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Sepia"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Blue and yellow"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Custom (palette_colors in the ini)");
     hfull = mk("BUTTON", "Start in full screen", BS_AUTOCHECKBOX, 24, 54, 170, 20, ID_FULL);
     hint = mk("BUTTON", "Sharp pixels (whole-number scaling)", BS_AUTOCHECKBOX, 230, 54, 215, 20, ID_INT);
     label("Widescreen", 24, 84, 90);

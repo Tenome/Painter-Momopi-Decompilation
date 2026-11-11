@@ -1,10 +1,11 @@
 /* Options of the native player, read from painter_momopie.ini (next to the program or in the current folder). See docs/CONFIG.md. */
 #ifndef GB_CONFIG_H
+#include <stdint.h>
 #define GB_CONFIG_H
 typedef struct {
     int scale;              /* window size in multiples of the picture; 0 = 4 */
     int fullscreen;         /* start in full screen */
-    int palette;            /* 0 green, 1 grey, 2 sepia */
+    int palette;            /* 0 green, 1 grey, 2 sepia, 3 blue and yellow (easy to tell apart for colour blind players), 4 the palette_colors of the ini */
     int widescreen;         /* extra pixels of the room shown on each side of the play screen (0-40; 0 = the original 160 pixel view) */
     int no_sprite_limit;    /* draw every sprite: no 40 sprite OAM limit, so no flicker when many things are on screen */
     int volume;             /* 0-100 */
@@ -26,7 +27,10 @@ typedef struct {
     int high_score;         /* the best score is kept in painter_momopie.sav and shown on the title screen */
     int resume;             /* the title screen's 1 PLAYER continues at the last round reached (hold SELECT for a new game) */
     int start_round;        /* 0 = the title screen's choice; 1-33 starts at that round */
+    char palette_colors[40]; /* four RRGGBB values, lightest first, separated by commas or spaces (palette 4) */
 } GbConfig;
 extern GbConfig gb_config;
+extern uint32_t gb_palettes[5][4];     /* 0x00RRGGBB of the four Game Boy shades (lightest first) of every palette; slot 4 comes from palette_colors */
+extern int gb_palette_count;           /* 4, or 5 when palette_colors is set: F2 cycles through them */
 void gb_config_load(const char *path);     /* missing file or key: the default; applies the options that live in the runtime */
 #endif

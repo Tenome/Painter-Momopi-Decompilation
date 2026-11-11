@@ -1,6 +1,6 @@
 /* Windows front end for the recompiled game: window, keyboard, audio (waveOut), frame pacing by the audio clock.
  * Keys: arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift / Backspace = Select, F11 = fullscreen toggle, Esc = quit,
- * P = pause, M = mute, F2 = next palette (green/grey/sepia), F5 = reload the texture folders, F12 = screenshot (screenshots folder), hold Tab = fast forward.
+ * P = pause, M = mute, F2 = next palette, F5 = reload the texture folders, F12 = screenshot (screenshots folder), hold Tab = fast forward.
  *   game_win [ROM]     (no argument: the game data built into the program; a ROM file argument is for testing mods) */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -18,11 +18,6 @@ extern const size_t gb_rom_image_size;
 
 static HWND hwnd;
 static uint32_t pixels[GB_MAX_W * 144];     /* the picture without a texture pack; with one gb_colorbuf is shown */
-static const uint32_t palettes[3][4] = {
-    {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* DMG green */
-    {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000},   /* grey */
-    {0x00F8E8C8, 0x00D8A860, 0x00985820, 0x00301810},   /* sepia */
-};
 static int pal_index;
 static int paused, muted, fast;
 static int fullscreen;
@@ -142,7 +137,7 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         if (w == VK_ESCAPE) { quit = 1; save_pos(h); DestroyWindow(h); }
         if (w == 'P') paused = !paused;
         if (w == 'M') muted = !muted;
-        if (w == VK_F2) pal_index = (pal_index + 1) % 3;
+        if (w == VK_F2) pal_index = (pal_index + 1) % gb_palette_count;
         if (w == VK_F11) toggle_fullscreen(h);
         if (w == VK_F12) want_shot = 1;
         if (w == VK_F5) want_reload = 1;
@@ -273,8 +268,8 @@ static void frame(unsigned f) {
     }
     if (quit) { if (wave) waveOutReset(wave); ExitProcess(0); }
     for (;;) {
-        memcpy(gb_color_pal, palettes[pal_index], sizeof gb_color_pal);
-        for (int i = 0; i < gb_view_w * 144; i++) pixels[i] = palettes[pal_index][gb_framebuf[i] & 3];
+        memcpy(gb_color_pal, gb_palettes[pal_index], sizeof gb_color_pal);
+        for (int i = 0; i < gb_view_w * 144; i++) pixels[i] = gb_palettes[pal_index][gb_framebuf[i] & 3];
         present();
         if (!paused) break;
         while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessage(&msg); }
@@ -366,7 +361,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
             WideCharToMultiByte(CP_ACP, 0, argv[i + 1], -1, file, MAX_PATH, 0, 0);
             if (!strcmp(arg, "--record") && !gb_replay_active) gb_replay_record(file);
         }
-        pal_index = gb_config.palette;
+        pal_index = gb_config.palette < gb_palette_count ? gb_config.palette : 0;
         muted = gb_config.mute;
         gb_sprite_limit_off = gb_config.no_sprite_limit;
     }

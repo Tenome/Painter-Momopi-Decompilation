@@ -25,7 +25,7 @@ otherwise flat colours.
 * **Custom tiles tab:** texture folders for the whole pack and for the current level (see below).
 * **Edit** menu: undo and redo (Ctrl+Z, Ctrl+Y), mirror the map, clear it, or make a random maze. The *Fill* tool fills a region.
 * **File** menu: save/load, *Add the game's 33 original levels* (read from your ROM build), *Add levels from another pack* (pick which), *Export the current level*, *Export the pack as a zip file* (with its tiles and songs, to share).
-* **Pack** menu: check the pack for problems, *Play the pack* (F5) or *Play from the current level* (F6) in `game_win.exe`.
+* **Pack** menu: *Restart the test window when I save* (on by default): while a test window is open, Ctrl+S closes it and starts it again on the saved level, so you can paint, save and see the change at once. Also: check the pack for problems, *Play the pack* (F5) or *Play from the current level* (F6) in `game_win.exe`.
 
 ## Checking a pack
 

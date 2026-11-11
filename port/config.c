@@ -8,6 +8,14 @@
 #include "levelpack.h"
 #include "save.h"
 
+uint32_t gb_palettes[5][4] = {
+    {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* DMG green */
+    {0x00FFFFFF, 0x00AAAAAA, 0x00555555, 0x00000000},   /* grey */
+    {0x00F8E8C8, 0x00D8A860, 0x00985820, 0x00301810},   /* sepia */
+    {0x00FFF6D6, 0x00E3C04A, 0x003F6FB5, 0x000B1D3A},   /* pale yellow, yellow, blue, navy: the pairs differ in brightness and in blue against yellow */
+    {0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820},   /* palette_colors */
+};
+int gb_palette_count = 4;
 GbConfig gb_config = {4, 0, 0, 0, 0, 100, 0, 1, 100, 0, "", "textures", 0, 0, 0, 0, 0, 0};
 
 static const char *const key_option[10] = {"key_right", "key_left", "key_up", "key_down", "key_a", "key_b", "key_select", "key_start", "key_card_prev", "key_card_next"};
@@ -29,7 +37,14 @@ static void set(const char *key, const char *val) {
     for (int k = 0; k < 10; k++) if (!strcmp(key, key_option[k])) { strncpy(gb_config.keys[k], val, 47); gb_config.keys[k][47] = 0; return; }
     if (!strcmp(key, "scale")) gb_config.scale = clampi(v, 1, 16);
     else if (!strcmp(key, "fullscreen")) gb_config.fullscreen = v != 0;
-    else if (!strcmp(key, "palette")) gb_config.palette = clampi(v, 0, 2);
+    else if (!strcmp(key, "palette")) gb_config.palette = clampi(v, 0, 4);
+    else if (!strcmp(key, "palette_colors")) {
+        unsigned c[4];
+        if (sscanf(val, "%x%*[, ]%x%*[, ]%x%*[, ]%x", &c[0], &c[1], &c[2], &c[3]) == 4) {
+            for (int i = 0; i < 4; i++) gb_palettes[4][i] = c[i] & 0xFFFFFF;
+            gb_palette_count = 5;
+        }
+    }
     else if (!strcmp(key, "widescreen")) gb_config.widescreen = clampi(v, 0, 40);
     else if (!strcmp(key, "no_sprite_limit")) gb_config.no_sprite_limit = v != 0;
     else if (!strcmp(key, "volume")) gb_config.volume = clampi(v, 0, 100);
