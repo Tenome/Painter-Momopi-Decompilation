@@ -25,8 +25,8 @@ Open tasks are in `REVERSE.md`.
 The project is a disassembly in RGBDS assembly, not C. The ROM rebuilds byte for byte from `src/` plus the assets extracted from your own ROM,
 so the progress report counts every routine and data region as matched. That number measures reproduction of the bytes, not understanding:
 the work that continues after it (naming routines and variables, comments, editable text forms for data, removing hardcoded addresses) is
-documentation and tooling. Names marked "provisional" in `labels.csv` and `src/constants.inc` are guesses from the code; a few dozen routines and
-many RAM addresses are still unnamed, and some data regions are still raw bytes.
+documentation and tooling. Every routine and every data table has a name chosen from what the code does (animation tables are named by the enemy kind that uses them and their number in the set); some RAM fields
+are still described only as "purpose unknown, only copied with the record", and some data regions are still raw bytes.
 
 ## Building
 

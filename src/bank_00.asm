@@ -6,7 +6,7 @@ SECTION "bank00", ROM0[$0000]
 RstVector00::  ; jp RstJumpTable
     jp RstJumpTable
     INCBIN "assets/bank_00/0003.bin"
-D_00_0027::
+Sound80Data::
     INCBIN "assets/bank_00/0027.bin"
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
@@ -561,7 +561,7 @@ SetObjPtr::  ; hObjPtr = HL
     ld a, l
     ldh [hObjPtrLo], a
     ret
-DrawBonusMetatileMap::  ; hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
+DrawBonusMetatileMap::  ; hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap
     ld a, $09
     ld [hScratch01], a
     ld a, $0a
@@ -1145,7 +1145,7 @@ AddOamSprite::  ; appends one OAM entry from hScratch values to the shadow at $c
     inc a
     ldh [hOamCount], a
     ret
-MoveObjectHalfStep::  ; adds the X and Y deltas at offsets 6 and 8 to the position (name provisional)
+MoveObjectHalfStep::  ; adds the X and Y deltas at offsets 6 and 8 to the position
     ld e, $06
     ld a, e
     ldh [hScratch00], a
@@ -1188,7 +1188,7 @@ AddStepSigned::  ; adds one step to a fixed point coordinate: two AddObjectField
     ld hl, hScratch00
     inc [hl]
     ret
-AddObjectField::  ; object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance (name provisional)
+AddObjectField::  ; object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance
     ldh a, [hScratch01]
     ld e, a
     ld d, $00
@@ -1220,7 +1220,7 @@ AddObjectField::  ; object byte [hScratch00] += object byte [hScratch01] (with c
     ld hl, hScratch01
     inc [hl]
     ret
-D_00_0a3f::
+CoordinateBoxTable::
     INCBIN "assets/bank_00/0a3f.bin"
 SerialSendByte::  ; sends C over the link port with the internal clock and waits for the reply
     ld a, [rSC]
@@ -1370,10 +1370,10 @@ CompareObjectCoordinate::  ; compares a coordinate (offset in DE) of the two obj
     ldh a, [hScratch03]
     ld c, a
     ld b, $00
-    ld hl, D_00_0a3f
+    ld hl, CoordinateBoxTable
     add hl, de
     ld a, [hl]
-    ld hl, D_00_0a3f
+    ld hl, CoordinateBoxTable
     add hl, bc
     add a, [hl]
     ldh [hScratch06], a
@@ -1701,9 +1701,9 @@ LowNibbleToDigitTile::  ; A and $0f then falls into NumberToTile
     and a, $0f
 NumberToTile::  ; digit in A to its tile id using the table at 10ab
     ld c, a
-    ld hl, D_00_10ab
+    ld hl, NumberDigitTiles
     jp LookupByte
-D_00_10ab::
+NumberDigitTiles::
     INCBIN "assets/bank_00/10ab.bin"
 Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld sp, wStackTop
@@ -1832,7 +1832,7 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ld [wExtraLifeIdx], a
 .L_00_11d5:
     ld c, a
-    ld hl, D_00_11e7
+    ld hl, ExtraLifeScoreTable
     call LookupByte
     cp a, d
     ret nz
@@ -1841,7 +1841,7 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ld hl, wExtraLifeIdx
     inc [hl]
     ret
-D_00_11e7::
+ExtraLifeScoreTable::
     INCBIN "assets/bank_00/11e7.bin"
 TimeUpSpawnEnemy::  ; when hTimeSeconds reaches 0 (once per round): creates an extra enemy ($a0/$04) in a free slot
     ldh a, [hLinkFlags]
@@ -1987,7 +1987,7 @@ ShowMagicScreen::  ; B button in play: MOMOPIE'S MAGIC screen (score
 .L_00_1327:
     ld a, [wMagicPoints]
     ldh [hScratch00], a
-DrawMagicPointsDigits::  ; loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
+DrawMagicPointsDigits::  ; loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453
     ldh a, [hScratch00]
     sub a, $64
     ld d, a
@@ -2084,15 +2084,15 @@ StartRoundMusic::  ; plays the song for the current round (id from a table index
     srl a
     srl a
     ld c, a
-    ld hl, D_00_1400
+    ld hl, RoundMusicTable
     call LookupByte
     call PlaySound
     ld hl, hVBlankTasks
     set 4, [hl]
     ret
-D_00_1400::
+RoundMusicTable::
     INCBIN "assets/bank_00/1400.bin"
-StoreMagicPointsDigit::  ; writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)
+StoreMagicPointsDigit::  ; writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5
     ld a, [wMpStreamIdx]
     ld c, a
     ld b, $00
@@ -2279,7 +2279,7 @@ RoomMapTable::  ; 17 pointers to packed 64 byte room maps (index (round-1)&15; 1
     dw RoomMap14
     dw RoomMap7
     dw RoomMap16
-CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
+CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation between CursorAnimBlink and CursorAnimDefault
     ld a, [wMagicScreenFlags]
     bit 2, a
     ret z
@@ -2291,10 +2291,10 @@ CursorBlinkStep::  ; counts $c47d to $50 and toggles the cursor animation betwee
     ld a, [$c769]
     and a, $04
     jr nz, SetCursorDefaultAnimation
-    ld hl, D_00_1a17
+    ld hl, CursorAnimBlink
     jr SetCursorAnimation
-SetCursorDefaultAnimation::  ; cursor object animation = D_00_1a30
-    ld hl, D_00_1a30
+SetCursorDefaultAnimation::  ; cursor object animation = CursorAnimDefault
+    ld hl, CursorAnimDefault
 SetCursorAnimation::  ; HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
     ld a, l
     ld [$c74f], a
@@ -2328,7 +2328,7 @@ MagicScreenInput::  ; D-pad moves the card cursor (sound SND_SFX_CURSOR); A or B
 .L_00_179c:
     ld a, [wMagicCol]
     ld c, a
-    ld hl, D_00_2630
+    ld hl, MagicCursorXTable
     call LookupByte
     ld [wCursorX], a
 .L_00_17a9:
@@ -2442,7 +2442,7 @@ MagicCursorUp::  ; moves the magic card cursor one row up
 MagicCursorDown::  ; moves the magic card cursor one row down
     ld a, [wMagicRow]
     cp a, $02
-    jp z, SetMagicRowAndReturn
+    jp z, MagicCursorSetRow
     ld a, [wMagicRow]
     inc a
     ld e, $03
@@ -2550,7 +2550,7 @@ DrawMagicPage::  ; draws the three cards of the current row (name
     ld hl, $9dee
     call QueueVramCopyRows
     jp WaitVramCopyDone
-SetMagicRowAndReturn::  ; stores A in wMagicRow (tail of a cursor move; name provisional)
+MagicCursorSetRow::  ; stores A in wMagicRow (tail of a cursor move)
     ld [wMagicRow], a
     ret
 InitMagicScreenState::  ; clears the cursor and card variables and creates the cursor object at wCursorObject
@@ -2567,7 +2567,7 @@ InitMagicScreenState::  ; clears the cursor and card variables and creates the c
     ld [wCursorX], a
     ld a, $68
     ld [wCursorY], a
-    ld hl, D_00_1a30
+    ld hl, CursorAnimDefault
     jp SetCursorAnimation
 MagicCostTable::  ; MP cost per card id (bytes: 0 10 50 40 90 60 30 80 70 20)
     INCBIN "assets/bank_00/199b_MagicCostTable.bin"
@@ -2622,13 +2622,13 @@ MagicCostJob8::  ; data (table entry)
     INCBIN "assets/bank_00/1a0b_MagicCostJob8.bin"
 MagicCostJob9::  ; data (table entry)
     INCBIN "assets/bank_00/1a11_MagicCostJob9.bin"
-D_00_1a17::
+CursorAnimBlink::
     INCBIN "assets/bank_00/1a17.bin"
-D_00_1a30::
+CursorAnimDefault::
     INCBIN "assets/bank_00/1a30.bin"
-MagicScreenJobsB::  ; VRAM copy list of the magic screen (card pictures; name provisional)
+MagicScreenJobsB::  ; VRAM copy list of the magic screen (card pictures)
     INCBIN "assets/bank_00/1a57_MagicScreenJobsB.bin"
-MagicScreenJobsA::  ; VRAM copy list of the magic screen (frame and text; name provisional)
+MagicScreenJobsA::  ; VRAM copy list of the magic screen (frame and text)
     INCBIN "assets/bank_00/1a94_MagicScreenJobsA.bin"
 MagicPictureJob0::  ; data (table entry)
     INCBIN "assets/bank_00/1b67_MagicPictureJob0.bin"
@@ -2760,16 +2760,16 @@ DrawTwoDigitNumber::  ; B = value drawn as two BCD digits at HL
     ldh [hScratch0D], a
     ld de, hScratch0A
     jp VramCopyStream
-DigitToTile::  ; A = BCD digit; returns the digit tile id from D_00_1d2f
+DigitToTile::  ; A = BCD digit; returns the digit tile id from BcdDigitTiles
     push hl
     push bc
     ld c, a
-    ld hl, D_00_1d2f
+    ld hl, BcdDigitTiles
     call LookupByte
     pop bc
     pop hl
     ret
-D_00_1d2f::
+BcdDigitTiles::
     INCBIN "assets/bank_00/1d2f.bin"
 RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
     dw RoomNameJob0
@@ -2816,11 +2816,11 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
     ldh a, [hSerialByte]
     bit 6, a
     jr nz, .L_00_1de6
-    ld bc, D_00_1e2e
+    ld bc, LinkLoseJobsA
     call RunVramCopyList
     jr .L_00_1dec
 .L_00_1de6:
-    ld bc, D_00_1e57
+    ld bc, LinkLoseJobsB
     call RunVramCopyList
 .L_00_1dec:
     xor a, a
@@ -2853,9 +2853,9 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
 .L_00_1e29:
     ld a, $04
     jp GameModeDispatch
-D_00_1e2e::
+LinkLoseJobsA::
     INCBIN "assets/bank_00/1e2e.bin"
-D_00_1e57::
+LinkLoseJobsB::
     INCBIN "assets/bank_00/1e57.bin"
 Mode4_GameOver::  ; GAME OVER screen
     ld sp, wStackTop
@@ -2918,9 +2918,9 @@ Mode5_Continue::  ; CONTINUE? countdown with YES/NO
     call Clear32Bytes
     call LoadTilesBank3A
     call ClearOamShadow
-    ld bc, D_00_2085
+    ld bc, ContinueScreenJobs
     call RunVramCopyList
-    ld hl, D_00_2083
+    ld hl, ContinueCursorAnim
     call SetCursorAnimation
     ld a, $3c
     ld [wCursorX], a
@@ -3069,9 +3069,9 @@ ContinueCursorInput::  ; A or B moves the YES/NO cursor (wCursorX $3c or $74) in
     ld a, $01
     ld [wMagicCol], a
     ret
-D_00_2083::
+ContinueCursorAnim::
     INCBIN "assets/bank_00/2083.bin"
-D_00_2085::
+ContinueScreenJobs::
     INCBIN "assets/bank_00/2085.bin"
 RoomMetatiles0::  ; data (table entry)
     INCBIN "assets/bank_00/20a7_RoomMetatiles0.bin"
@@ -3132,31 +3132,31 @@ Mode2_Init::  ; bonus select setup after LcdOff
     call LookupWord
     push hl
     pop de
-    ld bc, D_00_270f
+    ld bc, BonusBackgroundJobs
     ld hl, vBGMap0
     ld a, $ff
     ld [wMapCellMask], a
     call DrawBonusMetatileMap
-    ld bc, D_00_29b1
+    ld bc, BonusTextJobs
     call RunVramCopyList
     ld a, [wPlayerBlocked]
     and a, a
     jr nz, .L_00_24e9
-    ld de, D_00_264a
+    ld de, BonusTitleStream
     ld hl, $988c
     call VramCopyStream
 .L_00_24e9:
     cp a, $02
     jr nz, .L_00_250f
     ld a, [wBonusChoice]
-    ld hl, D_00_269b
+    ld hl, BonusRoundJobTableB
     call LookupWord
     push hl
     pop de
     ld hl, $9886
     call VramCopyStream
     ld a, [wBonusChoice]
-    ld hl, D_00_2651
+    ld hl, BonusRoundJobTableA
     call LookupWord
     push hl
     pop de
@@ -3185,7 +3185,7 @@ BonusModeJumpTable::  ; 3 entry points chosen by wPlayerBlocked: intro wait then
     dw BonusIntroWait
     dw BonusSelectLoop
     dw BonusResultWait
-BonusIntroWait::  ; waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init (name provisional)
+BonusIntroWait::  ; waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init
     ld a, $d0
     ldh [hScratch00], a
 .L_00_2545:
@@ -3228,7 +3228,7 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
     call MultiplyByDE
     ld c, a
     ld b, $00
-    ld hl, D_00_25cb
+    ld hl, BonusDoorTable
     add hl, bc
     ldh a, [hFrameSpin]
     cp a, $7f
@@ -3259,7 +3259,7 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
 .L_00_25c5:
     ld [wBonusChoice], a
     jp Mode2_Init
-D_00_25cb::
+BonusDoorTable::
     INCBIN "assets/bank_00/25cb.bin"
 MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
@@ -3296,13 +3296,13 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
 .L_00_261a:
     ld a, [wCursorIndex]
     ld c, a
-    ld hl, D_00_2630
+    ld hl, MagicCursorXTable
     call LookupByte
     ld [wCursorX], a
     ld hl, wCursorObject
     call SetObjPtr
     jp DrawObjectBytePos
-D_00_2630::
+MagicCursorXTable::
     INCBIN "assets/bank_00/2630.bin"
 InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
     xor a, a
@@ -3312,21 +3312,21 @@ InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor ob
     ld [wCursorY], a
     ld a, $80
     ld [wCursorObject], a
-    ld hl, D_00_2704
+    ld hl, BonusCursorAnim
     jp SetCursorAnimation
-D_00_264a::
+BonusTitleStream::
     INCBIN "assets/bank_00/264a.bin"
-D_00_2651::
+BonusRoundJobTableA::
     INCBIN "assets/bank_00/2651.bin"
-D_00_269b::
+BonusRoundJobTableB::
     INCBIN "assets/bank_00/269b.bin"
-D_00_2704::
+BonusCursorAnim::
     INCBIN "assets/bank_00/2704.bin"
 BonusSelectJobTable::  ; 3 pointers to VRAM job lists
     dw BonusSelectJob0
     dw BonusSelectJob1
     dw BonusSelectJob2
-D_00_270f::
+BonusBackgroundJobs::
     INCBIN "assets/bank_00/270f.bin"
 BonusSelectJob0::  ; data (table entry)
     INCBIN "assets/bank_00/28a3_BonusSelectJob0.bin"
@@ -3334,7 +3334,7 @@ BonusSelectJob1::  ; data (table entry)
     INCBIN "assets/bank_00/28fd_BonusSelectJob1.bin"
 BonusSelectJob2::  ; data (table entry)
     INCBIN "assets/bank_00/2957_BonusSelectJob2.bin"
-D_00_29b1::
+BonusTextJobs::
     INCBIN "assets/bank_00/29b1.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
     ld sp, wStackTop
@@ -3345,7 +3345,7 @@ Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the
     call PlaySound
     ld hl, vBGMapLast
     call FillBackwardsFF
-    ld bc, D_00_2b86
+    ld bc, TitleScreenJobs
     call RunVramCopyList
     call RequestOamDma
     ld hl, wCursorObject
@@ -3529,7 +3529,7 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     jp SetCursorAnimation
 AnimFrames0_2b84::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/2b84_AnimFrames0_2b84.bin"
-D_00_2b86::
+TitleScreenJobs::
     INCBIN "assets/bank_00/2b86.bin"
 Mode6_Ending::  ; castle scene after the last round
     ld sp, wStackTop
@@ -3547,8 +3547,8 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, $0a
     ldh [hScratch00], a
     ld hl, $98c0
-    ld bc, D_00_3156
-    ld de, D_00_31a6
+    ld bc, EndingMetatileBlocks
+    ld de, EndingMetatileCells
     ld a, $ff
     ld [wMapCellMask], a
     call DrawMetatileMap
@@ -3558,7 +3558,7 @@ Mode6_Ending::  ; castle scene after the last round
     ld a, $80
     ld [wEndingObject], a
     ld [wEndingObject2], a
-    ld hl, D_00_3143
+    ld hl, EndingCastleScript
     ld a, h
     ld [$c770], a
     ld a, l
@@ -3703,15 +3703,15 @@ EndingShowCreditsPage::  ; queues the credit page $c790 from CreditsPageTable
     call LookupWord
     call QueueVramCopyList
     jp WaitVramCopyDone
-RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until it is done (name provisional)
-    ld bc, D_00_2dff
+RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until it is done
+    ld bc, EndingTextJobs
     call QueueVramCopyList
 .L_00_2df7:
     ld a, [wVramCopyFlags]
     bit 0, a
     jr nz, .L_00_2df7
     ret
-D_00_2dff::
+EndingTextJobs::
     INCBIN "assets/bank_00/2dff.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
     dw CreditsPage0
@@ -3783,7 +3783,7 @@ EndingHeroFrame::  ; chooses the hero frame and flips it by $c782 bit 0
     ld hl, wEndingPhase
     inc [hl]
     ret
-EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_30df and D_00_3111
+EndingAnimateObject::  ; cycles the ending object between the frame tables EndingObjectFramesA and EndingObjectFramesB
     ld c, $00
     ld hl, $c780
     inc [hl]
@@ -3792,11 +3792,11 @@ EndingAnimateObject::  ; cycles the ending object between the frame tables D_00_
     srl a
     srl a
     ld c, a
-    ld hl, D_00_30df
+    ld hl, EndingObjectFramesA
     ld a, [wEndingEvents]
     bit 2, a
     jr z, .L_00_2f91
-    ld hl, D_00_3111
+    ld hl, EndingObjectFramesB
 .L_00_2f91:
     ld b, $00
     add hl, bc
@@ -3829,7 +3829,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     xor a, a
     ld [wCameraX], a
     ld [wCameraY], a
-    ld bc, D_00_30c4
+    ld bc, EndingSceneJobs
     call RunVramCopyList
     ld a, $80
     ld [wEndingObject], a
@@ -3839,7 +3839,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [wEndingY], a
     ld a, $0a
     ld [wEndingStep], a
-    ld bc, D_00_3009
+    ld bc, EndingCastleJobs
     call RunVramCopyList
     xor a, a
     ld [rIF], a
@@ -3849,7 +3849,7 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [rLCDC], a
     ei
     ret
-D_00_3009::
+EndingCastleJobs::
     INCBIN "assets/bank_00/3009.bin"
 EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [wEndingY]
@@ -3875,7 +3875,7 @@ EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
 SelectEndingObject::  ; hObjPtr = wEndingObject
     ld hl, wEndingObject
     jp SetObjPtr
-EndingCastleBlink::  ; toggles the castle flag animation from D_00_3148
+EndingCastleBlink::  ; toggles the castle flag animation from EndingCastleBlinkFrames
     ld c, $00
     ld hl, $c7a0
     inc [hl]
@@ -3884,7 +3884,7 @@ EndingCastleBlink::  ; toggles the castle flag animation from D_00_3148
     srl a
     srl a
     ld c, a
-    ld hl, D_00_3148
+    ld hl, EndingCastleBlinkFrames
     ld b, $00
     add hl, bc
     ld a, [hl+]
@@ -3907,23 +3907,23 @@ EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
     ld hl, wEndingEvents
     set 7, [hl]
     ret
-D_00_30c4::
+EndingSceneJobs::
     INCBIN "assets/bank_00/30c4.bin"
-D_00_30df::
+EndingObjectFramesA::
     INCBIN "assets/bank_00/30df.bin"
 AnimFrames0_30e3::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/30e3_AnimFrames0_30e3.bin"
-D_00_3111::
+EndingObjectFramesB::
     INCBIN "assets/bank_00/3111.bin"
-D_00_3143::
+EndingCastleScript::
     INCBIN "assets/bank_00/3143.bin"
-D_00_3148::
+EndingCastleBlinkFrames::
     INCBIN "assets/bank_00/3148.bin"
 AnimFrames0_314c::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/314c_AnimFrames0_314c.bin"
-D_00_3156::
+EndingMetatileBlocks::
     INCBIN "assets/bank_00/3156.bin"
-D_00_31a6::
+EndingMetatileCells::
     INCBIN "assets/bank_00/31a6.bin"
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     ld hl, hEnemyTick
@@ -4206,7 +4206,7 @@ EnemyDefeated::  ; plays SND_SFX_8E and handles an enemy hit by paint (hEnemyFla
     jp RemoveEnemy
 EnemyScoreTable::  ; points awarded for defeating an enemy by kind (hEnemyKind 0-11; passed to AddScore in E)
     INCBIN "assets/bank_00/33fd_EnemyScoreTable.bin"
-EnemySnapToGrid::  ; aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)
+EnemySnapToGrid::  ; aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4
     ld a, $04
     ldh [hEnemyBoxHalf], a
     ldh a, [hEnemyX]
@@ -4431,7 +4431,7 @@ EnemyErasePaint::  ; an enemy standing on a painted cell (hEnemyDir bit 5 asks f
     dec l
     ldh a, [hTilemapAddrHi]
     ld h, a
-    ld de, D_00_3ac4
+    ld de, EnemyErasedTiles
     call QueueVramCopyRows
     call WaitVramCopyDone
     ld hl, wPaintRemaining
@@ -4507,7 +4507,7 @@ RememberEnemyPosition::  ; stores hEnemyX/hEnemyY at $c525/$c526
     ldh a, [hEnemyY]
     ld [$c526], a
     ret
-EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
+EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from EnemySpeedByDir by direction (T.STOP card exception)
     ldh a, [hEnemyKind]
     cp a, $04
     jr z, .L_00_3620
@@ -4533,11 +4533,11 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     and a, $0f
     srl a
     ld c, a
-    ld hl, D_00_363d
+    ld hl, EnemySpeedByDir
     call LookupByte
     ldh [hEnemyAngle], a
     ret
-D_00_363d::
+EnemySpeedByDir::
     INCBIN "assets/bank_00/363d.bin"
 MoveAndApplyObject::  ; MoveObject then ApplyObjectStep
     call MoveObject
@@ -4546,10 +4546,10 @@ SetAnimationVariant::  ; DE = BC when bit 3 of $ffd0 is set; then SetObjectAnima
     ldh a, [hEnemyTick]
 L_00_364b::
     and a, $08
-    jr z, SetObjectAnimationStub
+    jr z, SetObjectAnimationTail
     push bc
     pop de
-SetObjectAnimationStub::  ; tail jump to SetObjectAnimation (name provisional)
+SetObjectAnimationTail::  ; tail jump to SetObjectAnimation
     jp SetObjectAnimation
 SelectObject2::  ; hObjPtr = hObject2
     ld hl, hObject2
@@ -4612,11 +4612,11 @@ CheckPaintHitsEnemy::  ; tests the object at $c4fe (paint blob) against hObject2
     ld hl, wPlayerStatus
     set 3, [hl]
     ret
-PopFrames2::  ; animation frames of the pop effect (second stage; name provisional)
+PopFrames2::  ; animation frames of the pop effect (second stage)
     INCBIN "assets/bank_00/36bc_PopFrames2.bin"
-PopFrames1::  ; animation frames of the pop effect when an enemy is defeated (first stage; name provisional)
+PopFrames1::  ; animation frames of the pop effect when an enemy is defeated (first stage)
     INCBIN "assets/bank_00/36c1_PopFrames1.bin"
-PopFrames3::  ; animation frames of the pop effect (last stage; name provisional)
+PopFrames3::  ; animation frames of the pop effect (last stage)
     INCBIN "assets/bank_00/36c6_PopFrames3.bin"
 EnemyEdgeBlockedDirs::  ; adds the screen edge limits (X $20-$f0; Y $28-$f8) to hEnemyBlocked
     xor a, a
@@ -4963,7 +4963,7 @@ EnemyKindIdle::  ; kinds 0 6 8: stationary enemy (kind 0 = the armoured guards s
     call EnemySelectAnimByKind
     call SelectObject2
     jp DrawObject
-EnemyPaintUnderB0M::  ; with the B.O.M card active paints the cell under an enemy that is not frozen (name provisional)
+EnemyPaintUnderB0M::  ; with the B.O.M card active paints the cell under an enemy that is not frozen
     ld a, [wActiveMagic]
     cp a, $05
     ret nz
@@ -4986,7 +4986,7 @@ EnemyRemoveIfPlayerDead::  ; removes the enemy when wPlayerDir bit 5 is set
     bit 5, a
     ret z
     jp RemoveEnemy
-EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (D_00_3acf and D_00_3ad9) or the default (name provisional)
+EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (EnemyKind6Anim0 and EnemyKind8Anim0) or the default
     ldh a, [hEnemyKind]
     cp a, $06
     jr z, .L_00_3963
@@ -4994,12 +4994,12 @@ EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (D_00_3acf 
     jr z, .L_00_396c
     jp .L_00_3975
 .L_00_3963:
-    ld de, D_00_3acf
-    ld bc, D_00_3ad4
+    ld de, EnemyKind6Anim0
+    ld bc, EnemyKind6Anim1
     jp SetAnimationVariant
 .L_00_396c:
-    ld de, D_00_3ad9
-    ld bc, D_00_3ade
+    ld de, EnemyKind8Anim0
+    ld bc, EnemyKind8Anim1
     jp SetAnimationVariant
 .L_00_3975:
     ldh a, [hEnemyDir]
@@ -5009,24 +5009,24 @@ EnemySelectAnimByKind::  ; sets the animation pair for kinds 6 and 8 (D_00_3acf 
     jr nz, .L_00_399a
     bit 2, a
     jr nz, .L_00_39a8
-    ld de, D_00_3aa6
-    ld bc, D_00_3aab
+    ld de, EnemyDefaultAnim0
+    ld bc, EnemyDefaultAnim1
     jp SetAnimationVariant
 .L_00_398c:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_00_3ab0
-    ld bc, D_00_3ab5
+    ld de, EnemyDefaultAnim2
+    ld bc, EnemyDefaultAnim3
     jp SetAnimationVariant
 .L_00_399a:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_00_3ab0
-    ld bc, D_00_3ab5
+    ld de, EnemyDefaultAnim2
+    ld bc, EnemyDefaultAnim3
     jp SetAnimationVariant
 .L_00_39a8:
-    ld de, D_00_3aba
-    ld bc, D_00_3abf
+    ld de, EnemyDefaultAnim4
+    ld bc, EnemyDefaultAnim5
     jp SetAnimationVariant
 EnemyMoveStep::  ; moves the enemy one step: asks for a turn when the way is blocked (or while T.STOP runs)
     ld a, [wActiveMagic]
@@ -5049,17 +5049,17 @@ EnemyMoveStep::  ; moves the enemy one step: asks for a turn when the way is blo
     sla a
     ld c, a
     ld b, $00
-    ld hl, D_00_3ae3
+    ld hl, EnemyStepTableA
     ldh a, [hEnemyFlags]
     bit 7, a
     jr z, .L_00_39e4
-    ld hl, D_00_3aed
+    ld hl, EnemyStepTableB
     jr .L_00_39ec
 .L_00_39e4:
     ldh a, [hEnemySpawnFlag]
     and a, a
     jr z, .L_00_39ec
-    ld hl, D_00_3aed
+    ld hl, EnemyStepTableB
 .L_00_39ec:
     add hl, bc
     ld a, [hl+]
@@ -5068,7 +5068,7 @@ EnemyMoveStep::  ; moves the enemy one step: asks for a turn when the way is blo
     ldh [hEnemyDYHi], a
     call SelectObject2
     jp ApplyObjectStep
-EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
+EnemyGridStep::  ; on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6
     call EnemyOnTileGrid
     jr z, .L_00_3a04
     ld hl, hEnemyDir
@@ -5100,7 +5100,7 @@ EnemyChooseDirection::  ; when hEnemyDir bit 6 is set: picks a new direction amo
     and a, $0f
     srl a
     ld c, a
-    ld hl, D_00_3aa2
+    ld hl, EnemyDirectionTable
     call LookupByte
     or a, e
     cp a, $0f
@@ -5145,7 +5145,7 @@ EnemyChooseDirection::  ; when hEnemyDir bit 6 is set: picks a new direction amo
     or a, b
     ldh [hEnemyDir], a
     ret
-EnemyInitMoveAnim::  ; sets counter $20 and picks the first animation by enemy kind 6 or 8 or default (name provisional)
+EnemyInitMoveAnim::  ; sets counter $20 and picks the first animation by enemy kind 6 or 8 or default
     ld a, $20
     ldh [hEnemyCounter], a
     ld a, $04
@@ -5155,52 +5155,52 @@ EnemyInitMoveAnim::  ; sets counter $20 and picks the first animation by enemy k
     jr z, .L_00_3a90
     cp a, $08
     jr z, .L_00_3a99
-    ld de, D_00_3aa6
+    ld de, EnemyDefaultAnim0
     call SetObjectAnimation
     jp EnemySnapToGrid
 .L_00_3a90:
-    ld de, D_00_3acf
+    ld de, EnemyKind6Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
 .L_00_3a99:
-    ld de, D_00_3ad9
+    ld de, EnemyKind8Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-D_00_3aa2::
+EnemyDirectionTable::
     INCBIN "assets/bank_00/3aa2.bin"
-D_00_3aa6::
+EnemyDefaultAnim0::
     INCBIN "assets/bank_00/3aa6.bin"
-D_00_3aab::
+EnemyDefaultAnim1::
     INCBIN "assets/bank_00/3aab.bin"
-D_00_3ab0::
+EnemyDefaultAnim2::
     INCBIN "assets/bank_00/3ab0.bin"
-D_00_3ab5::
+EnemyDefaultAnim3::
     INCBIN "assets/bank_00/3ab5.bin"
-D_00_3aba::
+EnemyDefaultAnim4::
     INCBIN "assets/bank_00/3aba.bin"
-D_00_3abf::
+EnemyDefaultAnim5::
     INCBIN "assets/bank_00/3abf.bin"
-D_00_3ac4::
+EnemyErasedTiles::
     INCBIN "assets/bank_00/3ac4.bin"
-D_00_3aca::
+EnemyBlinkAnim::
     INCBIN "assets/bank_00/3aca.bin"
-D_00_3acf::
+EnemyKind6Anim0::
     INCBIN "assets/bank_00/3acf.bin"
-D_00_3ad4::
+EnemyKind6Anim1::
     INCBIN "assets/bank_00/3ad4.bin"
-D_00_3ad9::
+EnemyKind8Anim0::
     INCBIN "assets/bank_00/3ad9.bin"
-D_00_3ade::
+EnemyKind8Anim1::
     INCBIN "assets/bank_00/3ade.bin"
-D_00_3ae3::
+EnemyStepTableA::
     INCBIN "assets/bank_00/3ae3.bin"
-D_00_3aed::
+EnemyStepTableB::
     INCBIN "assets/bank_00/3aed.bin"
 EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call SelectObject2
     call TickObjectTimer
     jr nz, .L_00_3b02
-    jp EnemyInitAnim3bbe
+    jp EnemyInitSlowWalkAnim
 .L_00_3b02:
     ldh a, [hEnemyFlags]
     bit 2, a
@@ -5226,7 +5226,7 @@ EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call CheckPaintHitsEnemy
     call SetEnemyAnimation
     jp DrawObject
-EnemyAuxCounterStep::  ; when hEnemyFlags bit 0 is set clears it and steps hEnemyAux up to $80 (name provisional)
+EnemyAuxCounterStep::  ; when hEnemyFlags bit 0 is set clears it and steps hEnemyAux up to $80
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
@@ -5255,24 +5255,24 @@ SelectEnemyAnimation::  ; chooses the animation pointers from hEnemyDir (and fli
     jr nz, .L_00_3b82
     bit 2, a
     jr nz, .L_00_3b90
-    ld de, D_00_3bbe
-    ld bc, D_00_3bc3
+    ld de, EnemyWalkAnim0
+    ld bc, EnemyWalkAnim1
     jp SetAnimationVariant
 .L_00_3b74:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_00_3bc8
-    ld bc, D_00_3bcd
+    ld de, EnemyWalkAnim2
+    ld bc, EnemyWalkAnim3
     jp SetAnimationVariant
 .L_00_3b82:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_00_3bc8
-    ld bc, D_00_3bcd
+    ld de, EnemyWalkAnim2
+    ld bc, EnemyWalkAnim3
     jp SetAnimationVariant
 .L_00_3b90:
-    ld de, D_00_3bd2
-    ld bc, D_00_3bd7
+    ld de, EnemyWalkAnim4
+    ld bc, EnemyWalkAnim5
     jp SetAnimationVariant
 EnemyFlagOffPath::  ; sets hEnemyFlags bit 1 when the map cell under the enemy is not a path (low nibble 0) else clears it
     call EnemyTileUnder
@@ -5286,25 +5286,25 @@ EnemyFlagOffPath::  ; sets hEnemyFlags bit 1 when the map cell under the enemy i
     ld hl, hEnemyFlags
     res 1, [hl]
     ret
-EnemyInitAnim3bbe::  ; hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
+EnemyInitSlowWalkAnim::  ; hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid
     ld a, $05
     ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
-    ld de, D_00_3bbe
+    ld de, EnemyWalkAnim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-D_00_3bbe::
+EnemyWalkAnim0::
     INCBIN "assets/bank_00/3bbe.bin"
-D_00_3bc3::
+EnemyWalkAnim1::
     INCBIN "assets/bank_00/3bc3.bin"
-D_00_3bc8::
+EnemyWalkAnim2::
     INCBIN "assets/bank_00/3bc8.bin"
-D_00_3bcd::
+EnemyWalkAnim3::
     INCBIN "assets/bank_00/3bcd.bin"
-D_00_3bd2::
+EnemyWalkAnim4::
     INCBIN "assets/bank_00/3bd2.bin"
-D_00_3bd7::
+EnemyWalkAnim5::
     INCBIN "assets/bank_00/3bd7.bin"
 EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call TickObjectTimer
@@ -5363,11 +5363,11 @@ EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call EnemyKind7SetAnimation
     call SelectObject2
     jp DrawObject
-EnemyKind7SetAnimation::  ; animation pair at $3c87 and $3c8c (name provisional)
+EnemyKind7SetAnimation::  ; animation pair at $3c87 and $3c8c
     ld de, AnimFrames0_3c87
-    ld bc, D_00_3c8c
+    ld bc, Kind7AnimB
     jp SetAnimationVariant
-EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87 (name provisional)
+EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87
     ld a, $20
     ldh [hEnemyCounter], a
     call EnemyMapTile
@@ -5378,12 +5378,12 @@ EnemyKind7Start::  ; counter $20; hEnemyAux = map tile under the enemy; $ffcb = 
     ldh [hEnemyDir], a
     ld de, AnimFrames0_3c87
     jp SetObjectAnimation
-EnemyStoreAuxToTile::  ; stores hEnemyAux into the map cell under the enemy (name provisional)
+EnemyStoreAuxToTile::  ; stores hEnemyAux into the map cell under the enemy
     call EnemyMapTile
     ldh a, [hEnemyAux]
     ld [hl], a
     ret
-EnemyClearTileSaveStep::  ; hEnemyStep = map tile under the enemy and clears that cell (name provisional)
+EnemyClearTileSaveStep::  ; hEnemyStep = map tile under the enemy and clears that cell
     call EnemyMapTile
     ldh [hEnemyStep], a
     xor a, a
@@ -5396,7 +5396,7 @@ EnemyMapTile::  ; A = room map tile at the enemy position (X to column
     jp LookupMapTile
 AnimFrames0_3c87::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/3c87_AnimFrames0_3c87.bin"
-D_00_3c8c::
+Kind7AnimB::
     INCBIN "assets/bank_00/3c8c.bin"
 EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
@@ -5413,7 +5413,7 @@ EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from
     call CheckPaintHitsEnemy
     call EnemyKind7Update
     jp DrawObject
-EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provisional)
+EnemyKind7Update::  ; state step of enemy kind 7 following the path
     ldh a, [hEnemyDir]
     bit 0, a
     jr z, .L_00_3ccd
@@ -5422,8 +5422,8 @@ EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provis
     jp z, .L_00_3d15
     dec a
     ldh [hEnemyAux], a
-    ld de, D_00_3aca
-    ld bc, D_00_3e4d
+    ld de, EnemyBlinkAnim
+    ld bc, Kind7WalkAnim0
     jp SetAnimationVariant
 .L_00_3ccd:
     ldh a, [hObject2]
@@ -5442,26 +5442,26 @@ EnemyKind7Update::  ; state step of enemy kind 7 following the path (name provis
 .L_00_3ce7:
     ld hl, hObject2
     res 6, [hl]
-    ld de, D_00_3e4d
-    ld bc, D_00_3e52
+    ld de, Kind7WalkAnim0
+    ld bc, Kind7WalkAnim1
     jp SetAnimationVariant
 .L_00_3cf5:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_00_3e57
-    ld bc, D_00_3e5c
+    ld de, Kind7WalkAnim2
+    ld bc, Kind7WalkAnim3
     jp SetAnimationVariant
 .L_00_3d03:
-    ld de, D_00_3e4d
-    ld bc, D_00_3e52
+    ld de, Kind7WalkAnim0
+    ld bc, Kind7WalkAnim1
     jp SetAnimationVariant
 .L_00_3d0c:
-    ld de, D_00_3e57
-    ld bc, D_00_3e5c
+    ld de, Kind7WalkAnim2
+    ld bc, Kind7WalkAnim3
     jp SetAnimationVariant
 .L_00_3d15:
     jp RemoveEnemy
-EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provisional)
+EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr
     ldh a, [hEnemyDir]
     bit 0, a
     ret nz
@@ -5509,14 +5509,14 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr (name provi
     ld a, h
     ld [wEnemyPathPtrHi], a
     jr .L_00_3d2f
-D_00_3d6a::
-    dw D_00_3d6e
-    dw D_00_3dc7
-D_00_3d6e::
+Kind7PathPointers::
+    dw Kind7Path0
+    dw Kind7Path1
+Kind7Path0::
     INCBIN "assets/bank_00/3d6e.bin"
-D_00_3dc7::
+Kind7Path1::
     INCBIN "assets/bank_00/3dc7.bin"
-EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
+EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a
     ld a, $05
     ldh [hEnemySpeed], a
     ld a, $20
@@ -5524,26 +5524,26 @@ EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then
     ldh [hEnemyAux], a
     ld hl, hObject2
     set 6, [hl]
-    ld de, D_00_3e4d
+    ld de, Kind7WalkAnim0
     call SetObjectAnimation
     call EnemySnapToGrid
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
-    ld hl, D_00_3d6a
+    ld hl, Kind7PathPointers
     call LookupWord
     ld a, l
     ld [wEnemyPathPtr], a
     ld a, h
     ld [wEnemyPathPtrHi], a
     ret
-D_00_3e4d::
+Kind7WalkAnim0::
     INCBIN "assets/bank_00/3e4d.bin"
-D_00_3e52::
+Kind7WalkAnim1::
     INCBIN "assets/bank_00/3e52.bin"
-D_00_3e57::
+Kind7WalkAnim2::
     INCBIN "assets/bank_00/3e57.bin"
-D_00_3e5c::
+Kind7WalkAnim3::
     INCBIN "assets/bank_00/3e5c.bin"
 EnemyKind5::  ; enemy kind 5
     call SelectObject2
@@ -5567,7 +5567,7 @@ EnemyKind5::  ; enemy kind 5
     call EnemyIdleAnimate
     call EnemyTeleportNext
     jp DrawObject
-EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
+EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation EnemyIdleAnim0 then sets hEnemyDir bit 1
     ldh a, [hEnemyDir]
     bit 1, a
     jr nz, .L_00_3eb0
@@ -5576,8 +5576,8 @@ EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then 
     jr z, .L_00_3ea8
     inc a
     ldh [hEnemyCounter], a
-    ld de, D_00_3f3a
-    ld bc, D_00_3f3f
+    ld de, EnemyIdleAnim0
+    ld bc, EnemyIdleAnim1
     jp SetAnimationVariant
 .L_00_3ea8:
     xor a, a
@@ -5593,11 +5593,11 @@ EnemyIdleAnimate::  ; counts hEnemyCounter to $a0 with animation D_00_3f3a then 
     ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_00_3ec5
-    ld de, D_00_3f3a
-    jp SetObjectAnimationStub
+    ld de, EnemyIdleAnim0
+    jp SetObjectAnimationTail
 .L_00_3ec5:
-    ld de, D_00_3aca
-    jp SetObjectAnimationStub
+    ld de, EnemyBlinkAnim
+    jp SetObjectAnimationTail
 .L_00_3ecb:
     ld hl, hEnemyDir
     set 0, [hl]
@@ -5622,9 +5622,9 @@ EnemyTeleportNext::  ; moves the enemy to the next position of the table at $c48
     ldh [hEnemyY], a
     ld hl, hEnemyStep
     inc [hl]
-    ld de, D_00_3f44
+    ld de, EnemyTeleportOffsets
     jp SetObjectAnimation
-EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy (+-$10) (name provisional)
+EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy (+-$10)
     ld a, $20
     ldh [hEnemyCounter], a
     ldh a, [hEnemyX]
@@ -5647,31 +5647,31 @@ EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy 
     ld [$c490], a
     xor a, a
     ld [$c493], a
-    ld de, D_00_3f3a
+    ld de, EnemyIdleAnim0
     call SetObjectAnimation
     ld a, $90
     ldh [hEnemyDir], a
     ret
-D_00_3f3a::
+EnemyIdleAnim0::
     INCBIN "assets/bank_00/3f3a.bin"
-D_00_3f3f::
+EnemyIdleAnim1::
     INCBIN "assets/bank_00/3f3f.bin"
-D_00_3f44::
+EnemyTeleportOffsets::
     INCBIN "assets/bank_00/3f44.bin"
 SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
     dw $cecd
-    dw D_00_3f56
-    dw D_00_3f95
-    dw D_00_3f9e
-    dw D_00_3faf
-D_00_3f56::
+    dw SoundPitchTable1
+    dw SoundPitchTable2
+    dw SoundPitchTable3
+    dw SoundPitchTable4
+SoundPitchTable1::
     dw RstVector00
     INCBIN "assets/bank_00/3f58.bin"
-D_00_3f95::
+SoundPitchTable2::
     INCBIN "assets/bank_00/3f95.bin"
-D_00_3f9e::
+SoundPitchTable3::
     INCBIN "assets/bank_00/3f9e.bin"
-D_00_3faf::
+SoundPitchTable4::
     INCBIN "assets/bank_00/3faf.bin"
-D_00_3fb8::
+SoundWavePatterns::
     INCBIN "assets/bank_00/3fb8.bin"

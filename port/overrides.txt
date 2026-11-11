@@ -159,7 +159,7 @@ EnemyShootIfReady
 CheckEnemyTouchesPlayer
 CheckPaintHitsEnemy
 SetObjectAnimation
-SetObjectAnimationStub
+SetObjectAnimationTail
 SetAnimationVariant
 SetObjectFlipFlag
 SelectEnemyAnimation
@@ -279,11 +279,11 @@ TableIndexFromRound
 TableIndexFromRoundDec
 PlaySound
 DelayLoopA
-SetMagicRowAndReturn
+MagicCursorSetRow
 EnemyRemoveIfPlayerDead
 MoveAndApplyObject
 SetEnemyAnimation
-EnemyInitAnim3bbe
+EnemyInitSlowWalkAnim
 EnemyKind9Move
 GameModeDispatch
 Start

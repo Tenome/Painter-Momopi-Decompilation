@@ -7,7 +7,7 @@ SECTION "bank01", ROMX[$4000], BANK[1]
 SoundFrequencyTable::  ; word frequency (NRx3/NRx4 value) per note index; SoundParseStream reads it with 2 * (note byte + transpose)
     INCBIN "assets/bank_01/4048_SoundFrequencyTable.bin"
 SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
-    dw D_00_0027
+    dw Sound80Data
     dw Sound81MusicData
     dw Sound82EffectData
     dw Sound83EffectData
@@ -19,7 +19,7 @@ SoundCommandDataTable::  ; per command word pointers used by SoundStartCommand
     dw Sound89MusicData
     dw Sound8AMusicData
     dw Sound8BMusicData
-    dw D_01_7f55
+    dw Sound8CEffectData
     dw Sound8DEffectData
     dw Sound8EEffectData
     dw Sound8FEffectData
@@ -47,7 +47,7 @@ SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (musi
     dw SoundStartEffect
     dw SoundStartEffect
     INCBIN "assets/bank_01/4140.bin"
-D_01_4141::
+SoundPriorityTable::
     INCBIN "assets/bank_01/4141.bin"
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
@@ -131,7 +131,7 @@ SoundStartCommand::  ; commands >= $80 index word tables at $40f4 and $411a
 .L_01_41d5:
     ret
 .L_01_41d6:
-    ld de, D_01_4332
+    ld de, SoundSilentMusicData
     ld b, $00
     jp SoundStartMusicNow
 SoundClearChannels::  ; clears the first byte of all 8 channel records and sets NR50 default ($77)
@@ -186,7 +186,7 @@ SoundClearRegisterShadow::  ; zeroes the register shadow bytes at $c427-$c431
     ld [$c432], a
     ret
 SoundStartMusic::  ; starts a music stream (priority at $4141 + id; replaces lower priority music)
-    ld hl, D_01_4141
+    ld hl, SoundPriorityTable
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -205,12 +205,12 @@ SoundStartMusicNow::  ; music accepted by the priority check: records the priori
     ld [wSoundChan3], a
     ld hl, wSoundChannels
     jp SoundLoadStream
-SoundRequestStop::  ; sets wSoundCmd to $80 (stop request; name provisional)
+SoundRequestStop::  ; sets wSoundCmd to $80 (stop request)
     ld a, $80
     ld [wSoundCmd], a
     ret
 SoundStartEffect::  ; starts an effect stream (priority compare with $c310)
-    ld hl, D_01_4141
+    ld hl, SoundPriorityTable
     add hl, bc
     ld a, [hl]
     ld b, a
@@ -310,7 +310,7 @@ SoundLoadStream::  ; copies the stream header into a channel record
     ld a, $80
     ld [wSoundCmd], a
     ret
-D_01_4332::
+SoundSilentMusicData::
     INCBIN "assets/bank_01/4332.bin"
 SoundAssignChannels::
     ld d, $04
@@ -952,7 +952,7 @@ SoundCmdSetWave::  ; command $ea: selects a wave pattern (SoundLoadWave) on the 
     ld [wWaveEffect], a
 SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wave RAM
     push bc
-    ld bc, D_00_3fb8
+    ld bc, SoundWavePatterns
     sla a
     ld l, a
     ld h, $00
@@ -978,7 +978,7 @@ SoundLoadWave::  ; copies a 16 byte wave pattern from the table at $3fb8 into wa
     ld a, $80
     ld [rNR30], a
     call SoundInit
-SoundReturn::  ; ret shared by the sound command that precedes SoundCmdEnd (name provisional)
+SoundReturn::  ; ret shared by the sound command that precedes SoundCmdEnd
     ret
 SoundCmdEnd::  ; sound command $eb: discards the caller's return address and ends the stream
     ld a, $00
@@ -1159,7 +1159,7 @@ PlaySound_Bank1::  ; appends wSoundArg to the sound command queue
     ld [wSoundBusy], a
     ret
     INCBIN "assets/bank_01/487b.bin"
-D_01_488c::
+PlayerDeathFrames::
     INCBIN "assets/bank_01/488c.bin"
 AnimFrames1_48ac::  ; animation frames (typed text form)
     INCBIN "assets/bank_01/48ac_AnimFrames1_48ac.bin"
@@ -1167,23 +1167,23 @@ PlayerAnimPtrs::  ; player animation pointers (down/up/side) chosen by SelectPla
     INCBIN "assets/bank_01/48c4_PlayerAnimPtrs.bin"
 PlayerAnimPtrsFlipped::  ; pointers for the side animation drawn flipped
     INCBIN "assets/bank_01/48cc_PlayerAnimPtrsFlipped.bin"
-D_01_48d4::
+PlayerAnimPtrsUp::
     INCBIN "assets/bank_01/48d4.bin"
 AnimFrames1_48dc::  ; animation frames (typed text form)
     INCBIN "assets/bank_01/48dc_AnimFrames1_48dc.bin"
-D_01_491b::
+CellTilesDefault::
     INCBIN "assets/bank_01/491b.bin"
-D_01_4921::
+CellTilesPath1::
     INCBIN "assets/bank_01/4921.bin"
-D_01_4927::
+PaintBlobAnim0::
     INCBIN "assets/bank_01/4927.bin"
-D_01_4929::
+PaintBlobAnim1::
     INCBIN "assets/bank_01/4929.bin"
-D_01_492b::
+PaintBlobAnim2::
     INCBIN "assets/bank_01/492b.bin"
-D_01_492d::
+PaintBlobAnim3::
     INCBIN "assets/bank_01/492d.bin"
-ClearBonusFlags::  ; clears wGameFlags bits 7 and 0 (name provisional)
+ClearBonusFlags::  ; clears wGameFlags bits 7 and 0
     ld hl, wGameFlags
     res 7, [hl]
     res 0, [hl]
@@ -1231,7 +1231,7 @@ SpawnBombBlob::  ; creates the paint blob object for the B.O.M card ($4929 anima
     set 4, [hl]
     ld a, $2a
     ld [$c50f], a
-    ld hl, D_01_4929
+    ld hl, PaintBlobAnim1
     ld a, l
     ld [wPaintAnimLo], a
     ld a, h
@@ -1284,7 +1284,7 @@ BombHitAllEnemies::  ; B.O.M card: sets bit 2 of hEnemyFlags (hit by paint) in e
 SpawnPaintBlob::  ; creates the paint blob object at wPaintObject at the player's position (flags $86)
     ld hl, wPaintObject
     call Clear32Bytes
-    ld hl, D_01_492b
+    ld hl, PaintBlobAnim2
     ld a, l
     ld [wPaintAnimLo], a
     ld a, h
@@ -1321,10 +1321,10 @@ SetPaintBlobAnimation::  ; picks animation $4927 or $4929 for the paint blob by 
     ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4a3d
-    ld hl, D_01_4927
+    ld hl, PaintBlobAnim0
     jr .L_01_4a40
 .L_01_4a3d:
-    ld hl, D_01_4929
+    ld hl, PaintBlobAnim1
 .L_01_4a40:
     ld a, l
     ld [wPaintAnimLo], a
@@ -1459,7 +1459,7 @@ SelectPlayerAnimation::  ; picks the animation table by direction
     ld hl, PlayerAnimPtrsFlipped
     jr .L_01_4b4f
 .L_01_4b4c:
-    ld hl, D_01_48d4
+    ld hl, PlayerAnimPtrsUp
 .L_01_4b4f:
     ld a, l
     ld [wPlayerAnimPtrLo], a
@@ -1715,7 +1715,7 @@ LinkSyncFrame::  ; per-frame link cable exchange for the 2 player game (rSC rSB)
     xor a, a
     ld [wMagicPoints], a
     ret
-SetLinkFlag5::  ; sets hSerialByte bit 5 (name provisional)
+SetLinkFlag5::  ; sets hSerialByte bit 5
     ld hl, hSerialByte
     set 5, [hl]
     ret
@@ -1808,10 +1808,10 @@ SelectBlobAnimation::  ; chooses the paint blob animation pointer ($492b or $492
     ld a, [wBlobPhase]
     and a, $02
     jr z, .L_01_4dfa
-    ld hl, D_01_492b
+    ld hl, PaintBlobAnim2
     jr .L_01_4dfd
 .L_01_4dfa:
-    ld hl, D_01_492d
+    ld hl, PaintBlobAnim3
 .L_01_4dfd:
     ld a, l
     ld [wPaintAnimLo], a
@@ -1847,7 +1847,7 @@ MagicEffectBom::  ; card 7 B.O.M: spawns the paint blob object and draws it
     xor a, a
     ld [wTrailIdx], a
     ret
-MagicTimerCountdown::  ; decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
+MagicTimerCountdown::  ; decrements hMagicTimer; at zero clears wMagicState and ends the paint
     ldh a, [hMagicTimer]
     dec a
     ldh [hMagicTimer], a
@@ -1855,11 +1855,11 @@ MagicTimerCountdown::  ; decrements hMagicTimer; at zero clears wMagicState and 
     xor a, a
     ld [wMagicState], a
     jr EndMagicPaint
-MagicPaintEndUnlessBit2::  ; ends the magic paint unless wPaintObject bit 2 is set (name provisional)
+MagicPaintEndUnlessBit2::  ; ends the magic paint unless wPaintObject bit 2 is set
     ld a, [wPaintObject]
     bit 2, a
     ret nz
-EndMagicPaint::  ; clears the paint object active bit then ends the magic state bits (name provisional)
+EndMagicPaint::  ; clears the paint object active bit then ends the magic state bits
     ld hl, wPaintObject
     res 7, [hl]
     ld a, [wActiveMagic]
@@ -1955,13 +1955,13 @@ MapCellToVramAddr::  ; hScratch00/01 = background map address of the cell at pix
     adc a, $00
     ldh [hScratch01], a
     ret
-QueueCellTileRows::  ; queues the 2x2 tile update of a cell (painted tiles D_01_4921 or normal D_01_491b)
-    ld de, D_01_4921
+QueueCellTileRows::  ; queues the 2x2 tile update of a cell (painted tiles CellTilesPath1 or normal CellTilesDefault)
+    ld de, CellTilesPath1
     ldh a, [hScratch02]
     and a, $0f
     cp a, $01
     jr z, .L_01_4f15
-    ld de, D_01_491b
+    ld de, CellTilesDefault
 .L_01_4f15:
     ldh a, [hScratch00]
     ld l, a
@@ -2116,12 +2116,12 @@ PaintCell::  ; sets the painted bit ($10) of the wRoomMap cell under the player 
     dec l
     ldh a, [hTilemapAddrHi]
     ld h, a
-    ld de, D_01_4921
+    ld de, CellTilesPath1
     ldh a, [hScratch00]
     and a, $0f
     cp a, $01
     jr z, .L_01_5039
-    ld de, D_01_491b
+    ld de, CellTilesDefault
 .L_01_5039:
     call QueueVramCopyRows
     call WaitVramCopyDone
@@ -2248,14 +2248,14 @@ PlayerSetDirection::  ; dpad to wPlayerDir and the animation index
     srl a
     ld c, a
     ld b, $00
-    ld hl, D_01_518d
+    ld hl, PlayerDirTableA
     ld a, [wActiveMagic]
     cp a, $01
     jr nz, .L_01_5153
     ld a, [wMagicState]
     bit 0, a
     jr z, .L_01_5153
-    ld hl, D_01_519d
+    ld hl, PlayerDirTableB
 .L_01_5153:
     add hl, bc
     ld a, [hl+]
@@ -2282,9 +2282,9 @@ SetPlayerStatusBit0::  ; sets wPlayerStatus bit 0 and clears $c4cf
     xor a, a
     ld [wPlayerSpeed], a
     ret
-D_01_518d::
+PlayerDirTableA::
     INCBIN "assets/bank_01/518d.bin"
-D_01_519d::
+PlayerDirTableB::
     INCBIN "assets/bank_01/519d.bin"
 InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and animation start values
     ld hl, wPlayer
@@ -2372,7 +2372,7 @@ PlayerDeath::  ; waits $27 frames; plays sound $8b; runs the death animation (wP
     ld hl, wPlayer
     res 5, [hl]
 .L_01_5267:
-    ld hl, D_01_488c
+    ld hl, PlayerDeathFrames
     ld b, $00
     add hl, bc
     ld a, [hl+]
@@ -2522,21 +2522,21 @@ SelectKind4Animation::  ; animation pointers of enemy kind 4 by hEnemyDir
     jr nz, .L_01_53b3
     bit 2, a
     jr nz, .L_01_53be
-    ld de, D_01_53e5
-    jp SetObjectAnimationStub
+    ld de, Kind4Anim0
+    jp SetObjectAnimationTail
 .L_01_53a8:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_01_53ec
-    jp SetObjectAnimationStub
+    ld de, Kind4Anim1
+    jp SetObjectAnimationTail
 .L_01_53b3:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_01_53ec
-    jp SetObjectAnimationStub
+    ld de, Kind4Anim1
+    jp SetObjectAnimationTail
 .L_01_53be:
-    ld de, D_01_53f3
-    jp SetObjectAnimationStub
+    ld de, Kind4Anim2
+    jp SetObjectAnimationTail
 EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($80 or $50 steps in a link game)
     ld a, $08
     ldh [hEnemySpeed], a
@@ -2551,16 +2551,16 @@ EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($
     ld a, $80
 .L_01_53d8:
     ldh [hEnemyCounter], a
-    ld de, D_01_53e5
+    ld de, Kind4Anim0
     call SetObjectAnimation
     ld a, $91
     ldh [hEnemyDir], a
     ret
-D_01_53e5::
+Kind4Anim0::
     INCBIN "assets/bank_01/53e5.bin"
-D_01_53ec::
+Kind4Anim1::
     INCBIN "assets/bank_01/53ec.bin"
-D_01_53f3::
+Kind4Anim2::
     INCBIN "assets/bank_01/53f3.bin"
 EnemyKind13::  ; enemy kind 13 of the last round (round 33): a chaser that lives for a fixed time (a 16 bit countdown in hEnemyTimer and hEnemyAux)
     call SelectObject2
@@ -2583,17 +2583,17 @@ EnemyKind13::  ; enemy kind 13 of the last round (round 33): a chaser that lives
     call CheckEnemyTouchesPlayer
     call SelectKind13Animation
     jp DrawObject
-EnemyKind13Leave::  ; when the timer has run out: counts hEnemyStep down while blinking and then removes the enemy (name provisional)
+EnemyKind13Leave::  ; when the timer has run out: counts hEnemyStep down while blinking and then removes the enemy
     ld hl, hEnemyStep
     dec [hl]
     jp z, RemoveEnemy
     ld hl, hEnemyCounter
     inc [hl]
-    ld de, D_00_3aca
+    ld de, EnemyBlinkAnim
     ld bc, $54e9
     ldh a, [hEnemyCounter]
     jp L_00_364b
-EnemyKind13Timer::  ; counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) down; at 0 hEnemyFlags bit 0 starts the leaving (name provisional)
+EnemyKind13Timer::  ; counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) down; at 0 hEnemyFlags bit 0 starts the leaving
     ldh a, [hEnemyTimer]
     ld c, a
     ldh a, [hEnemyAux]
@@ -2611,7 +2611,7 @@ EnemyKind13Timer::  ; counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) dow
     ld hl, hEnemyFlags
     set 0, [hl]
     ret
-SelectKind13Animation::  ; animation pointers of the kind 13 enemy by hEnemyDir (name provisional)
+SelectKind13Animation::  ; animation pointers of the kind 13 enemy by hEnemyDir
     ldh a, [hEnemyDir]
     bit 0, a
     jr nz, .L_01_5471
@@ -2619,26 +2619,26 @@ SelectKind13Animation::  ; animation pointers of the kind 13 enemy by hEnemyDir 
     jr nz, .L_01_547f
     bit 2, a
     jr nz, .L_01_548d
-    ld de, D_01_54e9
+    ld de, Kind13Anim0
     ld bc, $54f0
     jp SetAnimationVariant
 .L_01_5471:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_01_54f7
+    ld de, Kind13Anim1
     ld bc, $54fe
     jp SetAnimationVariant
 .L_01_547f:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_01_54f7
+    ld de, Kind13Anim1
     ld bc, $54fe
     jp SetAnimationVariant
 .L_01_548d:
-    ld de, D_01_5505
+    ld de, Kind13Anim2
     ld bc, $550c
     jp SetAnimationVariant
-EnemyKind13Speed::  ; speed phases of the kind 13 enemy: sets the fast flag (hEnemyFlags bit 7) while hEnemyField18 counts down (name provisional)
+EnemyKind13Speed::  ; speed phases of the kind 13 enemy: sets the fast flag (hEnemyFlags bit 7) while hEnemyField18 counts down
     ldh a, [hEnemyDir]
     bit 5, a
     jr nz, .L_01_54b4
@@ -2681,14 +2681,14 @@ EnemyKind13Init::  ; starts the kind 13 enemy: timer $0250
     ldh [hEnemyStep], a
     ld a, $20
     ldh [hEnemyCounter], a
-    ld de, D_01_54e9
+    ld de, Kind13Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-D_01_54e9::
+Kind13Anim0::
     INCBIN "assets/bank_01/54e9.bin"
-D_01_54f7::
+Kind13Anim1::
     INCBIN "assets/bank_01/54f7.bin"
-D_01_5505::
+Kind13Anim2::
     INCBIN "assets/bank_01/5505.bin"
 EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call TickObjectTimer
@@ -2714,7 +2714,7 @@ ProjectileRemoveIfHit::  ; removes the projectile and its enemy when hEnemyFlags
     ld hl, wProjectile
     res 7, [hl]
     jp RemoveEnemy
-ProjectileSelectFrame::  ; picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2 (name provisional)
+ProjectileSelectFrame::  ; picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2
     ldh a, [hEnemyTick]
     and a, $04
     jr z, .L_01_5559
@@ -2766,10 +2766,10 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ldh a, [hEnemyKind]
     cp a, $0a
     jr nz, .L_01_55a7
-    ld de, D_01_57ec
+    ld de, Kind10Anim0
     jr .L_01_55aa
 .L_01_55a7:
-    ld de, D_01_57c9
+    ld de, ProjectileFrameTable
 .L_01_55aa:
     ld a, e
     ld [wProjectileAnimLo], a
@@ -2780,7 +2780,7 @@ UpdateProjectile::  ; projectile steps while the shooter enemy lives; removed wh
     ld hl, hEnemyFlags
     set 0, [hl]
     ret
-ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9 (name provisional)
+ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9
     ldh a, [hEnemyFlags]
     bit 0, a
     ret z
@@ -2822,30 +2822,30 @@ ProjectileCheckPlayerHit::  ; when hEnemyFlags bit 0 is set runs ProjectileHitTe
     ld hl, hEnemyFlags
     set 1, [hl]
     ret
-EnemyKind10Animate::  ; toggles between two animations D_01_57ec and D_01_57ee every 4 ticks (kind $0a only; name provisional)
+EnemyKind10Animate::  ; toggles between two animations Kind10Anim0 and Kind10Anim1 every 4 ticks (kind $0a only)
     ldh a, [hEnemyKind]
     cp a, $0a
     ret nz
     ld hl, hEnemyCounter2
     inc [hl]
-    ld hl, D_01_57ec
+    ld hl, Kind10Anim0
     ldh a, [hEnemyCounter2]
     and a, $04
     jr z, .L_01_562d
-    ld hl, D_01_57ee
+    ld hl, Kind10Anim1
 .L_01_562d:
     ld a, l
     ld [wProjectileAnimLo], a
     ld a, h
     ld [wProjectileAnimHi], a
     ret
-EnemyKind10Move::  ; moves and clamps the enemy by the speed table D_01_5782 indexed by hEnemyDir (name provisional)
+EnemyKind10Move::  ; moves and clamps the enemy by the speed table Kind10SpeedTable indexed by hEnemyDir
     ldh a, [hEnemyDir]
     and a, $0f
     srl a
     ld c, a
     ld b, $00
-    ld hl, D_01_5782
+    ld hl, Kind10SpeedTable
     add hl, bc
     ld a, [hl]
     ldh [hEnemyAngle], a
@@ -2917,14 +2917,14 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     ldh a, [hEnemyKind]
     cp a, $0a
     jr nz, .L_01_56ca
-    ld bc, D_01_5793
-    ld de, D_01_579b
-    ld hl, D_01_5797
+    ld bc, ProjectileInit3
+    ld de, ProjectileInit5
+    ld hl, ProjectileInit4
     jr .L_01_56d3
 .L_01_56ca:
-    ld bc, D_01_5787
-    ld de, D_01_578f
-    ld hl, D_01_578b
+    ld bc, ProjectileInit0
+    ld de, ProjectileInit2
+    ld hl, ProjectileInit1
 .L_01_56d3:
     call EnemySnapToGrid
     push af
@@ -2954,7 +2954,7 @@ InitProjectile::  ; creates the projectile object at wProjectile for the kind 10
     pop hl
     jr .L_01_5701
 .L_01_56fe:
-    ld hl, D_01_578b
+    ld hl, ProjectileInit1
 .L_01_5701:
     ld a, l
     ld [$c499], a
@@ -3028,25 +3028,25 @@ ProjectileAimAtPlayer::  ; sets the heading of the projectile (wProjectile +$10)
 .L_01_577e:
     ld [$c4ae], a
     ret
-D_01_5782::
+Kind10SpeedTable::
     INCBIN "assets/bank_01/5782.bin"
-D_01_5787::
+ProjectileInit0::
     INCBIN "assets/bank_01/5787.bin"
-D_01_578b::
+ProjectileInit1::
     INCBIN "assets/bank_01/578b.bin"
-D_01_578f::
+ProjectileInit2::
     INCBIN "assets/bank_01/578f.bin"
-D_01_5793::
+ProjectileInit3::
     INCBIN "assets/bank_01/5793.bin"
-D_01_5797::
+ProjectileInit4::
     INCBIN "assets/bank_01/5797.bin"
-D_01_579b::
+ProjectileInit5::
     INCBIN "assets/bank_01/579b.bin"
-D_01_57c9::
+ProjectileFrameTable::
     INCBIN "assets/bank_01/57c9.bin"
-D_01_57ec::
+Kind10Anim0::
     INCBIN "assets/bank_01/57ec.bin"
-D_01_57ee::
+Kind10Anim1::
     INCBIN "assets/bank_01/57ee.bin"
 EnemyKind9::  ; enemy kind 9
     call SelectObject2
@@ -3064,7 +3064,7 @@ EnemyKind9::  ; enemy kind 9
     call CheckEnemyTouchesPlayer
     call SelectKind9Animation
     jp DrawObject
-EnemyKind9Move::  ; sets hEnemySpeed 6 then moves and clamps (name provisional)
+EnemyKind9Move::  ; sets hEnemySpeed 6 then moves and clamps
     ld a, $06
     ldh [hEnemySpeed], a
     call EnemyTurnIfBlocked
@@ -3079,16 +3079,16 @@ SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     jr nz, .L_01_5847
     bit 0, a
     call nz, SetObjectFlipFlag
-    ld de, D_01_587d
-    ld bc, D_01_5884
+    ld de, Kind9Anim2
+    ld bc, Kind9Anim3
     jp .L_01_584d
 .L_01_583e:
-    ld de, D_01_588b
-    ld bc, D_01_5892
+    ld de, Kind9Anim4
+    ld bc, Kind9Anim5
     jp .L_01_584d
 .L_01_5847:
-    ld de, D_01_586f
-    ld bc, D_01_5876
+    ld de, Kind9Anim0
+    ld bc, Kind9Anim1
 .L_01_584d:
     ldh a, [hEnemyTick]
     and a, $08
@@ -3097,7 +3097,7 @@ SelectKind9Animation::  ; animation pointers of enemy kind 9 by hEnemyDir
     pop de
 .L_01_5855:
     jp SetObjectAnimation
-SetObjectFlipFlag::  ; sets hObject2 bit 5 (horizontal flip; name provisional)
+SetObjectFlipFlag::  ; sets hObject2 bit 5 (horizontal flip)
     ld hl, hObject2
     set 5, [hl]
     ret
@@ -3106,20 +3106,20 @@ EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
-    ld de, D_01_586f
+    ld de, Kind9Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-D_01_586f::
+Kind9Anim0::
     INCBIN "assets/bank_01/586f.bin"
-D_01_5876::
+Kind9Anim1::
     INCBIN "assets/bank_01/5876.bin"
-D_01_587d::
+Kind9Anim2::
     INCBIN "assets/bank_01/587d.bin"
-D_01_5884::
+Kind9Anim3::
     INCBIN "assets/bank_01/5884.bin"
-D_01_588b::
+Kind9Anim4::
     INCBIN "assets/bank_01/588b.bin"
-D_01_5892::
+Kind9Anim5::
     INCBIN "assets/bank_01/5892.bin"
 EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
@@ -3160,7 +3160,7 @@ EnemyShootIfReady::  ; counts hEnemyStep down; when it hits 0 and no projectile 
     and a, a
     ret nz
     jp SpawnEnemyProjectile
-EnemyShooterAI::  ; decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)
+EnemyShooterAI::  ; decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot)
     ld a, [wActiveMagic]
     cp a, $03
     jr nz, .L_01_58fc
@@ -3183,11 +3183,11 @@ EnemyShooterAI::  ; decision routine of an enemy that shoots (checks the T.STOP 
     jr z, .L_01_5938
     ld hl, $c4b9
     inc [hl]
-    ld hl, D_01_59fa
+    ld hl, ShooterParams1
     ld a, [$c4b9]
     and a, $10
     jr z, .L_01_5927
-    ld hl, D_01_59f5
+    ld hl, ShooterParams0
 .L_01_5927:
     ld a, l
     ld [wProjectileAnimLo], a
@@ -3236,22 +3236,22 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
 .L_01_5983:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_01_59d9
-    ld bc, D_01_59e0
+    ld de, Kind2Anim2
+    ld bc, Kind2Anim3
     jr .L_01_59ab
 .L_01_5990:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_01_59d9
-    ld bc, D_01_59e0
+    ld de, Kind2Anim2
+    ld bc, Kind2Anim3
     jr .L_01_59ab
 .L_01_599d:
-    ld bc, D_01_59e7
-    ld de, D_01_59ee
+    ld bc, Kind2Anim4
+    ld de, Kind2Anim5
     jr .L_01_59ab
 .L_01_59a5:
-    ld bc, D_01_59cb
-    ld de, D_01_59d2
+    ld bc, Kind2Anim0
+    ld de, Kind2Anim1
 .L_01_59ab:
     ldh a, [hEnemyTick]
     and a, $04
@@ -3259,7 +3259,7 @@ SelectKind2Animation::  ; animation pointers of enemy kind 2 by hEnemyDir
     push bc
     pop de
 .L_01_59b3:
-    jp SetObjectAnimationStub
+    jp SetObjectAnimationTail
 EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld a, $05
     ldh [hEnemySpeed], a
@@ -3267,24 +3267,24 @@ EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ldh [hEnemyCounter], a
     ld a, $05
     ldh [hEnemyStep], a
-    ld de, D_01_59cb
+    ld de, Kind2Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-D_01_59cb::
+Kind2Anim0::
     INCBIN "assets/bank_01/59cb.bin"
-D_01_59d2::
+Kind2Anim1::
     INCBIN "assets/bank_01/59d2.bin"
-D_01_59d9::
+Kind2Anim2::
     INCBIN "assets/bank_01/59d9.bin"
-D_01_59e0::
+Kind2Anim3::
     INCBIN "assets/bank_01/59e0.bin"
-D_01_59e7::
+Kind2Anim4::
     INCBIN "assets/bank_01/59e7.bin"
-D_01_59ee::
+Kind2Anim5::
     INCBIN "assets/bank_01/59ee.bin"
-D_01_59f5::
+ShooterParams0::
     INCBIN "assets/bank_01/59f5.bin"
-D_01_59fa::
+ShooterParams1::
     INCBIN "assets/bank_01/59fa.bin"
 EnemyKind3::  ; enemy kind 3
     call SelectObject2
@@ -3311,44 +3311,44 @@ SelectKind3Animation::  ; animation pointers of enemy kind 3 by hEnemyDir
     jr nz, .L_01_5a4e
     bit 2, a
     jr nz, .L_01_5a5c
-    ld de, D_01_5a76
-    ld bc, D_01_5a7d
+    ld de, Kind3Anim0
+    ld bc, Kind3Anim1
     jp SetAnimationVariant
 .L_01_5a40:
     ld hl, hObject2
     set 5, [hl]
-    ld de, D_01_5a84
-    ld bc, D_01_5a8b
+    ld de, Kind3Anim2
+    ld bc, Kind3Anim3
     jp SetAnimationVariant
 .L_01_5a4e:
     ld hl, hObject2
     res 5, [hl]
-    ld de, D_01_5a84
-    ld bc, D_01_5a8b
+    ld de, Kind3Anim2
+    ld bc, Kind3Anim3
     jp SetAnimationVariant
 .L_01_5a5c:
-    ld de, D_01_5a92
-    ld bc, D_01_5a99
+    ld de, Kind3Anim4
+    ld bc, Kind3Anim5
     jp SetAnimationVariant
 EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
-    ld de, D_01_5a76
+    ld de, Kind3Anim0
     call SetObjectAnimation
     ld a, $05
     ldh [hEnemySpeed], a
     ld a, $20
     ldh [hEnemyCounter], a
     jp EnemySnapToGrid
-D_01_5a76::
+Kind3Anim0::
     INCBIN "assets/bank_01/5a76.bin"
-D_01_5a7d::
+Kind3Anim1::
     INCBIN "assets/bank_01/5a7d.bin"
-D_01_5a84::
+Kind3Anim2::
     INCBIN "assets/bank_01/5a84.bin"
-D_01_5a8b::
+Kind3Anim3::
     INCBIN "assets/bank_01/5a8b.bin"
-D_01_5a92::
+Kind3Anim4::
     INCBIN "assets/bank_01/5a92.bin"
-D_01_5a99::
+Kind3Anim5::
     INCBIN "assets/bank_01/5a99.bin"
 Sound8DEffectData::  ; stream of sound id $8d
     INCBIN "assets/bank_01/5c48_Sound8DEffectData.bin"
@@ -3410,5 +3410,5 @@ Sound8BMusicData::  ; stream of sound id $8b
     INCBIN "assets/bank_01/7d55_Sound8BMusicData.bin"
 UnusedSoundDataB::  ; bytes after song $8b
     INCBIN "assets/bank_01/7dad_UnusedSoundDataB.bin"
-D_01_7f55::
+Sound8CEffectData::
     INCBIN "assets/bank_01/7f55.bin"

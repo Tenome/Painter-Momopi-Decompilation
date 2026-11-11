@@ -179,29 +179,29 @@ DEF wCreditsPage    EQU $c790   ; index into CreditsPageTable
 DEF wMusicPriority  EQU $c30f   ; priority of the playing music (SoundStartMusic)
 DEF wEffectPriority EQU $c310   ; priority of the playing effect (SoundStartEffect)
 
-; ---- more names (provisional where the comment says so) ----
+; ---- more names ----
 DEF hEnemyAnimLo    EQU $ffb6   ; +1: animation pointer of the enemy record (SetObjectAnimation)
 DEF hEnemyAnimHi    EQU $ffb7   ; +2
 DEF hEnemyBoxHalf   EQU $ffb9   ; +4: half size of the hit box used by ObjectsOverlap (2 or 4)
-DEF hEnemyCounter2  EQU $ffd3   ; +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional)
+DEF hEnemyCounter2  EQU $ffd3   ; +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10)
 DEF wEnemyLoopIdx   EQU $c53e   ; slot index of the running enemy loop (15 down to 0)
 DEF wEnemyLoopStart EQU $c53f   ; incremented each frame so the update order rotates
-DEF wRoundFlags     EQU $c51f   ; bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional)
-DEF wEndingObject2  EQU $c78e   ; second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional)
+DEF wRoundFlags     EQU $c51f   ; bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised
+DEF wEndingObject2  EQU $c78e   ; second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished
 DEF wEndingObject2Anim EQU $c78f ; +1 of the second ending object (set to $ff when the credits start)
 DEF wEnemyPathPtrHi EQU $c534   ; high byte of the enemy path pointer (wEnemyPathPtr is the low byte)
 DEF wSoundTmp       EQU $c30b   ; scratch byte used by SoundLoadStream and the stream commands
 DEF wBlobPhase      EQU $c519   ; counter of the paint blob; bit 1 picks one of two animations
 DEF wTextBuf        EQU $c44c   ; VramCopyStream buffer: count, rows, tiles (round intro and continue texts)
 DEF wRemoteRound    EQU $c7bf   ; round number received over the link cable (bit 7 stripped)
-DEF wEndingStep     EQU $c781   ; ending scene step timer; reloaded with $0a (provisional)
-DEF wEndingPhase    EQU $c782   ; ending scene step counter (provisional)
-DEF wEndingEvents   EQU $c7ae   ; bit 2 hero reached its place, bit 7 scene finished (provisional)
-DEF wMagicCastTimer EQU $c4d2   ; frame counter used while a card is being cast (provisional)
-DEF wCheatTimer     EQU $c49d   ; counts down from $a0 after wCheatFlags bit 5 is set (provisional)
+DEF wEndingStep     EQU $c781   ; ending scene step timer; reloaded with $0a
+DEF wEndingPhase    EQU $c782   ; ending scene step counter
+DEF wEndingEvents   EQU $c7ae   ; bit 2 hero reached its place, bit 7 scene finished
+DEF wMagicCastTimer EQU $c4d2   ; frame counter used while a card is being cast
+DEF wCheatTimer     EQU $c49d   ; counts down from $a0 after wCheatFlags bit 5 is set
 DEF wScoreTemp      EQU $c47a   ; scratch byte of AddScore
 DEF wExtraLifeIdx   EQU $c488   ; index (0-4) of the next score threshold for an extra life (CheckExtraLife)
-DEF wBonusChoice    EQU $c75a   ; chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional)
+DEF wBonusChoice    EQU $c75a   ; chosen bonus door / entry, indexes BonusRoundJobTableA and BonusRoundJobTableB
 DEF wTrailIdx       EQU $c1b6   ; index of the trail segment (7 bytes each) copied by LoadTrailSegment
 DEF wProjectileAnimLo EQU $c49f ; wProjectile +1: animation pointer
 DEF wProjectileAnimHi EQU $c4a0
@@ -211,7 +211,7 @@ DEF wPaintAnimHi    EQU $c500
 DEF wSoundChan1     EQU $c347
 DEF wSoundChan2     EQU $c367
 DEF wSoundChan3     EQU $c387
-DEF wSoundChan4     EQU $c3a7   ; SoundStartEffect loads its stream here (records 5-7 provisional)
+DEF wSoundChan4     EQU $c3a7   ; SoundStartEffect loads its stream here
 DEF wSoundChan5     EQU $c3c7
 DEF wSoundChan6     EQU $c3e7
 DEF wSoundChan7     EQU $c407
@@ -229,9 +229,9 @@ DEF wShadowNR42     EQU $c430   ; noise envelope
 DEF wShadowNR43     EQU $c431   ; noise polynomial
 DEF wSoundChanLeft  EQU $c30d   ; channel records left to update in SoundUpdate (8 down to 0)
 DEF wSoundMasterVol EQU $c315   ; NR50 value ($77 at init, set by command $ef)
-DEF wWavePending    EQU $c312   ; wave pattern index waiting to be loaded (provisional)
-DEF wWaveEffect     EQU $c313   ; wave pattern of the effect record (provisional)
-DEF wWaveCurrent    EQU $c314   ; wave pattern index currently in wave RAM (provisional)
+DEF wWavePending    EQU $c312   ; wave pattern index waiting to be loaded
+DEF wWaveEffect     EQU $c313   ; wave pattern of the effect record
+DEF wWaveCurrent    EQU $c314   ; wave pattern index currently in wave RAM
 DEF hEnemyAngle     EQU $ffc5   ; +$10: heading 0-31 (index into the movement vector table at $0bb6)
 DEF hEnemyDXLo      EQU $ffc1   ; +$0c: horizontal movement of the last MoveObject (16 bit with $ffc2)
 DEF hEnemyDXHi      EQU $ffc2
@@ -246,11 +246,11 @@ DEF wEnding2X       EQU $c795   ; wEndingObject2 +7
 DEF wEnding2Y       EQU $c798   ; wEndingObject2 +$a
 DEF wMapCellMask    EQU $c7c0   ; DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it)
 DEF wMpStream       EQU $c451   ; VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453
-DEF wMpStreamIdx    EQU $c463   ; number of tiles written so far into the magic points stream (provisional)
+DEF wMpStreamIdx    EQU $c463   ; number of tiles written so far into the magic points stream
 DEF wSpawnListPtr   EQU $c481   ; 16 bit pointer to the spawn list of the current wave (StepEnemySpawnScript)
 DEF wSpawnCount     EQU $c485   ; number of spawns in the current wave (first byte of the list)
-DEF wWaveEnded      EQU $c486   ; set to 1 when a wave has finished spawning (provisional)
-DEF wComboCounter   EQU $c4bc   ; chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional)
+DEF wWaveEnded      EQU $c486   ; set to 1 when a wave has finished spawning
+DEF wComboCounter   EQU $c4bc   ; chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set
 DEF wCursorBlink    EQU $c47d   ; counts to $50 and toggles the card cursor animation (CursorBlinkStep)
 DEF wWalkAnimCount  EQU $c4d9   ; walk animation counter of the player (AnimatePlayerWalk)
 ; more object record fields (offsets from the record start: +1/+2 animation, +4 box half size, +7 X, +$a Y, +$10 heading, +$11 speed)
@@ -270,16 +270,16 @@ DEF wScoreStream    EQU $c46d   ; VramCopyStream buffer: count, rows, then six d
 DEF hRoundSeconds   EQU $ffe3   ; seconds the round started with (hTimeSeconds counts down from it)
 DEF hSpawnDelay     EQU $ffe9   ; delay value (in seconds into the round) of the next spawn from the wave list
 DEF hSpawnFlag      EQU $ffee   ; flag bit taken from the low 3 bits of the Y byte of a spawn entry (bit 1 in rounds 17 and later, else bit 0); the Y position itself is Y and $f8
-DEF hEnemySpawnFlag EQU $ffcf   ; per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional)
-DEF hEnemyTimer     EQU $ffcb   ; per-enemy countdown (kind 7 follows its path when it runs out; provisional)
+DEF hEnemySpawnFlag EQU $ffcf   ; per-enemy value set at spawn from hSpawnFlag; selects animation tables
+DEF hEnemyTimer     EQU $ffcb   ; per-enemy countdown (kind 7 follows its path when it runs out)
 DEF hEnemyFrame     EQU $ffba   ; +5: animation frame index of the enemy record
 DEF hEnemyField3    EQU $ffb8   ; +3: unused by the code read so far
 DEF hEnemyXFrac     EQU $ffbb   ; +6: fraction of the X position
 DEF hEnemyYFrac     EQU $ffbe   ; +9: fraction of the Y position
-DEF hEnemyField13   EQU $ffc8   ; +$13: only copied (provisional)
-DEF hEnemyField18   EQU $ffcd   ; +$18: only copied (provisional)
-DEF hEnemyField19   EQU $ffce   ; +$19: only copied (provisional)
-DEF hBlinkTick      EQU $ffde   ; incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames (provisional)
+DEF hEnemyField13   EQU $ffc8   ; +$13: purpose unknown, only copied with the record
+DEF hEnemyField18   EQU $ffcd   ; +$18: purpose unknown, only copied with the record
+DEF hEnemyField19   EQU $ffce   ; +$19: purpose unknown, only copied with the record
+DEF hBlinkTick      EQU $ffde   ; incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames
 DEF wPlayerStepXLo  EQU $c4ca   ; wPlayer +$0c: horizontal step (fraction part; $c4cb = wPlayerVelX is the pixel part)
 DEF wPlayerStepYLo  EQU $c4cc   ; wPlayer +$0e: vertical step (fraction part; $c4cd = wPlayerVelY is the pixel part)
 DEF wPlayerAnimPtrLo EQU $c4e3  ; pointer to the table of animation pointers chosen by SelectPlayerAnimation (16 bit with $c4e4)

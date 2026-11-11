@@ -812,7 +812,7 @@
      }
     },
     {
-     "name": "SetMagicRowAndReturn",
+     "name": "MagicCursorSetRow",
      "size": "4",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1252,7 +1252,7 @@
      }
     },
     {
-     "name": "SetObjectAnimationStub",
+     "name": "SetObjectAnimationTail",
      "size": "3",
      "fuzzy_match_percent": 100.0,
      "metadata": {
@@ -1500,7 +1500,7 @@
      }
     },
     {
-     "name": "EnemyInitAnim3bbe",
+     "name": "EnemyInitSlowWalkAnim",
      "size": "17",
      "fuzzy_match_percent": 100.0,
      "metadata": {

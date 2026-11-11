@@ -220,7 +220,7 @@ bank,addr,name,comment
 1,47cb,SoundSetFrequency,frequency for the current note from the pitch tables at $3f4c (SoundPitchTables)
 0,3f4c,SoundPitchTables,pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
 0,1760,SetCursorAnimation,HL = animation pointer stored in the cursor object record ($c74f/$c750 = wCursorObject +1/+2)
-0,1740,CursorBlinkStep,counts $c47d to $50 and toggles the cursor animation between D_00_1a17 and D_00_1a30
+0,1740,CursorBlinkStep,counts $c47d to $50 and toggles the cursor animation between CursorAnimBlink and CursorAnimDefault
 2,5000,SpriteSet1,$900 bytes of sprite tiles copied to $8700 (skull/ghost enemies); used for room indices 12-14 and 16
 2,5900,SpriteSet2,$900 bytes of sprite tiles (knight and ghost enemies); room indices 8-10
 2,6200,SpriteSet3,$900 bytes of sprite tiles (cook enemies); room indices 3-6 and 11
@@ -265,7 +265,7 @@ bank,addr,name,comment
 1,49d6,SpawnPaintBlob,creates the paint blob object at wPaintObject at the player's position (flags $86)
 1,5947,SpawnEnemyProjectile,creates the projectile at wProjectile in front of the shooter enemy
 1,4edd,MapCellToVramAddr,hScratch00/01 = background map address of the cell at pixel position B C
-1,4f07,QueueCellTileRows,queues the 2x2 tile update of a cell (painted tiles D_01_4921 or normal D_01_491b)
+1,4f07,QueueCellTileRows,queues the 2x2 tile update of a cell (painted tiles CellTilesPath1 or normal CellTilesDefault)
 1,5677,ProjectileHitTest,compares projectile and player boxes (hScratch00-03): A = 1 on a hit
 0,2fb9,EndingSetup,mode 6 setup: clears OAM and the ending variables at $c76e and loads the castle scene jobs
 0,2fa5,EndingScrollStep,scrolls the castle scene: $c798/$c799 -= $5a and copies it to wScrollX
@@ -310,14 +310,14 @@ bank,addr,name,comment
 0,0b66,MoveObject,moves the object by its heading (+$10, index 0-31) and speed (+$11): position += MoveVectorTable[heading] * speed via MultiplyByDE
 0,09e0,ApplyObjectStep,adds the horizontal step (+$0c/+$0d) to the 24 bit fixed point X (+6 fraction, +7/+8 pixels); the same for Y with +$0e/+$0f and +9/+$a/+$b after MoveObject
 0,0c2a,CounterToFrame,turns a running counter and a bit mask (hScratch06-08) into a frame index
-0,1d23,DigitToTile,A = BCD digit; returns the digit tile id from D_00_1d2f
+0,1d23,DigitToTile,A = BCD digit; returns the digit tile id from BcdDigitTiles
 0,2633,InitBonusCursor,resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
 0,2f26,EndingTick,one step of the ending scene: hero movement then the object animation
 0,2f2c,EndingMoveHero,moves the hero in the ending scene until it reaches $c775 = $50
 0,2f47,EndingHeroFrame,chooses the hero frame and flips it by $c782 bit 0
-0,2f76,EndingAnimateObject,cycles the ending object between the frame tables D_00_30df and D_00_3111
+0,2f76,EndingAnimateObject,cycles the ending object between the frame tables EndingObjectFramesA and EndingObjectFramesB
 0,3054,EndingWalkStep,steps the walking animation counters at $c77e-$c780
-0,3085,EndingCastleBlink,toggles the castle flag animation from D_00_3148
+0,3085,EndingCastleBlink,toggles the castle flag animation from EndingCastleBlinkFrames
 0,30aa,EndingAdvance,advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
 0,3449,EnemyScreenPosition,converts enemy pixel position to screen coordinates (camera subtracted) in hScratch00/01
 0,3525,RemoveEnemy,clears the active bit of hObject2 and decrements wEnemyCount
@@ -342,76 +342,76 @@ bank,addr,name,comment
 0,3c87,AnimFrames0_3c87,animation frames (typed text form)
 1,48ac,AnimFrames1_48ac,animation frames (typed text form)
 1,48dc,AnimFrames1_48dc,animation frames (typed text form)
-0,3651,SetObjectAnimationStub,tail jump to SetObjectAnimation (name provisional)
+0,3651,SetObjectAnimationTail,tail jump to SetObjectAnimation
 0,3681,GetEnemyPos,C = hEnemyX and B = hEnemyY
 0,368a,GetPlayerPos,L = wPlayerX and H = wPlayerY
-0,0a13,AddObjectField,object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance (name provisional)
+0,0a13,AddObjectField,object byte [hScratch00] += object byte [hScratch01] (with carry); both indexes then advance
 0,09ed,AddStepSigned,adds one step to a fixed point coordinate: two AddObjectField bytes then the sign extension of the step into the top byte
 0,307f,SelectEndingObject,hObjPtr = wEndingObject
 0,31eb,SetEnemyHitFlag,sets hEnemyFlags bit 2 (paint hit)
-0,340c,EnemySnapToGrid,aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4 (name provisional)
+0,340c,EnemySnapToGrid,aligns hEnemyX to the 16 pixel grid and sets hEnemyDir to $90 plus the low nibble; also sets $ffb9 = 4
 0,394d,EnemyRemoveIfPlayerDead,removes the enemy when wPlayerDir bit 5 is set
-1,428c,SoundRequestStop,sets wSoundCmd to $80 (stop request; name provisional)
+1,428c,SoundRequestStop,sets wSoundCmd to $80 (stop request)
 1,46fa,SoundSkipOperand2,skips two stream bytes (command with an unused 2 byte operand)
 1,4722,SoundSetPendingWave,stores the next stream byte at $c312 (pending wave pattern index)
-1,492f,ClearBonusFlags,clears wGameFlags bits 7 and 0 (name provisional)
-1,4d3e,SetLinkFlag5,sets hSerialByte bit 5 (name provisional)
+1,492f,ClearBonusFlags,clears wGameFlags bits 7 and 0
+1,4d3e,SetLinkFlag5,sets hSerialByte bit 5
 1,5183,SetPlayerStatusBit0,sets wPlayerStatus bit 0 and clears $c4cf
 1,553a,ProjectileRemoveIfHit,removes the projectile and its enemy when hEnemyFlags has bits 1 and 3 set
 1,566a,EnemyFlagBit3IfDead,sets hEnemyFlags bit 3 when hEnemyDir bit 5 is set
-1,5858,SetObjectFlipFlag,sets hObject2 bit 5 (horizontal flip; name provisional)
+1,5858,SetObjectFlipFlag,sets hObject2 bit 5 (horizontal flip)
 1,58cf,EnemyShootIfReady,counts hEnemyStep down; when it hits 0 and no projectile is live and the enemy is on screen calls SpawnEnemyProjectile
-1,4e59,EndMagicPaint,clears the paint object active bit then ends the magic state bits (name provisional)
+1,4e59,EndMagicPaint,clears the paint object active bit then ends the magic state bits
 1,4a31,SetPaintBlobAnimation,picks animation $4927 or $4929 for the paint blob by $c519 bit 1
-1,5817,EnemyKind9Move,sets hEnemySpeed 6 then moves and clamps (name provisional)
+1,5817,EnemyKind9Move,sets hEnemySpeed 6 then moves and clamps
 0,253b,BonusModeJumpTable,3 entry points chosen by wPlayerBlocked: intro wait then Mode2_Init; BonusSelectLoop; BonusResultWait
-0,2541,BonusIntroWait,waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init (name provisional)
+0,2541,BonusIntroWait,waits $d0 frames then wPlayerBlocked++ and jumps to Mode2_Init
 0,3b99,EnemyFlagOffPath,sets hEnemyFlags bit 1 when the map cell under the enemy is not a path (low nibble 0) else clears it
-0,3bad,EnemyInitAnim3bbe,hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid (name provisional)
+0,3bad,EnemyInitSlowWalkAnim,hEnemySpeed 5 and counter $20; animation at $3bbe; snaps to the grid
 0,3c7d,EnemyMapTile,A = room map tile at the enemy position (X to column, Y as is)
-0,3e20,EnemyKind7Init,sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a (name provisional)
+0,3e20,EnemyKind7Init,sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a
 0,3ed1,EnemyTeleportNext,moves the enemy to the next position of the table at $c489 (pairs X Y, ends with X = 0) or removes it; used by the teleporting enemy of kind 5
-1,4e53,MagicPaintEndUnlessBit2,ends the magic paint unless wPaintObject bit 2 is set (name provisional)
+1,4e53,MagicPaintEndUnlessBit2,ends the magic paint unless wPaintObject bit 2 is set
 1,49a0,BombHitAllEnemies,B.O.M card: sets bit 2 of hEnemyFlags (hit by paint) in every active enemy slot and clears its counter
-1,5549,ProjectileSelectFrame,picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2 (name provisional)
-1,55bc,ProjectileCheckPlayerHit,when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9 (name provisional)
-1,5618,EnemyKind10Animate,toggles between two animations D_01_57ec and D_01_57ee every 4 ticks (kind $0a only; name provisional)
-1,5636,EnemyKind10Move,moves and clamps the enemy by the speed table D_01_5782 indexed by hEnemyDir (name provisional)
-0,3a75,EnemyInitMoveAnim,sets counter $20 and picks the first animation by enemy kind 6 or 8 or default (name provisional)
-0,3b3b,EnemyAuxCounterStep,when hEnemyFlags bit 0 is set clears it and steps hEnemyAux up to $80 (name provisional)
-0,3cb5,EnemyKind7Update,state step of enemy kind 7 following the path (name provisional)
-0,3d18,EnemyKind7NextStep,reads the next path entry from wEnemyPathPtr (name provisional)
-0,3e90,EnemyIdleAnimate,counts hEnemyCounter to $a0 with animation D_00_3f3a then sets hEnemyDir bit 1 (name provisional)
-0,3ef9,EnemyBuildTeleportTable,fills the position table at $c489 around the enemy (+-$10) (name provisional)
+1,5549,ProjectileSelectFrame,picks the projectile animation frame pointer from $c499/$c49a by hEnemyTick bit 2
+1,55bc,ProjectileCheckPlayerHit,when hEnemyFlags bit 0 is set runs ProjectileHitTest on the boxes at $c4a5-$c4a9
+1,5618,EnemyKind10Animate,toggles between two animations Kind10Anim0 and Kind10Anim1 every 4 ticks (kind $0a only)
+1,5636,EnemyKind10Move,moves and clamps the enemy by the speed table Kind10SpeedTable indexed by hEnemyDir
+0,3a75,EnemyInitMoveAnim,sets counter $20 and picks the first animation by enemy kind 6 or 8 or default
+0,3b3b,EnemyAuxCounterStep,when hEnemyFlags bit 0 is set clears it and steps hEnemyAux up to $80
+0,3cb5,EnemyKind7Update,state step of enemy kind 7 following the path
+0,3d18,EnemyKind7NextStep,reads the next path entry from wEnemyPathPtr
+0,3e90,EnemyIdleAnimate,counts hEnemyCounter to $a0 with animation EnemyIdleAnim0 then sets hEnemyDir bit 1
+0,3ef9,EnemyBuildTeleportTable,fills the position table at $c489 around the enemy (+-$10)
 0,352f,EnemyErasePaint,an enemy standing on a painted cell (hEnemyDir bit 5 asks for the check) on the screen turns it back to unpainted ($80 set) and raises wPaintRemaining; not for kind 8 or while the B.O.M card runs
-0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from D_00_363d by direction (T.STOP card exception; name provisional)
+0,3603,EnemyTurnIfBlocked,requests a turn when the enemy walks into a blocked direction; otherwise sets the speed from EnemySpeedByDir by direction (T.STOP card exception)
 0,39b1,EnemyMoveStep,moves the enemy one step: asks for a turn when the way is blocked (or while T.STOP runs), else takes the step from the table at $3ae3 (slow) or $3aed (fast: flags bit 7 or the spawn flag) and applies it
-0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6 (name provisional)
+0,39f9,EnemyGridStep,on the tile grid advances hEnemyStep to $0b and then sets hEnemyDir bits 5 and 6
 0,10a2,LowNibbleToDigitTile,A and $0f then falls into NumberToTile
-0,175d,SetCursorDefaultAnimation,cursor object animation = D_00_1a30
+0,175d,SetCursorDefaultAnimation,cursor object animation = CursorAnimDefault
 0,1769,ResetMagicCursorAnimation,clears wMagicScreenFlags bit 2 and sets the default cursor animation
-0,196f,SetMagicRowAndReturn,stores A in wMagicRow (tail of a cursor move; name provisional)
-0,2df1,RunEndingTextListAndWait,queues the VRAM copy list at $2dff and waits until it is done (name provisional)
+0,196f,MagicCursorSetRow,stores A in wMagicRow (tail of a cursor move)
+0,2df1,RunEndingTextListAndWait,queues the VRAM copy list at $2dff and waits until it is done
 0,10a4,NumberToTile,digit in A to its tile id using the table at 10ab
-1,4e47,MagicTimerCountdown,decrements hMagicTimer; at zero clears wMagicState and ends the paint (name provisional)
-0,392e,EnemyPaintUnderB0M,with the B.O.M card active paints the cell under an enemy that is not frozen (name provisional)
-0,3956,EnemySelectAnimByKind,sets the animation pair for kinds 6 and 8 (D_00_3acf and D_00_3ad9) or the default (name provisional)
-0,3c4e,EnemyKind7SetAnimation,animation pair at $3c87 and $3c8c (name provisional)
-0,3c57,EnemyKind7Start,counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87 (name provisional)
-0,3c6e,EnemyStoreAuxToTile,stores hEnemyAux into the map cell under the enemy (name provisional)
-0,3c75,EnemyClearTileSaveStep,hEnemyStep = map tile under the enemy and clears that cell (name provisional)
-0,09d1,MoveObjectHalfStep,adds the X and Y deltas at offsets 6 and 8 to the position (name provisional)
+1,4e47,MagicTimerCountdown,decrements hMagicTimer; at zero clears wMagicState and ends the paint
+0,392e,EnemyPaintUnderB0M,with the B.O.M card active paints the cell under an enemy that is not frozen
+0,3956,EnemySelectAnimByKind,sets the animation pair for kinds 6 and 8 (EnemyKind6Anim0 and EnemyKind8Anim0) or the default
+0,3c4e,EnemyKind7SetAnimation,animation pair at $3c87 and $3c8c
+0,3c57,EnemyKind7Start,counter $20; hEnemyAux = map tile under the enemy; $ffcb = $fe; hEnemyDir = $90; animation $3c87
+0,3c6e,EnemyStoreAuxToTile,stores hEnemyAux into the map cell under the enemy
+0,3c75,EnemyClearTileSaveStep,hEnemyStep = map tile under the enemy and clears that cell
+0,09d1,MoveObjectHalfStep,adds the X and Y deltas at offsets 6 and 8 to the position
 0,0bb6,MoveVectorTable,32 headings (index 0-31) x (dx dy) signed bytes: points on a circle of radius about 50; MoveObject multiplies them by the speed
-0,132c,DrawMagicPointsDigits,loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453 (name provisional)
-0,1409,StoreMagicPointsDigit,writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5 (name provisional)
+0,132c,DrawMagicPointsDigits,loop of the magic points display: subtracts 100s then 10s from hScratch00 and stores tile $b8 style digits into the stream at $c453
+0,1409,StoreMagicPointsDigit,writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5
 0,01f4,LoadTilesBank3Full,BC = $1000 then LoadTilesBank3 (copies a full $1000 byte tile set from bank 3)
 0,0498,DelayLoopA,counts A down to 0 (busy wait)
 0,04fc,FillBackwardsFFBC,fills BC bytes with $ff going down from HL
-0,051d,DrawBonusMetatileMap,hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap (name provisional)
+0,051d,DrawBonusMetatileMap,hScratch00 = $0a and hScratch01 = $09 then DrawMetatileMap
 0,09aa,ReturnOnly,a bare ret (jump target of DrawObject for inactive objects)
-1,4775,SoundReturn,ret shared by the sound command that precedes SoundCmdEnd (name provisional)
+1,4775,SoundReturn,ret shared by the sound command that precedes SoundCmdEnd
 1,570c,ProjectileAimAtPlayer,sets the heading of the projectile (wProjectile +$10) towards the player in eight directions from the position differences (a difference below 16 counts as the same row or column)
-1,58ee,EnemyShooterAI,decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot; name provisional)
+1,58ee,EnemyShooterAI,decision routine of an enemy that shoots (checks the T.STOP and B.O.M cards and the projectile slot)
 0,151b,RoomVramJob0,data (table entry)
 0,1538,RoomVramJob1,data (table entry)
 0,1551,RoomVramJob2,data (table entry)
@@ -510,16 +510,133 @@ bank,addr,name,comment
 0,28fd,BonusSelectJob1,data (table entry)
 0,2957,BonusSelectJob2,data (table entry)
 0,33fd,EnemyScoreTable,points awarded for defeating an enemy by kind (hEnemyKind 0-11; passed to AddScore in E)
-0,36c1,PopFrames1,animation frames of the pop effect when an enemy is defeated (first stage; name provisional)
-0,36bc,PopFrames2,animation frames of the pop effect (second stage; name provisional)
-0,36c6,PopFrames3,animation frames of the pop effect (last stage; name provisional)
+0,36c1,PopFrames1,animation frames of the pop effect when an enemy is defeated (first stage)
+0,36bc,PopFrames2,animation frames of the pop effect (second stage)
+0,36c6,PopFrames3,animation frames of the pop effect (last stage)
 0,1d90,RoundIntroText,VRAM copy list of the round intro screen (ROUND, ROOM, READY !!, x lives)
 0,1f10,GameOverText,VRAM stream "GAME  OVER" (length, rows, tiles)
-0,1a94,MagicScreenJobsA,VRAM copy list of the magic screen (frame and text; name provisional)
-0,1a57,MagicScreenJobsB,VRAM copy list of the magic screen (card pictures; name provisional)
-1,53fa,EnemyKind13,enemy kind 13 of the last round (round 33): a chaser that lives for a fixed time (a 16 bit countdown in hEnemyTimer and hEnemyAux), found through the spawn list of round 33 (name provisional)
-1,54ca,EnemyKind13Init,starts the kind 13 enemy: timer $0250, speed phase counters, animation $54e9, snapped to the grid (name provisional)
-1,542c,EnemyKind13Leave,when the timer has run out: counts hEnemyStep down while blinking and then removes the enemy (name provisional)
-1,5442,EnemyKind13Timer,counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) down; at 0 hEnemyFlags bit 0 starts the leaving (name provisional)
-1,5496,EnemyKind13Speed,speed phases of the kind 13 enemy: sets the fast flag (hEnemyFlags bit 7) while hEnemyField18 counts down (name provisional)
-1,545a,SelectKind13Animation,animation pointers of the kind 13 enemy by hEnemyDir (name provisional)
+0,1a94,MagicScreenJobsA,VRAM copy list of the magic screen (frame and text)
+0,1a57,MagicScreenJobsB,VRAM copy list of the magic screen (card pictures)
+1,53fa,EnemyKind13,enemy kind 13 of the last round (round 33): a chaser that lives for a fixed time (a 16 bit countdown in hEnemyTimer and hEnemyAux), found through the spawn list of round 33
+1,54ca,EnemyKind13Init,starts the kind 13 enemy: timer $0250, speed phase counters, animation $54e9, snapped to the grid
+1,542c,EnemyKind13Leave,when the timer has run out: counts hEnemyStep down while blinking and then removes the enemy
+1,5442,EnemyKind13Timer,counts the 16 bit lifetime (hEnemyTimer and hEnemyAux) down; at 0 hEnemyFlags bit 0 starts the leaving
+1,5496,EnemyKind13Speed,speed phases of the kind 13 enemy: sets the fast flag (hEnemyFlags bit 7) while hEnemyField18 counts down
+1,545a,SelectKind13Animation,animation pointers of the kind 13 enemy by hEnemyDir
+0,0027,Sound80Data,data table used by SoundCommandDataTable
+1,7f55,Sound8CEffectData,data table used by SoundCommandDataTable
+1,4332,SoundSilentMusicData,data table used by SoundStartCommand
+1,4141,SoundPriorityTable,data table used by SoundStartEffect, SoundStartMusic
+0,3f56,SoundPitchTable1,data table used by SoundPitchTables
+0,3f95,SoundPitchTable2,data table used by SoundPitchTables
+0,3f9e,SoundPitchTable3,data table used by SoundPitchTables
+0,3faf,SoundPitchTable4,data table used by SoundPitchTables
+0,3fb8,SoundWavePatterns,data table used by SoundLoadWave
+0,0a3f,CoordinateBoxTable,data table used by CompareObjectCoordinate
+0,10ab,NumberDigitTiles,data table used by NumberToTile
+0,11e7,ExtraLifeScoreTable,data table used by CheckExtraLife
+0,1400,RoundMusicTable,data table used by StartRoundMusic
+0,1a17,CursorAnimBlink,data table used by CursorBlinkStep
+0,1a30,CursorAnimDefault,data table used by CursorBlinkStep, InitMagicScreenState, SetCursorDefaultAnimation
+0,1d2f,BcdDigitTiles,data table used by DigitToTile
+0,1e2e,LinkLoseJobsA,data table used by Mode7_LinkLose
+0,1e57,LinkLoseJobsB,data table used by Mode7_LinkLose
+0,2083,ContinueCursorAnim,data table used by Mode5_Continue
+0,2085,ContinueScreenJobs,data table used by Mode5_Continue
+0,25cb,BonusDoorTable,data table used by BonusSelectLoop
+0,2630,MagicCursorXTable,data table used by MagicScreenInput, MenuCursorInput
+0,264a,BonusTitleStream,data table used by Mode2_Init
+0,2651,BonusRoundJobTableA,data table used by Mode2_Init
+0,269b,BonusRoundJobTableB,data table used by Mode2_Init
+0,2704,BonusCursorAnim,data table used by InitBonusCursor
+0,270f,BonusBackgroundJobs,data table used by Mode2_Init
+0,29b1,BonusTextJobs,data table used by Mode2_Init
+0,2b86,TitleScreenJobs,data table used by Mode0_Title
+0,2dff,EndingTextJobs,data table used by RunEndingTextListAndWait
+0,3009,EndingCastleJobs,data table used by EndingSetup
+0,30c4,EndingSceneJobs,data table used by EndingSetup
+0,30df,EndingObjectFramesA,data table used by EndingAnimateObject
+0,3111,EndingObjectFramesB,data table used by EndingAnimateObject
+0,3143,EndingCastleScript,data table used by Mode6_Ending
+0,3148,EndingCastleBlinkFrames,data table used by EndingCastleBlink
+0,3156,EndingMetatileBlocks,data table used by Mode6_Ending
+0,31a6,EndingMetatileCells,data table used by Mode6_Ending
+0,363d,EnemySpeedByDir,data table used by EnemyTurnIfBlocked
+0,3aa2,EnemyDirectionTable,data table used by EnemyChooseDirection
+0,3ac4,EnemyErasedTiles,data table used by EnemyErasePaint
+0,3ae3,EnemyStepTableA,data table used by EnemyMoveStep
+0,3aed,EnemyStepTableB,data table used by EnemyMoveStep
+0,3d6e,Kind7Path0,data table (reached through a pointer table)
+0,3dc7,Kind7Path1,data table (reached through a pointer table)
+0,3f44,EnemyTeleportOffsets,data table used by EnemyTeleportNext
+1,488c,PlayerDeathFrames,data table used by PlayerDeath
+1,48d4,PlayerAnimPtrsUp,data table used by SelectPlayerAnimation
+1,491b,CellTilesDefault,data table used by PaintCell, QueueCellTileRows
+1,4921,CellTilesPath1,data table used by PaintCell, QueueCellTileRows
+1,518d,PlayerDirTableA,data table used by PlayerSetDirection
+1,519d,PlayerDirTableB,data table used by PlayerSetDirection
+1,5782,Kind10SpeedTable,data table used by EnemyKind10Move
+1,57c9,ProjectileFrameTable,data table used by UpdateProjectile
+1,59f5,ShooterParams0,data table used by EnemyShooterAI
+1,59fa,ShooterParams1,data table used by EnemyShooterAI
+0,3aa6,EnemyDefaultAnim0,data table used by EnemyInitMoveAnim, EnemySelectAnimByKind
+0,3aab,EnemyDefaultAnim1,data table used by EnemySelectAnimByKind
+0,3ab0,EnemyDefaultAnim2,data table used by EnemySelectAnimByKind
+0,3ab5,EnemyDefaultAnim3,data table used by EnemySelectAnimByKind
+0,3aba,EnemyDefaultAnim4,data table used by EnemySelectAnimByKind
+0,3abf,EnemyDefaultAnim5,data table used by EnemySelectAnimByKind
+0,3aca,EnemyBlinkAnim,data table used by EnemyIdleAnimate, EnemyKind13Leave, EnemyKind7Update
+0,3acf,EnemyKind6Anim0,data table used by EnemyInitMoveAnim, EnemySelectAnimByKind
+0,3ad4,EnemyKind6Anim1,data table used by EnemySelectAnimByKind
+0,3ad9,EnemyKind8Anim0,data table used by EnemyInitMoveAnim, EnemySelectAnimByKind
+0,3ade,EnemyKind8Anim1,data table used by EnemySelectAnimByKind
+0,3bbe,EnemyWalkAnim0,data table used by EnemyInitSlowWalkAnim, SelectEnemyAnimation
+0,3bc3,EnemyWalkAnim1,data table used by SelectEnemyAnimation
+0,3bc8,EnemyWalkAnim2,data table used by SelectEnemyAnimation
+0,3bcd,EnemyWalkAnim3,data table used by SelectEnemyAnimation
+0,3bd2,EnemyWalkAnim4,data table used by SelectEnemyAnimation
+0,3bd7,EnemyWalkAnim5,data table used by SelectEnemyAnimation
+0,3c8c,Kind7AnimB,data table used by EnemyKind7SetAnimation
+0,3d6a,Kind7PathPointers,data table used by EnemyKind7Init
+0,3e4d,Kind7WalkAnim0,data table used by EnemyKind7Init, EnemyKind7Update
+0,3e52,Kind7WalkAnim1,data table used by EnemyKind7Update
+0,3e57,Kind7WalkAnim2,data table used by EnemyKind7Update
+0,3e5c,Kind7WalkAnim3,data table used by EnemyKind7Update
+0,3f3a,EnemyIdleAnim0,data table used by EnemyBuildTeleportTable, EnemyIdleAnimate
+0,3f3f,EnemyIdleAnim1,data table used by EnemyIdleAnimate
+1,4927,PaintBlobAnim0,data table used by SetPaintBlobAnimation
+1,4929,PaintBlobAnim1,data table used by SetPaintBlobAnimation, SpawnBombBlob
+1,492b,PaintBlobAnim2,data table used by SelectBlobAnimation, SpawnPaintBlob
+1,492d,PaintBlobAnim3,data table used by SelectBlobAnimation
+1,53e5,Kind4Anim0,data table used by EnemyKind4Init, SelectKind4Animation
+1,53ec,Kind4Anim1,data table used by SelectKind4Animation
+1,53f3,Kind4Anim2,data table used by SelectKind4Animation
+1,54e9,Kind13Anim0,data table used by EnemyKind13Init, SelectKind13Animation
+1,54f7,Kind13Anim1,data table used by SelectKind13Animation
+1,5505,Kind13Anim2,data table used by SelectKind13Animation
+1,5787,ProjectileInit0,data table used by InitProjectile
+1,578b,ProjectileInit1,data table used by InitProjectile
+1,578f,ProjectileInit2,data table used by InitProjectile
+1,5793,ProjectileInit3,data table used by InitProjectile
+1,5797,ProjectileInit4,data table used by InitProjectile
+1,579b,ProjectileInit5,data table used by InitProjectile
+1,57ec,Kind10Anim0,data table used by EnemyKind10Animate, UpdateProjectile
+1,57ee,Kind10Anim1,data table used by EnemyKind10Animate
+1,586f,Kind9Anim0,data table used by EnemyKind9Init, SelectKind9Animation
+1,5876,Kind9Anim1,data table used by SelectKind9Animation
+1,587d,Kind9Anim2,data table used by SelectKind9Animation
+1,5884,Kind9Anim3,data table used by SelectKind9Animation
+1,588b,Kind9Anim4,data table used by SelectKind9Animation
+1,5892,Kind9Anim5,data table used by SelectKind9Animation
+1,59cb,Kind2Anim0,data table used by EnemyKind2Init, SelectKind2Animation
+1,59d2,Kind2Anim1,data table used by SelectKind2Animation
+1,59d9,Kind2Anim2,data table used by SelectKind2Animation
+1,59e0,Kind2Anim3,data table used by SelectKind2Animation
+1,59e7,Kind2Anim4,data table used by SelectKind2Animation
+1,59ee,Kind2Anim5,data table used by SelectKind2Animation
+1,5a76,Kind3Anim0,data table used by EnemyKind3Init, SelectKind3Animation
+1,5a7d,Kind3Anim1,data table used by SelectKind3Animation
+1,5a84,Kind3Anim2,data table used by SelectKind3Animation
+1,5a8b,Kind3Anim3,data table used by SelectKind3Animation
+1,5a92,Kind3Anim4,data table used by SelectKind3Animation
+1,5a99,Kind3Anim5,data table used by SelectKind3Animation

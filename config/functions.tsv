@@ -94,7 +94,7 @@ bank	addr	size	name
 0	185f	23	MagicCursorUp
 0	1876	45	MagicCursorDown
 0	18a3	204	DrawMagicPage
-0	196f	4	SetMagicRowAndReturn
+0	196f	4	MagicCursorSetRow
 0	1973	40	InitMagicScreenState
 0	1c57	144	Mode3_RoundIntro
 0	1ce7	22	ClearRoomState
@@ -149,7 +149,7 @@ bank	addr	size	name
 0	3643	6	MoveAndApplyObject
 0	3649	2	SetAnimationVariant
 0	364b	6	L_00_364b
-0	3651	3	SetObjectAnimationStub
+0	3651	3	SetObjectAnimationTail
 0	3654	11	SelectObject2
 0	365f	7	SetObjectAnimation
 0	3666	13	EnemyRequestTurn
@@ -180,7 +180,7 @@ bank	addr	size	name
 0	3b57	6	SetEnemyAnimation
 0	3b5d	60	SelectEnemyAnimation
 0	3b99	20	EnemyFlagOffPath
-0	3bad	17	EnemyInitAnim3bbe
+0	3bad	17	EnemyInitSlowWalkAnim
 0	3bdc	114	EnemyKind11
 0	3c4e	9	EnemyKind7SetAnimation
 0	3c57	23	EnemyKind7Start

@@ -835,7 +835,7 @@ void *gb_native_EnemyKindIdle(void) {
 void *gb_native_EnemyKind1(void) {
     gb_native_SelectObject2();
     gb_native_TickObjectTimer();
-    if (ZF()) return (void *)GAME_EnemyInitAnim3bbe;
+    if (ZF()) return (void *)GAME_EnemyInitSlowWalkAnim;
     if (rd(hEnemyFlags) & 0x04) return (void *)GAME_EnemyDefeated;
     NCALL(GAME_EnemyComputeBlockedDirs);
     NCALL(GAME_EnemyGridStep);
@@ -1411,7 +1411,7 @@ void *gb_native_PlayerAction(void) {
 }
 
 /* PaintCell: B = X and C = Y of a grid aligned cell under the player. Sets the painted bit ($10) of the map cell and queues the tile update (two tile rows from
- * D_01_4921 for path type 1, else D_01_491b) at the cell's position in the background map, waits for the VRAM copy, and counts wPaintRemaining down;
+ * CellTilesPath1 for path type 1, else CellTilesDefault) at the cell's position in the background map, waits for the VRAM copy, and counts wPaintRemaining down;
  * at 0 the round is cleared (RoundCleared). Nothing happens when the cell is already painted. */
 void *gb_native_PaintCell(void) {
     r.a = r.b;
@@ -1782,7 +1782,7 @@ gauge_done:
     return (void *)GAME_StartRoundMusic;
 }
 
-/* SetCursorAnimation: HL = animation pointer of the card cursor object (wCursorObject +1/+2). SetCursorDefaultAnimation uses D_00_1a30. */
+/* SetCursorAnimation: HL = animation pointer of the card cursor object (wCursorObject +1/+2). SetCursorDefaultAnimation uses CursorAnimDefault. */
 void *gb_native_SetCursorAnimation(void) {
     wr(wCursorObject + 1, r.l);
     wr(wCursorObject + 2, r.h);
@@ -1800,7 +1800,7 @@ void *gb_native_ResetMagicCursorAnimation(void) {
 }
 
 /* CursorBlinkStep: while the cursor is active (wMagicScreenFlags bit 2) wCursorBlink counts to $50 (then the cursor is reset); in between the cursor
- * animation toggles between D_00_1a17 and D_00_1a30 with bit 2 of the screen frame counter $c769. */
+ * animation toggles between CursorAnimBlink and CursorAnimDefault with bit 2 of the screen frame counter $c769. */
 void *gb_native_CursorBlinkStep(void) {
     r.a = rd(wMagicScreenFlags);
     r.f = (r.f & 0x10) | 0x20 | ((r.a & 4) ? 0 : 0x80);
@@ -1898,7 +1898,7 @@ void *gb_native_MagicCursorDown(void) {
 
 /* MagicScreenInput: the pad on the magic screen. D-pad: sound, move the cursor (right 4, left 5, up 6, down 7 of hJoyNew; each routine leaves A as the original does and
  * the following tests read that A). A: the selected card is chosen when the magic points pay for it (cost in MagicCostTable): sound $90, wActiveMagic = the card,
- * wMagicScreenFlags |= 6, and the A bit is removed from hJoyNew. Then the cursor object is placed at the column (D_00_2630) and drawn. */
+ * wMagicScreenFlags |= 6, and the A bit is removed from hJoyNew. Then the cursor object is placed at the column (MagicCursorXTable) and drawn. */
 void *gb_native_MagicScreenInput(void) {
     if (!(rd(wMagicScreenFlags) & 0x02)) {
         uint8_t pad = rd(hJoyNew) & 0xF1;
@@ -2967,7 +2967,7 @@ static void set_flip(int on) { SET_HL(hObject2); wr(hObject2, on ? (rd(hObject2)
 static void anim_variant(uint16_t a, uint16_t b) { SET_BC(b); set_anim((rd(hEnemyTick) & 0x08) ? b : a); }
 
 void *gb_native_SetObjectAnimation(void) { set_anim(DE()); return 0; }
-void *gb_native_SetObjectAnimationStub(void) { return gb_native_SetObjectAnimation(); }
+void *gb_native_SetObjectAnimationTail(void) { return gb_native_SetObjectAnimation(); }
 void *gb_native_SetAnimationVariant(void) {
     if (rd(hEnemyTick) & 0x08) SET_DE(BC());
     return gb_native_SetObjectAnimation();
@@ -3045,7 +3045,7 @@ void *gb_native_SelectKind9Animation(void) {
 }
 
 /* EnemyErasePaint: enemies undo the player's work. When hEnemyDir bit 5 asks for it (set by EnemyGridStep), the map cell under the enemy is a painted cell (bit 4)
- * and the enemy is on the screen, the cell becomes unpainted again (its low nibble with bit 7) and its two tile rows are redrawn from D_00_3ac4; wPaintRemaining goes up by 1.
+ * and the enemy is on the screen, the cell becomes unpainted again (its low nibble with bit 7) and its two tile rows are redrawn from EnemyErasedTiles; wPaintRemaining goes up by 1.
  * Not for kind 8, and not while the B.O.M card (5) runs. */
 void *gb_native_EnemyErasePaint(void) {
     if (rd(hEnemyKind) == 0x08) return 0;
@@ -3820,7 +3820,7 @@ void *gb_native_Mode2_BonusSelect(void) {
     return gb_native_Mode2_Init();
 }
 
-/* Mode6_Ending: the castle scene after the last round. The setup draws the castle with metatiles (D_00_31a6 cells, D_00_3156 blocks), creates the two scene objects
+/* Mode6_Ending: the castle scene after the last round. The setup draws the castle with metatiles (EndingMetatileCells cells, EndingMetatileBlocks blocks), creates the two scene objects
  * (the hero walking in at X $80, Y $68, heading $18, and the castle flag object), starts the ending music and runs the scene (castle blink and walk) until the hero
  * has arrived (wEndingEvents bit 7). Then the credit pages scroll up (EndingSetup, scroll, credits window); wCheatFlags and wCheatTimer serve as counters here
  * ($10 frames per page step and 5 rounds after the last page). Finally the game restarts (Entry). */
@@ -4710,7 +4710,7 @@ void *gb_native_SetPaintBlobAnimation(void) {
     return 0;
 }
 
-/* QueueCellTileRows: the 2x2 tile update of the cell in hScratch00/01 (HL): D_01_4921 for path type 1, else D_01_491b; then waits for the copy. */
+/* QueueCellTileRows: the 2x2 tile update of the cell in hScratch00/01 (HL): CellTilesPath1 for path type 1, else CellTilesDefault; then waits for the copy. */
 void *gb_native_QueueCellTileRows(void) {
     SET_DE((rd(hScratch02) & 0x0F) == 0x01 ? 0x4921 : 0x491B);
     SET_HL(rd(hScratch00) | rd(hScratch01) << 8);
@@ -4840,7 +4840,7 @@ void *gb_native_TableIndexFromRoundDec(void) { r.a--; return gb_native_TableInde
 
 void *gb_native_PlaySound(void) { wr(wSoundArg, r.a); return gb_native_PlaySound_Bank1(); }
 void *gb_native_DelayLoopA(void) { r.a = 0; r.f = (r.f & 0x10) | 0xC0; return 0; }
-void *gb_native_SetMagicRowAndReturn(void) { wr(wMagicRow, r.a); return 0; }
+void *gb_native_MagicCursorSetRow(void) { wr(wMagicRow, r.a); return 0; }
 void *gb_native_EnemyRemoveIfPlayerDead(void) {
     r.a = rd(wPlayerDir);
     if (!(r.a & 0x20)) return 0;
@@ -4854,7 +4854,7 @@ void *gb_native_SetEnemyAnimation(void) {
     gb_native_SelectEnemyAnimation();
     return gb_native_SetAnimationVariant();
 }
-void *gb_native_EnemyInitAnim3bbe(void) {
+void *gb_native_EnemyInitSlowWalkAnim(void) {
     wr(hEnemySpeed, 0x05);
     wr(hEnemyCounter, 0x20);
     set_anim(0x3BBE);

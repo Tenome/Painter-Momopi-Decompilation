@@ -27,9 +27,9 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c30f | `wMusicPriority` | 3 | priority of the playing music (SoundStartMusic) |
 | $c310 | `wEffectPriority` | 7 | priority of the playing effect (SoundStartEffect) |
 | $c311 | `wSoundBusy` | 3 | 1 while the queue is being modified |
-| $c312 | `wWavePending` | 3 | wave pattern index waiting to be loaded (provisional) |
-| $c313 | `wWaveEffect` | 1 | wave pattern of the effect record (provisional) |
-| $c314 | `wWaveCurrent` | 4 | wave pattern index currently in wave RAM (provisional) |
+| $c312 | `wWavePending` | 3 | wave pattern index waiting to be loaded |
+| $c313 | `wWaveEffect` | 1 | wave pattern of the effect record |
+| $c314 | `wWaveCurrent` | 4 | wave pattern index currently in wave RAM |
 | $c315 | `wSoundMasterVol` | 3 | NR50 value ($77 at init, set by command $ef) |
 | $c316 | `wSoundQueueLen` | 5 |  |
 | $c317 | `wSoundQueue` | 3 |  |
@@ -37,7 +37,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c347 | `wSoundChan1` | 2 |  |
 | $c367 | `wSoundChan2` | 2 |  |
 | $c387 | `wSoundChan3` | 2 |  |
-| $c3a7 | `wSoundChan4` | 4 | SoundStartEffect loads its stream here (records 5-7 provisional) |
+| $c3a7 | `wSoundChan4` | 4 | SoundStartEffect loads its stream here |
 | $c3c7 | `wSoundChan5` | 2 |  |
 | $c3e7 | `wSoundChan6` | 2 |  |
 | $c407 | `wSoundChan7` | 2 |  |
@@ -61,7 +61,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c44b | `wMagicPointsHi` | 8 | high byte of the 16 bit MP |
 | $c44c | `wTextBuf` | 5 | VramCopyStream buffer: count, rows, tiles (round intro and continue texts) |
 | $c451 | `wMpStream` | 2 | VramCopyStream buffer of the magic points display: count, rows, then tiles from $c453 |
-| $c463 | `wMpStreamIdx` | 8 | number of tiles written so far into the magic points stream (provisional) |
+| $c463 | `wMpStreamIdx` | 8 | number of tiles written so far into the magic points stream |
 | $c464 | `wScoreDigits` | 3 | 8 BCD digits of the score (SCR on the magic screen) |
 | $c467 | `wScoreDecimal` | 3 | six decimal digits of the score |
 | $c46d | `wScoreStream` | 3 | VramCopyStream buffer: count, rows, then six digit tiles from $c46f |
@@ -72,11 +72,11 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c483 | `wSpawnWave` | 4 | index (0-5) of the current wave in the round's list |
 | $c484 | `wSpawnIndex` | 6 | next entry within the wave (1 based) |
 | $c485 | `wSpawnCount` | 1 | number of spawns in the current wave (first byte of the list) |
-| $c486 | `wWaveEnded` | 3 | set to 1 when a wave has finished spawning (provisional) |
+| $c486 | `wWaveEnded` | 3 | set to 1 when a wave has finished spawning |
 | $c488 | `wExtraLifeIdx` | 4 | index (0-4) of the next score threshold for an extra life (CheckExtraLife) |
 | $c49b | `wContinues` | 7 | continues left (5 in a normal game, $ff with the cheat) |
 | $c49c | `wCheatFlags` | 15 | bit 0 = title code Up+Select+A+B entered: unlimited continues |
-| $c49d | `wCheatTimer` | 6 | counts down from $a0 after wCheatFlags bit 5 is set (provisional) |
+| $c49d | `wCheatTimer` | 6 | counts down from $a0 after wCheatFlags bit 5 is set |
 | $c49e | `wProjectile` | 31 | object record of an enemy projectile (kind 10 shoots it; the T.STOP and FRIEND cards remove it) |
 | $c49f | `wProjectileAnimLo` | 4 | wProjectile +1: animation pointer |
 | $c4a0 | `wProjectileAnimHi` | 4 |  |
@@ -84,7 +84,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4a5 | `wProjectileX` | 3 | wProjectile +7 (16 bit with $c4a6) |
 | $c4a8 | `wProjectileY` | 3 | wProjectile +$a (16 bit with $c4a9) |
 | $c4af | `wProjectileSpeed` | 2 | wProjectile +$11 |
-| $c4bc | `wComboCounter` | 3 | chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set (provisional) |
+| $c4bc | `wComboCounter` | 3 | chain counter used by EnemyDefeated while wPlayerStatus bit 4 is set |
 | $c4be | `wPlayer` | 14 | the player's object record |
 | $c4bf | `wPlayerAnimLo` | 3 | wPlayer +1 |
 | $c4c0 | `wPlayerAnimHi` | 3 | wPlayer +2 |
@@ -96,7 +96,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c4cd | `wPlayerVelY` | 1 |  |
 | $c4ce | `wPlayerAngle` | 3 | wPlayer +$10 |
 | $c4cf | `wPlayerSpeed` | 2 | wPlayer +$11 |
-| $c4d2 | `wMagicCastTimer` | 5 | frame counter used while a card is being cast (provisional) |
+| $c4d2 | `wMagicCastTimer` | 5 | frame counter used while a card is being cast |
 | $c4d9 | `wWalkAnimCount` | 3 | walk animation counter of the player (AnimatePlayerWalk) |
 | $c4de | `wPlayerDir` | 19 | low nibble = facing/direction bits, bit 5 = on a tile boundary, bit 6 = action pressed |
 | $c4df | `wPlayerStatus` | 27 | bit 2 = caught/clear animation started |
@@ -109,7 +109,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c508 | `wPaintY` | 3 | wPaintObject +$a (16 bit with $c509) |
 | $c519 | `wBlobPhase` | 6 | counter of the paint blob; bit 1 picks one of two animations |
 | $c51e | `wGameFlags` | 15 | bit 0 = round cleared (PlayFrame jumps to RoundCleared), bit 6 = advance to the next mode after the clear |
-| $c51f | `wRoundFlags` | 8 | bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised (provisional) |
+| $c51f | `wRoundFlags` | 8 | bit 0 set while a round is running; bit 1 extra life given; bit 2 round variables initialised |
 | $c520 | `wPaintRemaining` | 5 | unpainted path cells left; decremented as the painter paints a cell; 0 = round cleared |
 | $c522 | `wRound` | 30 | round number, starts at 1 ("ROUND 01") |
 | $c523 | `wRoundBackup` | 7 | also set to 1 at boot; incremented together with wRound |
@@ -126,20 +126,20 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $c755 | `wCursorY` | 10 | title screen: $64 = 1 PLAYER, $74 = 2 PLAYER |
 | $c758 | `wCursorIndex` | 7 | menu choice 0-2 (MenuCursorInput) |
 | $c759 | `wCursorFlags` | 3 | bit 7 = a choice was confirmed |
-| $c75a | `wBonusChoice` | 4 | chosen bonus door / entry, indexes D_00_2651 and D_00_269b (provisional) |
+| $c75a | `wBonusChoice` | 4 | chosen bonus door / entry, indexes BonusRoundJobTableA and BonusRoundJobTableB |
 | $c76e | `wEndingObject` | 7 | object record used by the ending scene |
 | $c775 | `wEndingX` | 4 | wEndingObject +7 |
 | $c778 | `wEndingY` | 3 | wEndingObject +$a |
 | $c77e | `wEndingAngle` | 4 | wEndingObject +$10 |
 | $c77f | `wEndingSpeed` | 3 | wEndingObject +$11 |
-| $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a (provisional) |
-| $c782 | `wEndingPhase` | 4 | ending scene step counter (provisional) |
-| $c78e | `wEndingObject2` | 9 | second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished (provisional) |
+| $c781 | `wEndingStep` | 5 | ending scene step timer; reloaded with $0a |
+| $c782 | `wEndingPhase` | 4 | ending scene step counter |
+| $c78e | `wEndingObject2` | 9 | second object record of the ending scene (also drawn with SetObjPtr); its flag bits 0-2 double as credits state: 0 window shown, 1 window slid in, 2 credits finished |
 | $c78f | `wEndingObject2Anim` | 4 | +1 of the second ending object (set to $ff when the credits start) |
 | $c790 | `wCreditsPage` | 5 | index into CreditsPageTable |
 | $c795 | `wEnding2X` | 1 | wEndingObject2 +7 |
 | $c798 | `wEnding2Y` | 3 | wEndingObject2 +$a |
-| $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished (provisional) |
+| $c7ae | `wEndingEvents` | 6 | bit 2 hero reached its place, bit 7 scene finished |
 | $c7bf | `wRemoteRound` | 5 | round number received over the link cable (bit 7 stripped) |
 | $c7c0 | `wMapCellMask` | 4 | DrawMetatileMap ANDs each map cell with this ($0f ignores the painted bit, $ff keeps it) |
 | $dfff | `wStackTop` | 9 | SP is reset here at the start of every mode |
@@ -197,18 +197,18 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffc5 | `hEnemyAngle` | 5 | +$10: heading 0-31 (index into the movement vector table at $0bb6) |
 | $ffc6 | `hEnemySpeed` | 18 | +$11: speed factor MoveObject multiplies the movement vector by (5 and 6 are used) |
 | $ffc7 | `hEnemyBlocked` | 32 | bit mask of directions the enemy cannot walk (set from the room map and the screen edges) |
-| $ffc8 | `hEnemyField13` | 2 | +$13: only copied (provisional) |
+| $ffc8 | `hEnemyField13` | 2 | +$13: purpose unknown, only copied with the record |
 | $ffc9 | `hEnemyCounter` | 24 | frame counter used by the enemy behaviour routines |
 | $ffca | `hEnemyStep` | 17 | enemy step counter |
-| $ffcb | `hEnemyTimer` | 5 | per-enemy countdown (kind 7 follows its path when it runs out; provisional) |
+| $ffcb | `hEnemyTimer` | 5 | per-enemy countdown (kind 7 follows its path when it runs out) |
 | $ffcc | `hEnemyAux` | 15 | enemy auxiliary counter |
-| $ffcd | `hEnemyField18` | 2 | +$18: only copied (provisional) |
-| $ffce | `hEnemyField19` | 2 | +$19: only copied (provisional) |
-| $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables (provisional) |
+| $ffcd | `hEnemyField18` | 2 | +$18: purpose unknown, only copied with the record |
+| $ffce | `hEnemyField19` | 2 | +$19: purpose unknown, only copied with the record |
+| $ffcf | `hEnemySpawnFlag` | 5 | per-enemy value set at spawn from hSpawnFlag; selects animation tables |
 | $ffd0 | `hEnemyTick` | 9 | incremented by TickObjectTimer; bits 2 and 3 alternate animation variants |
 | $ffd1 | `hEnemyDir` | 64 | low nibble = direction bits (like wPlayerDir); bit 4/5/6 = state flags |
 | $ffd2 | `hEnemyKind` | 13 | index into EnemyBehaviorTable |
-| $ffd3 | `hEnemyCounter2` | 7 | +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) (name provisional) |
+| $ffd3 | `hEnemyCounter2` | 7 | +$1e: second per-enemy counter (hit counter; bit 2 toggles animations of kind 10) |
 | $ffd4 | `hEnemyFlags` | 38 | bit 1/2 = frozen / hit by the player |
 | $ffd5 | `hObjPtrLo` | 16 | pointer to the current object record |
 | $ffd6 | `hObjPtrHi` | 16 |  |
@@ -217,7 +217,7 @@ Named variables come from `src/constants.inc`; the counts are references in `src
 | $ffd9 | `hOamCount` | 7 |  |
 | $ffda | `hRngCounter` | 10 | incremented while the game waits for VBlank: cheap random source |
 | $ffdb | `hFrameSpin` | 7 |  |
-| $ffde | `hBlinkTick` | 2 | incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames (provisional) |
+| $ffde | `hBlinkTick` | 2 | incremented by the game; bit 2 alternates and makes blinking enemies visible every other group of frames |
 | $ffdf | `hMagicTimer` | 13 | frames left of the running magic effect (MagicTimerTick) |
 | $ffe0 | `hTimeFrames` | 4 | frame counter reloaded with 60 each second (TIME on the magic screen counts down hTimeSeconds) |
 | $ffe1 | `hTimeSeconds` | 9 | seconds left in the round (shown as TIME) |
