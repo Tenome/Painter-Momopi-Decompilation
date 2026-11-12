@@ -30,6 +30,7 @@ except ImportError:                                                  # the edito
     Image = ImageTk = None
 
 ROOT = lp.ROOT
+HOME = lp.HOME                                             # packs/, textures/ and the game program live here
 CELL = 34
 SETTINGS = os.path.join(ROOT, "level_editor_settings.json" if lp.FROZEN else os.path.join("tools", ".level_editor.json"))
 FLAT = ["#1c1c28", "#e8c84a", "#d98a2b", "#6ab0e8"]
@@ -101,10 +102,7 @@ def save_settings(s):
 
 
 def find_game():
-    for p in (os.path.join(ROOT, "game_win.exe"), os.path.join(ROOT, "build", "recomp", "game_win.exe")):
-        if os.path.exists(p):
-            return p
-    return ""
+    return lp.game_path() or ""
 
 
 class Editor:
@@ -645,7 +643,7 @@ class Editor:
         rel = self.v_song.get().strip() or "%s.mml" % name
         target = self.resolve(rel)
         if not os.path.exists(target):
-            example = os.path.join(ROOT, "packs", "example_song.mml")
+            example = os.path.join(HOME, "packs", "example_song.mml")
             if os.path.exists(example):
                 shutil.copy(example, target)
             else:
@@ -922,7 +920,7 @@ class Editor:
     def open_dialog(self):
         if not self.confirm_discard():
             return
-        p = filedialog.askopenfilename(initialdir=os.path.join(ROOT, "packs") if os.path.isdir(os.path.join(ROOT, "packs")) else ROOT,
+        p = filedialog.askopenfilename(initialdir=os.path.join(HOME, "packs") if os.path.isdir(os.path.join(HOME, "packs")) else HOME,
                                        filetypes=[("level packs", "*.pmpack *.zip"), ("all", "*.*")])
         if p:
             self.open_file(p)
@@ -959,7 +957,7 @@ class Editor:
 
     def save_as(self):
         p = filedialog.asksaveasfilename(defaultextension=".pmpack", filetypes=[("level packs", "*.pmpack")],
-                                         initialdir=os.path.join(ROOT, "packs") if os.path.isdir(os.path.join(ROOT, "packs")) else ROOT)
+                                         initialdir=os.path.join(HOME, "packs") if os.path.isdir(os.path.join(HOME, "packs")) else HOME)
         if not p:
             return False
         self.path = p
@@ -969,7 +967,7 @@ class Editor:
         try:
             orig = lp.original()
         except (OSError, KeyError) as ex:
-            messagebox.showerror("Original levels", "The original levels are read from build/painter_momopie.gb (run tools/build.py first): %s" % ex)
+            messagebox.showerror("Original levels", "The original levels are read from the game data: %s" % ex + chr(10)*2 + "The editor looked for %s (and build/painter_momopie.gb in the folders above it)." % lp.data_path("painter_momopie.gb") + chr(10) + "Run tools/build.py, or put level_editor.exe in the folder made by tools/package.py.")
             return
         self.pack.levels.extend(orig.levels[:lp.MAX_LEVELS - len(self.pack.levels)])
         self.touch()
@@ -1057,7 +1055,7 @@ class Editor:
             return
         try:
             if lp.FROZEN:                                           # the packaged folder has the exported sheets in textures/: copy them
-                src = os.path.join(ROOT, "textures")
+                src = os.path.join(HOME, "textures")
                 if not os.path.isdir(src):
                     raise OSError("the textures folder next to the editor is missing")
                 os.makedirs(target, exist_ok=True)
@@ -1204,7 +1202,7 @@ class Editor:
             status.config(text="Downloading...")
 
             def fetch():
-                dest = os.path.join(ROOT, "packs", "community")
+                dest = os.path.join(HOME, "packs", "community")
                 zp = community.download(e, dest)
                 return community.extract_zip(zp, os.path.join(dest, e["id"]))
 
@@ -1260,7 +1258,7 @@ class Editor:
                 out.config(text="Title, author and description are needed.")
                 return
             self.save()
-            folder, errs = community.make_submission(self.path, title, author, text, os.path.join(ROOT, "submissions"), v_tags.get().split(","))
+            folder, errs = community.make_submission(self.path, title, author, text, os.path.join(HOME, "submissions"), v_tags.get().split(","))
             made["folder"] = folder
             if errs:
                 out.config(text="Fix these first:\n- " + "\n- ".join(errs[:8]))

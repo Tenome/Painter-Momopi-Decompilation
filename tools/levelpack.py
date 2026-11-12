@@ -27,16 +27,58 @@ ROOT = os.path.dirname(sys.executable) if FROZEN else os.path.dirname(os.path.di
 RESOURCES = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))     # files bundled into the exe (original_levels.json)
 
 
+def _bases():
+    """the folder of the exe and the folders above it (the editor may sit in the packaged folder, or in build/editor of the repository)"""
+    out, d = [], ROOT
+    for _ in range(4):
+        out.append(d)
+        d = os.path.dirname(d)
+    return out
+
+
+def _find(*relatives):
+    for base in _bases():
+        for rel in relatives:
+            p = os.path.join(base, *rel.split("/"))
+            if os.path.exists(p):
+                return p
+    return None
+
+
+HOME = ROOT                                                    # where packs/, textures/ and the game program are (the exe's folder, or a folder above it)
+if FROZEN:
+    for _b in _bases():
+        if os.path.isdir(os.path.join(_b, "packs")):
+            HOME = _b
+            break
+
+
 def data_path(name):
-    """a file of the game data: build/<name> in the repository, data/<name> next to the exe"""
-    return os.path.join(ROOT, "data" if FROZEN else "build", name)
+    """a file of the game data: build/<name> in the repository; with the exe data/<name> next to it, or build/<name> of a repository above it"""
+    if FROZEN:
+        return _find("data/" + name, "build/" + name) or os.path.join(ROOT, "data", name)
+    return os.path.join(ROOT, "build", name)
 
 
 def runner_path():
     """game_headless(.exe), or None"""
     exe = ".exe" if sys.platform == "win32" else ""
-    p = os.path.join(ROOT, "game_headless" + exe) if FROZEN else os.path.join(ROOT, "build", "recomp", "game_headless" + exe)
+    if FROZEN:
+        return _find("game_headless" + exe, "build/recomp/game_headless" + exe)
+    p = os.path.join(ROOT, "build", "recomp", "game_headless" + exe)
     return p if os.path.exists(p) else None
+
+
+def game_path():
+    """game_win.exe, or None"""
+    cands = ("game_win.exe", "build/recomp/game_win.exe")
+    if FROZEN:
+        return _find(*cands)
+    for c in reversed(cands):
+        p = os.path.join(ROOT, *c.split("/"))
+        if os.path.exists(p):
+            return p
+    return None
 MAX_LEVELS = 99
 KINDS = {0: "Statue", 1: "Chaser", 2: "Wanderer", 3: "Fast chaser", 4: "Time-up chaser (paint cannot hurt it)", 5: "Shooter chaser",
          6: "Statue (B)", 7: "Path walker", 8: "Statue (C)", 9: "Teleporter", 10: "Shooter", 11: "Tile hider", 12: "Shooter (projectile)",

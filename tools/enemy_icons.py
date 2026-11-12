@@ -11,7 +11,7 @@ sys.path.insert(0, HERE)
 import levelpack as lp
 
 ROOT = lp.ROOT
-DEFAULT_OUT = os.path.join(ROOT, "data", "enemy_icons") if lp.FROZEN else os.path.join(HERE, ".enemy_icons")
+DEFAULT_OUT = os.path.join(os.path.dirname(lp.data_path("painter_momopie.gb")), "enemy_icons") if lp.FROZEN else os.path.join(HERE, ".enemy_icons")
 FRAMES = (470, 520, 560)               # shots taken after the round has started; the first that shows a difference is used
 
 
