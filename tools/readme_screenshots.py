@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Make the pictures of the README: python tools/readme_screenshots.py
 
-Starts the level editor with flat colours (no game graphics, so the pictures can be published) on the tutorial pack and saves screenshots of its windows into
-docs/images/. Windows only (it grabs the screen); needs Pillow."""
+Starts the level editor on the tutorial pack and saves screenshots of its windows into docs/images/. With the game data next to it (build/painter_momopie.gb) the pictures
+show the real room tiles and enemies; set PMEDITOR_FLAT=1 for flat colours. Windows only (it grabs the screen); needs Pillow."""
 import os, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-os.environ["PMEDITOR_FLAT"] = "1"
 sys.path.insert(0, HERE)
 import tkinter as tk
 from tkinter import ttk

@@ -21,7 +21,7 @@ and press **F6** to play it. While the test window is open, saving restarts it o
 
 ![The enemies tab: waves, kinds and delays](docs/images/editor_enemies.png)
 
-*(These pictures use flat colours so that no game graphics are published. With your own ROM the editor draws the real room tiles and the real enemy pictures.)*
+*The editor draws the real room tiles and enemy pictures from your own copy of the ROM (without it, flat colours).*
 
 - Per-level and per-pack **custom tiles**: repaint floors, walls, enemies or the player in full colour for one level only (a Halloween level, say).
 - **Custom music** in a small text language, played by the game's own sound engine (the editor has New / Edit / Listen buttons).
