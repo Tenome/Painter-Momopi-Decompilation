@@ -15,7 +15,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 title Painter Momopie - build
 
-set "WANT_SHA1=193901223FFC89CF4F42A19E57447249AFCC843"
+set "WANT_SHA1=193901223FFC89CF4F42A19E57447249AFFCC843"
 set "RGBDS_URL=https://github.com/gbdev/rgbds/releases/download/v1.0.4/rgbds-win64.zip"
 set "RGBDS_SHA256=BD1D7E386F290AFD57F4EA9A7353BFCD4AE10884A94C5C1F2FC42A75DB7F97E6"
 set "LLVM_NAME=llvm-mingw-20261104-ucrt-x86_64"
