@@ -74,7 +74,7 @@ Everything below is optional and off by default: the game plays exactly like the
 |---|---|
 | Options: widescreen, no sprite limit, speed, infinite lives, start round, all magic cards, infinite magic, no time limit, quick magic (cycle cards without the menu), best score, resume, scanline / LCD filters, key and gamepad remapping | `docs/CONFIG.md` |
 | Full-colour sprite and background replacement from a folder of PNGs (a `textures` folder with a README is exported for you) | `docs/TEXTURES.md` |
-| Level packs: your own levels in any order, with their own tiles, enemies, intro title and music; `tools/level_editor.py` is a point-and-click editor | `docs/LEVELS.md` |
+| Level packs: your own levels in any order, with their own tiles, enemies, intro title and music; `level_editor.exe` is a point-and-click editor (no Python needed; `tools/level_editor.py` is the same program for developers) | `docs/LEVELS.md` |
 | Custom music in a small text language, played by the game's own sound engine | `docs/MUSIC.md` |
 | Level pack check: `tools/pack_check.py` plays a pack with random input and reports levels that cannot be cleared | `docs/LEVELS.md` |
 | A tutorial pack and a ten minute guide to making a level | `docs/TUTORIAL.md` |
@@ -83,7 +83,7 @@ Everything below is optional and off by default: the game plays exactly like the
 | Painting the player and other characters: `tools/sprite_sheet.py` assembles every frame into one picture and splits it back; `tools/make_example_player.py` makes a recoloured example | `docs/SPRITES.md` |
 | Recording and playback of inputs (`--record`, `--replay`) | `docs/CONFIG.md` |
 
-A quick start for making a level: `python tools/level_editor.py` > File > New pack, paint a map, place enemies, press Play. Share the pack file (and its
+A quick start for making a level: open `level_editor.exe` (next to `game_win.exe` in the folder `tools/package.py` makes) > File > New pack, paint a map, place enemies, press Play. Share the pack file (and its
 folders, or the `.zip` the editor can export, which the player loads directly). The windows and tools use only the Python standard library plus Pillow.
 
 ## Progress report and CI

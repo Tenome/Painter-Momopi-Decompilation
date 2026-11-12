@@ -31,7 +31,7 @@ except ImportError:                                                  # the edito
 
 ROOT = lp.ROOT
 CELL = 34
-SETTINGS = os.path.join(ROOT, "tools", ".level_editor.json")
+SETTINGS = os.path.join(ROOT, "level_editor_settings.json" if lp.FROZEN else os.path.join("tools", ".level_editor.json"))
 FLAT = ["#1c1c28", "#e8c84a", "#d98a2b", "#6ab0e8"]
 WAVE_COLORS = ["#e04040", "#e08030", "#d0c030", "#40b040", "#4080e0", "#a050d0"]
 SONGS = {0x81: "$81 (title/jingle)", 0x82: "$82", 0x83: "$83", 0x84: "$84", 0x85: "$85", 0x86: "$86", 0x87: "$87", 0x88: "$88", 0x89: "$89", 0x8A: "$8a (round clear)", 0x8B: "$8b"}
@@ -46,8 +46,8 @@ class Tiles:
         self.cache = {}
         if Image is None:
             return
-        rom_path = os.path.join(ROOT, "build", "painter_momopie.gb")
-        sym_path = os.path.join(ROOT, "build", "painter_momopie.sym")
+        rom_path = lp.data_path("painter_momopie.gb")
+        sym_path = lp.data_path("painter_momopie.sym")
         if not (os.path.exists(rom_path) and os.path.exists(sym_path)):
             return
         self.rom = open(rom_path, "rb").read()
@@ -101,7 +101,7 @@ def save_settings(s):
 
 
 def find_game():
-    for p in (os.path.join(ROOT, "build", "recomp", "game_win.exe"), os.path.join(ROOT, "game_win.exe")):
+    for p in (os.path.join(ROOT, "game_win.exe"), os.path.join(ROOT, "build", "recomp", "game_win.exe")):
         if os.path.exists(p):
             return p
     return ""
@@ -677,9 +677,9 @@ class Editor:
         if not p or not os.path.exists(p):
             messagebox.showinfo("Music", "Choose or create a song first.")
             return
-        head = os.path.join(ROOT, "build", "recomp", "game_headless.exe" if sys.platform == "win32" else "game_headless")
-        if not os.path.exists(head):
-            messagebox.showinfo("Music", "game_headless was not found (build it with tools/build_port.py).")
+        head = lp.runner_path()
+        if not head:
+            messagebox.showinfo("Music", "game_headless was not found (build it with tools/build_port.py; the packaged folder has it next to the editor).")
             return
         wav = os.path.join(tempfile.gettempdir(), "pm_preview.wav")
         r = subprocess.run([head, "-", "900", "--song", p, "--wav", wav], capture_output=True, text=True)
@@ -1056,7 +1056,16 @@ class Editor:
         if not scale:
             return
         try:
-            subprocess.run([sys.executable, os.path.join(ROOT, "tools", "export_textures.py"), "--scale", str(scale), "--out", target], check=True)
+            if lp.FROZEN:                                           # the packaged folder has the exported sheets in textures/: copy them
+                src = os.path.join(ROOT, "textures")
+                if not os.path.isdir(src):
+                    raise OSError("the textures folder next to the editor is missing")
+                os.makedirs(target, exist_ok=True)
+                for name in os.listdir(src):
+                    if name.lower().endswith(".png") or name.lower() == "readme.ini":
+                        shutil.copy(os.path.join(src, name), target)
+            else:
+                subprocess.run([sys.executable, os.path.join(ROOT, "tools", "export_textures.py"), "--scale", str(scale), "--out", target], check=True)
         except (subprocess.CalledProcessError, OSError) as ex:
             messagebox.showerror("Sheets", "Could not create the sheets (needs assets/gfx from tools/gb_dis.py --write): %s" % ex)
             return

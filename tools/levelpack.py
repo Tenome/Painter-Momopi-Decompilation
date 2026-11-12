@@ -22,7 +22,21 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FROZEN = bool(getattr(sys, "frozen", False))                   # running as level_editor.exe (PyInstaller) instead of from the repository
+ROOT = os.path.dirname(sys.executable) if FROZEN else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RESOURCES = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))     # files bundled into the exe (original_levels.json)
+
+
+def data_path(name):
+    """a file of the game data: build/<name> in the repository, data/<name> next to the exe"""
+    return os.path.join(ROOT, "data" if FROZEN else "build", name)
+
+
+def runner_path():
+    """game_headless(.exe), or None"""
+    exe = ".exe" if sys.platform == "win32" else ""
+    p = os.path.join(ROOT, "game_headless" + exe) if FROZEN else os.path.join(ROOT, "build", "recomp", "game_headless" + exe)
+    return p if os.path.exists(p) else None
 MAX_LEVELS = 99
 KINDS = {0: "Statue", 1: "Chaser", 2: "Wanderer", 3: "Fast chaser", 4: "Time-up chaser (paint cannot hurt it)", 5: "Shooter chaser",
          6: "Statue (B)", 7: "Path walker", 8: "Statue (C)", 9: "Teleporter", 10: "Shooter", 11: "Tile hider", 12: "Shooter (projectile)",
@@ -227,9 +241,9 @@ def sym_table(sym):
 
 
 def original(rom_path=None):
-    rom_path = rom_path or os.path.join(ROOT, "build", "painter_momopie.gb")
+    rom_path = rom_path or data_path("painter_momopie.gb")
     rom = open(rom_path, "rb").read()
-    sym = sym_table(os.path.join(ROOT, "build", "painter_momopie.sym"))
+    sym = sym_table(data_path("painter_momopie.sym"))
 
     def b0(name):
         return sym[name][1]                          # bank 0 addresses are file offsets

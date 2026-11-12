@@ -13,7 +13,7 @@ in the editor to see how it is made.
 
 ## Make your own level in ten minutes
 
-1. `python tools/level_editor.py` (needs Python 3 with tkinter and Pillow; the real room tiles are shown when you have built `build/painter_momopie.gb` with `tools/build.py`).
+1. Open `level_editor.exe` (or `python tools/level_editor.py` from the repository). It shows the real room tiles when it finds the game data: `tools/package.py` puts it next to the exe, or `build/painter_momopie.gb` from `tools/build.py`.
 2. *File > New pack*. The pack starts with one empty level. Click the **Path 1** tool and drag across the map to paint the path the player walks on. Cells that are not a path are walls.
    The player starts on the cell marked **P** (column 7, row 6), which must be a path.
 3. Every path cell must be joined to the start. The status bar warns about problems; *Pack > Check the pack* lists them.

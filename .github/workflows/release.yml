@@ -20,6 +20,15 @@ jobs:
           mkdir -p build/recomp
           gcc -O2 -w port/config_gui.c -o build/recomp/settings.exe -mwindows -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32 -lole32
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the level editor program
+        run: |
+          pip install pyinstaller pillow
+          python tools/build_editor.py
+
       - name: Package the toolkit
         run: python tools/package.py --tools-only --zip --out dist/PainterMomopie-toolkit
 

@@ -7,11 +7,13 @@ The original game is unchanged, and with no pack selected nothing differs from i
 
 ## Making a pack: the level editor
 
+Open `level_editor.exe` (a double click: no Python needed; `settings.exe` has a *Level editor...* button for it). From the repository the same program is
+
 ```
 python tools/level_editor.py [packs/example.pmpack]
 ```
 
-Needs Python with tkinter and Pillow. If `build/painter_momopie.gb` exists (run `python tools/build.py --rgbds E:/rgbds --mod`) the editor draws the real room tiles,
+(needs Python with tkinter and Pillow; `python tools/build_editor.py` builds the exe). If `build/painter_momopie.gb` exists (run `python tools/build.py --rgbds E:/rgbds --mod`) the editor draws the real room tiles,
 otherwise flat colours.
 
 * **Levels** (left): add, copy, delete, move up and down. The order of the list is the play order; the pack ends after the last level (the ending plays).

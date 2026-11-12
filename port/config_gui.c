@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 enum { ID_SCALE = 100, ID_FULL, ID_INT, ID_PAL, ID_WIDE, ID_WIDE_L, ID_SPR, ID_VOL, ID_VOL_L, ID_MUTE, ID_SPEED, ID_SPEED_L, ID_INF, ID_LIVES, ID_ROUND,
-       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP, ID_PACK, ID_PACKBR, ID_CARDS, ID_MAGIC, ID_TIME, ID_QUICK, ID_BEST, ID_RESUME };
+       ID_TEX, ID_TEX_ON, ID_BROWSE, ID_OPEN, ID_SAVE, ID_PLAY, ID_RESET, ID_CLOSE, ID_TEX_HELP, ID_PACK, ID_PACKBR, ID_CARDS, ID_MAGIC, ID_TIME, ID_QUICK, ID_BEST, ID_RESUME, ID_EDITOR };
 
 static HWND wnd, hscale, hfull, hint, hpal, hwide, hwide_l, hspr, hvol, hvol_l, hmute, hspeed, hspeed_l, hinf, hlives, hround, htex, hbrowse, hopen, hpack, hcards, hmagic, htime, hquick, hbest, hresume;
 static char ini_path[MAX_PATH], exe_dir[MAX_PATH];
@@ -205,6 +205,13 @@ static LRESULT CALLBACK proc(HWND h, UINT m, WPARAM w, LPARAM l) {
         case ID_BROWSE: browse(); break;
         case ID_PACKBR: browse_pack(); break;
         case ID_OPEN: open_folder(); break;
+        case ID_EDITOR: {                                   /* the level editor program next to this one */
+            char exe[MAX_PATH];
+            snprintf(exe, sizeof exe, "%s\\level_editor.exe", exe_dir);
+            if (GetFileAttributesA(exe) == INVALID_FILE_ATTRIBUTES) MessageBoxA(wnd, "level_editor.exe was not found next to this program.", "Painter Momopie", MB_OK);
+            else ShellExecuteA(wnd, "open", exe, 0, exe_dir, SW_SHOWNORMAL);
+            break;
+        }
         case ID_CLOSE: PostQuitMessage(0); break;
         }
         return 0;
@@ -227,65 +234,66 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) {
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = proc; wc.hInstance = inst; wc.lpszClassName = "pmcfg"; wc.hCursor = LoadCursor(0, IDC_ARROW); wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClassA(&wc);
-    RECT rc = {0, 0, 470, 592};
+    RECT rc = {0, 0, 540, 592};
     AdjustWindowRect(&rc, WS_CAPTION | WS_SYSMENU, 0);
     wnd = CreateWindowA("pmcfg", "Painter Momopie settings", WS_CAPTION | WS_SYSMENU | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, 0, 0, inst, 0);
 
-    group("Display", 10, 6, 450, 150);
+    group("Display", 10, 6, 520, 150);
     label("Window size", 24, 28, 90);
     hscale = mk("COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL, 120, 24, 80, 200, ID_SCALE);
     for (int i = 1; i <= 8; i++) { char b[16]; snprintf(b, sizeof b, "%dx", i); SendMessageA(hscale, CB_ADDSTRING, 0, (LPARAM)b); }
     label("Colours", 230, 28, 50);
-    hpal = mk("COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL, 285, 24, 160, 200, ID_PAL);
+    hpal = mk("COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL, 285, 24, 230, 200, ID_PAL);
     SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Game Boy green"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Grey"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Sepia"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Blue and yellow"); SendMessageA(hpal, CB_ADDSTRING, 0, (LPARAM)"Custom (palette_colors in the ini)");
     hfull = mk("BUTTON", "Start in full screen", BS_AUTOCHECKBOX, 24, 54, 170, 20, ID_FULL);
-    hint = mk("BUTTON", "Sharp pixels (whole-number scaling)", BS_AUTOCHECKBOX, 230, 54, 215, 20, ID_INT);
+    hint = mk("BUTTON", "Sharp pixels (whole-number scaling)", BS_AUTOCHECKBOX, 230, 54, 285, 20, ID_INT);
     label("Widescreen", 24, 84, 90);
-    hwide = slider(116, 80, 260, 0, 40, ID_WIDE);
-    hwide_l = label("0 px", 384, 84, 60);
-    label("extra room shown on each side of the play screen (0 = original)", 116, 106, 330);
-    hspr = mk("BUTTON", "No sprite limit (no flicker with many objects)", BS_AUTOCHECKBOX, 24, 128, 400, 20, ID_SPR);
+    hwide = slider(116, 80, 330, 0, 40, ID_WIDE);
+    hwide_l = label("0 px", 454, 84, 60);
+    label("extra room shown on each side of the play screen (0 = original)", 116, 106, 400);
+    hspr = mk("BUTTON", "No sprite limit (no flicker with many objects)", BS_AUTOCHECKBOX, 24, 128, 470, 20, ID_SPR);
 
-    group("Sound", 10, 162, 450, 74);
+    group("Sound", 10, 162, 520, 74);
     label("Volume", 24, 186, 90);
-    hvol = slider(116, 182, 260, 0, 100, ID_VOL);
-    hvol_l = label("100%", 384, 186, 60);
+    hvol = slider(116, 182, 330, 0, 100, ID_VOL);
+    hvol_l = label("100%", 454, 186, 60);
     hmute = mk("BUTTON", "Mute", BS_AUTOCHECKBOX, 24, 210, 120, 20, ID_MUTE);
 
-    group("Game", 10, 242, 450, 234);
+    group("Game", 10, 242, 520, 234);
     label("Speed", 24, 266, 90);
-    hspeed = slider(116, 262, 260, 50, 400, ID_SPEED);
-    hspeed_l = label("100%", 384, 266, 60);
-    label("(other than 100% plays without sound)", 116, 288, 330);
+    hspeed = slider(116, 262, 330, 50, 400, ID_SPEED);
+    hspeed_l = label("100%", 454, 266, 60);
+    label("(other than 100% plays without sound)", 116, 288, 400);
     hinf = mk("BUTTON", "Infinite lives", BS_AUTOCHECKBOX, 24, 312, 170, 20, ID_INF);
-    label("Starting lives", 230, 314, 90);
-    hlives = mk("EDIT", "3", WS_BORDER | ES_NUMBER, 325, 310, 50, 22, ID_LIVES);
+    label("Starting lives", 260, 314, 90);
+    hlives = mk("EDIT", "3", WS_BORDER | ES_NUMBER, 360, 310, 50, 22, ID_LIVES);
     label("Start in round", 24, 346, 90);
     hround = mk("COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL, 120, 342, 160, 300, ID_ROUND);
     SendMessageA(hround, CB_ADDSTRING, 0, (LPARAM)"Round 1 (normal)");
     for (int i = 1; i <= 33; i++) { char b[24]; snprintf(b, sizeof b, "Round %d", i); SendMessageA(hround, CB_ADDSTRING, 0, (LPARAM)b); }
 
-    hcards = mk("BUTTON", "All magic cards", BS_AUTOCHECKBOX, 24, 374, 130, 20, ID_CARDS);
-    hmagic = mk("BUTTON", "Infinite magic", BS_AUTOCHECKBOX, 160, 374, 130, 20, ID_MAGIC);
-    htime = mk("BUTTON", "No time limit", BS_AUTOCHECKBOX, 296, 374, 130, 20, ID_TIME);
-    hquick = mk("BUTTON", "Quick magic: Q / E (gamepad L1 / R1) cycle the card during play, no magic screen", BS_AUTOCHECKBOX, 24, 392, 420, 18, ID_QUICK);
-    hbest = mk("BUTTON", "Best score on the title", BS_AUTOCHECKBOX, 24, 410, 190, 18, ID_BEST);
-    hresume = mk("BUTTON", "Resume (hold B for new)", BS_AUTOCHECKBOX, 220, 410, 230, 18, ID_RESUME);
+    hcards = mk("BUTTON", "All magic cards", BS_AUTOCHECKBOX, 24, 374, 150, 20, ID_CARDS);
+    hmagic = mk("BUTTON", "Infinite magic", BS_AUTOCHECKBOX, 180, 374, 150, 20, ID_MAGIC);
+    htime = mk("BUTTON", "No time limit", BS_AUTOCHECKBOX, 340, 374, 160, 20, ID_TIME);
+    hquick = mk("BUTTON", "Quick magic: Q / E (gamepad L1 / R1) cycle the card during play, no magic screen", BS_AUTOCHECKBOX, 24, 392, 490, 18, ID_QUICK);
+    hbest = mk("BUTTON", "Best score on the title", BS_AUTOCHECKBOX, 24, 410, 210, 18, ID_BEST);
+    hresume = mk("BUTTON", "Resume (hold B for new)", BS_AUTOCHECKBOX, 250, 410, 260, 18, ID_RESUME);
     label("Level pack", 24, 432, 70);
-    hpack = mk("EDIT", "", WS_BORDER | ES_AUTOHSCROLL, 100, 428, 292, 22, ID_PACK);
-    mk("BUTTON", "Browse...", BS_PUSHBUTTON, 396, 427, 56, 24, ID_PACKBR);
-    label("(empty = the game's own 33 rounds; make packs with tools/level_editor.py)", 100, 452, 350);
+    hpack = mk("EDIT", "", WS_BORDER | ES_AUTOHSCROLL, 100, 428, 342, 22, ID_PACK);
+    mk("BUTTON", "Browse...", BS_PUSHBUTTON, 448, 427, 66, 24, ID_PACKBR);
+    label("(empty = the game's own 33 rounds)", 100, 454, 230);
+    mk("BUTTON", "Level editor...", BS_PUSHBUTTON, 394, 449, 120, 24, ID_EDITOR);
 
-    group("Textures (full-colour sprite replacements)", 10, 482, 450, 56);
+    group("Textures (full-colour sprite replacements)", 10, 482, 520, 56);
     label("Folder", 24, 508, 50);
-    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 504, 250, 22, ID_TEX);
-    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 330, 503, 62, 24, ID_BROWSE);
-    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 396, 503, 56, 24, ID_OPEN);
+    htex = mk("EDIT", "textures", WS_BORDER | ES_AUTOHSCROLL, 74, 504, 310, 22, ID_TEX);
+    hbrowse = mk("BUTTON", "Browse...", BS_PUSHBUTTON, 390, 503, 66, 24, ID_BROWSE);
+    hopen = mk("BUTTON", "Open", BS_PUSHBUTTON, 460, 503, 54, 24, ID_OPEN);
 
-    mk("BUTTON", "Save", BS_PUSHBUTTON, 130, 552, 100, 26, ID_SAVE);
-    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 236, 552, 110, 26, ID_PLAY);
+    mk("BUTTON", "Save", BS_PUSHBUTTON, 160, 552, 100, 26, ID_SAVE);
+    mk("BUTTON", "Save and play", BS_DEFPUSHBUTTON, 266, 552, 120, 26, ID_PLAY);
     mk("BUTTON", "Defaults", BS_PUSHBUTTON, 24, 552, 80, 26, ID_RESET);
-    mk("BUTTON", "Close", BS_PUSHBUTTON, 352, 552, 100, 26, ID_CLOSE);
+    mk("BUTTON", "Close", BS_PUSHBUTTON, 414, 552, 100, 26, ID_CLOSE);
     load();
     to_controls();
     MSG msg;

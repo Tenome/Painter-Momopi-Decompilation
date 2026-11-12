@@ -14,9 +14,11 @@ Set PMCOMMUNITY_URL to another base address (an http:// or file:// URL ending in
 import argparse, datetime, hashlib, io, json, os, re, shutil, sys, urllib.request, zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import levelpack as lp
+
+ROOT = lp.ROOT
+HERE = lp.RESOURCES                                       # original_levels.json is bundled into the editor exe
 
 REPO = "Tenome/Painter-Momopi-Decompilation"
 BRANCH = "master"

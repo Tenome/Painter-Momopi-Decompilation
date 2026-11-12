@@ -7,20 +7,16 @@ Needs build/recomp/game_headless(.exe) (python tools/build_port.py) and Pillow."
 import argparse, os, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import levelpack as lp
 
-DEFAULT_OUT = os.path.join(HERE, ".enemy_icons")
+ROOT = lp.ROOT
+DEFAULT_OUT = os.path.join(ROOT, "data", "enemy_icons") if lp.FROZEN else os.path.join(HERE, ".enemy_icons")
 FRAMES = (470, 520, 560)               # shots taken after the round has started; the first that shows a difference is used
 
 
 def runner():
-    for n in ("game_headless.exe", "game_headless"):
-        p = os.path.join(ROOT, "build", "recomp", n)
-        if os.path.exists(p):
-            return p
-    return None
+    return lp.runner_path()
 
 
 def shots(prog, kind, tmp, tag):
