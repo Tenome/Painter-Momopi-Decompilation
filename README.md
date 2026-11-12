@@ -8,6 +8,16 @@ and checked frame by frame against the original. This repository contains **no g
 
 ![Progress](progress/jp/progress.svg)
 
+## Quick start (Windows): `build.bat`
+
+1. Put your own copy of the ROM (a `.gb` file; the Japanese original, SHA-1 `193901223ffc89cf4f42a19e57447249affcc843`) in the same folder as `build.bat`.
+2. Install [Python 3.9 or newer](https://www.python.org/downloads/) once (tick *Add python.exe to PATH* and keep *tcl/tk*).
+3. Double-click `build.bat`. The first run downloads RGBDS and, if you have no C compiler, a portable one (about 190 MB) into `.buildtools/`, checks every download against a fixed checksum,
+   and rebuilds everything from your ROM.
+
+You get a folder `PainterMomopie/` with `game_win.exe` (the game), `settings.exe` (all options), `level_editor.exe`, the example and tutorial level packs, textures and docs. It contains data from
+your ROM, so it is for your own use only: do not publish it.
+
 ## What you get
 
 Everything is optional and **off by default**: the game plays exactly like the Game Boy original until you switch something on.
