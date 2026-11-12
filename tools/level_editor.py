@@ -45,7 +45,7 @@ class Tiles:
     def __init__(self):
         self.ok = False
         self.cache = {}
-        if Image is None:
+        if Image is None or os.environ.get("PMEDITOR_FLAT"):          # PMEDITOR_FLAT=1: flat colours even when the game data is there (for screenshots)
             return
         rom_path = lp.data_path("painter_momopie.gb")
         sym_path = lp.data_path("painter_momopie.sym")
@@ -140,7 +140,7 @@ class Editor:
     @staticmethod
     def load_icons():
         """pictures of the enemy kinds (tools/enemy_icons.py cuts them out of the game; made on the first start when the native runner is built)"""
-        if Image is None:
+        if Image is None or os.environ.get("PMEDITOR_FLAT"):
             return {}
         import enemy_icons
         d = enemy_icons.DEFAULT_OUT

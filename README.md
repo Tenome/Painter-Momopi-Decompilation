@@ -1,24 +1,80 @@
-# Painter Momopie: matching decompilation
+# Painter Momopie: decompilation, native PC port and level editor
 
-A work-in-progress **matching decompilation** of *Painter Momopie* (Game Boy, Japan; Sigma Enterprises, 1990): RGBDS assembly source that builds
-the original 64 KiB ROM byte for byte, to be lifted step by step into named, structured, readable source. The long-term goal is a
-native Windows and Linux port.
+A matching **decompilation** of *Painter Momopie* (Game Boy, Japan; Sigma Enterprises, 1990), a **native Windows port** that runs without an emulator, and a set of **modding tools**:
+a point-and-click level editor, custom textures, music, level packs and a community pack browser.
 
-This repository contains no game files. You need your own copy of the ROM.
+The RGBDS assembly source rebuilds the original 64 KiB ROM byte for byte. A static recompiler turns it into C, and about 300 routines have been rewritten by hand in readable C
+and checked frame by frame against the original. This repository contains **no game files**: you need your own copy of the ROM to build and play (see below).
+
+![Progress](progress/jp/progress.svg)
+
+## What you get
+
+Everything is optional and **off by default**: the game plays exactly like the Game Boy original until you switch something on.
+
+### A level editor that needs no Python
+
+`level_editor.exe` is a point-and-click editor for new levels: paint the map, place enemies in up to six waves, pick the look, music, time and intro title of each level, reorder the levels,
+and press **F6** to play it. While the test window is open, saving restarts it on your change. Levels live in text `.pmpack` files that can be zipped and shared.
+
+![The level editor: the map of a level with its enemies](docs/images/editor_map.png)
+
+![The enemies tab: waves, kinds and delays](docs/images/editor_enemies.png)
+
+*(These pictures use flat colours so that no game graphics are published. With your own ROM the editor draws the real room tiles and the real enemy pictures.)*
+
+- Per-level and per-pack **custom tiles**: repaint floors, walls, enemies or the player in full colour for one level only (a Halloween level, say).
+- **Custom music** in a small text language, played by the game's own sound engine (the editor has New / Edit / Listen buttons).
+- Undo and redo, mirror, flood fill, random mazes, an automatic **pack check** that finds levels which can never be cleared, and a `tools/pack_check.py` that plays every level with random input.
+- A tutorial pack (`packs/tutorial.pmpack`) and a ten minute guide: [docs/TUTORIAL.md](docs/TUTORIAL.md).
+
+### Community level packs
+
+*Community* menu: browse packs made by other players with a preview of the maps and a description, download one with a click, or submit your own. Submissions are plain pull requests to this
+repository (`community/packs/`): the editor checks the pack, makes the submission folder, and opens GitHub's upload page, so nothing is sent until you finish it yourself. Details and rules:
+[docs/COMMUNITY.md](docs/COMMUNITY.md).
+
+![The community pack browser](docs/images/community_browser.png)
+
+![Submitting a pack](docs/images/community_submit.png)
+
+### A settings window for everything
+
+`settings.exe` edits `painter_momopie.ini` and starts the game.
+
+![The settings window](docs/images/settings.png)
+
+### More about the native player
+
+| Feature | Details |
+|---|---|
+| **Widescreen** and **no sprite limit** | see more of the room (up to 240 pixels wide) and play without the flicker of the Game Boy's 40 sprite limit |
+| **Full-colour textures** | replace any tile with a PNG: sprites, floors, fonts, the title logo. Reload with F5 while the game runs. [docs/TEXTURES.md](docs/TEXTURES.md) |
+| Paint a whole character | `tools/sprite_sheet.py` assembles every frame of the player into one picture and splits your painting back into tiles. [docs/SPRITES.md](docs/SPRITES.md) |
+| Palettes and filters | Game Boy green, grey, sepia, a colour-blind friendly blue and yellow, or your own four colours; scanline and LCD-grid filters |
+| **Quick magic** | cycle the magic cards with Q / E or the shoulder buttons during play instead of using the menu (the original menu still works) |
+| Practice options | infinite lives, start lives, start in any round, all magic cards, infinite magic, no time limit, 50-400 % speed, fast forward (Tab) |
+| Best score and resume | a high score on the title screen and continue from the last round reached (hold B for a new game) |
+| Remap keys and gamepad buttons | in the ini; the gamepad works with D-pad or stick |
+| **Replays** | `--record` and `--replay` store and replay a run exactly (the game is deterministic) |
+| Replace the game's own songs | put `song_81.mml` ... in a folder (`music_folder`) |
+| Translating and fonts | the text is tile graphics; [docs/FONTS.md](docs/FONTS.md) lists which tile is which letter |
+| Level packs as `.zip` | the player loads a zipped pack (pack, textures and songs) directly |
+
+All options are in [docs/CONFIG.md](docs/CONFIG.md).
+
+## Status of the decompilation
 
 | | |
 |---|---|
 | ROM | 65,536 bytes, MBC1, 4 banks of 16 KiB (SHA-1 in `orig/README.md`) |
-| Code found so far | 344 routines, all named; about 14.5 KB traced as code (22 % of the ROM); every instruction the game executed in play tests is covered; the rest is data (`INCBIN` of your ROM) |
-| Native build | a static recompilation to C plays the game on Windows with video, input and sound (`port/`, `tools/recomp.py`) |
-| Byte identity | the generated sources reproduce all 65,536 bytes (proved by `tools/gb_dis.py --check`) |
+| Routines | 344 found and named; 294 rewritten as hand-written C, the rest are vectors, tables and routines folded into those (`tools/lift_status.py`); every data table is named |
+| Byte identity | the sources reproduce all 65,536 bytes (proved by `tools/gb_dis.py --check` and the RGBDS build) |
+| Native build | a static recompilation to C plays the game on Windows with video, input and sound (`port/`, `tools/recomp.py`); an SDL2 front end for Linux and macOS exists but has not been run yet |
 | Assembler | RGBDS (rgbasm, rgblink) |
 
 The percentages in the ByteMatch report count **byte-exact assembly source**. Decoded instructions and `db` blobs both count as
-matching, so the numbers start high. The remaining work is readability: names, structured data, constants, commented routines.
-Open tasks are in `REVERSE.md`.
-
-![Progress](progress/jp/progress.svg)
+matching, so the numbers start high. The remaining work is readability and testing on other platforms. Open tasks are in `REVERSE.md`.
 
 ## What "100%" means here
 
@@ -47,7 +103,7 @@ python tools/report.py            # write progress/jp/report.json
 | `labels.csv`, `seeds.csv` | names and code entry points, fed to the disassembler |
 | `config/functions.tsv` | routine list used by the progress report |
 | `tools/` | SM83 table and encoder, tracing disassembler, headless interpreter with screenshots (`emu.py`), static recompiler to C (`recomp.py`), report generator, ROM checker |
-| `port/` | runtime and drivers for the recompiled game (native Windows/Linux port in progress); `port/logic.c` holds hand written C versions of 294 routines (play mode, enemies, scoring, sound, ending, link); the rest are vectors, tables and routines folded into those (`tools/lift_status.py`), checked frame by frame with `tools/lift_check.py` |
+| `port/` | runtime and drivers for the recompiled game (native Windows port, SDL2 front end for Linux and macOS); `port/logic.c` holds hand written C versions of 294 routines (play mode, enemies, scoring, sound, ending, link); the rest are vectors, tables and routines folded into those (`tools/lift_status.py`), checked frame by frame with `tools/lift_check.py` |
 | `REVERSE.md`, `dead_ends.md`, `docs/` | findings, task list, notes |
 | `progress/jp/report.json` | the objdiff-format report ByteMatch reads |
 
@@ -56,35 +112,23 @@ python tools/report.py            # write progress/jp/report.json
 ```
 python tools/gb_dis.py --write                                   # once: extract src/ and assets/ from your ROM
 python tools/build_port.py --rgbds E:/rgbds --cc path/to/clang.exe   # builds game_win.exe, settings.exe and game_headless.exe in build/recomp/
-python tools/package.py                                           # optional: a ready-to-use folder dist/PainterMomopie/ for your own use
+python tools/build_editor.py                                     # level_editor.exe (needs pip install pyinstaller pillow)
+python tools/package.py                                           # a ready-to-use folder dist/PainterMomopie/ with the game, settings, editor and packs, for your own use
 build/recomp/game_win.exe                                          # no ROM file needed any more
 ```
 
-The executables contain the game's data, so they are for your own use and are never committed or published. Run `settings.exe` (next to the player) for a
+The game and settings executables contain the game's data, so they are for your own use and are never committed or published. `level_editor.exe` contains none: a toolkit zip
+with the editor, settings window, docs and example packs is published from `.github/workflows/release.yml`. Run `settings.exe` (next to the player) for a
 window with every option; the same options live in `painter_momopie.ini`.
 
 Arrows = D-pad, Z = A, X = B, Enter = Start, Right Shift = Select, F11 = fullscreen, Esc = quit, P = pause, M = mute, F2 = palette, F5 = reload textures,
 F12 = screenshot, Tab = fast forward. Keys and gamepad buttons can be changed in the ini (`[keys]`).
 
-## What the native player adds
+## Documentation
 
-Everything below is optional and off by default: the game plays exactly like the Game Boy original until you switch something on.
-
-| Feature | Where it is explained |
-|---|---|
-| Options: widescreen, no sprite limit, speed, infinite lives, start round, all magic cards, infinite magic, no time limit, quick magic (cycle cards without the menu), best score, resume, scanline / LCD filters, key and gamepad remapping | `docs/CONFIG.md` |
-| Full-colour sprite and background replacement from a folder of PNGs (a `textures` folder with a README is exported for you) | `docs/TEXTURES.md` |
-| Level packs: your own levels in any order, with their own tiles, enemies, intro title and music; `level_editor.exe` is a point-and-click editor (no Python needed; `tools/level_editor.py` is the same program for developers) | `docs/LEVELS.md` |
-| Custom music in a small text language, played by the game's own sound engine | `docs/MUSIC.md` |
-| Level pack check: `tools/pack_check.py` plays a pack with random input and reports levels that cannot be cleared | `docs/LEVELS.md` |
-| A tutorial pack and a ten minute guide to making a level | `docs/TUTORIAL.md` |
-| Community level packs: browse, download and submit from the level editor (Community menu; submissions are pull requests, nothing is sent until you finish them on GitHub) | `docs/COMMUNITY.md` |
-| Fonts and translating (which tile is which letter, on which screen) | `docs/FONTS.md` |
-| Painting the player and other characters: `tools/sprite_sheet.py` assembles every frame into one picture and splits it back; `tools/make_example_player.py` makes a recoloured example | `docs/SPRITES.md` |
-| Recording and playback of inputs (`--record`, `--replay`) | `docs/CONFIG.md` |
-
-A quick start for making a level: open `level_editor.exe` (next to `game_win.exe` in the folder `tools/package.py` makes) > File > New pack, paint a map, place enemies, press Play. Share the pack file (and its
-folders, or the `.zip` the editor can export, which the player loads directly). The windows and tools use only the Python standard library plus Pillow.
+[CONFIG](docs/CONFIG.md) options and controls, [LEVELS](docs/LEVELS.md) the editor and the pack format, [TUTORIAL](docs/TUTORIAL.md) your first level,
+[COMMUNITY](docs/COMMUNITY.md) sharing packs, [TEXTURES](docs/TEXTURES.md), [SPRITES](docs/SPRITES.md) and [FONTS](docs/FONTS.md) for pictures and translations,
+[MUSIC](docs/MUSIC.md) custom songs, [MODDING](docs/MODDING.md) and [PORTING](docs/PORTING.md) for how the port works.
 
 ## Progress report and CI
 
