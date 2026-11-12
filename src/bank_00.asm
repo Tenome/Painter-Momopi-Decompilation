@@ -6,8 +6,8 @@ SECTION "bank00", ROM0[$0000]
 RstVector00::  ; jp RstJumpTable
     jp RstJumpTable
     INCBIN "assets/bank_00/0003.bin"
-Sound80Data::
-    INCBIN "assets/bank_00/0027.bin"
+Sound80Data::  ; data table used by SoundCommandDataTable
+    INCBIN "assets/bank_00/0027_Sound80Data.bin"
 VBlankVector::  ; jp to VBlankHandler
     jp VBlankHandler
     INCBIN "assets/bank_00/0043.bin"
@@ -1220,8 +1220,8 @@ AddObjectField::  ; object byte [hScratch00] += object byte [hScratch01] (with c
     ld hl, hScratch01
     inc [hl]
     ret
-CoordinateBoxTable::
-    INCBIN "assets/bank_00/0a3f.bin"
+CoordinateBoxTable::  ; data table used by CompareObjectCoordinate
+    INCBIN "assets/bank_00/0a3f_CoordinateBoxTable.bin"
 SerialSendByte::  ; sends C over the link port with the internal clock and waits for the reply
     ld a, [rSC]
     res 7, a
@@ -1703,8 +1703,8 @@ NumberToTile::  ; digit in A to its tile id using the table at 10ab
     ld c, a
     ld hl, NumberDigitTiles
     jp LookupByte
-NumberDigitTiles::
-    INCBIN "assets/bank_00/10ab.bin"
+NumberDigitTiles::  ; data table used by NumberToTile
+    INCBIN "assets/bank_00/10ab_NumberDigitTiles.bin"
 Mode1_Play::  ; gameplay in a room (paint the floor); loads tiles of bank 2
     ld sp, wStackTop
     call LcdOff
@@ -1841,8 +1841,8 @@ CheckExtraLife::  ; when a score digit reaches the next threshold (table $11e7):
     ld hl, wExtraLifeIdx
     inc [hl]
     ret
-ExtraLifeScoreTable::
-    INCBIN "assets/bank_00/11e7.bin"
+ExtraLifeScoreTable::  ; data table used by CheckExtraLife
+    INCBIN "assets/bank_00/11e7_ExtraLifeScoreTable.bin"
 TimeUpSpawnEnemy::  ; when hTimeSeconds reaches 0 (once per round): creates an extra enemy ($a0/$04) in a free slot
     ldh a, [hLinkFlags]
     bit 0, a
@@ -2090,8 +2090,8 @@ StartRoundMusic::  ; plays the song for the current round (id from a table index
     ld hl, hVBlankTasks
     set 4, [hl]
     ret
-RoundMusicTable::
-    INCBIN "assets/bank_00/1400.bin"
+RoundMusicTable::  ; data table used by StartRoundMusic
+    INCBIN "assets/bank_00/1400_RoundMusicTable.bin"
 StoreMagicPointsDigit::  ; writes one block of digit tiles into the magic points stream and advances wMpStreamIdx by 5
     ld a, [wMpStreamIdx]
     ld c, a
@@ -2622,10 +2622,10 @@ MagicCostJob8::  ; data (table entry)
     INCBIN "assets/bank_00/1a0b_MagicCostJob8.bin"
 MagicCostJob9::  ; data (table entry)
     INCBIN "assets/bank_00/1a11_MagicCostJob9.bin"
-CursorAnimBlink::
-    INCBIN "assets/bank_00/1a17.bin"
-CursorAnimDefault::
-    INCBIN "assets/bank_00/1a30.bin"
+CursorAnimBlink::  ; data table used by CursorBlinkStep
+    INCBIN "assets/bank_00/1a17_CursorAnimBlink.bin"
+CursorAnimDefault::  ; data table used by CursorBlinkStep
+    INCBIN "assets/bank_00/1a30_CursorAnimDefault.bin"
 MagicScreenJobsB::  ; VRAM copy list of the magic screen (card pictures)
     INCBIN "assets/bank_00/1a57_MagicScreenJobsB.bin"
 MagicScreenJobsA::  ; VRAM copy list of the magic screen (frame and text)
@@ -2769,8 +2769,8 @@ DigitToTile::  ; A = BCD digit; returns the digit tile id from BcdDigitTiles
     pop bc
     pop hl
     ret
-BcdDigitTiles::
-    INCBIN "assets/bank_00/1d2f.bin"
+BcdDigitTiles::  ; data table used by DigitToTile
+    INCBIN "assets/bank_00/1d2f_BcdDigitTiles.bin"
 RoomNameJobTable::  ; 17 pointers to the room name VRAM jobs
     dw RoomNameJob0
     dw RoomNameJob0
@@ -2853,10 +2853,10 @@ Mode7_LinkLose::  ; SORRY YOU LOSE / TRY AGAIN (2 player loser)
 .L_00_1e29:
     ld a, $04
     jp GameModeDispatch
-LinkLoseJobsA::
-    INCBIN "assets/bank_00/1e2e.bin"
-LinkLoseJobsB::
-    INCBIN "assets/bank_00/1e57.bin"
+LinkLoseJobsA::  ; data table used by Mode7_LinkLose
+    INCBIN "assets/bank_00/1e2e_LinkLoseJobsA.bin"
+LinkLoseJobsB::  ; data table used by Mode7_LinkLose
+    INCBIN "assets/bank_00/1e57_LinkLoseJobsB.bin"
 Mode4_GameOver::  ; GAME OVER screen
     ld sp, wStackTop
     call LcdOff
@@ -3069,10 +3069,10 @@ ContinueCursorInput::  ; A or B moves the YES/NO cursor (wCursorX $3c or $74) in
     ld a, $01
     ld [wMagicCol], a
     ret
-ContinueCursorAnim::
-    INCBIN "assets/bank_00/2083.bin"
-ContinueScreenJobs::
-    INCBIN "assets/bank_00/2085.bin"
+ContinueCursorAnim::  ; data table used by Mode5_Continue
+    INCBIN "assets/bank_00/2083_ContinueCursorAnim.bin"
+ContinueScreenJobs::  ; data table used by Mode5_Continue
+    INCBIN "assets/bank_00/2085_ContinueScreenJobs.bin"
 RoomMetatiles0::  ; data (table entry)
     INCBIN "assets/bank_00/20a7_RoomMetatiles0.bin"
 RoomMetatiles8::  ; data (table entry)
@@ -3259,8 +3259,8 @@ BonusSelectLoop::  ; per-frame loop of the three-door choice: cursor input
 .L_00_25c5:
     ld [wBonusChoice], a
     jp Mode2_Init
-BonusDoorTable::
-    INCBIN "assets/bank_00/25cb.bin"
+BonusDoorTable::  ; data table used by BonusSelectLoop
+    INCBIN "assets/bank_00/25cb_BonusDoorTable.bin"
 MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ldh a, [hJoyNew]
     bit 5, a
@@ -3302,8 +3302,8 @@ MenuCursorInput::  ; dpad changes the cursor ($c758 wraps 0-2) with sound $8f
     ld hl, wCursorObject
     call SetObjPtr
     jp DrawObjectBytePos
-MagicCursorXTable::
-    INCBIN "assets/bank_00/2630.bin"
+MagicCursorXTable::  ; data table used by MagicScreenInput
+    INCBIN "assets/bank_00/2630_MagicCursorXTable.bin"
 InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor object at $80/$50)
     xor a, a
     ld [wCursorIndex], a
@@ -3314,28 +3314,28 @@ InitBonusCursor::  ; resets the door selection cursor (wCursorIndex 0; cursor ob
     ld [wCursorObject], a
     ld hl, BonusCursorAnim
     jp SetCursorAnimation
-BonusTitleStream::
-    INCBIN "assets/bank_00/264a.bin"
-BonusRoundJobTableA::
-    INCBIN "assets/bank_00/2651.bin"
-BonusRoundJobTableB::
-    INCBIN "assets/bank_00/269b.bin"
-BonusCursorAnim::
-    INCBIN "assets/bank_00/2704.bin"
+BonusTitleStream::  ; data table used by Mode2_Init
+    INCBIN "assets/bank_00/264a_BonusTitleStream.bin"
+BonusRoundJobTableA::  ; data table used by Mode2_Init
+    INCBIN "assets/bank_00/2651_BonusRoundJobTableA.bin"
+BonusRoundJobTableB::  ; data table used by Mode2_Init
+    INCBIN "assets/bank_00/269b_BonusRoundJobTableB.bin"
+BonusCursorAnim::  ; data table used by InitBonusCursor
+    INCBIN "assets/bank_00/2704_BonusCursorAnim.bin"
 BonusSelectJobTable::  ; 3 pointers to VRAM job lists
     dw BonusSelectJob0
     dw BonusSelectJob1
     dw BonusSelectJob2
-BonusBackgroundJobs::
-    INCBIN "assets/bank_00/270f.bin"
+BonusBackgroundJobs::  ; data table used by Mode2_Init
+    INCBIN "assets/bank_00/270f_BonusBackgroundJobs.bin"
 BonusSelectJob0::  ; data (table entry)
     INCBIN "assets/bank_00/28a3_BonusSelectJob0.bin"
 BonusSelectJob1::  ; data (table entry)
     INCBIN "assets/bank_00/28fd_BonusSelectJob1.bin"
 BonusSelectJob2::  ; data (table entry)
     INCBIN "assets/bank_00/2957_BonusSelectJob2.bin"
-BonusTextJobs::
-    INCBIN "assets/bank_00/29b1.bin"
+BonusTextJobs::  ; data table used by Mode2_Init
+    INCBIN "assets/bank_00/29b1_BonusTextJobs.bin"
 Mode0_Title::  ; title screen: 1 PLAYER / 2 PLAYER; link-cable detection via the serial port
     ld sp, wStackTop
     call LcdOff
@@ -3529,8 +3529,8 @@ InitTitleVariables::  ; clears hLinkFlags and the variables used by the title sc
     jp SetCursorAnimation
 AnimFrames0_2b84::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/2b84_AnimFrames0_2b84.bin"
-TitleScreenJobs::
-    INCBIN "assets/bank_00/2b86.bin"
+TitleScreenJobs::  ; data table used by Mode0_Title
+    INCBIN "assets/bank_00/2b86_TitleScreenJobs.bin"
 Mode6_Ending::  ; castle scene after the last round
     ld sp, wStackTop
     call LcdOff
@@ -3711,8 +3711,8 @@ RunEndingTextListAndWait::  ; queues the VRAM copy list at $2dff and waits until
     bit 0, a
     jr nz, .L_00_2df7
     ret
-EndingTextJobs::
-    INCBIN "assets/bank_00/2dff.bin"
+EndingTextJobs::  ; data table used by RunEndingTextListAndWait
+    INCBIN "assets/bank_00/2dff_EndingTextJobs.bin"
 CreditsPageTable::  ; 9 pointers to credit pages
     dw CreditsPage0
     dw CreditsPage1
@@ -3849,8 +3849,8 @@ EndingSetup::  ; mode 6 setup: clears OAM and the ending variables at $c76e and 
     ld [rLCDC], a
     ei
     ret
-EndingCastleJobs::
-    INCBIN "assets/bank_00/3009.bin"
+EndingCastleJobs::  ; data table used by EndingSetup
+    INCBIN "assets/bank_00/3009_EndingCastleJobs.bin"
 EndingWalkStep::  ; steps the walking animation counters at $c77e-$c780
     ld a, [wEndingY]
     cp a, $08
@@ -3907,24 +3907,24 @@ EndingAdvance::  ; advances $c781/$c782 by $10 per call; sets $c7ae bit 7 at 5
     ld hl, wEndingEvents
     set 7, [hl]
     ret
-EndingSceneJobs::
-    INCBIN "assets/bank_00/30c4.bin"
-EndingObjectFramesA::
-    INCBIN "assets/bank_00/30df.bin"
+EndingSceneJobs::  ; data table used by EndingSetup
+    INCBIN "assets/bank_00/30c4_EndingSceneJobs.bin"
+EndingObjectFramesA::  ; data table used by EndingAnimateObject
+    INCBIN "assets/bank_00/30df_EndingObjectFramesA.bin"
 AnimFrames0_30e3::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/30e3_AnimFrames0_30e3.bin"
-EndingObjectFramesB::
-    INCBIN "assets/bank_00/3111.bin"
-EndingCastleScript::
-    INCBIN "assets/bank_00/3143.bin"
-EndingCastleBlinkFrames::
-    INCBIN "assets/bank_00/3148.bin"
+EndingObjectFramesB::  ; data table used by EndingAnimateObject
+    INCBIN "assets/bank_00/3111_EndingObjectFramesB.bin"
+EndingCastleScript::  ; data table used by Mode6_Ending
+    INCBIN "assets/bank_00/3143_EndingCastleScript.bin"
+EndingCastleBlinkFrames::  ; data table used by EndingCastleBlink
+    INCBIN "assets/bank_00/3148_EndingCastleBlinkFrames.bin"
 AnimFrames0_314c::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/314c_AnimFrames0_314c.bin"
-EndingMetatileBlocks::
-    INCBIN "assets/bank_00/3156.bin"
-EndingMetatileCells::
-    INCBIN "assets/bank_00/31a6.bin"
+EndingMetatileBlocks::  ; data table used by Mode6_Ending
+    INCBIN "assets/bank_00/3156_EndingMetatileBlocks.bin"
+EndingMetatileCells::  ; data table used by Mode6_Ending
+    INCBIN "assets/bank_00/31a6_EndingMetatileCells.bin"
 TickObjectTimer::  ; increments $ffd0; Z flag from bit 7 of $ffd1
     ld hl, hEnemyTick
     inc [hl]
@@ -4537,8 +4537,8 @@ EnemyTurnIfBlocked::  ; requests a turn when the enemy walks into a blocked dire
     call LookupByte
     ldh [hEnemyAngle], a
     ret
-EnemySpeedByDir::
-    INCBIN "assets/bank_00/363d.bin"
+EnemySpeedByDir::  ; data table used by EnemyTurnIfBlocked
+    INCBIN "assets/bank_00/363d_EnemySpeedByDir.bin"
 MoveAndApplyObject::  ; MoveObject then ApplyObjectStep
     call MoveObject
     jp ApplyObjectStep
@@ -5166,36 +5166,36 @@ EnemyInitMoveAnim::  ; sets counter $20 and picks the first animation by enemy k
     ld de, EnemyKind8Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-EnemyDirectionTable::
-    INCBIN "assets/bank_00/3aa2.bin"
-EnemyDefaultAnim0::
-    INCBIN "assets/bank_00/3aa6.bin"
-EnemyDefaultAnim1::
-    INCBIN "assets/bank_00/3aab.bin"
-EnemyDefaultAnim2::
-    INCBIN "assets/bank_00/3ab0.bin"
-EnemyDefaultAnim3::
-    INCBIN "assets/bank_00/3ab5.bin"
-EnemyDefaultAnim4::
-    INCBIN "assets/bank_00/3aba.bin"
-EnemyDefaultAnim5::
-    INCBIN "assets/bank_00/3abf.bin"
-EnemyErasedTiles::
-    INCBIN "assets/bank_00/3ac4.bin"
-EnemyBlinkAnim::
-    INCBIN "assets/bank_00/3aca.bin"
-EnemyKind6Anim0::
-    INCBIN "assets/bank_00/3acf.bin"
-EnemyKind6Anim1::
-    INCBIN "assets/bank_00/3ad4.bin"
-EnemyKind8Anim0::
-    INCBIN "assets/bank_00/3ad9.bin"
-EnemyKind8Anim1::
-    INCBIN "assets/bank_00/3ade.bin"
-EnemyStepTableA::
-    INCBIN "assets/bank_00/3ae3.bin"
-EnemyStepTableB::
-    INCBIN "assets/bank_00/3aed.bin"
+EnemyDirectionTable::  ; data table used by EnemyChooseDirection
+    INCBIN "assets/bank_00/3aa2_EnemyDirectionTable.bin"
+EnemyDefaultAnim0::  ; data table used by EnemyInitMoveAnim
+    INCBIN "assets/bank_00/3aa6_EnemyDefaultAnim0.bin"
+EnemyDefaultAnim1::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3aab_EnemyDefaultAnim1.bin"
+EnemyDefaultAnim2::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3ab0_EnemyDefaultAnim2.bin"
+EnemyDefaultAnim3::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3ab5_EnemyDefaultAnim3.bin"
+EnemyDefaultAnim4::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3aba_EnemyDefaultAnim4.bin"
+EnemyDefaultAnim5::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3abf_EnemyDefaultAnim5.bin"
+EnemyErasedTiles::  ; data table used by EnemyErasePaint
+    INCBIN "assets/bank_00/3ac4_EnemyErasedTiles.bin"
+EnemyBlinkAnim::  ; data table used by EnemyIdleAnimate
+    INCBIN "assets/bank_00/3aca_EnemyBlinkAnim.bin"
+EnemyKind6Anim0::  ; data table used by EnemyInitMoveAnim
+    INCBIN "assets/bank_00/3acf_EnemyKind6Anim0.bin"
+EnemyKind6Anim1::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3ad4_EnemyKind6Anim1.bin"
+EnemyKind8Anim0::  ; data table used by EnemyInitMoveAnim
+    INCBIN "assets/bank_00/3ad9_EnemyKind8Anim0.bin"
+EnemyKind8Anim1::  ; data table used by EnemySelectAnimByKind
+    INCBIN "assets/bank_00/3ade_EnemyKind8Anim1.bin"
+EnemyStepTableA::  ; data table used by EnemyMoveStep
+    INCBIN "assets/bank_00/3ae3_EnemyStepTableA.bin"
+EnemyStepTableB::  ; data table used by EnemyMoveStep
+    INCBIN "assets/bank_00/3aed_EnemyStepTableB.bin"
 EnemyKind1::  ; enemy kind 1: ticks the object timer then moves on the tile grid
     call SelectObject2
     call TickObjectTimer
@@ -5294,18 +5294,18 @@ EnemyInitSlowWalkAnim::  ; hEnemySpeed 5 and counter $20; animation at $3bbe; sn
     ld de, EnemyWalkAnim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-EnemyWalkAnim0::
-    INCBIN "assets/bank_00/3bbe.bin"
-EnemyWalkAnim1::
-    INCBIN "assets/bank_00/3bc3.bin"
-EnemyWalkAnim2::
-    INCBIN "assets/bank_00/3bc8.bin"
-EnemyWalkAnim3::
-    INCBIN "assets/bank_00/3bcd.bin"
-EnemyWalkAnim4::
-    INCBIN "assets/bank_00/3bd2.bin"
-EnemyWalkAnim5::
-    INCBIN "assets/bank_00/3bd7.bin"
+EnemyWalkAnim0::  ; data table used by EnemyInitSlowWalkAnim
+    INCBIN "assets/bank_00/3bbe_EnemyWalkAnim0.bin"
+EnemyWalkAnim1::  ; data table used by SelectEnemyAnimation
+    INCBIN "assets/bank_00/3bc3_EnemyWalkAnim1.bin"
+EnemyWalkAnim2::  ; data table used by SelectEnemyAnimation
+    INCBIN "assets/bank_00/3bc8_EnemyWalkAnim2.bin"
+EnemyWalkAnim3::  ; data table used by SelectEnemyAnimation
+    INCBIN "assets/bank_00/3bcd_EnemyWalkAnim3.bin"
+EnemyWalkAnim4::  ; data table used by SelectEnemyAnimation
+    INCBIN "assets/bank_00/3bd2_EnemyWalkAnim4.bin"
+EnemyWalkAnim5::  ; data table used by SelectEnemyAnimation
+    INCBIN "assets/bank_00/3bd7_EnemyWalkAnim5.bin"
 EnemyKind11::  ; enemy kind 11 (rounds 5 6 9 11 and the same rounds +16)
     call TickObjectTimer
     jr nz, .L_00_3be4
@@ -5396,8 +5396,8 @@ EnemyMapTile::  ; A = room map tile at the enemy position (X to column
     jp LookupMapTile
 AnimFrames0_3c87::  ; animation frames (typed text form)
     INCBIN "assets/bank_00/3c87_AnimFrames0_3c87.bin"
-Kind7AnimB::
-    INCBIN "assets/bank_00/3c8c.bin"
+Kind7AnimB::  ; data table used by EnemyKind7SetAnimation
+    INCBIN "assets/bank_00/3c8c_Kind7AnimB.bin"
 EnemyKind7::  ; enemy kind 7 (round 5-7 and 21-23): follows a scripted path from $c533
     call SelectObject2
     call TickObjectTimer
@@ -5509,13 +5509,13 @@ EnemyKind7NextStep::  ; reads the next path entry from wEnemyPathPtr
     ld a, h
     ld [wEnemyPathPtrHi], a
     jr .L_00_3d2f
-Kind7PathPointers::
+Kind7PathPointers::  ; data table used by EnemyKind7Init
     dw Kind7Path0
     dw Kind7Path1
-Kind7Path0::
-    INCBIN "assets/bank_00/3d6e.bin"
-Kind7Path1::
-    INCBIN "assets/bank_00/3dc7.bin"
+Kind7Path0::  ; data table (reached through a pointer table)
+    INCBIN "assets/bank_00/3d6e_Kind7Path0.bin"
+Kind7Path1::  ; data table (reached through a pointer table)
+    INCBIN "assets/bank_00/3dc7_Kind7Path1.bin"
 EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then follows the path table at $3d6a
     ld a, $05
     ldh [hEnemySpeed], a
@@ -5537,14 +5537,14 @@ EnemyKind7Init::  ; sets hEnemySpeed 5 and counter $20 with animation $3e4d then
     ld a, h
     ld [wEnemyPathPtrHi], a
     ret
-Kind7WalkAnim0::
-    INCBIN "assets/bank_00/3e4d.bin"
-Kind7WalkAnim1::
-    INCBIN "assets/bank_00/3e52.bin"
-Kind7WalkAnim2::
-    INCBIN "assets/bank_00/3e57.bin"
-Kind7WalkAnim3::
-    INCBIN "assets/bank_00/3e5c.bin"
+Kind7WalkAnim0::  ; data table used by EnemyKind7Init
+    INCBIN "assets/bank_00/3e4d_Kind7WalkAnim0.bin"
+Kind7WalkAnim1::  ; data table used by EnemyKind7Update
+    INCBIN "assets/bank_00/3e52_Kind7WalkAnim1.bin"
+Kind7WalkAnim2::  ; data table used by EnemyKind7Update
+    INCBIN "assets/bank_00/3e57_Kind7WalkAnim2.bin"
+Kind7WalkAnim3::  ; data table used by EnemyKind7Update
+    INCBIN "assets/bank_00/3e5c_Kind7WalkAnim3.bin"
 EnemyKind5::  ; enemy kind 5
     call SelectObject2
     call TickObjectTimer
@@ -5652,26 +5652,26 @@ EnemyBuildTeleportTable::  ; fills the position table at $c489 around the enemy 
     ld a, $90
     ldh [hEnemyDir], a
     ret
-EnemyIdleAnim0::
-    INCBIN "assets/bank_00/3f3a.bin"
-EnemyIdleAnim1::
-    INCBIN "assets/bank_00/3f3f.bin"
-EnemyTeleportOffsets::
-    INCBIN "assets/bank_00/3f44.bin"
+EnemyIdleAnim0::  ; data table used by EnemyBuildTeleportTable
+    INCBIN "assets/bank_00/3f3a_EnemyIdleAnim0.bin"
+EnemyIdleAnim1::  ; data table used by EnemyIdleAnimate
+    INCBIN "assets/bank_00/3f3f_EnemyIdleAnim1.bin"
+EnemyTeleportOffsets::  ; data table used by EnemyTeleportNext
+    INCBIN "assets/bank_00/3f44_EnemyTeleportOffsets.bin"
 SoundPitchTables::  ; pointers to the pitch tables used by SoundSetFrequency (the first word is not a pointer)
     dw $cecd
     dw SoundPitchTable1
     dw SoundPitchTable2
     dw SoundPitchTable3
     dw SoundPitchTable4
-SoundPitchTable1::
+SoundPitchTable1::  ; data table used by SoundPitchTables
     dw RstVector00
     INCBIN "assets/bank_00/3f58.bin"
-SoundPitchTable2::
-    INCBIN "assets/bank_00/3f95.bin"
-SoundPitchTable3::
-    INCBIN "assets/bank_00/3f9e.bin"
-SoundPitchTable4::
-    INCBIN "assets/bank_00/3faf.bin"
-SoundWavePatterns::
-    INCBIN "assets/bank_00/3fb8.bin"
+SoundPitchTable2::  ; data table used by SoundPitchTables
+    INCBIN "assets/bank_00/3f95_SoundPitchTable2.bin"
+SoundPitchTable3::  ; data table used by SoundPitchTables
+    INCBIN "assets/bank_00/3f9e_SoundPitchTable3.bin"
+SoundPitchTable4::  ; data table used by SoundPitchTables
+    INCBIN "assets/bank_00/3faf_SoundPitchTable4.bin"
+SoundWavePatterns::  ; data table used by SoundLoadWave
+    INCBIN "assets/bank_00/3fb8_SoundWavePatterns.bin"

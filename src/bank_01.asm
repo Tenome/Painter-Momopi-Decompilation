@@ -47,8 +47,8 @@ SoundCommandHandlerTable::  ; per sound id: routine that starts the stream (musi
     dw SoundStartEffect
     dw SoundStartEffect
     INCBIN "assets/bank_01/4140.bin"
-SoundPriorityTable::
-    INCBIN "assets/bank_01/4141.bin"
+SoundPriorityTable::  ; data table used by SoundStartEffect
+    INCBIN "assets/bank_01/4141_SoundPriorityTable.bin"
 SoundUpdate::  ; per-frame sound engine called from VBlankHandler
     ld a, [wSoundBusy]
     and a, a
@@ -310,8 +310,8 @@ SoundLoadStream::  ; copies the stream header into a channel record
     ld a, $80
     ld [wSoundCmd], a
     ret
-SoundSilentMusicData::
-    INCBIN "assets/bank_01/4332.bin"
+SoundSilentMusicData::  ; data table used by SoundStartCommand
+    INCBIN "assets/bank_01/4332_SoundSilentMusicData.bin"
 SoundAssignChannels::
     ld d, $04
     ld hl, wSoundChannels
@@ -1159,30 +1159,30 @@ PlaySound_Bank1::  ; appends wSoundArg to the sound command queue
     ld [wSoundBusy], a
     ret
     INCBIN "assets/bank_01/487b.bin"
-PlayerDeathFrames::
-    INCBIN "assets/bank_01/488c.bin"
+PlayerDeathFrames::  ; data table used by PlayerDeath
+    INCBIN "assets/bank_01/488c_PlayerDeathFrames.bin"
 AnimFrames1_48ac::  ; animation frames (typed text form)
     INCBIN "assets/bank_01/48ac_AnimFrames1_48ac.bin"
 PlayerAnimPtrs::  ; player animation pointers (down/up/side) chosen by SelectPlayerAnimation
     INCBIN "assets/bank_01/48c4_PlayerAnimPtrs.bin"
 PlayerAnimPtrsFlipped::  ; pointers for the side animation drawn flipped
     INCBIN "assets/bank_01/48cc_PlayerAnimPtrsFlipped.bin"
-PlayerAnimPtrsUp::
-    INCBIN "assets/bank_01/48d4.bin"
+PlayerAnimPtrsUp::  ; data table used by SelectPlayerAnimation
+    INCBIN "assets/bank_01/48d4_PlayerAnimPtrsUp.bin"
 AnimFrames1_48dc::  ; animation frames (typed text form)
     INCBIN "assets/bank_01/48dc_AnimFrames1_48dc.bin"
-CellTilesDefault::
-    INCBIN "assets/bank_01/491b.bin"
-CellTilesPath1::
-    INCBIN "assets/bank_01/4921.bin"
-PaintBlobAnim0::
-    INCBIN "assets/bank_01/4927.bin"
-PaintBlobAnim1::
-    INCBIN "assets/bank_01/4929.bin"
-PaintBlobAnim2::
-    INCBIN "assets/bank_01/492b.bin"
-PaintBlobAnim3::
-    INCBIN "assets/bank_01/492d.bin"
+CellTilesDefault::  ; data table used by PaintCell
+    INCBIN "assets/bank_01/491b_CellTilesDefault.bin"
+CellTilesPath1::  ; data table used by PaintCell
+    INCBIN "assets/bank_01/4921_CellTilesPath1.bin"
+PaintBlobAnim0::  ; data table used by SetPaintBlobAnimation
+    INCBIN "assets/bank_01/4927_PaintBlobAnim0.bin"
+PaintBlobAnim1::  ; data table used by SetPaintBlobAnimation
+    INCBIN "assets/bank_01/4929_PaintBlobAnim1.bin"
+PaintBlobAnim2::  ; data table used by SelectBlobAnimation
+    INCBIN "assets/bank_01/492b_PaintBlobAnim2.bin"
+PaintBlobAnim3::  ; data table used by SelectBlobAnimation
+    INCBIN "assets/bank_01/492d_PaintBlobAnim3.bin"
 ClearBonusFlags::  ; clears wGameFlags bits 7 and 0
     ld hl, wGameFlags
     res 7, [hl]
@@ -2282,10 +2282,10 @@ SetPlayerStatusBit0::  ; sets wPlayerStatus bit 0 and clears $c4cf
     xor a, a
     ld [wPlayerSpeed], a
     ret
-PlayerDirTableA::
-    INCBIN "assets/bank_01/518d.bin"
-PlayerDirTableB::
-    INCBIN "assets/bank_01/519d.bin"
+PlayerDirTableA::  ; data table used by PlayerSetDirection
+    INCBIN "assets/bank_01/518d_PlayerDirTableA.bin"
+PlayerDirTableB::  ; data table used by PlayerSetDirection
+    INCBIN "assets/bank_01/519d_PlayerDirTableB.bin"
 InitPlayer::  ; clears wPlayer and sets flags $a2; X=$80; Y=$78; direction and animation start values
     ld hl, wPlayer
     call Clear32Bytes
@@ -2556,12 +2556,12 @@ EnemyKind4Init::  ; sets the counters and the first animation of enemy kind 4 ($
     ld a, $91
     ldh [hEnemyDir], a
     ret
-Kind4Anim0::
-    INCBIN "assets/bank_01/53e5.bin"
-Kind4Anim1::
-    INCBIN "assets/bank_01/53ec.bin"
-Kind4Anim2::
-    INCBIN "assets/bank_01/53f3.bin"
+Kind4Anim0::  ; data table used by EnemyKind4Init
+    INCBIN "assets/bank_01/53e5_Kind4Anim0.bin"
+Kind4Anim1::  ; data table used by SelectKind4Animation
+    INCBIN "assets/bank_01/53ec_Kind4Anim1.bin"
+Kind4Anim2::  ; data table used by SelectKind4Animation
+    INCBIN "assets/bank_01/53f3_Kind4Anim2.bin"
 EnemyKind13::  ; enemy kind 13 of the last round (round 33): a chaser that lives for a fixed time (a 16 bit countdown in hEnemyTimer and hEnemyAux)
     call SelectObject2
     call TickObjectTimer
@@ -2684,12 +2684,12 @@ EnemyKind13Init::  ; starts the kind 13 enemy: timer $0250
     ld de, Kind13Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-Kind13Anim0::
-    INCBIN "assets/bank_01/54e9.bin"
-Kind13Anim1::
-    INCBIN "assets/bank_01/54f7.bin"
-Kind13Anim2::
-    INCBIN "assets/bank_01/5505.bin"
+Kind13Anim0::  ; data table used by EnemyKind13Init
+    INCBIN "assets/bank_01/54e9_Kind13Anim0.bin"
+Kind13Anim1::  ; data table used by SelectKind13Animation
+    INCBIN "assets/bank_01/54f7_Kind13Anim1.bin"
+Kind13Anim2::  ; data table used by SelectKind13Animation
+    INCBIN "assets/bank_01/5505_Kind13Anim2.bin"
 EnemyKind10::  ; enemy kind 10 (rounds 14 and 30)
     call TickObjectTimer
     jr nz, .L_01_551b
@@ -3028,26 +3028,26 @@ ProjectileAimAtPlayer::  ; sets the heading of the projectile (wProjectile +$10)
 .L_01_577e:
     ld [$c4ae], a
     ret
-Kind10SpeedTable::
-    INCBIN "assets/bank_01/5782.bin"
-ProjectileInit0::
-    INCBIN "assets/bank_01/5787.bin"
-ProjectileInit1::
-    INCBIN "assets/bank_01/578b.bin"
-ProjectileInit2::
-    INCBIN "assets/bank_01/578f.bin"
-ProjectileInit3::
-    INCBIN "assets/bank_01/5793.bin"
-ProjectileInit4::
-    INCBIN "assets/bank_01/5797.bin"
-ProjectileInit5::
-    INCBIN "assets/bank_01/579b.bin"
-ProjectileFrameTable::
-    INCBIN "assets/bank_01/57c9.bin"
-Kind10Anim0::
-    INCBIN "assets/bank_01/57ec.bin"
-Kind10Anim1::
-    INCBIN "assets/bank_01/57ee.bin"
+Kind10SpeedTable::  ; data table used by EnemyKind10Move
+    INCBIN "assets/bank_01/5782_Kind10SpeedTable.bin"
+ProjectileInit0::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/5787_ProjectileInit0.bin"
+ProjectileInit1::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/578b_ProjectileInit1.bin"
+ProjectileInit2::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/578f_ProjectileInit2.bin"
+ProjectileInit3::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/5793_ProjectileInit3.bin"
+ProjectileInit4::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/5797_ProjectileInit4.bin"
+ProjectileInit5::  ; data table used by InitProjectile
+    INCBIN "assets/bank_01/579b_ProjectileInit5.bin"
+ProjectileFrameTable::  ; data table used by UpdateProjectile
+    INCBIN "assets/bank_01/57c9_ProjectileFrameTable.bin"
+Kind10Anim0::  ; data table used by EnemyKind10Animate
+    INCBIN "assets/bank_01/57ec_Kind10Anim0.bin"
+Kind10Anim1::  ; data table used by EnemyKind10Animate
+    INCBIN "assets/bank_01/57ee_Kind10Anim1.bin"
 EnemyKind9::  ; enemy kind 9
     call SelectObject2
     call TickObjectTimer
@@ -3109,18 +3109,18 @@ EnemyKind9Init::  ; sets the counters and the first animation of enemy kind 9
     ld de, Kind9Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-Kind9Anim0::
-    INCBIN "assets/bank_01/586f.bin"
-Kind9Anim1::
-    INCBIN "assets/bank_01/5876.bin"
-Kind9Anim2::
-    INCBIN "assets/bank_01/587d.bin"
-Kind9Anim3::
-    INCBIN "assets/bank_01/5884.bin"
-Kind9Anim4::
-    INCBIN "assets/bank_01/588b.bin"
-Kind9Anim5::
-    INCBIN "assets/bank_01/5892.bin"
+Kind9Anim0::  ; data table used by EnemyKind9Init
+    INCBIN "assets/bank_01/586f_Kind9Anim0.bin"
+Kind9Anim1::  ; data table used by SelectKind9Animation
+    INCBIN "assets/bank_01/5876_Kind9Anim1.bin"
+Kind9Anim2::  ; data table used by SelectKind9Animation
+    INCBIN "assets/bank_01/587d_Kind9Anim2.bin"
+Kind9Anim3::  ; data table used by SelectKind9Animation
+    INCBIN "assets/bank_01/5884_Kind9Anim3.bin"
+Kind9Anim4::  ; data table used by SelectKind9Animation
+    INCBIN "assets/bank_01/588b_Kind9Anim4.bin"
+Kind9Anim5::  ; data table used by SelectKind9Animation
+    INCBIN "assets/bank_01/5892_Kind9Anim5.bin"
 EnemyKind2::  ; enemy kind 2
     call TickObjectTimer
     jr nz, .L_01_58a1
@@ -3270,22 +3270,22 @@ EnemyKind2Init::  ; sets the counters and the first animation of enemy kind 2
     ld de, Kind2Anim0
     call SetObjectAnimation
     jp EnemySnapToGrid
-Kind2Anim0::
-    INCBIN "assets/bank_01/59cb.bin"
-Kind2Anim1::
-    INCBIN "assets/bank_01/59d2.bin"
-Kind2Anim2::
-    INCBIN "assets/bank_01/59d9.bin"
-Kind2Anim3::
-    INCBIN "assets/bank_01/59e0.bin"
-Kind2Anim4::
-    INCBIN "assets/bank_01/59e7.bin"
-Kind2Anim5::
-    INCBIN "assets/bank_01/59ee.bin"
-ShooterParams0::
-    INCBIN "assets/bank_01/59f5.bin"
-ShooterParams1::
-    INCBIN "assets/bank_01/59fa.bin"
+Kind2Anim0::  ; data table used by EnemyKind2Init
+    INCBIN "assets/bank_01/59cb_Kind2Anim0.bin"
+Kind2Anim1::  ; data table used by SelectKind2Animation
+    INCBIN "assets/bank_01/59d2_Kind2Anim1.bin"
+Kind2Anim2::  ; data table used by SelectKind2Animation
+    INCBIN "assets/bank_01/59d9_Kind2Anim2.bin"
+Kind2Anim3::  ; data table used by SelectKind2Animation
+    INCBIN "assets/bank_01/59e0_Kind2Anim3.bin"
+Kind2Anim4::  ; data table used by SelectKind2Animation
+    INCBIN "assets/bank_01/59e7_Kind2Anim4.bin"
+Kind2Anim5::  ; data table used by SelectKind2Animation
+    INCBIN "assets/bank_01/59ee_Kind2Anim5.bin"
+ShooterParams0::  ; data table used by EnemyShooterAI
+    INCBIN "assets/bank_01/59f5_ShooterParams0.bin"
+ShooterParams1::  ; data table used by EnemyShooterAI
+    INCBIN "assets/bank_01/59fa_ShooterParams1.bin"
 EnemyKind3::  ; enemy kind 3
     call SelectObject2
     call TickObjectTimer
@@ -3338,18 +3338,18 @@ EnemyKind3Init::  ; sets the counters and the first animation of enemy kind 3
     ld a, $20
     ldh [hEnemyCounter], a
     jp EnemySnapToGrid
-Kind3Anim0::
-    INCBIN "assets/bank_01/5a76.bin"
-Kind3Anim1::
-    INCBIN "assets/bank_01/5a7d.bin"
-Kind3Anim2::
-    INCBIN "assets/bank_01/5a84.bin"
-Kind3Anim3::
-    INCBIN "assets/bank_01/5a8b.bin"
-Kind3Anim4::
-    INCBIN "assets/bank_01/5a92.bin"
-Kind3Anim5::
-    INCBIN "assets/bank_01/5a99.bin"
+Kind3Anim0::  ; data table used by EnemyKind3Init
+    INCBIN "assets/bank_01/5a76_Kind3Anim0.bin"
+Kind3Anim1::  ; data table used by SelectKind3Animation
+    INCBIN "assets/bank_01/5a7d_Kind3Anim1.bin"
+Kind3Anim2::  ; data table used by SelectKind3Animation
+    INCBIN "assets/bank_01/5a84_Kind3Anim2.bin"
+Kind3Anim3::  ; data table used by SelectKind3Animation
+    INCBIN "assets/bank_01/5a8b_Kind3Anim3.bin"
+Kind3Anim4::  ; data table used by SelectKind3Animation
+    INCBIN "assets/bank_01/5a92_Kind3Anim4.bin"
+Kind3Anim5::  ; data table used by SelectKind3Animation
+    INCBIN "assets/bank_01/5a99_Kind3Anim5.bin"
 Sound8DEffectData::  ; stream of sound id $8d
     INCBIN "assets/bank_01/5c48_Sound8DEffectData.bin"
 Sound8EEffectData::  ; stream of sound id $8e
@@ -3410,5 +3410,5 @@ Sound8BMusicData::  ; stream of sound id $8b
     INCBIN "assets/bank_01/7d55_Sound8BMusicData.bin"
 UnusedSoundDataB::  ; bytes after song $8b
     INCBIN "assets/bank_01/7dad_UnusedSoundDataB.bin"
-Sound8CEffectData::
-    INCBIN "assets/bank_01/7f55.bin"
+Sound8CEffectData::  ; data table used by SoundCommandDataTable
+    INCBIN "assets/bank_01/7f55_Sound8CEffectData.bin"
