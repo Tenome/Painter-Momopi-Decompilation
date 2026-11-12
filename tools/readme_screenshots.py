@@ -29,11 +29,36 @@ def pump(n=10):
 
 
 def grab(win, name):
+    """the window's own picture (PrintWindow): other windows on the screen, the desktop or anything in front of it can never end up in the screenshot"""
+    import ctypes
+    from ctypes import wintypes
+    from PIL import Image
     pump(6)
-    win.lift()
     win.update()
-    x, y, w, h = win.winfo_rootx(), win.winfo_rooty(), win.winfo_width(), win.winfo_height()
-    ImageGrab.grab((x, y, x + w, y + h)).save(os.path.join(OUT, name))
+    user32, gdi32 = ctypes.windll.user32, ctypes.windll.gdi32
+    hwnd = user32.GetAncestor(win.winfo_id(), 2)                  # GA_ROOT: the top level window
+    rc = wintypes.RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(rc))
+    w, h = rc.right - rc.left, rc.bottom - rc.top
+    hdc = user32.GetWindowDC(hwnd)
+    mem = gdi32.CreateCompatibleDC(hdc)
+    bmp = gdi32.CreateCompatibleBitmap(hdc, w, h)
+    gdi32.SelectObject(mem, bmp)
+    user32.PrintWindow(hwnd, mem, 2)                              # PW_RENDERFULLCONTENT
+    class BIH(ctypes.Structure):
+        _fields_ = [("size", wintypes.DWORD), ("w", wintypes.LONG), ("h", wintypes.LONG), ("planes", wintypes.WORD), ("bits", wintypes.WORD),
+                    ("comp", wintypes.DWORD), ("img", wintypes.DWORD), ("x", wintypes.LONG), ("y", wintypes.LONG), ("used", wintypes.DWORD), ("imp", wintypes.DWORD)]
+    bi = BIH(ctypes.sizeof(BIH), w, -h, 1, 32, 0, 0, 0, 0, 0, 0)
+    buf = ctypes.create_string_buffer(w * h * 4)
+    gdi32.GetDIBits(mem, bmp, 0, h, buf, ctypes.byref(bi), 0)
+    gdi32.DeleteObject(bmp)
+    gdi32.DeleteDC(mem)
+    user32.ReleaseDC(hwnd, hdc)
+    full = Image.frombuffer("RGBA", (w, h), buf, "raw", "BGRA", 0, 1).convert("RGB")
+    pt = wintypes.POINT(0, 0)
+    user32.ClientToScreen(win.winfo_id(), ctypes.byref(pt))       # only the client area: the title bar and frame are left out
+    cx, cy = pt.x - rc.left, pt.y - rc.top
+    full.crop((cx, cy, cx + win.winfo_width(), cy + win.winfo_height())).save(os.path.join(OUT, name))
     print("wrote", name)
 
 
@@ -74,6 +99,7 @@ grab(root, "editor_enemies.png")
 
 # 3. the community browser, read from a local test folder (made by tools/community.py)
 import shutil, tempfile
+community.PREVIEW_TILES = le.Tiles()                     # the previews use the real room tiles when the game data is there
 tmp = tempfile.mkdtemp()
 sub = os.path.join(tmp, "community", "packs")
 os.makedirs(sub)

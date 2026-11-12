@@ -102,8 +102,16 @@ FLAT = [(28, 28, 40), (232, 200, 74), (217, 138, 43), (106, 176, 232)]
 WAVE = [(224, 64, 64), (224, 128, 48), (208, 192, 48), (64, 176, 64), (64, 128, 224), (160, 80, 208)]
 
 
-def preview_png(pack, path, per_row=3, cell=8):
+PREVIEW_TILES = None            # set to a level_editor.Tiles (with the game data found) to draw the previews with the real room tiles instead of flat colours
+
+
+def preview_png(pack, path, per_row=3, cell=8, tiles=None):
     from PIL import Image, ImageDraw
+    tiles = tiles or PREVIEW_TILES
+    if tiles is not None and not tiles.ok:
+        tiles = None
+    if tiles is not None:
+        cell = 10
     levels = pack.levels[:6]
     size = 16 * cell
     cols = min(per_row, max(1, len(levels)))
@@ -112,9 +120,13 @@ def preview_png(pack, path, per_row=3, cell=8):
     d = ImageDraw.Draw(img)
     for i, lv in enumerate(levels):
         ox, oy = 6 + (i % cols) * (size + 6), 6 + (i // cols) * (size + 6)
+        look = lv.theme if lv.theme is not None else (16 if i == 32 else i & 15)
         for r in range(16):
             for c in range(16):
-                d.rectangle([ox + c * cell, oy + r * cell, ox + c * cell + cell - 1, oy + r * cell + cell - 1], fill=FLAT[lv.map[r][c]])
+                if tiles is not None:
+                    img.paste(tiles.cell_image(look, lv.map[r][c], cell), (ox + c * cell, oy + r * cell))
+                else:
+                    d.rectangle([ox + c * cell, oy + r * cell, ox + c * cell + cell - 1, oy + r * cell + cell - 1], fill=FLAT[lv.map[r][c]])
         for w, spawns in enumerate(lv.waves):
             for kind, x, y, delay in spawns:
                 col, row = lp.cell_of(x, y)

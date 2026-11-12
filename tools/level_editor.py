@@ -71,10 +71,8 @@ class Tiles:
                 px[x, y] = SHADES[((d[y * 2 + 1] >> (7 - x)) & 1) << 1 | ((d[y * 2] >> (7 - x)) & 1)]
         return im
 
-    def cell(self, theme, value, size):
-        key = (theme, value, size)
-        if key in self.cache:
-            return self.cache[key]
+    def cell_image(self, theme, value, size):
+        """the cell as a picture (PIL), size pixels square"""
         look = 16 if theme == 16 else theme & 15
         meta = self.word(self.sym["RoomMetatileTable"][1] + 2 * look)
         setbase = self.word(self.sym["RoomSpriteSetTable"][1] + 2 * look)
@@ -82,7 +80,13 @@ class Tiles:
         im = Image.new("L", (16, 16))
         for i, t in enumerate(ids):
             im.paste(self.tile(t, setbase), ((i % 2) * 8, (i // 2) * 8))
-        photo = ImageTk.PhotoImage(im.resize((size, size), Image.NEAREST).convert("RGB"))
+        return im.resize((size, size), Image.NEAREST).convert("RGB")
+
+    def cell(self, theme, value, size):
+        key = (theme, value, size)
+        if key in self.cache:
+            return self.cache[key]
+        photo = ImageTk.PhotoImage(self.cell_image(theme, value, size))
         self.cache[key] = photo
         return photo
 
