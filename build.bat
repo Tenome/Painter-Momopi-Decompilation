@@ -198,10 +198,17 @@ for /f "usebackq delims=" %%h in (`powershell -NoProfile -Command "(Get-FileHash
 exit /b 0
 
 :download
-rem  call :download URL SHA256 target
+rem  call :download URL SHA256 target     (PowerShell follows the Windows proxy settings, which curl.exe does not)
 if not exist "%TOOLS%" mkdir "%TOOLS%"
-curl.exe -L --fail --retry 3 -o "%~3" "%~1"
+set "PM_URL=%~1"
+set "PM_OUT=%~3"
+echo       downloading, this can take a few minutes...
+powershell -NoProfile -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $ProgressPreference='SilentlyContinue'; Invoke-WebRequest -UseBasicParsing -Uri $env:PM_URL -OutFile $env:PM_OUT"
 if errorlevel 1 (
+    echo       PowerShell could not download it, trying curl...
+    curl.exe -L --fail --retry 3 -o "%~3" "%~1"
+)
+if not exist "%~3" (
     echo  The download failed: %~1
     echo  Check the internet connection and run build.bat again.
     exit /b 1
